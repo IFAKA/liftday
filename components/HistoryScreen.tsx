@@ -85,11 +85,11 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
       <div className="flex items-center gap-4 pt-2 shrink-0 mb-8">
         <button
           onClick={onBack}
-          className="p-2 -ml-2 rounded-full hover:bg-muted active:scale-95 transition-all"
+          className="flex items-center gap-4 p-2 -ml-2 rounded-xl hover:bg-muted active:scale-95 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
+          <h1 className="text-lg font-bold tracking-tight uppercase">History</h1>
         </button>
-        <h1 className="text-lg font-bold tracking-tight uppercase">History</h1>
         <span className="ml-auto text-sm text-muted-foreground font-mono">
           {totalSessions} sessions
         </span>
