@@ -3,11 +3,11 @@ import { Exercise, MobilityExercise, MicroBreakExercise } from './types';
 // PUSH DAY EXERCISES
 export const PUSH_EXERCISES: Exercise[] = [
   {
-    key: 'trx_pushup',
-    name: 'TRX PUSH-UP',
+    key: 'band_lateral_raise',
+    name: 'BAND LATERAL RAISE',
     unit: 'reps',
-    instruction: 'Hands in TRX handles, body straight. Lower chest between handles, press back up. Harder than regular pushups.',
-    youtubeId: 'OlUqeytSoxE',
+    instruction: 'Stand on band, arms at sides. Raise arms out to sides to shoulder height, slight bend in elbows. Lower with control. 15-20 reps. #1 side delt width exercise.',
+    youtubeId: '7_bIc8s_YDY',
     workoutType: 'push',
   },
   {
@@ -19,25 +19,41 @@ export const PUSH_EXERCISES: Exercise[] = [
     workoutType: 'push',
   },
   {
-    key: 'tricep_extension',
-    name: 'TRX TRICEP EXTENSION',
+    key: 'trx_y_raise',
+    name: 'TRX Y RAISE',
     unit: 'reps',
-    instruction: 'Face away from anchor, arms extended. Bend elbows, lower body. Extend arms. Keep elbows tight.',
-    youtubeId: 'VKqhVPiLh00',
+    instruction: 'Face anchor, lean back. Raise arms into a Y overhead, thumbs up. Squeeze shoulder blades at top. Slow and controlled. Builds upper back width and rear delts.',
+    youtubeId: 'SdSZwVpun28',
     workoutType: 'push',
   },
   {
-    key: 'regular_pushup',
-    name: 'REGULAR PUSH-UP',
+    key: 'trx_pushup',
+    name: 'TRX PUSH-UP',
     unit: 'reps',
-    instruction: 'Hands shoulder-width, body straight. Lower chest to floor, elbows at 45°. Push back up.',
-    youtubeId: 'IODxDxX7oi4',
+    instruction: 'Hands in TRX handles, body straight. Lower chest between handles, press back up. Harder than regular pushups.',
+    youtubeId: 'OlUqeytSoxE',
     workoutType: 'push',
   },
 ];
 
 // PULL DAY EXERCISES
 export const PULL_EXERCISES: Exercise[] = [
+  {
+    key: 'pull_up',
+    name: 'PULL-UP',
+    unit: 'reps',
+    instruction: 'Dead hang, hands shoulder-width or wider. Pull chest to bar, elbows drive down and back. Lower fully — full stretch at bottom is key for lat width. If needed, use a chair for assistance.',
+    youtubeId: 'Hdc7Mw6BIEE',
+    workoutType: 'pull',
+  },
+  {
+    key: 'trx_straight_arm_pulldown',
+    name: 'TRX STRAIGHT-ARM PULLDOWN',
+    unit: 'reps',
+    instruction: 'Face anchor high above. Arms straight, lean forward slightly. Drive arms down to hips keeping elbows locked. Squeeze lats hard at bottom. This isolates the lats with a full stretch.',
+    youtubeId: 'MrL7odiwMEY',
+    workoutType: 'pull',
+  },
   {
     key: 'trx_row',
     name: 'TRX ROW',
@@ -52,22 +68,6 @@ export const PULL_EXERCISES: Exercise[] = [
     unit: 'reps',
     instruction: 'Lean back holding TRX. Pull handles to face, elbows high and wide. Squeeze rear delts.',
     youtubeId: 'Jbyoxer58j4',
-    workoutType: 'pull',
-  },
-  {
-    key: 'bicep_curl',
-    name: 'TRX BICEP CURL',
-    unit: 'reps',
-    instruction: 'Lean back, palms up. Curl handles to shoulders, keep elbows high. Lower with control.',
-    youtubeId: 'xG57S0fgXAk',
-    workoutType: 'pull',
-  },
-  {
-    key: 'inverted_row',
-    name: 'INVERTED ROW',
-    unit: 'reps',
-    instruction: 'Under TRX, feet forward. Pull chest to handles, body straight. Harder angle = harder exercise.',
-    youtubeId: 'hXTc1mDnZCw',
     workoutType: 'pull',
   },
 ];

@@ -1,16 +1,16 @@
 // Push exercises
 export type PushExerciseKey =
-  | 'trx_pushup'
+  | 'band_lateral_raise'
   | 'pike_pushup'
-  | 'tricep_extension'
-  | 'regular_pushup';
+  | 'trx_y_raise'
+  | 'trx_pushup';
 
 // Pull exercises
 export type PullExerciseKey =
+  | 'pull_up'
+  | 'trx_straight_arm_pulldown'
   | 'trx_row'
-  | 'face_pull'
-  | 'bicep_curl'
-  | 'inverted_row';
+  | 'face_pull';
 
 // Legs exercises
 export type LegsExerciseKey =
