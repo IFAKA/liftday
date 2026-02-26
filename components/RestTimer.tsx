@@ -129,7 +129,7 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
         <span
           className={`font-mono font-bold tracking-wider transition-colors duration-300 ${
             seconds <= 3 && seconds > 0
-              ? 'text-yellow-500 text-6xl'
+              ? 'text-yellow-500 text-4xl'
               : isPaused
                 ? 'text-muted-foreground text-5xl'
                 : 'text-5xl'
