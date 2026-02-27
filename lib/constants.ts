@@ -7,7 +7,7 @@ export const PUSH_EXERCISES: Exercise[] = [
     name: 'TRX T RAISE',
     unit: 'reps',
     instruction: 'Face anchor, lean back at 45°. Arms straight at sides, thumbs up. Raise both arms out to a T shape — shoulder height, no higher. Squeeze side delts at top. Lower slowly. 15-20 reps. Best side delt exercise with TRX only.',
-    youtubeId: 'JMvMpSAVGiw',
+    youtubeId: 'tO9uZImsiRw',
     workoutType: 'push',
   },
   {
@@ -43,7 +43,7 @@ export const PULL_EXERCISES: Exercise[] = [
     name: 'TRX KNEELING LAT PULLDOWN',
     unit: 'reps',
     instruction: 'Kneel facing the anchor. Reach both arms overhead and grip handles. Pull elbows down and back to ribs — like a lat pulldown. Full stretch overhead at top is key for lat width. Walk knees back to make it harder.',
-    youtubeId: 'r3dMikZMqp8',
+    youtubeId: 't2xgvi9BU1Q',
     workoutType: 'pull',
   },
   {
