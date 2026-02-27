@@ -3,11 +3,11 @@ import { Exercise, MobilityExercise, MicroBreakExercise } from './types';
 // PUSH DAY EXERCISES
 export const PUSH_EXERCISES: Exercise[] = [
   {
-    key: 'band_lateral_raise',
-    name: 'BAND LATERAL RAISE',
+    key: 'trx_t_raise',
+    name: 'TRX T RAISE',
     unit: 'reps',
-    instruction: 'Stand on band, arms at sides. Raise arms out to sides to shoulder height, slight bend in elbows. Lower with control. 15-20 reps. #1 side delt width exercise.',
-    youtubeId: '7_bIc8s_YDY',
+    instruction: 'Face anchor, lean back at 45°. Arms straight at sides, thumbs up. Raise both arms out to a T shape — shoulder height, no higher. Squeeze side delts at top. Lower slowly. 15-20 reps. Best side delt exercise with TRX only.',
+    youtubeId: 'JMvMpSAVGiw',
     workoutType: 'push',
   },
   {
@@ -39,11 +39,11 @@ export const PUSH_EXERCISES: Exercise[] = [
 // PULL DAY EXERCISES
 export const PULL_EXERCISES: Exercise[] = [
   {
-    key: 'pull_up',
-    name: 'PULL-UP',
+    key: 'trx_kneeling_lat_pulldown',
+    name: 'TRX KNEELING LAT PULLDOWN',
     unit: 'reps',
-    instruction: 'Dead hang, hands shoulder-width or wider. Pull chest to bar, elbows drive down and back. Lower fully — full stretch at bottom is key for lat width. If needed, use a chair for assistance.',
-    youtubeId: 'Hdc7Mw6BIEE',
+    instruction: 'Kneel facing the anchor. Reach both arms overhead and grip handles. Pull elbows down and back to ribs — like a lat pulldown. Full stretch overhead at top is key for lat width. Walk knees back to make it harder.',
+    youtubeId: 'r3dMikZMqp8',
     workoutType: 'pull',
   },
   {
