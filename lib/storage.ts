@@ -1,5 +1,5 @@
-import { StorageAdapter, WorkoutData, WorkoutSession } from './types';
-import { STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY } from './constants';
+import { StorageAdapter, WorkoutData, WorkoutSession, UserProfile } from './types';
+import { STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY } from './constants';
 import { formatDateKey } from './workout-utils';
 
 export function loadWorkoutData(): WorkoutData {
@@ -44,6 +44,55 @@ export function setFirstSessionDate(dateKey: string): void {
   } catch {
     // ignore
   }
+}
+
+// ── User Profile ──────────────────────────────────────────────────────────────
+
+export function loadUserProfile(): UserProfile | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem(USER_PROFILE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as UserProfile;
+  } catch {
+    return null;
+  }
+}
+
+export function saveUserProfile(profile: UserProfile): void {
+  try {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+  } catch {
+    // localStorage full or unavailable
+  }
+}
+
+/** Default profile for brand-new users — all tiers start at 0. */
+export function getDefaultProfile(): UserProfile {
+  return {
+    tiers: {},
+    tierProgress: {},
+    createdAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Migration profile for existing users who already have workout data.
+ * They've been training at what were tier-1 exercises, so start them there.
+ */
+export function buildMigratedProfile(): UserProfile {
+  return {
+    tiers: {
+      push_press: 1,            // was doing TRX Push-Up
+      push_press_variation: 1,  // was doing Pike Push-Up
+      pull_vertical: 1,         // was doing TRX Kneeling Lat Pulldown
+      legs_squat: 1,            // was doing Bulgarian Split Squat
+      legs_posterior: 1,        // was doing TRX Hamstring Curl
+    },
+    tierProgress: {},
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export const pwaStorage: StorageAdapter = {

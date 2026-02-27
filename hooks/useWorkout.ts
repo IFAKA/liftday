@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter } from '@/lib/types';
-import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, REST_DURATION } from '@/lib/constants';
+import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile } from '@/lib/types';
+import { EXERCISES, REST_DURATION } from '@/lib/constants';
 import { formatDateKey, getWeekNumber, getSetsForWeek } from '@/lib/workout-utils';
-import { getTargets } from '@/lib/progression';
+import { getTargets, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutType } from '@/lib/schedule';
-import { pwaStorage } from '@/lib/storage';
+import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
+import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -52,12 +53,14 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [nextExerciseName, setNextExerciseName] = useState('');
   const [firstSessionDate, setFirstSessionDate] = useState<string | null>(null);
   const [timerPaused, setTimerPaused] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownPlayedRef = useRef<Set<number>>(new Set());
   const timerEndRef = useRef<number | null>(null);
   const timerPauseStartRef = useRef<number | null>(null);
   const sessionRepsRef = useRef<Record<string, number[]>>({});
+  const userProfileRef = useRef<UserProfile | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -66,6 +69,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         if (mounted) { setData(loadedData); setFirstSessionDate(firstDate); }
       }
     );
+    const profile = loadUserProfile();
+    if (mounted) {
+      setUserProfile(profile);
+      userProfileRef.current = profile;
+    }
     return () => { mounted = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -76,9 +84,17 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const { workoutType, exercises } = useMemo(() => {
     const wt = getWorkoutType(date);
-    const exs = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : wt === 'legs' ? LEGS_EXERCISES : PUSH_EXERCISES;
+    if (wt === 'rest') {
+      return { workoutType: wt, exercises: [] as Exercise[] };
+    }
+    const chains = getChainsForWorkout(wt);
+    const tiers = userProfile?.tiers ?? {};
+    const exs = chains.map((chain) => {
+      const key = resolveExerciseKey(chain, tiers);
+      return EXERCISES.find((e) => e.key === key)!;
+    }).filter(Boolean);
     return { workoutType: wt, exercises: exs };
-  }, [date]);
+  }, [date, userProfile]);
 
   const currentExercise = exercises[exerciseIndex];
   const targets = currentExercise ? getTargets(currentExercise.key, weekNumber, date, data) : [];
@@ -137,6 +153,23 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     await storageAdapter.saveSession(dateKey, session);
     await storageAdapter.setFirstSessionDate(dateKey);
     setData(await storageAdapter.loadWorkoutData());
+
+    // Evaluate tier progress for non-fixed chains
+    if (workoutType !== 'rest' && userProfileRef.current) {
+      const chains = getChainsForWorkout(workoutType);
+      let updatedProfile = userProfileRef.current;
+      for (const chain of chains) {
+        if (!chain.fixed) {
+          const exerciseKey = resolveExerciseKey(chain, updatedProfile.tiers);
+          const sessionExReps = reps[exerciseKey] ?? [];
+          updatedProfile = evaluateTierProgress(chain.slotId, sessionExReps, updatedProfile, chain, weekNumber);
+        }
+      }
+      saveUserProfile(updatedProfile);
+      userProfileRef.current = updatedProfile;
+      setUserProfile(updatedProfile);
+    }
+
     playSessionComplete();
     setState('complete');
   }, [dateKey, weekNumber, exercises, workoutType, storageAdapter]);

@@ -6,7 +6,7 @@ export const PUSH_EXERCISES: Exercise[] = [
     key: 'trx_t_raise',
     name: 'TRX T RAISE',
     unit: 'reps',
-    instruction: 'Face anchor, lean back at 45°. Arms straight at sides, thumbs up. Raise both arms out to a T shape — shoulder height, no higher. Squeeze side delts at top. Lower slowly. 15-20 reps. Best side delt exercise with TRX only.',
+    instruction: 'Face anchor, lean back at 45°. Arms straight at sides, thumbs up. Raise both arms out to a T shape — shoulder height, no higher. Squeeze rear delts at top. Lower slowly. Primarily trains posterior deltoids and rotator cuff — critical for shoulder width from behind and healthy shoulder posture.',
     youtubeId: 'tO9uZImsiRw',
     workoutType: 'push',
   },
@@ -32,6 +32,22 @@ export const PUSH_EXERCISES: Exercise[] = [
     unit: 'reps',
     instruction: 'Hands in TRX handles, body straight. Lower chest between handles, press back up. Harder than regular pushups.',
     youtubeId: 'OlUqeytSoxE',
+    workoutType: 'push',
+  },
+  {
+    key: 'incline_pushup',
+    name: 'INCLINE PUSH-UP',
+    unit: 'reps',
+    instruction: 'Hands in TRX handles at mid-height or against a wall. Body straight. Lower chest toward hands, press back up. Easier angle — build pushing mechanics here before going horizontal.',
+    youtubeId: '4dF580BTZRY',
+    workoutType: 'push',
+  },
+  {
+    key: 'decline_pike_pushup',
+    name: 'DECLINE PIKE PUSH-UP',
+    unit: 'reps',
+    instruction: 'Feet elevated on chair. Hips high in pike. Lower crown toward floor, press back up. Heavier overhead load than standard pike push-up.',
+    youtubeId: 'XckEEwa1BPI',
     workoutType: 'push',
   },
 ];
@@ -70,6 +86,14 @@ export const PULL_EXERCISES: Exercise[] = [
     youtubeId: 'Jbyoxer58j4',
     workoutType: 'pull',
   },
+  {
+    key: 'trx_row_steep',
+    name: 'TRX ROW (STEEP)',
+    unit: 'reps',
+    instruction: 'Body nearly upright under TRX — feet only slightly in front of anchor. Pull chest to handles, squeeze shoulder blades. Easiest row angle. Build the pull pattern before going more horizontal.',
+    youtubeId: 'fW_jdwZT804',
+    workoutType: 'pull',
+  },
 ];
 
 // LEGS DAY EXERCISES
@@ -78,7 +102,7 @@ export const LEGS_EXERCISES: Exercise[] = [
     key: 'bulgarian_split_squat',
     name: 'BULGARIAN SPLIT SQUAT',
     unit: 'reps',
-    instruction: 'Rear foot elevated on chair/couch. Lower front knee to 90°. Press back up. Do all reps, switch legs.',
+    instruction: 'Rear foot elevated on chair/couch. Lower front knee to 90°. Press back up. Start with your weaker leg — match the rep count on both sides, weaker side sets the cap.',
     youtubeId: 'hiLF_pF3EJM',
     workoutType: 'legs',
   },
@@ -106,6 +130,22 @@ export const LEGS_EXERCISES: Exercise[] = [
     youtubeId: 'k8ipHzKeAkQ',
     workoutType: 'legs',
   },
+  {
+    key: 'trx_assisted_squat',
+    name: 'TRX ASSISTED SQUAT',
+    unit: 'reps',
+    instruction: 'Hold TRX lightly for balance only — legs do all the work, TRX does NOT pull you up. Feet hip-width. Sit back and down to depth. Builds squat mechanics before unassisted work.',
+    youtubeId: 'ul-yPBFwhnw',
+    workoutType: 'legs',
+  },
+  {
+    key: 'glute_bridge',
+    name: 'GLUTE BRIDGE',
+    unit: 'reps',
+    instruction: 'Lie on back, feet flat, knees bent. Drive hips up, squeeze glutes 1 second at top. Lower slowly with control. Foundation for TRX Hamstring Curl. Start with your weaker side if doing single-leg — match the rep count on both sides.',
+    youtubeId: 'OB3jcUgqUSU',
+    workoutType: 'legs',
+  },
 ];
 
 // All exercises combined
@@ -114,6 +154,7 @@ export const EXERCISES: Exercise[] = [...PUSH_EXERCISES, ...PULL_EXERCISES, ...L
 export const STORAGE_KEY = 'traindaily_sessions';
 export const FIRST_SESSION_KEY = 'traindaily_first_session';
 export const MOBILITY_DONE_KEY = 'traindaily_mobility_done';
+export const USER_PROFILE_KEY = 'liftday_user_profile';
 
 export const REST_DURATION = 90;
 
