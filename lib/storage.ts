@@ -77,23 +77,6 @@ export function getDefaultProfile(): UserProfile {
   };
 }
 
-/**
- * Migration profile for existing users who already have workout data.
- * They've been training at what were tier-1 exercises, so start them there.
- */
-export function buildMigratedProfile(): UserProfile {
-  return {
-    tiers: {
-      push_press: 1,            // was doing TRX Push-Up
-      push_press_variation: 1,  // was doing Pike Push-Up
-      pull_vertical: 1,         // was doing TRX Kneeling Lat Pulldown
-      legs_squat: 1,            // was doing Bulgarian Split Squat
-      legs_posterior: 1,        // was doing TRX Hamstring Curl
-    },
-    tierProgress: {},
-    createdAt: new Date().toISOString(),
-  };
-}
 
 export const pwaStorage: StorageAdapter = {
   loadWorkoutData: async () => loadWorkoutData(),

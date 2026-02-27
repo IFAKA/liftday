@@ -15,9 +15,8 @@ import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
 import { formatDisplayDate, getWeekNumber } from '@/lib/workout-utils';
-import { getFirstSessionDate, saveUserProfile, getDefaultProfile, buildMigratedProfile } from '@/lib/storage';
+import { getFirstSessionDate, saveUserProfile, getDefaultProfile } from '@/lib/storage';
 import { getWorkoutType, getTrainingStreak } from '@/lib/schedule';
-import { USER_PROFILE_KEY } from '@/lib/constants';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -30,12 +29,6 @@ export function TodayScreen() {
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
-    } else {
-      // Migration: existing user who predates the profile system
-      const hasProfile = localStorage.getItem(USER_PROFILE_KEY);
-      if (!hasProfile) {
-        saveUserProfile(buildMigratedProfile());
-      }
     }
   }, []);
 
