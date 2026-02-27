@@ -138,6 +138,7 @@ function TodayContent({ date }: { date: Date }) {
         sessionReps={workout.sessionReps}
         data={workout.data}
         date={date}
+        advancedTiers={workout.advancedTiers}
         onDone={workout.quitWorkout}
       />
     );
@@ -197,13 +198,23 @@ function TodayContent({ date }: { date: Date }) {
         </div>
 
         {!isDone && (
-          <Button
-            size="lg"
-            onClick={workout.startWorkout}
-            className="rounded-full w-20 h-20 animate-pulse active:scale-95 transition-transform"
-          >
-            <Play className="w-10 h-10" />
-          </Button>
+          <>
+            <Button
+              size="lg"
+              onClick={workout.startWorkout}
+              className="rounded-full w-20 h-20 animate-pulse active:scale-95 transition-transform"
+            >
+              <Play className="w-10 h-10" />
+            </Button>
+            {streak > 0 && (
+              <p
+                className="text-xs text-orange-400/90 font-mono tracking-wider"
+                style={{ animation: 'stagger-in 400ms ease-out 400ms backwards' }}
+              >
+                {streak} DAY STREAK — DON'T BREAK IT
+              </p>
+            )}
+          </>
         )}
       </div>
 

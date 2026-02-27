@@ -30,6 +30,7 @@ export interface UseWorkoutReturn {
   totalExercises: number;
   nextExerciseName: string;
   timerPaused: boolean;
+  advancedTiers: string[];
   startWorkout: () => void;
   logSet: (value: number) => void;
   skipTimer: () => void;
@@ -54,6 +55,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [firstSessionDate, setFirstSessionDate] = useState<string | null>(null);
   const [timerPaused, setTimerPaused] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [advancedTiers, setAdvancedTiers] = useState<string[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownPlayedRef = useRef<Set<number>>(new Set());
@@ -157,7 +159,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     // Evaluate tier progress for non-fixed chains
     if (workoutType !== 'rest' && userProfileRef.current) {
       const chains = getChainsForWorkout(workoutType);
-      let updatedProfile = userProfileRef.current;
+      const oldProfile = userProfileRef.current;
+      let updatedProfile = oldProfile;
       for (const chain of chains) {
         if (!chain.fixed) {
           const exerciseKey = resolveExerciseKey(chain, updatedProfile.tiers);
@@ -165,6 +168,20 @@ export function useWorkout(date: Date): UseWorkoutReturn {
           updatedProfile = evaluateTierProgress(chain.slotId, sessionExReps, updatedProfile, chain, weekNumber);
         }
       }
+      // Detect tier advances: slots where tier index increased
+      const advanced: string[] = [];
+      for (const chain of chains) {
+        if (!chain.fixed) {
+          const oldTier = oldProfile.tiers[chain.slotId] ?? 0;
+          const newTier = updatedProfile.tiers[chain.slotId] ?? 0;
+          if (newTier > oldTier) {
+            const newExKey = chain.exercises[newTier];
+            const exName = EXERCISES.find((e) => e.key === newExKey)?.name;
+            if (exName) advanced.push(exName);
+          }
+        }
+      }
+      setAdvancedTiers(advanced);
       saveUserProfile(updatedProfile);
       userProfileRef.current = updatedProfile;
       setUserProfile(updatedProfile);
@@ -300,6 +317,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   return {
     state, exerciseIndex, currentSet, setsPerExercise, timer, currentExercise, currentTarget,
     previousRep, flashColor, sessionReps, weekNumber, data, totalExercises: exercises.length, nextExerciseName, timerPaused,
+    advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
   };
 }

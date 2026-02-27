@@ -10,12 +10,15 @@ import { WorkoutData } from '@/lib/types';
 import { formatDateKey } from '@/lib/workout-utils';
 import { getTrainingDaysCompletedThisWeek } from '@/lib/schedule';
 
+const MILESTONES = [10, 25, 50, 100, 200, 365];
+
 type SessionCompleteProps =
   | {
       mode: 'workout';
       sessionReps: Record<string, number[]>;
       data: WorkoutData;
       date: Date;
+      advancedTiers?: string[];
       onDone: () => void;
     }
   | { mode: 'mobility'; date: Date; weekCompleted: number; weekTotal: number; nextTraining: string | null; onDone: () => void };
@@ -26,13 +29,22 @@ export function SessionComplete(props: SessionCompleteProps) {
 
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share !== 'undefined';
 
+  const workoutPropsTyped = isWorkout ? (props as Extract<typeof props, { mode: 'workout' }>) : null;
+
   const maxedExercises = isWorkout
     ? EXERCISES.filter((ex) => {
-        const reps = (props as Extract<typeof props, { mode: 'workout' }>).sessionReps[ex.key];
+        const reps = workoutPropsTyped!.sessionReps[ex.key];
         return reps && reps.length > 0 && reps.every((r) => r >= 20);
       })
     : [];
   const hasDifficultyIncrease = maxedExercises.length > 0;
+  const advancedTiers = workoutPropsTyped?.advancedTiers ?? [];
+
+  // Milestone detection — data already includes today's saved session
+  const totalSessions = isWorkout
+    ? Object.values(workoutPropsTyped!.data).filter((s) => s.logged_at).length
+    : 0;
+  const milestone = MILESTONES.find((m) => m === totalSessions);
 
   const weekProgress = isWorkout
     ? getTrainingDaysCompletedThisWeek(
@@ -173,12 +185,28 @@ export function SessionComplete(props: SessionCompleteProps) {
         >
           {isWorkout ? 'SESSION COMPLETE' : 'MOBILITY COMPLETE'}
         </h1>
-        {hasDifficultyIncrease && (
+        {milestone && (
           <p
-            className="text-xs text-orange-400 uppercase tracking-widest font-mono"
+            className="text-xs text-yellow-400 uppercase tracking-widest font-mono"
+            style={{ animation: 'slide-up-in 260ms ease-out 320ms backwards' }}
+          >
+            ★ SESSION #{milestone} — MILESTONE
+          </p>
+        )}
+        {advancedTiers.length > 0 && (
+          <p
+            className="text-xs text-green-400 uppercase tracking-widest font-mono text-center"
             style={{ animation: 'slide-up-in 260ms ease-out 340ms backwards' }}
           >
-            ↑ DIFFICULTY UP NEXT SESSION
+            ↑ LEVELED UP: {advancedTiers.join(', ')}
+          </p>
+        )}
+        {hasDifficultyIncrease && advancedTiers.length === 0 && (
+          <p
+            className="text-xs text-orange-400 uppercase tracking-widest font-mono text-center"
+            style={{ animation: 'slide-up-in 260ms ease-out 340ms backwards' }}
+          >
+            ↑ HARDER NEXT: {maxedExercises.map((e) => e.name).join(', ')}
           </p>
         )}
         {!isWorkout && mobilityProps?.nextTraining && (
