@@ -82,7 +82,10 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background p-6 overflow-hidden">
-      <div className="flex items-center gap-4 pt-2 shrink-0 mb-8">
+      <div
+        className="flex items-center gap-4 pt-2 shrink-0 mb-8"
+        style={{ animation: 'slide-down-in 260ms ease-out backwards' }}
+      >
         <button
           onClick={onBack}
           className="flex items-center gap-4 p-2 -ml-2 rounded-xl hover:bg-muted active:scale-95 transition-all"
@@ -102,7 +105,7 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
       ) : (
         <div className="flex-1 overflow-y-auto min-h-0 space-y-8">
           {/* Weekly consistency chart */}
-          <div className="space-y-3">
+          <div className="space-y-3" style={{ animation: 'slide-up-in 260ms ease-out 80ms backwards' }}>
             <div className="flex items-center justify-between">
               <p className="text-xs uppercase tracking-widest text-muted-foreground/60">
                 Weekly Sessions
@@ -171,10 +174,11 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
                 <Trophy className="w-3.5 h-3.5 text-yellow-500" />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
+                {EXERCISES.filter((ex) => prs[ex.key]).map((ex, i) => (
                   <div
                     key={ex.key}
                     className={cn('rounded-lg p-3', TYPE_BG[ex.workoutType])}
+                    style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${120 + i * 60}ms` }}
                   >
                     <p className="text-xs text-muted-foreground truncate">{ex.name}</p>
                     <p className="text-2xl font-mono font-bold mt-0.5">{prs[ex.key]}</p>
@@ -192,7 +196,7 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
                 Recent Sessions
               </p>
               <div className="space-y-2">
-                {recentSessions.map(([dateKey, session]) => {
+                {recentSessions.map(([dateKey, session], i) => {
                   const wt = session.workout_type;
                   const exercises =
                     wt === 'push'
@@ -210,6 +214,7 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
                     <div
                       key={dateKey}
                       className="flex items-center gap-3 px-3 py-3 rounded-lg bg-card/50"
+                      style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${100 + i * 60}ms` }}
                     >
                       <div className="flex flex-col items-center min-w-[3rem]">
                         <span className="text-xs text-muted-foreground uppercase">

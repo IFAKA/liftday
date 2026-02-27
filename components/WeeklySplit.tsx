@@ -38,7 +38,7 @@ export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
       </div>
 
       <div className="space-y-1">
-        {days.map((day) => {
+        {days.map((day, i) => {
           const workoutType = getWorkoutType(day);
           const dateKey = formatDateKey(day);
           const isCompleted = !!data[dateKey]?.logged_at;
@@ -54,6 +54,7 @@ export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
                 isToday && 'bg-muted/50',
                 !isToday && 'opacity-60'
               )}
+              style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 60}ms` }}
             >
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-center min-w-[3rem]">

@@ -35,8 +35,17 @@ export function ExerciseScreen({
   onQuit,
 }: ExerciseScreenProps) {
   const [showInstruction, setShowInstruction] = useState(false);
+  const [isInstructionClosing, setIsInstructionClosing] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const showInstructionRef = useRef(false);
+
+  const closeInstruction = () => {
+    setIsInstructionClosing(true);
+    setTimeout(() => {
+      setIsInstructionClosing(false);
+      setShowInstruction(false);
+    }, 200);
+  };
 
   useEffect(() => {
     showInstructionRef.current = showInstruction;
@@ -71,11 +80,11 @@ export function ExerciseScreen({
         flashColor === 'red' && 'bg-red-950/30'
       )}
     >
-      {showInstruction && (
-        <div className="fixed inset-0 z-40 bg-background flex flex-col">
+      {(showInstruction || isInstructionClosing) && (
+        <div className={`fixed inset-0 z-40 bg-background flex flex-col ${isInstructionClosing ? 'animate-out slide-out-to-bottom fade-out-0 duration-200' : 'animate-in slide-in-from-bottom fade-in-0 duration-200'}`}>
           <button
             type="button"
-            onClick={() => setShowInstruction(false)}
+            onClick={closeInstruction}
             className="flex items-center gap-3 p-4 text-left"
             aria-label="Close how to"
           >
@@ -94,7 +103,7 @@ export function ExerciseScreen({
             <Button
               variant="outline"
               className="rounded-full px-6"
-              onClick={() => setShowInstruction(false)}
+              onClick={closeInstruction}
             >
               Got it
             </Button>
