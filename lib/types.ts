@@ -1,11 +1,12 @@
 // Push exercises
 export type PushExerciseKey =
-  | 'trx_t_raise'
-  | 'pike_pushup'
-  | 'trx_y_raise'
-  | 'trx_pushup'
   | 'incline_pushup'
-  | 'decline_pike_pushup';
+  | 'trx_pushup'
+  | 'pike_pushup'
+  | 'decline_pike_pushup'
+  | 'trx_y_raise'
+  | 'trx_upright_row'   // side delts + upper traps
+  | 'trx_shrug';        // upper trap isolation
 
 // Pull exercises
 export type PullExerciseKey =
@@ -13,7 +14,10 @@ export type PullExerciseKey =
   | 'trx_straight_arm_pulldown'
   | 'trx_row'
   | 'trx_row_steep'
-  | 'face_pull';
+  | 'face_pull'
+  | 'trx_t_raise'               // MOVED from push — rear delts (pull movement)
+  | 'trx_reverse_curl'          // forearm hypertrophy (loaded)
+  | 'trx_reverse_curl_assisted'; // forearm entry tier (unloaded)
 
 // Legs exercises
 export type LegsExerciseKey =
@@ -22,7 +26,9 @@ export type LegsExerciseKey =
   | 'trx_hamstring_curl'
   | 'calf_raise'
   | 'trx_assisted_squat'
-  | 'glute_bridge';
+  | 'glute_bridge'
+  | 'neck_iso_flex'   // isometric neck flexion (front)
+  | 'neck_iso_ext';   // isometric neck extension (back)
 
 export type ExerciseKey = PushExerciseKey | PullExerciseKey | LegsExerciseKey;
 
@@ -87,15 +93,15 @@ export interface StorageAdapter {
   clearAll?(): Promise<void>;
 }
 
-// V-Taper priority levels — determines how fast a slot advances tiers
-export type VTaperPriority = 'critical' | 'high' | 'support' | 'indirect' | 'aesthetic';
+// Training priority levels — determines how fast a slot advances tiers
+export type TrainingPriority = 'critical' | 'high' | 'support' | 'indirect' | 'aesthetic';
 
 // A tier chain defines a progression of exercises for one workout slot
 export interface TierChain {
   slotId: string;
   workoutType: Exclude<WorkoutType, 'rest'>;
   fixed: boolean; // fixed = reps-only, no tier to advance
-  priority: VTaperPriority;
+  priority: TrainingPriority;
   exercises: ExerciseKey[]; // tier 0 → 1 → 2
 }
 

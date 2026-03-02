@@ -1,4 +1,4 @@
-import { WorkoutData, ExerciseKey, VTaperPriority, UserProfile, TierChain } from './types';
+import { WorkoutData, ExerciseKey, TrainingPriority, UserProfile, TierChain } from './types';
 import { getPreviousSessionDate, getSetsForWeek } from './workout-utils';
 
 const MIN_REPS = 6;
@@ -34,7 +34,7 @@ export function getTargets(
 }
 
 /** How many consecutive max-rep sessions are needed to advance a tier. */
-export function getSessionsToAdvance(priority: VTaperPriority): number {
+export function getSessionsToAdvance(priority: TrainingPriority): number {
   switch (priority) {
     case 'critical': return 1;
     case 'high':     return 2;
@@ -57,13 +57,6 @@ export function evaluateTierProgress(
 ): UserProfile {
   if (chain.fixed) return profile;
   if (isDeloadWeek(weekNumber)) return profile;
-
-  // Push/pull cap: push support slots can't advance past pull_vertical tier
-  if (chain.workoutType === 'push' && chain.priority === 'support') {
-    const pullTier = profile.tiers['pull_vertical'] ?? 0;
-    const currentTier = profile.tiers[slotId] ?? 0;
-    if (currentTier >= pullTier) return profile;
-  }
 
   const sessionsToAdvance = getSessionsToAdvance(chain.priority);
   const currentTier = profile.tiers[slotId] ?? 0;

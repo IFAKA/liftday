@@ -3,11 +3,19 @@ import { Exercise, MobilityExercise, MicroBreakExercise } from './types';
 // PUSH DAY EXERCISES
 export const PUSH_EXERCISES: Exercise[] = [
   {
-    key: 'trx_t_raise',
-    name: 'TRX T RAISE',
+    key: 'incline_pushup',
+    name: 'INCLINE PUSH-UP',
     unit: 'reps',
-    instruction: 'Face anchor, lean back at 45°. Arms straight at sides, thumbs up. Raise both arms out to a T shape — shoulder height, no higher. Squeeze rear delts at top. Lower slowly. Primarily trains posterior deltoids and rotator cuff — critical for shoulder width from behind and healthy shoulder posture.',
-    youtubeId: 'tO9uZImsiRw',
+    instruction: 'Hands in TRX handles at mid-height or against a wall. Body straight. Lower chest toward hands, press back up. Easier angle — build pushing mechanics here before going horizontal.',
+    youtubeId: '4dF580BTZRY',
+    workoutType: 'push',
+  },
+  {
+    key: 'trx_pushup',
+    name: 'TRX PUSH-UP',
+    unit: 'reps',
+    instruction: 'Hands in TRX handles, body straight. Lower chest between handles, press back up. Harder than regular pushups.',
+    youtubeId: 'OlUqeytSoxE',
     workoutType: 'push',
   },
   {
@@ -15,6 +23,14 @@ export const PUSH_EXERCISES: Exercise[] = [
     name: 'PIKE PUSH-UP',
     unit: 'reps',
     instruction: 'Pike position, hips high. Bend elbows, lower head toward floor. Press back up. Targets shoulders.',
+    youtubeId: 'XckEEwa1BPI',
+    workoutType: 'push',
+  },
+  {
+    key: 'decline_pike_pushup',
+    name: 'DECLINE PIKE PUSH-UP',
+    unit: 'reps',
+    instruction: 'Feet elevated on chair. Hips high in pike. Lower crown toward floor, press back up. Heavier overhead load than standard pike push-up.',
     youtubeId: 'XckEEwa1BPI',
     workoutType: 'push',
   },
@@ -27,33 +43,31 @@ export const PUSH_EXERCISES: Exercise[] = [
     workoutType: 'push',
   },
   {
-    key: 'trx_pushup',
-    name: 'TRX PUSH-UP',
+    key: 'trx_upright_row',
+    name: 'TRX UPRIGHT ROW',
     unit: 'reps',
-    instruction: 'Hands in TRX handles, body straight. Lower chest between handles, press back up. Harder than regular pushups.',
-    youtubeId: 'OlUqeytSoxE',
+    instruction: 'Face anchor, lean back 30°, overhand grip. Pull handles up to chin, elbows high and flared wide. Pause at top. Directly loads side delts and upper traps — the two muscles that widen the shoulder silhouette from the front.',
     workoutType: 'push',
   },
   {
-    key: 'incline_pushup',
-    name: 'INCLINE PUSH-UP',
+    key: 'trx_shrug',
+    name: 'TRX SHRUG',
     unit: 'reps',
-    instruction: 'Hands in TRX handles at mid-height or against a wall. Body straight. Lower chest toward hands, press back up. Easier angle — build pushing mechanics here before going horizontal.',
-    youtubeId: '4dF580BTZRY',
-    workoutType: 'push',
-  },
-  {
-    key: 'decline_pike_pushup',
-    name: 'DECLINE PIKE PUSH-UP',
-    unit: 'reps',
-    instruction: 'Feet elevated on chair. Hips high in pike. Lower crown toward floor, press back up. Heavier overhead load than standard pike push-up.',
-    youtubeId: 'XckEEwa1BPI',
+    instruction: 'Face anchor, lean back 45°, arms straight. Keeping arms extended, elevate shoulders as high as possible. Hold 1 sec at top, lower slowly. Upper trap isolation — key for neck-to-shoulder thickness perceived as physical dominance.',
     workoutType: 'push',
   },
 ];
 
 // PULL DAY EXERCISES
 export const PULL_EXERCISES: Exercise[] = [
+  {
+    key: 'trx_row_steep',
+    name: 'TRX ROW (STEEP)',
+    unit: 'reps',
+    instruction: 'Body nearly upright under TRX — feet only slightly in front of anchor. Pull chest to handles, squeeze shoulder blades. Easiest row angle. Build the pull pattern before going more horizontal.',
+    youtubeId: 'fW_jdwZT804',
+    workoutType: 'pull',
+  },
   {
     key: 'trx_kneeling_lat_pulldown',
     name: 'TRX KNEELING LAT PULLDOWN',
@@ -87,17 +101,39 @@ export const PULL_EXERCISES: Exercise[] = [
     workoutType: 'pull',
   },
   {
-    key: 'trx_row_steep',
-    name: 'TRX ROW (STEEP)',
+    key: 'trx_t_raise',
+    name: 'TRX T RAISE',
     unit: 'reps',
-    instruction: 'Body nearly upright under TRX — feet only slightly in front of anchor. Pull chest to handles, squeeze shoulder blades. Easiest row angle. Build the pull pattern before going more horizontal.',
-    youtubeId: 'fW_jdwZT804',
+    instruction: 'Face anchor, lean back at 45°. Arms straight at sides, thumbs up. Raise both arms out to a T shape — shoulder height, no higher. Squeeze rear delts at top. Lower slowly. Primarily trains posterior deltoids and rotator cuff — critical for shoulder width from behind and healthy shoulder posture.',
+    youtubeId: 'tO9uZImsiRw',
+    workoutType: 'pull',
+  },
+  {
+    key: 'trx_reverse_curl_assisted',
+    name: 'TRX REVERSE CURL (ASSISTED)',
+    unit: 'reps',
+    instruction: 'Stand nearly upright facing anchor, slight lean back only. Palms down, arms extended. Curl handles toward shoulders. Upright angle reduces load — build the movement pattern here before adding weight via body angle. Brachioradialis + forearm extensors.',
+    workoutType: 'pull',
+  },
+  {
+    key: 'trx_reverse_curl',
+    name: 'TRX REVERSE CURL',
+    unit: 'reps',
+    instruction: 'Face anchor, lean back to 45°, palms facing down, arms extended. Curl handles toward shoulders keeping wrists neutral. Full load version. Brachioradialis and forearm extensors — creates the visible forearm thickness seen in short sleeves.',
     workoutType: 'pull',
   },
 ];
 
 // LEGS DAY EXERCISES
 export const LEGS_EXERCISES: Exercise[] = [
+  {
+    key: 'trx_assisted_squat',
+    name: 'TRX ASSISTED SQUAT',
+    unit: 'reps',
+    instruction: 'Hold TRX lightly for balance only — legs do all the work, TRX does NOT pull you up. Feet hip-width. Sit back and down to depth. Builds squat mechanics before unassisted work.',
+    youtubeId: 'ul-yPBFwhnw',
+    workoutType: 'legs',
+  },
   {
     key: 'bulgarian_split_squat',
     name: 'BULGARIAN SPLIT SQUAT',
@@ -112,6 +148,14 @@ export const LEGS_EXERCISES: Exercise[] = [
     unit: 'reps',
     instruction: 'One leg, hold TRX for balance. Lower slowly on one leg. Press back up. Switch legs each rep.',
     youtubeId: 'ul-yPBFwhnw',
+    workoutType: 'legs',
+  },
+  {
+    key: 'glute_bridge',
+    name: 'GLUTE BRIDGE',
+    unit: 'reps',
+    instruction: 'Lie on back, feet flat, knees bent. Drive hips up, squeeze glutes 1 second at top. Lower slowly with control. Foundation for TRX Hamstring Curl. Start with your weaker side if doing single-leg — match the rep count on both sides.',
+    youtubeId: 'OB3jcUgqUSU',
     workoutType: 'legs',
   },
   {
@@ -131,19 +175,17 @@ export const LEGS_EXERCISES: Exercise[] = [
     workoutType: 'legs',
   },
   {
-    key: 'trx_assisted_squat',
-    name: 'TRX ASSISTED SQUAT',
-    unit: 'reps',
-    instruction: 'Hold TRX lightly for balance only — legs do all the work, TRX does NOT pull you up. Feet hip-width. Sit back and down to depth. Builds squat mechanics before unassisted work.',
-    youtubeId: 'ul-yPBFwhnw',
+    key: 'neck_iso_flex',
+    name: 'NECK ISO — FRONT',
+    unit: 'seconds',
+    instruction: 'Sit tall. Both hands on forehead. Press head forward against hand resistance. Do NOT let head move — pure isometric. Hold 10 seconds per rep. Builds sternocleidomastoid and anterior neck — the visible front neck thickness.',
     workoutType: 'legs',
   },
   {
-    key: 'glute_bridge',
-    name: 'GLUTE BRIDGE',
-    unit: 'reps',
-    instruction: 'Lie on back, feet flat, knees bent. Drive hips up, squeeze glutes 1 second at top. Lower slowly with control. Foundation for TRX Hamstring Curl. Start with your weaker side if doing single-leg — match the rep count on both sides.',
-    youtubeId: 'OB3jcUgqUSU',
+    key: 'neck_iso_ext',
+    name: 'NECK ISO — BACK',
+    unit: 'seconds',
+    instruction: 'Clasp hands behind head. Press head backward against hand resistance. Hold 10 seconds per rep. Builds posterior neck extensors — directly increases neck circumference perceived as formidability.',
     workoutType: 'legs',
   },
 ];
