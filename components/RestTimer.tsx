@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { Timer, SkipForward, X, Pause, Play, RotateCcw } from 'lucide-react';
+import { SkipForward, Pause, Play, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
 import { REST_DURATION } from '@/lib/constants';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
@@ -97,23 +97,16 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
   const progress = ((REST_DURATION - seconds) / REST_DURATION) * 100;
 
   return (
-    <div className="flex flex-col items-center justify-center h-[100dvh] bg-background p-4 sm:p-6 gap-6 sm:gap-8">
-      {/* Quit */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
-        <button
-          type="button"
-          onClick={() => setShowQuitConfirm(true)}
-          className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Quit workout"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <div className="flex flex-col items-center justify-between h-[100dvh] bg-background p-4 pt-2 pb-6 relative overflow-hidden">
+      {/* Label */}
+      <div className="flex flex-col items-center gap-1 z-10 shrink-0 mt-2">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
+          Resting
+        </h2>
       </div>
 
-      <Timer className="w-8 h-8 text-muted-foreground" />
-
       {/* Circular timer */}
-      <div className="relative w-48 h-48 flex items-center justify-center">
+      <div className="relative w-56 h-56 flex items-center justify-center shrink-0">
         <div
           className="absolute inset-0 rounded-full"
           style={{
@@ -126,52 +119,57 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
             transition: '--timer-progress 1s linear',
           } as CSSProperties}
         />
-        <span
-          className={`font-mono font-bold tracking-wider transition-colors duration-300 ${
-            seconds <= 3 && seconds > 0
-              ? 'text-yellow-500 text-4xl'
-              : isPaused
-                ? 'text-muted-foreground text-5xl'
-                : 'text-5xl'
-          }`}
-          style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
-          key={seconds <= 3 ? seconds : 'normal'}
-        >
-          {display}
-        </span>
+        <div className="flex flex-col items-center gap-2">
+          <span
+            className={`font-mono font-black tracking-tighter transition-colors duration-300 ${
+              seconds <= 3 && seconds > 0
+                ? 'text-yellow-500 text-6xl'
+                : isPaused
+                  ? 'text-muted-foreground/40 text-7xl'
+                  : 'text-7xl'
+            }`}
+            style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
+            key={seconds <= 3 ? seconds : 'normal'}
+          >
+            {display}
+          </span>
+          <button
+            onClick={onPauseToggle}
+            className="p-2 text-muted-foreground/60 active:scale-90 transition-transform"
+          >
+            {isPaused ? <Play className="w-8 h-8 fill-current" /> : <Pause className="w-8 h-8 fill-current" />}
+          </button>
+        </div>
       </div>
 
-      {/* Action buttons: undo · pause · skip */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={onUndo}
-          className="rounded-full w-14 h-14 active:scale-95 transition-transform text-muted-foreground hover:text-foreground"
-          aria-label="Undo last set"
-        >
-          <RotateCcw className="w-5 h-5" />
-        </Button>
+      {/* Action buttons: undo · skip */}
+      <div className="w-full max-w-sm flex flex-col gap-4 z-10 shrink-0">
+        <div className="flex gap-3 w-full">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={onUndo}
+            className="flex-1 rounded-full py-8 text-xs font-black uppercase tracking-widest border-2"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Undo
+          </Button>
 
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={onPauseToggle}
-          className="rounded-full w-16 h-16 active:scale-95 transition-transform"
-          aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
+          <Button
+            size="lg"
+            onClick={onSkip}
+            className="flex-[1.5] rounded-full py-8 text-lg font-black uppercase tracking-tighter bg-foreground text-background hover:bg-foreground/90"
+          >
+            <SkipForward className="w-6 h-6 mr-2 fill-current" />
+            Skip
+          </Button>
+        </div>
+        <button
+          onClick={() => setShowQuitConfirm(true)}
+          className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 hover:text-red-500/60 transition-colors py-2"
         >
-          {isPaused ? <Play className="w-7 h-7" /> : <Pause className="w-7 h-7" />}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={onSkip}
-          className="rounded-full w-14 h-14 active:scale-95 transition-transform text-muted-foreground hover:text-foreground"
-          aria-label="Skip rest"
-        >
-          <SkipForward className="w-5 h-5" />
-        </Button>
+          Quit Workout
+        </button>
       </div>
 
       <QuitConfirmDialog

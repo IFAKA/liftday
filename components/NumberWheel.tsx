@@ -47,9 +47,19 @@ interface NumberWheelProps {
   max: number;
   label: string;
   onConfirm: (value: number) => void;
+  onChange?: (value: number) => void;
+  hideButton?: boolean;
 }
 
-export function NumberWheel({ defaultValue, min = 0, max, label, onConfirm }: NumberWheelProps) {
+export function NumberWheel({ 
+  defaultValue, 
+  min = 0, 
+  max, 
+  label, 
+  onConfirm,
+  onChange,
+  hideButton = false
+}: NumberWheelProps) {
   const init = Math.min(Math.max(defaultValue, min), max);
 
   const [float, setFloat] = useState(init);
@@ -89,6 +99,7 @@ export function NumberWheel({ defaultValue, min = 0, max, label, onConfirm }: Nu
       lastTickInt.current = intNow;
       playTick();
       if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(2);
+      onChange?.(intNow);
     }
   }
 
@@ -178,6 +189,7 @@ export function NumberWheel({ defaultValue, min = 0, max, label, onConfirm }: Nu
     floatRef.current = target;
     setFloat(target);
     setEditing(false);
+    onChange?.(target);
   }
 
   function cancelEdit() {
@@ -263,16 +275,18 @@ export function NumberWheel({ defaultValue, min = 0, max, label, onConfirm }: Nu
         )}
       </div>
 
-      <button
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          if (editing) finishEdit(editText);
-          else onConfirm(clamp(Math.round(floatRef.current)));
-        }}
-        className="w-14 h-14 rounded-full bg-foreground text-background flex items-center justify-center active:scale-95 transition-transform shadow-md"
-      >
-        <Check className="w-7 h-7" />
-      </button>
+      {!hideButton && (
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            if (editing) finishEdit(editText);
+            else onConfirm(clamp(Math.round(floatRef.current)));
+          }}
+          className="w-14 h-14 rounded-full bg-foreground text-background flex items-center justify-center active:scale-95 transition-transform shadow-md"
+        >
+          <Check className="w-7 h-7" />
+        </button>
+      )}
     </div>
   );
 }

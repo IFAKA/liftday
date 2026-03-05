@@ -147,79 +147,80 @@ function TodayContent({ date }: { date: Date }) {
   // Idle — ready to start (or already done today)
   const isDone = schedule.isDone;
   return (
-    <div className="flex flex-col h-[100dvh] overflow-hidden bg-background">
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-background relative p-4 pt-2 pb-6">
       {/* Top content */}
-      <div className="flex flex-col items-center flex-shrink-0 px-6 pt-12 pb-4 gap-5">
+      <div className="flex flex-col items-center flex-shrink-0 w-full gap-4 mt-2">
         {/* History button top-right */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-2 right-2 z-20">
           <button
             onClick={() => setShowHistory(true)}
-            className="p-2 rounded-full hover:bg-muted active:scale-95 transition-all text-muted-foreground hover:text-foreground"
+            className="p-2 rounded-full hover:bg-muted active:scale-95 transition-all text-muted-foreground/60 hover:text-foreground"
             aria-label="View history"
           >
             <ChartBar className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-1.5 text-center">
           {isDone ? (
             <CheckCircle
-              className="w-10 h-10 text-green-500"
+              className="w-10 h-10 text-green-500 mb-1"
               style={{ animation: 'bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards' }}
             />
           ) : (
-            <Dumbbell
-              className="w-10 h-10"
-              style={{ animation: 'bounce-in 600ms ease-out backwards' }}
-            />
+            <div className="relative mb-1">
+              <Dumbbell
+                className="w-10 h-10 text-foreground"
+                style={{ animation: 'bounce-in 600ms ease-out backwards' }}
+              />
+            </div>
           )}
-          <h1 className="text-2xl font-bold tracking-tight uppercase text-foreground">
+          <h1 className="text-xl font-black tracking-tighter uppercase text-foreground leading-none">
             {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
           </h1>
-          <p className="text-sm text-muted-foreground">{formatDisplayDate(date)}</p>
+          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-mono font-medium">{formatDisplayDate(date)}</p>
         </div>
 
         <div
-          className="flex items-center gap-3 text-sm text-muted-foreground"
+          className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-mono font-bold uppercase tracking-wider"
           style={{ animation: 'stagger-in 400ms ease-out 200ms backwards' }}
         >
-          <span className="font-mono">WEEK {weekNumber}</span>
-          <span>·</span>
-          <span className="font-mono">{workout.setsPerExercise} SETS</span>
+          <span>WK {weekNumber}</span>
+          <span className="opacity-30">|</span>
+          <span>{workout.setsPerExercise} SETS</span>
           {streak > 0 && (
             <>
-              <span>·</span>
+              <span className="opacity-30">|</span>
               <div className="flex items-center gap-1">
-                <Flame className="w-4 h-4 text-orange-500" />
-                <span className="font-mono text-orange-500">{streak}</span>
+                <Flame className="w-3 h-3 text-orange-500" />
+                <span className="text-orange-500">{streak}</span>
               </div>
             </>
           )}
         </div>
 
         {!isDone && (
-          <>
+          <div className="flex flex-col items-center gap-4 mt-2 mb-2">
             <Button
               size="lg"
               onClick={workout.startWorkout}
-              className="rounded-full w-20 h-20 animate-pulse active:scale-95 transition-transform"
+              className="rounded-full w-24 h-24 shadow-xl active:scale-[0.98] transition-all bg-foreground text-background hover:bg-foreground/90 border-0"
             >
-              <Play className="w-10 h-10" />
+              <Play className="w-12 h-12 fill-current ml-1" />
             </Button>
             {streak > 0 && (
-              <p
-                className="text-xs text-orange-400/90 font-mono tracking-wider"
-                style={{ animation: 'stagger-in 400ms ease-out 400ms backwards' }}
-              >
-                {streak} DAY STREAK — DON'T BREAK IT
-              </p>
+              <div className="flex flex-col items-center animate-pulse">
+                <p className="text-[10px] text-orange-500/80 font-black tracking-[0.2em] uppercase">
+                  STREAK AT RISK
+                </p>
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
-      {/* Weekly Split — scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
+      {/* Weekly Split — scrollable, more compact for watch */}
+      <div className="flex-1 overflow-y-auto w-full max-w-sm mx-auto no-scrollbar mask-fade-edges">
         <WeeklySplit currentDate={date} data={workout.data} />
       </div>
     </div>
