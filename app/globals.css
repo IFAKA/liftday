@@ -236,3 +236,122 @@ input[type="number"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================================
+   RESPONSIVE UTILITIES
+   ============================================================================ */
+
+/* Smartwatch-specific styles (≤320px) */
+@media (max-width: 320px) {
+  html, body {
+    font-size: 14px;
+  }
+  
+  .smartwatch-only {
+    display: block !important;
+  }
+  
+  .mobile-only,
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Mobile-specific styles (321px - 1023px) */
+@media (min-width: 321px) and (max-width: 1023px) {
+  .mobile-only {
+    display: block !important;
+  }
+  
+  .smartwatch-only,
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Desktop-specific styles (≥1024px) */
+@media (min-width: 1024px) {
+  html, body {
+    font-size: 16px;
+  }
+  
+  .desktop-only {
+    display: block !important;
+  }
+  
+  .smartwatch-only,
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Responsive touch targets */
+@media (max-width: 320px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (min-width: 321px) {
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Responsive spacing */
+.responsive-spacing-sm {
+  @apply gap-1 p-2;
+}
+
+@media (min-width: 321px) {
+  .responsive-spacing-sm {
+    @apply gap-2 p-4;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-spacing-sm {
+    @apply gap-3 p-6;
+  }
+}
+
+.responsive-spacing-md {
+  @apply gap-2 p-3;
+}
+
+@media (min-width: 321px) {
+  .responsive-spacing-md {
+    @apply gap-3 p-4;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-spacing-md {
+    @apply gap-4 p-6;
+  }
+}
+
+.responsive-spacing-lg {
+  @apply gap-3 p-4;
+}
+
+@media (min-width: 321px) {
+  .responsive-spacing-lg {
+    @apply gap-4 p-6;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-spacing-lg {
+    @apply gap-6 p-8;
+  }
+}

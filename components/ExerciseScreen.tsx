@@ -77,7 +77,14 @@ export function ExerciseScreen({
   return (
     <div
       className={cn(
-        'flex flex-col h-[100dvh] bg-background transition-colors duration-500 overflow-hidden items-center justify-between max-w-sm mx-auto gap-2 p-4 pt-2 pb-6 relative',
+        'flex flex-col h-[100dvh] bg-background transition-colors duration-500 overflow-hidden items-center justify-between gap-2 p-4 pt-2 pb-6 relative',
+        // Mobile (default) - centered layout
+        'max-w-sm mx-auto',
+        // Desktop - wider layout with better spacing
+        'md:max-w-md md:px-6 md:gap-3',
+        'lg:max-w-lg lg:px-8 lg:gap-4',
+        // Smartwatch - compact layout
+        'max-w-[240px] mx-auto sm:max-w-none',
         flashColor === 'green' && 'bg-green-950/30',
         flashColor === 'red' && 'bg-red-950/30'
       )}
@@ -90,21 +97,21 @@ export function ExerciseScreen({
             className="flex items-center gap-3 p-4 text-left"
             aria-label="Close how to"
           >
-            <ChevronLeft className="w-6 h-6 text-muted-foreground shrink-0" />
-            <h2 className="text-lg font-semibold flex-1">{exercise.name}</h2>
+            <ChevronLeft className="w-5 h-5 text-muted-foreground shrink-0 sm:w-6 sm:h-6" />
+            <h2 className="text-base font-semibold flex-1 sm:text-lg">{exercise.name}</h2>
           </button>
-          <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 pb-8 overflow-y-auto min-h-0">
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 pb-8 overflow-y-auto min-h-0 sm:gap-6">
             {exercise.youtubeId && (
-              <div className="w-full max-w-sm">
+              <div className="w-full max-w-xs sm:max-w-sm">
                 <ExerciseDemo youtubeId={exercise.youtubeId} title={exercise.name} />
               </div>
             )}
-            <p className="text-sm text-muted-foreground text-center max-w-sm leading-relaxed">
+            <p className="text-xs text-muted-foreground text-center max-w-xs leading-relaxed sm:text-sm sm:max-w-sm">
               {exercise.instruction}
             </p>
             <Button
               variant="outline"
-              className="rounded-full px-6"
+              className="rounded-full px-4 py-2 text-xs sm:px-6 sm:py-3 sm:text-sm"
               onClick={closeInstruction}
             >
               Got it
@@ -114,16 +121,16 @@ export function ExerciseScreen({
       )}
 
       {/* Progress Strip + Corners */}
-      <div className="w-full flex items-center gap-3 px-2 h-6 shrink-0 relative z-10">
+      <div className="w-full flex items-center gap-2 px-2 h-5 shrink-0 relative z-10 sm:gap-3 sm:h-6 sm:px-2">
         <button
           type="button"
           onClick={() => setShowQuitConfirm(true)}
           className="p-1 text-muted-foreground/60 hover:text-foreground transition-colors shrink-0"
           aria-label="Quit workout"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
-        <div className="flex-1 flex items-center gap-[3px] h-1">
+        <div className="flex-1 flex items-center gap-[2px] h-1 sm:gap-[3px]">
           {Array.from({ length: totalExercises }).map((_, exIdx) => (
             <div key={exIdx} className="flex flex-1 gap-px">
               {Array.from({ length: setsPerExercise }).map((_, setIdx) => {
@@ -148,13 +155,13 @@ export function ExerciseScreen({
           className="p-1 text-muted-foreground/60 hover:text-foreground transition-colors shrink-0"
           aria-label="How to"
         >
-          <Info className="w-5 h-5" />
+          <Info className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
       {/* Header Section */}
-      <div className="flex flex-col items-center gap-1 text-center mt-2 shrink-0">
-        <h1 className="text-lg font-bold uppercase tracking-tight leading-tight">{exercise.name}</h1>
+      <div className="flex flex-col items-center gap-1 text-center mt-1 shrink-0 sm:mt-2">
+        <h1 className="text-sm font-bold uppercase tracking-tight leading-tight sm:text-base lg:text-lg">{exercise.name}</h1>
       </div>
 
       {/* Center Piece: Wheel */}
@@ -170,24 +177,24 @@ export function ExerciseScreen({
         />
 
         {previousRep !== null && (
-          <div className="flex items-center gap-2 text-muted-foreground/60 mt-4">
+          <div className="flex items-center gap-1.5 text-muted-foreground/60 mt-2 sm:gap-2 sm:mt-4">
             {flashColor === 'green' ? (
-              <TrendingUp className="w-4 h-4 text-green-500" />
+              <TrendingUp className="w-3 h-3 text-green-500 sm:w-4 sm:h-4" />
             ) : flashColor === 'red' ? (
-              <TrendingDown className="w-4 h-4 text-red-500" />
+              <TrendingDown className="w-3 h-3 text-red-500 sm:w-4 sm:h-4" />
             ) : (
-              <Minus className="w-4 h-4" />
+              <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
             )}
-            <span className="text-sm font-mono font-medium">{previousRep} PREVIOUS</span>
+            <span className="text-xs font-mono font-medium sm:text-sm">{previousRep} PREVIOUS</span>
           </div>
         )}
       </div>
 
       {/* Footer Section */}
-      <div className="w-full pb-2 shrink-0">
+      <div className="w-full pb-1 shrink-0 sm:pb-2">
         <Button 
           onClick={() => onLogSet(val)} 
-          className="w-full rounded-full py-7 text-lg font-bold shadow-lg active:scale-[0.98] transition-all bg-foreground text-background hover:bg-foreground/90"
+          className="w-full rounded-full py-4 px-4 text-sm font-bold shadow-lg active:scale-[0.98] transition-all bg-foreground text-background hover:bg-foreground/90 sm:py-6 sm:px-6 sm:text-base lg:py-7 lg:px-8 lg:text-lg"
         >
           LOG SET
         </Button>
@@ -198,12 +205,12 @@ export function ExerciseScreen({
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
           {flashColor === 'green' ? (
             <TrendingUp
-              className="w-24 h-24 text-green-500"
+              className="w-16 h-16 text-green-500 sm:w-20 sm:h-20 lg:w-24 lg:h-24"
               style={{ animation: 'feedback-pop 400ms ease-out forwards' }}
             />
           ) : (
             <TrendingDown
-              className="w-24 h-24 text-red-500"
+              className="w-16 h-16 text-red-500 sm:w-20 sm:h-20 lg:w-24 lg:h-24"
               style={{ animation: 'feedback-pop 400ms ease-out forwards' }}
             />
           )}

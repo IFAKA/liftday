@@ -7,6 +7,13 @@ const ITEM_H = 60;
 const VISIBLE = 5;
 const CENTER = Math.floor(VISIBLE / 2); // 2
 
+// Responsive constants
+const RESPONSIVE_CONFIG = {
+  smartwatch: { itemHeight: 40, visible: 3, width: 80, centerFontSize: 28, nearFontSize: 16, farFontSize: 12 },
+  mobile: { itemHeight: 60, visible: 5, width: 120, centerFontSize: 42, nearFontSize: 26, farFontSize: 18 },
+  desktop: { itemHeight: 70, visible: 5, width: 140, centerFontSize: 48, nearFontSize: 30, farFontSize: 20 }
+};
+
 let _audioCtx: AudioContext | null = null;
 
 function getAudioCtx(): AudioContext | null {
@@ -82,6 +89,29 @@ export function NumberWheel({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Responsive configuration
+  const [config, setConfig] = useState(RESPONSIVE_CONFIG.mobile);
+  
+  useEffect(() => {
+    const updateConfig = () => {
+      const width = window.innerWidth;
+      if (width <= 320) {
+        setConfig(RESPONSIVE_CONFIG.smartwatch);
+      } else if (width >= 1024) {
+        setConfig(RESPONSIVE_CONFIG.desktop);
+      } else {
+        setConfig(RESPONSIVE_CONFIG.mobile);
+      }
+    };
+    
+    updateConfig();
+    window.addEventListener('resize', updateConfig);
+    return () => window.removeEventListener('resize', updateConfig);
+  }, []);
+
+  const { itemHeight, visible, width: wheelWidth, centerFontSize, nearFontSize, farFontSize } = config;
+  const center = Math.floor(visible / 2);
+
   useEffect(() => {
     if (editing) {
       inputRef.current?.focus();
@@ -134,7 +164,7 @@ export function NumberWheel({
     if (!dragging.current) return;
     const dy = e.clientY - startY.current;
     if (Math.abs(dy) > 4) hasMoved.current = true;
-    applyFloat(clamp(startFloat.current - dy / ITEM_H));
+    applyFloat(clamp(startFloat.current - dy / itemHeight));
     const now = Date.now();
     const dt = now - lastT.current;
     if (dt > 0) velY.current = (e.clientY - lastY.current) / dt;
@@ -149,7 +179,7 @@ export function NumberWheel({
     if (!hasMoved.current && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const y = e.clientY - rect.top;
-      if (y >= CENTER * ITEM_H && y < (CENTER + 1) * ITEM_H) {
+      if (y >= center * itemHeight && y < (center + 1) * itemHeight) {
         const cur = clamp(Math.round(floatRef.current));
         editDone.current = false;
         editStartVal.current = cur;
@@ -169,7 +199,7 @@ export function NumberWheel({
     let v = vel;
     const decay = () => {
       v *= 0.88;
-      const next = clamp(floatRef.current - v * 16 / ITEM_H);
+      const next = clamp(floatRef.current - v * 16 / itemHeight);
       applyFloat(next);
       if (Math.abs(v) > 0.06) {
         raf.current = requestAnimationFrame(decay);
@@ -202,18 +232,18 @@ export function NumberWheel({
     setEditing(false);
   }
 
-  const translateY = CENTER * ITEM_H - (float - min) * ITEM_H;
+  const translateY = center * itemHeight - (float - min) * itemHeight;
   const centerInt = clamp(Math.round(float));
   const numbers = Array.from({ length: max - min + 1 }, (_, i) => min + i);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
+    <div className="flex flex-col items-center gap-3 sm:gap-4">
+      <span className="text-[8px] uppercase tracking-widest text-muted-foreground sm:text-[10px]">{label}</span>
 
       <div
         ref={containerRef}
         className="relative overflow-hidden select-none touch-none cursor-ns-resize"
-        style={{ height: VISIBLE * ITEM_H, width: 120 }}
+        style={{ height: visible * itemHeight, width: wheelWidth }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -221,7 +251,7 @@ export function NumberWheel({
       >
         <div
           className="absolute inset-x-0 z-10 pointer-events-none border-t border-b border-foreground/25"
-          style={{ top: CENTER * ITEM_H, height: ITEM_H }}
+          style={{ top: center * itemHeight, height: itemHeight }}
         />
 
         <div
@@ -237,8 +267,8 @@ export function NumberWheel({
                 key={n}
                 className="flex items-center justify-center font-mono font-bold"
                 style={{
-                  height: ITEM_H,
-                  fontSize: isCenter ? 42 : distInt === 1 ? 26 : 18,
+                  height: itemHeight,
+                  fontSize: isCenter ? centerFontSize : distInt === 1 ? nearFontSize : farFontSize,
                   opacity: editing && isCenter ? 0 : Math.max(0.04, 1 - dist * 0.55),
                 }}
               >
@@ -248,13 +278,13 @@ export function NumberWheel({
           })}
         </div>
 
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background to-transparent pointer-events-none z-20" />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent pointer-events-none z-20" />
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background to-transparent pointer-events-none z-20 sm:h-20" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none z-20 sm:h-20" />
 
         {editing && (
           <div
             className="absolute inset-x-0 z-30 flex items-center justify-center"
-            style={{ top: CENTER * ITEM_H, height: ITEM_H }}
+            style={{ top: center * itemHeight, height: itemHeight }}
           >
             <input
               ref={inputRef}
@@ -269,7 +299,7 @@ export function NumberWheel({
                 if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
               }}
               className="w-full text-center font-mono font-bold bg-transparent border-none outline-none text-foreground caret-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              style={{ fontSize: 42 }}
+              style={{ fontSize: centerFontSize }}
             />
           </div>
         )}
@@ -282,9 +312,9 @@ export function NumberWheel({
             if (editing) finishEdit(editText);
             else onConfirm(clamp(Math.round(floatRef.current)));
           }}
-          className="w-14 h-14 rounded-full bg-foreground text-background flex items-center justify-center active:scale-95 transition-transform shadow-md"
+          className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center active:scale-95 transition-transform shadow-md sm:w-12 sm:h-12 lg:w-14 lg:h-14"
         >
-          <Check className="w-7 h-7" />
+          <Check className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
         </button>
       )}
     </div>
