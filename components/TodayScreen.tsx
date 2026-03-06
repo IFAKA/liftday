@@ -85,20 +85,11 @@ function TodayContent({ date }: { date: Date }) {
   // Weekly Split screen overlay
   if (showSplit) {
     return (
-      <div className="flex flex-col h-[100dvh] bg-black p-4">
-        <div className="flex items-center gap-4 shrink-0 mb-6 mt-2">
-          <button
-            onClick={() => setShowSplit(false)}
-            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-all"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-bold tracking-tight uppercase text-white">Schedule</h1>
-        </div>
-        <div className="flex-1 overflow-y-auto no-scrollbar mask-fade-edges pb-8">
-          <WeeklySplit currentDate={date} data={workout.data} />
-        </div>
-      </div>
+      <WeeklySplit 
+        currentDate={date} 
+        data={workout.data} 
+        onBack={() => setShowSplit(false)} 
+      />
     );
   }
 

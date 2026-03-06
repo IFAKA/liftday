@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { startOfWeek, addDays, isSameDay, format } from 'date-fns';
-import { Dumbbell } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getWorkoutType } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
@@ -10,6 +12,7 @@ import { WorkoutData, WorkoutType } from '@/lib/types';
 interface WeeklySplitProps {
   currentDate: Date;
   data: WorkoutData;
+  onBack: () => void;
 }
 
 const WORKOUT_TYPE_COLORS: Record<WorkoutType, string> = {
@@ -26,20 +29,43 @@ const WORKOUT_TYPE_LABELS: Record<WorkoutType, string> = {
   rest: 'REST',
 };
 
-export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
+export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
+  useEffect(() => {
+    const handlePopState = () => {
+      onBack();
+      window.history.pushState({ split: true }, '');
+    };
+    window.history.pushState({ split: true }, '');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [onBack]);
+
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="w-full flex flex-col space-y-3">
-      <div className="flex items-center justify-between px-1">
-        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/50">
-          This Week
-        </span>
-        <Dumbbell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/30" />
+    <div className="flex flex-col h-[100dvh] bg-black p-safe overflow-hidden relative">
+      <div
+        className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 pt-2 sm:pt-4 pb-2 shrink-0 z-10 bg-black"
+        style={{ animation: 'slide-down-in 260ms ease-out backwards' }}
+      >
+        <button
+          onClick={onBack}
+          className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center -ml-1 sm:-ml-3 rounded-full active:bg-white/10 text-white transition-colors"
+          aria-label="Back"
+        >
+          <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+        </button>
+        <div className="flex flex-col">
+          <h1 className="text-base sm:text-xl font-bold tracking-tight uppercase text-white leading-none">Schedule</h1>
+          <span className="text-[8px] sm:text-[10px] text-white/50 font-mono tracking-widest mt-0.5">
+            THIS WEEK
+          </span>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mask-fade-edges mt-4">
+        <div className="flex flex-col gap-2">
         {days.map((day, i) => {
           const workoutType = getWorkoutType(day);
           const dateKey = formatDateKey(day);
@@ -89,6 +115,7 @@ export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
