@@ -78,39 +78,43 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
             <div
               key={dateKey}
               className={cn(
-                'flex items-center justify-between px-4 py-3 rounded-2xl transition-colors',
+                'flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-colors',
                 isToday ? 'bg-white/10 ring-1 ring-white/20' : 'bg-[#1A1A1A]',
                 isCompleted && 'opacity-50' // Dim days already done
               )}
               style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
             >
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col items-center justify-center w-8 sm:w-10">
-                  <span className="text-[8px] sm:text-[10px] text-white/50 uppercase tracking-widest">{dayName}</span>
-                  <span className="text-lg sm:text-xl font-black tabular-nums text-white leading-none mt-0.5">{dayNumber}</span>
-                </div>
-
-                <div className="flex flex-col justify-center border-l border-white/10 pl-3 sm:pl-4 h-8 sm:h-10">
-                  <span
-                    className={cn(
-                      'text-base sm:text-lg font-black uppercase tracking-tight leading-none',
-                      WORKOUT_TYPE_COLORS[workoutType],
-                      isCompleted && 'text-white/40' // Override color if done
-                    )}
-                  >
-                    {WORKOUT_TYPE_LABELS[workoutType]}
+              <div className="flex flex-col">
+                <span className="text-[8px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mb-1">
+                  {dayName}, {dayNumber}
+                </span>
+                <span
+                  className={cn(
+                    'text-lg sm:text-2xl font-black uppercase tracking-tighter leading-none',
+                    WORKOUT_TYPE_COLORS[workoutType],
+                    isCompleted && 'text-white/40' // Override color if done
+                  )}
+                >
+                  {WORKOUT_TYPE_LABELS[workoutType]}
+                </span>
+              </div>
+              
+              <div className="text-right flex flex-col items-end justify-center">
+                {isCompleted ? (
+                  <span className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none mt-1">
+                    COMPLETED
                   </span>
-                  {isCompleted && (
-                    <span className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase tracking-widest mt-0.5 sm:mt-1">
-                      COMPLETED
-                    </span>
-                  )}
-                  {isToday && !isCompleted && workoutType !== 'rest' && (
-                    <span className="text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-widest mt-0.5 sm:mt-1 animate-pulse">
-                      YOUR TURN
-                    </span>
-                  )}
-                </div>
+                ) : (
+                  <span className="text-xl sm:text-3xl font-black tabular-nums text-white leading-none">
+                    --
+                  </span>
+                )}
+                
+                {isToday && !isCompleted && workoutType !== 'rest' && (
+                  <span className="text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-widest mt-1 animate-pulse">
+                    YOUR TURN
+                  </span>
+                )}
               </div>
             </div>
           );
