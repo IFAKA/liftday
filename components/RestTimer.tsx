@@ -106,7 +106,7 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
       </div>
 
       {/* Circular timer */}
-      <div className="relative w-56 h-56 flex items-center justify-center shrink-0">
+      <div className="relative w-72 h-72 flex items-center justify-center shrink-0">
         <div
           className="absolute inset-0 rounded-full"
           style={{
