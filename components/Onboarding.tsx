@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Dumbbell, TrendingUp, Calendar } from 'lucide-react';
+import { Dumbbell, TrendingUp, Calendar, X, ChevronLeft } from 'lucide-react';
 import { Button } from './ui/button';
+import { TopBar } from './TopBar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -55,57 +57,76 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     }
   };
 
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-between p-safe">
-      <div className="w-full flex justify-end p-4 shrink-0">
-        <button
-          onClick={onComplete}
-          className="text-[10px] text-white/50 uppercase font-bold tracking-widest px-4 py-2"
-          aria-label="Skip onboarding"
-        >
-          SKIP
-        </button>
-      </div>
-
-      <div className="flex flex-col items-center justify-center flex-1 px-6 w-full max-w-sm">
-        <Icon
-          key={`icon-${step}`}
-          className="w-16 h-16 sm:w-32 sm:h-32 text-white mb-4 sm:mb-8"
-          style={{ animation: 'bounce-in 400ms ease-out backwards' }}
-        />
-
-        <div className="text-center w-full">
-          <h1
-            key={`title-${step}`}
-            className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white mb-3 sm:mb-6"
-            style={{ animation: 'slide-up-in 300ms ease-out 100ms backwards' }}
+    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center overflow-hidden">
+      <TopBar
+        leftAction={
+          step > 0 ? (
+            <button
+              onClick={handleBack}
+              className="p-2 -ml-2 text-white/40 active:text-white transition-colors"
+              aria-label="Previous step"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          ) : null
+        }
+        rightAction={
+          <button
+            onClick={onComplete}
+            className="p-2 -mr-2 text-white/40 active:text-white transition-colors"
+            aria-label="Skip onboarding"
           >
-            {currentStep.title}
-          </h1>
+            <X className="w-5 h-5" />
+          </button>
+        }
+      />
 
-          <div className="flex flex-col gap-3">
-            {currentStep.description.map((line, i) => (
-              <p
-                key={`desc-${step}-${i}`}
-                className="text-sm font-bold text-white/60 text-center uppercase tracking-wider"
-                style={{
-                  animation: `slide-up-in 300ms ease-out ${i * 80 + 200}ms backwards`,
-                }}
-              >
-                {line}
-              </p>
-            ))}
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center px-4 w-full relative">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="flex flex-col items-center text-center w-full"
+          >
+            <div className="p-4 bg-white/5 rounded-full mb-4">
+              <Icon className="w-10 h-10 text-white" />
+            </div>
+
+            <h1 className="text-[28px] font-black uppercase tracking-tight text-white mb-2 leading-none">
+              {currentStep.title}
+            </h1>
+
+            <div className="flex flex-col gap-1">
+              {currentStep.description.map((line, i) => (
+                <p
+                  key={i}
+                  className="text-[11px] font-bold text-white/50 uppercase tracking-widest"
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      <div className="w-full px-4 mb-4 sm:mb-8 shrink-0 flex flex-col items-center gap-4 sm:gap-6">
-        <div className="flex gap-2">
+      <div className="w-full px-2 pb-2 shrink-0 flex flex-col items-center gap-3">
+        <div className="flex gap-1.5">
           {steps.map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step ? 'w-6 sm:w-8 bg-white' : 'w-1.5 sm:w-2 bg-white/20'
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === step ? 'w-4 bg-white' : 'w-1 bg-white/20'
               }`}
             />
           ))}
@@ -113,7 +134,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
         <Button
           onClick={handleNext}
-          className="w-full h-[54px] sm:h-[68px] rounded-full text-xl sm:text-2xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+          className="w-full h-11 rounded-full text-lg font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
         >
           {currentStep.action}
         </Button>
