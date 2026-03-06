@@ -73,7 +73,7 @@ export function NumberInput({
   }, [stopAdjust]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full flex-1 relative min-h-0 touch-none">
+    <div className="flex flex-col items-center justify-center w-full flex-1 relative min-h-0">
       {/* Massive number in center */}
       <div className="flex items-center justify-center pointer-events-none z-10 -mt-2">
         <span className="font-mono font-black text-[100px] tracking-tighter tabular-nums leading-none">

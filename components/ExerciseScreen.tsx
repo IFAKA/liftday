@@ -125,11 +125,18 @@ export function ExerciseScreen({
               flashColor === 'green' && 'bg-green-950/40',
               flashColor === 'red' && 'bg-red-950/40'
             )}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
+            drag
+            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
             dragElastic={0.1}
             onDragEnd={(e, { offset, velocity }) => {
-              if (offset.x < -30 || velocity.x < -400) setShowTutorial(true);
+              // Horizontal: Swipe left for tutorial
+              if (offset.x < -40 || velocity.x < -400) {
+                setShowTutorial(true);
+              }
+              // Vertical: Swipe down to quit
+              if (offset.y > 60 || velocity.y > 600) {
+                setShowQuitConfirm(true);
+              }
             }}
           >
             <TopBar

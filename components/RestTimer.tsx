@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { Play, Pause, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from './ui/button';
 import { REST_DURATION } from '@/lib/constants';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface RestTimerProps {
   seconds: number;
   isPaused: boolean;
-  onPauseToggle: () => void;
   onSkip: () => void;
   onQuit: () => void;
   onUndo: () => void;
@@ -47,7 +47,7 @@ function cancelRestNotification() {
 
 import { TopBar } from './TopBar';
 
-export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, onUndo }: RestTimerProps) {
+export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTimerProps) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const showQuitConfirmRef = useRef(false);
 
@@ -99,7 +99,22 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
   const progress = ((REST_DURATION - seconds) / REST_DURATION) * 100;
 
   return (
-    <div className="flex flex-col items-center w-full h-full bg-black overflow-hidden relative">
+    <motion.div
+      className="flex flex-col items-center w-full h-full bg-black overflow-hidden relative"
+      drag
+      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+      dragElastic={0.1}
+      onDragEnd={(e, { offset, velocity }) => {
+        // Vertical: Swipe down to quit
+        if (offset.y > 60 || velocity.y > 600) {
+          setShowQuitConfirm(true);
+        }
+        // Horizontal: Swipe right to undo (mimic system back)
+        if (offset.x > 60 || velocity.x > 600) {
+          onUndo();
+        }
+      }}
+    >
       <TopBar
         leftAction={
           <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/40 active:text-white transition-colors">
@@ -158,6 +173,6 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
         onOpenChange={setShowQuitConfirm}
         onConfirm={onQuit}
       />
-    </div>
+    </motion.div>
   );
 }

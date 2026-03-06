@@ -17,6 +17,7 @@ import { useMobility } from '@/hooks/useMobility';
 import { formatDisplayDate } from '@/lib/workout-utils';
 import { saveUserProfile, getDefaultProfile } from '@/lib/storage';
 import { getWorkoutType, getTrainingStreak } from '@/lib/schedule';
+import { motion } from 'framer-motion';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -138,7 +139,6 @@ function TodayContent({ date }: { date: Date }) {
       <RestTimer
         seconds={workout.timer}
         isPaused={workout.timerPaused}
-        onPauseToggle={workout.togglePauseTimer}
         onSkip={workout.skipTimer}
         onQuit={workout.quitWorkout}
         onUndo={workout.undoLastSet}
@@ -163,7 +163,22 @@ function TodayContent({ date }: { date: Date }) {
   const isDone = schedule.isDone;
   
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-black relative">
+    <motion.div 
+      className="flex flex-col h-full overflow-hidden bg-black relative"
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.1}
+      onDragEnd={(e, { offset, velocity }) => {
+        // Swipe Left (reveals history on the right)
+        if (offset.x < -40 || velocity.x < -400) {
+          setShowHistory(true);
+        }
+        // Swipe Right (reveals weekly split on the left)
+        if (offset.x > 40 || velocity.x > 400) {
+          setShowSplit(true);
+        }
+      }}
+    >
       <TopBar
         leftAction={
           <button
@@ -221,6 +236,6 @@ function TodayContent({ date }: { date: Date }) {
           </Button>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
