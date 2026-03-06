@@ -109,27 +109,9 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
         center={<span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">Resting</span>}
       />
 
-      {/* Action buttons at the top */}
-      <div className="w-full px-1 pb-2 shrink-0 flex gap-1 z-20">
-        <Button
-          variant="outline"
-          onClick={onUndo}
-          className="flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-tight bg-white/5 border-0 text-white/60 active:bg-white/10 active:scale-95 transition-all"
-        >
-          Undo
-        </Button>
-
-        <Button
-          onClick={onSkip}
-          className="flex-[1.5] rounded-full h-9 text-[10px] font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
-        >
-          Skip
-        </Button>
-      </div>
-
-      {/* Large Timer area below buttons */}
-      <div className="flex-1 w-full flex flex-col items-center justify-center relative min-h-0">
-        {/* Edge Timer Ring (Contained to timer area) */}
+      {/* Large Timer area (Above buttons) */}
+      <div className="flex-1 w-full flex flex-col items-center justify-center relative min-h-0 -mt-2">
+        {/* Edge Timer Ring (Apple Watch Style) */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
           style={{
@@ -151,6 +133,24 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
         >
           {display}
         </span>
+      </div>
+
+      {/* Action buttons at the bottom */}
+      <div className="w-full px-1 pb-1 shrink-0 flex gap-1 z-20">
+        <Button
+          variant="outline"
+          onClick={onUndo}
+          className="flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-tight bg-white/5 border-0 text-white/60 active:bg-white/10 active:scale-95 transition-all"
+        >
+          Undo
+        </Button>
+
+        <Button
+          onClick={onSkip}
+          className="flex-[1.5] rounded-full h-9 text-[10px] font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
+        >
+          Skip
+        </Button>
       </div>
 
       <QuitConfirmDialog
