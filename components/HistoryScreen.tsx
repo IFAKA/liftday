@@ -19,6 +19,8 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
   legs: 'text-green-400',
 };
 
+import { TopBar } from './TopBar';
+
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   useEffect(() => {
     const handlePopState = () => {
@@ -58,59 +60,41 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   }, [data]);
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-black p-safe overflow-hidden relative">
-      <div
-        className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 pt-2 sm:pt-4 pb-2 shrink-0 z-10 bg-black"
-        style={{ animation: 'slide-down-in 260ms ease-out backwards' }}
-      >
-        <button
-          onClick={onBack}
-          className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center -ml-1 sm:-ml-3 rounded-full active:bg-white/10 text-white transition-colors"
-          aria-label="Back"
-        >
-          <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-        </button>
-        <div className="flex flex-col">
-          <h1 className="text-base sm:text-xl font-bold tracking-tight uppercase text-white leading-none">History</h1>
-          <span className="text-[8px] sm:text-[10px] text-white/50 font-mono tracking-widest mt-0.5">
-            {totalSessions} SESSIONS
-          </span>
-        </div>
-      </div>
+    <div className="flex flex-col h-full bg-black overflow-hidden relative">
+      <TopBar
+        leftAction={
+          <button onClick={onBack} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        }
+        center={
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] font-bold uppercase tracking-tight text-white">History</span>
+            <span className="text-[8px] text-white/40 font-mono tracking-widest -mt-0.5">{totalSessions} SESSIONS</span>
+          </div>
+        }
+      />
 
       {totalSessions === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <p className="text-white/40 text-sm uppercase tracking-widest font-bold">No sessions yet.</p>
+        <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
+          <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">No sessions yet.</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mask-fade-edges mt-4">
-          
-          {/* Personal Records - High Contrast Blocks */}
+        <div className="flex-1 overflow-y-auto px-2 pb-4 no-scrollbar mt-2">
+          {/* Best Sets - Compact Grid */}
           {Object.keys(prs).length > 0 && (
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Trophy className="w-4 h-4 text-yellow-500" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">
-                  Best Sets
-                </p>
+            <div className="mb-4">
+              <div className="flex items-center gap-1.5 mb-2 px-1">
+                <Trophy className="w-3 h-3 text-yellow-500" />
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Best Sets</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                {EXERCISES.filter((ex) => prs[ex.key]).map((ex, i) => (
-                  <div
-                    key={ex.key}
-                    className="rounded-xl sm:rounded-2xl p-3 sm:p-4 bg-[#1A1A1A] flex flex-col justify-between aspect-square"
-                    style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
-                  >
-                    <p className="text-[10px] sm:text-xs font-bold text-white/60 leading-tight uppercase tracking-wide">
-                      {ex.name}
-                    </p>
+              <div className="grid grid-cols-2 gap-2">
+                {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
+                  <div key={ex.key} className="rounded-xl p-2 bg-[#111] flex flex-col justify-between aspect-square min-h-0">
+                    <p className="text-[8px] font-bold text-white/60 leading-tight uppercase truncate">{ex.name}</p>
                     <div className="mt-auto">
-                      <p className="text-2xl sm:text-4xl font-black tabular-nums tracking-tighter text-white">
-                        {prs[ex.key]}
-                      </p>
-                      <p className="text-[8px] sm:text-[10px] font-mono text-white/30 uppercase tracking-widest">
-                        {ex.unit === 'seconds' ? 'Seconds' : 'Reps'}
-                      </p>
+                      <p className="text-xl font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>
+                      <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest mt-0.5">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</p>
                     </div>
                   </div>
                 ))}
@@ -118,47 +102,29 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
             </div>
           )}
 
-          {/* Recent sessions */}
+          {/* Recent Workouts - Compact List */}
           {recentSessions.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 px-1">
-                Recent Workouts
-              </p>
-              <div className="flex flex-col gap-3">
-                {recentSessions.map(([dateKey, session], i) => {
+            <div className="space-y-2">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-white/40 px-1">Recent</p>
+              <div className="flex flex-col gap-2">
+                {recentSessions.map(([dateKey, session]) => {
                   const wt = session.workout_type;
-                  const exercises =
-                    wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
-                  
+                  const exercises = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
                   const totalReps = exercises.reduce((sum, ex) => {
                     const reps = session[ex.key];
                     return sum + (reps ? reps.reduce((s, r) => s + r, 0) : 0);
                   }, 0);
-                  
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
-                    <div
-                      key={dateKey}
-                      className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#1A1A1A]"
-                      style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
-                    >
+                    <div key={dateKey} className="flex items-center justify-between p-2 rounded-xl bg-[#111]">
                       <div className="flex flex-col">
-                        <span className="text-[8px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mb-1">
-                          {format(displayDate, 'MMM d, EEE')}
-                        </span>
-                        <span className={cn('text-lg sm:text-2xl font-black uppercase tracking-tighter leading-none', TYPE_COLOR[wt])}>
-                          {wt}
-                        </span>
+                        <span className="text-[8px] text-white/40 uppercase tracking-widest font-mono mb-0.5">{format(displayDate, 'MMM d, EEE')}</span>
+                        <span className={cn('text-sm font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
                       </div>
-                      
                       <div className="text-right">
-                        <span className="text-xl sm:text-3xl font-black tabular-nums text-white leading-none">
-                          {totalReps}
-                        </span>
-                        <p className="text-[8px] sm:text-[10px] font-mono text-white/30 uppercase tracking-widest mt-1">
-                          TOTAL REPS
-                        </p>
+                        <span className="text-lg font-black tabular-nums text-white leading-none">{totalReps}</span>
+                        <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest mt-0.5">REPS</p>
                       </div>
                     </div>
                   );

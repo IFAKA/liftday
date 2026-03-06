@@ -56,7 +56,7 @@ export function NumberInput({
       timeoutRef.current = setTimeout(() => {
         intervalRef.current = setInterval(() => {
           updateValue(delta);
-        }, 50); // Fast increment once held
+        }, 80); // Slightly slower for better control on tiny screen
       }, 400); // 400ms delay to consider it a "hold"
     },
     [updateValue]
@@ -73,51 +73,41 @@ export function NumberInput({
   }, [stopAdjust]);
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-full flex-1 touch-none">
-      {/* Small top label */}
-      <span className="text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground/60 mb-2 sm:mb-8 font-mono absolute top-2 sm:top-4 z-10 pointer-events-none">
-        {label}
-      </span>
-
+    <div className="flex flex-col items-center justify-center w-full flex-1 relative min-h-0 touch-none">
       {/* Massive number in center */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-        <span className="font-mono font-black text-[80px] sm:text-[140px] tracking-tighter tabular-nums leading-none">
+      <div className="flex items-center justify-center pointer-events-none z-10 -mt-2">
+        <span className="font-mono font-black text-[100px] tracking-tighter tabular-nums leading-none">
           {value}
         </span>
       </div>
+      
+      {/* Label under number (very small) */}
+      <span className="text-[10px] uppercase tracking-widest text-white/40 font-mono -mt-1 z-10">
+        {label}
+      </span>
 
       {/* Split touch zones (Left = Minus, Right = Plus) */}
       <div className="absolute inset-0 flex z-20">
         <button
-          className="flex-1 h-full flex items-center justify-start pl-4 sm:pl-8 active:bg-white/5 transition-colors group"
-          onPointerDown={(e) => {
-            e.preventDefault();
-            startAdjust(-1);
-          }}
+          className="flex-1 h-full flex items-center justify-start pl-2 active:bg-white/5 transition-colors group"
+          onPointerDown={(e) => { e.preventDefault(); startAdjust(-1); }}
           onPointerUp={stopAdjust}
           onPointerCancel={stopAdjust}
-          onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long press
+          onContextMenu={(e) => e.preventDefault()}
           aria-label="Decrease"
         >
-          <div className="w-16 h-16 rounded-full flex items-center justify-center opacity-20 group-active:opacity-100 transition-opacity">
-            <Minus className="w-12 h-12 text-white" />
-          </div>
+          <Minus className="w-8 h-8 text-white opacity-20 group-active:opacity-100 transition-opacity" />
         </button>
 
         <button
-          className="flex-1 h-full flex items-center justify-end pr-4 sm:pr-8 active:bg-white/5 transition-colors group"
-          onPointerDown={(e) => {
-            e.preventDefault();
-            startAdjust(1);
-          }}
+          className="flex-1 h-full flex items-center justify-end pr-2 active:bg-white/5 transition-colors group"
+          onPointerDown={(e) => { e.preventDefault(); startAdjust(1); }}
           onPointerUp={stopAdjust}
           onPointerCancel={stopAdjust}
-          onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long press
+          onContextMenu={(e) => e.preventDefault()}
           aria-label="Increase"
         >
-          <div className="w-16 h-16 rounded-full flex items-center justify-center opacity-20 group-active:opacity-100 transition-opacity">
-            <Plus className="w-12 h-12 text-white" />
-          </div>
+          <Plus className="w-8 h-8 text-white opacity-20 group-active:opacity-100 transition-opacity" />
         </button>
       </div>
     </div>

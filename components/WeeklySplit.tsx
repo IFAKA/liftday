@@ -29,6 +29,8 @@ const WORKOUT_TYPE_LABELS: Record<WorkoutType, string> = {
   rest: 'REST',
 };
 
+import { TopBar } from './TopBar';
+
 export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
   useEffect(() => {
     const handlePopState = () => {
@@ -44,81 +46,68 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-black p-safe overflow-hidden relative">
-      <div
-        className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 pt-2 sm:pt-4 pb-2 shrink-0 z-10 bg-black"
-        style={{ animation: 'slide-down-in 260ms ease-out backwards' }}
-      >
-        <button
-          onClick={onBack}
-          className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center -ml-1 sm:-ml-3 rounded-full active:bg-white/10 text-white transition-colors"
-          aria-label="Back"
-        >
-          <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-        </button>
-        <div className="flex flex-col">
-          <h1 className="text-base sm:text-xl font-bold tracking-tight uppercase text-white leading-none">Schedule</h1>
-          <span className="text-[8px] sm:text-[10px] text-white/50 font-mono tracking-widest mt-0.5">
-            THIS WEEK
-          </span>
-        </div>
-      </div>
+    <div className="flex flex-col h-full bg-black overflow-hidden relative">
+      <TopBar
+        leftAction={
+          <button onClick={onBack} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        }
+        center={
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] font-bold uppercase tracking-tight text-white">Schedule</span>
+            <span className="text-[8px] text-white/40 font-mono tracking-widest -mt-0.5">THIS WEEK</span>
+          </div>
+        }
+      />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mask-fade-edges mt-4">
+      <div className="flex-1 overflow-y-auto px-2 pb-4 no-scrollbar mt-2">
         <div className="flex flex-col gap-2">
-        {days.map((day, i) => {
-          const workoutType = getWorkoutType(day);
-          const dateKey = formatDateKey(day);
-          const isCompleted = !!data[dateKey]?.logged_at;
-          const isToday = isSameDay(day, currentDate);
-          const dayName = format(day, 'EEE');
-          const dayNumber = format(day, 'd');
+          {days.map((day) => {
+            const workoutType = getWorkoutType(day);
+            const dateKey = formatDateKey(day);
+            const isCompleted = !!data[dateKey]?.logged_at;
+            const isToday = isSameDay(day, currentDate);
+            const dayName = format(day, 'EEE');
+            const dayNumber = format(day, 'd');
 
-          return (
-            <div
-              key={dateKey}
-              className={cn(
-                'flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-colors',
-                isToday ? 'bg-white/10 ring-1 ring-white/20' : 'bg-[#1A1A1A]',
-                isCompleted && 'opacity-50' // Dim days already done
-              )}
-              style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
-            >
-              <div className="flex flex-col">
-                <span className="text-[8px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mb-1">
-                  {dayName}, {dayNumber}
-                </span>
-                <span
-                  className={cn(
-                    'text-lg sm:text-2xl font-black uppercase tracking-tighter leading-none',
-                    WORKOUT_TYPE_COLORS[workoutType],
-                    isCompleted && 'text-white/40' // Override color if done
-                  )}
-                >
-                  {WORKOUT_TYPE_LABELS[workoutType]}
-                </span>
-              </div>
-              
-              <div className="text-right flex flex-col items-end justify-center">
-                {isCompleted ? (
-                  <span className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none mt-1">
-                    COMPLETED
-                  </span>
-                ) : (
-                  <span className="text-xl sm:text-3xl font-black tabular-nums text-white leading-none">
-                    --
-                  </span>
+            return (
+              <div
+                key={dateKey}
+                className={cn(
+                  'flex items-center justify-between p-2 rounded-xl transition-colors',
+                  isToday ? 'bg-white/10 ring-1 ring-white/20' : 'bg-[#111]',
+                  isCompleted && 'opacity-40'
                 )}
+              >
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-[8px] text-white/40 uppercase tracking-widest font-mono mb-0.5">
+                    {dayName}, {dayNumber}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-sm font-black uppercase tracking-tight leading-none truncate',
+                      WORKOUT_TYPE_COLORS[workoutType],
+                      isCompleted && 'text-white/40'
+                    )}
+                  >
+                    {WORKOUT_TYPE_LABELS[workoutType]}
+                  </span>
+                </div>
                 
-                {isToday && !isCompleted && workoutType !== 'rest' && (
-                  <span className="text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-widest mt-1 animate-pulse">
-                    YOUR TURN
-                  </span>
-                )}
+                <div className="flex flex-col items-end shrink-0 ml-2">
+                  {isCompleted ? (
+                    <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest leading-none">DONE</span>
+                  ) : (
+                    <span className="text-sm font-black tabular-nums text-white leading-none">--</span>
+                  )}
+                  {isToday && !isCompleted && workoutType !== 'rest' && (
+                    <span className="text-[7px] font-bold text-white uppercase tracking-widest mt-0.5 animate-pulse">TODAY</span>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
       </div>
     </div>

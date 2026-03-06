@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, TrendingUp, TrendingDown, ChevronLeft, Info } from 'lucide-react';
+import { X, ChevronLeft, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Exercise } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,8 @@ interface ExerciseScreenProps {
   onQuit: () => void;
 }
 
+import { TopBar } from './TopBar';
+
 export function ExerciseScreen({
   exercise,
   exerciseIndex,
@@ -41,9 +43,9 @@ export function ExerciseScreen({
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShowQuitConfirm(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVal(currentTarget);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShowQuitConfirm(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowTutorial(false);
   }, [exerciseIndex, currentSet, currentTarget]);
@@ -62,15 +64,14 @@ export function ExerciseScreen({
     return () => window.removeEventListener('popstate', handlePopState);
   }, [showTutorial]);
 
-  // Overall workout progress percentage
   const totalSets = totalExercises * setsPerExercise;
   const completedSets = exerciseIndex * setsPerExercise + currentSet;
   const progressPercent = (completedSets / totalSets) * 100;
 
   return (
-    <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col">
-      {/* Absolute Edge Progress Bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-50">
+    <div className="relative w-full h-full bg-black overflow-hidden flex flex-col">
+      {/* Subtle Progress Bar */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/10 z-50">
         <div
           className="h-full bg-white transition-all duration-500 ease-out"
           style={{ width: `${progressPercent}%` }}
@@ -85,38 +86,30 @@ export function ExerciseScreen({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-            className="absolute inset-0 z-40 bg-black flex flex-col p-safe"
+            className="absolute inset-0 z-40 bg-black flex flex-col"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
+            dragElastic={0.1}
             onDragEnd={(e, { offset, velocity }) => {
-              if (offset.x > 50 || velocity.x > 500) {
-                setShowTutorial(false);
-              }
+              if (offset.x > 30 || velocity.x > 400) setShowTutorial(false);
             }}
           >
-            {/* Tutorial Header */}
-            <div className="p-4 flex items-center shrink-0">
-              <button
-                onClick={() => setShowTutorial(false)}
-                className="w-12 h-12 flex items-center justify-center -ml-2 rounded-full active:bg-white/10 text-white transition-colors"
-                aria-label="Back to workout"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </button>
-            </div>
+            <TopBar
+              leftAction={
+                <button onClick={() => setShowTutorial(false)} className="p-2 -ml-2 text-white active:bg-white/10 rounded-full">
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              }
+              center={<span className="text-[10px] font-black uppercase tracking-tight truncate w-full text-center px-2">{exercise.name}</span>}
+            />
 
-            {/* Tutorial Content */}
-            <div className="flex-1 overflow-y-auto px-4 pb-8 flex flex-col items-center">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-6 text-center">
-                {exercise.name}
-              </h2>
+            <div className="flex-1 overflow-y-auto px-2 pb-4 flex flex-col items-center">
               {exercise.youtubeId && (
-                <div className="w-full max-w-md aspect-video mb-6 rounded-2xl overflow-hidden bg-white/5">
+                <div className="w-full aspect-video mb-3 rounded-lg overflow-hidden bg-white/5 shrink-0">
                   <ExerciseDemo youtubeId={exercise.youtubeId} title={exercise.name} />
                 </div>
               )}
-              <p className="text-sm text-white/70 text-center leading-relaxed">
+              <p className="text-[11px] text-white/70 text-center leading-snug">
                 {exercise.instruction}
               </p>
             </div>
@@ -124,85 +117,60 @@ export function ExerciseScreen({
         ) : (
           <motion.div
             key="logging"
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className={cn(
-              'absolute inset-0 flex flex-col items-center p-safe transition-colors duration-500',
+              'absolute inset-0 flex flex-col items-center transition-colors duration-500',
               flashColor === 'green' && 'bg-green-950/40',
               flashColor === 'red' && 'bg-red-950/40'
             )}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
+            dragElastic={0.1}
             onDragEnd={(e, { offset, velocity }) => {
-              if (offset.x < -50 || velocity.x < -500) {
-                setShowTutorial(true);
-              }
+              if (offset.x < -30 || velocity.x < -400) setShowTutorial(true);
             }}
           >
-            {/* Top Bar for Logging View */}
-            <div className="w-full flex justify-between items-start p-2 sm:p-4 shrink-0 mt-1 sm:mt-2">
-              <button
-                onClick={() => setShowQuitConfirm(true)}
-                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
-                aria-label="Quit workout"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              
-              <div className="flex flex-col items-center mt-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
-                  {exercise.name}
-                </span>
-                <span className="text-xs sm:text-sm font-black uppercase tracking-tighter text-white">
-                  SET {currentSet + 1} OF {setsPerExercise}
-                </span>
-              </div>
-
-              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center relative">
-                <button
-                  onClick={() => setShowTutorial(true)}
-                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-white/50 active:text-white transition-colors"
-                  aria-label="How to do this exercise"
-                >
-                  <Info className="w-5 h-5 sm:w-6 sm:h-6" />
+            <TopBar
+              leftAction={
+                <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
+                  <X className="w-5 h-5" />
                 </button>
-                {/* Swipe hint dot */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20 animate-pulse" />
-              </div>
-            </div>
+              }
+              center={
+                <div className="flex flex-col items-center">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/40 truncate w-24 text-center">{exercise.name}</span>
+                  <span className="text-[10px] font-black uppercase text-white -mt-0.5">SET {currentSet + 1}/{setsPerExercise}</span>
+                </div>
+              }
+              rightAction={
+                <button onClick={() => setShowTutorial(true)} className="p-2 -mr-2 text-white/50 active:text-white transition-colors">
+                  <Info className="w-5 h-5" />
+                </button>
+              }
+            />
 
-            {/* Core Input */}
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
               <NumberInput
                 key={`${exerciseIndex}-${currentSet}`}
                 defaultValue={currentTarget}
                 max={exercise.unit === 'seconds' ? 120 : 40}
-                label={exercise.unit === 'seconds' ? 'Seconds held' : 'Reps done'}
+                label={exercise.unit === 'seconds' ? 'Seconds' : 'Reps'}
                 onChange={setVal}
               />
 
-              {previousRep !== null && (
-                <div className="absolute bottom-8 flex items-center gap-2 text-white/50 bg-white/5 px-4 py-1.5 rounded-full">
-                  {flashColor === 'green' ? (
-                    <TrendingUp className="w-4 h-4 text-green-500" />
-                  ) : flashColor === 'red' ? (
-                    <TrendingDown className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <div className="w-4 h-px bg-white/50" />
-                  )}
-                  <span className="text-xs font-mono font-bold tracking-widest">{previousRep} PREV</span>
+              {previousRep !== null && !flashColor && (
+                <div className="absolute bottom-2 flex items-center gap-1.5 text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
+                  <span className="text-[9px] font-mono font-bold tracking-widest">{previousRep} PREV</span>
                 </div>
               )}
             </div>
 
-            {/* Bottom Action Button */}
-            <div className="w-full px-4 mb-4 shrink-0 z-10">
+            <div className="w-full px-2 pb-2 shrink-0 z-10">
               <Button
                 onClick={() => onLogSet(val)}
-                className="w-full h-[54px] sm:h-[68px] rounded-full text-xl sm:text-2xl font-black shadow-lg uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all"
+                className="w-full h-11 rounded-full text-lg font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all"
               >
                 LOG SET
               </Button>

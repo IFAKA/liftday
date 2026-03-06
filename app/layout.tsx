@@ -43,8 +43,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geist.variable} ${geistMono.variable} font-mono antialiased bg-[#000000] text-foreground`}>
-        <div className="w-full max-w-md mx-auto h-[100dvh] overflow-hidden bg-background relative shadow-2xl ring-1 ring-white/5 sm:rounded-3xl sm:h-[min(850px,100dvh)] sm:my-auto flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+      <body className={`${geist.variable} ${geistMono.variable} font-mono antialiased bg-black text-foreground overflow-hidden h-[100dvh]`}>
+        <div className="w-full h-full overflow-hidden bg-background relative flex flex-col p-safe">
           <WakeLockProvider>{children}</WakeLockProvider>
         </div>
       </body>

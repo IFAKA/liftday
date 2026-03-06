@@ -6,6 +6,7 @@ import { Play, Pause, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { REST_DURATION } from '@/lib/constants';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
+import { cn } from '@/lib/utils';
 
 interface RestTimerProps {
   seconds: number;
@@ -43,6 +44,8 @@ function cancelRestNotification() {
     restNotificationTimeout = null;
   }
 }
+
+import { TopBar } from './TopBar';
 
 export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, onUndo }: RestTimerProps) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
@@ -96,46 +99,35 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
   const progress = ((REST_DURATION - seconds) / REST_DURATION) * 100;
 
   return (
-    <div className="flex flex-col items-center justify-between h-[100dvh] bg-black p-safe relative overflow-hidden">
-      {/* Top Label */}
-      <div className="flex w-full justify-between items-center p-2 sm:p-4 z-10 shrink-0 mt-1 sm:mt-2">
-        <button
-          onClick={() => setShowQuitConfirm(true)}
-          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
-          aria-label="Quit workout"
-        >
-          <X className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-        <h2 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white/50 absolute left-1/2 -translate-x-1/2">
-          Resting
-        </h2>
-        <div className="w-8 h-8 sm:w-10 sm:h-10" /> {/* Spacer */}
-      </div>
+    <div className="flex flex-col items-center w-full h-full bg-black overflow-hidden relative">
+      <TopBar
+        leftAction={
+          <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        }
+        center={<span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Resting</span>}
+      />
 
       {/* Circular timer */}
-      <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square flex items-center justify-center shrink-0 min-h-0 my-auto">
+      <div className="relative w-full max-w-[140px] aspect-square flex items-center justify-center shrink-0 min-h-0 my-auto">
         <div
           className="absolute inset-0 rounded-full"
           style={{
             '--timer-progress': progress,
-            background: isPaused
-              ? `conic-gradient(from -90deg, rgba(255,255,255,1) calc(var(--timer-progress) * 1%), rgba(255,255,255,0.15) 0%)`
-              : `conic-gradient(from -90deg, rgba(255,255,255,1) calc(var(--timer-progress) * 1%), rgba(255,255,255,0.15) 0%)`,
-            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
-            mask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
+            background: `conic-gradient(from -90deg, rgba(255,255,255,1) calc(var(--timer-progress) * 1%), rgba(255,255,255,0.15) 0%)`,
+            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
+            mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
             transition: '--timer-progress 1s linear',
           } as CSSProperties}
         />
-        <div className="flex flex-col items-center justify-center mt-2">
+        <div className="flex flex-col items-center justify-center">
           <span
-            className={`font-mono font-black tabular-nums tracking-tighter transition-colors duration-300 ${
-              seconds <= 3 && seconds > 0
-                ? 'text-white text-6xl sm:text-8xl scale-110'
-                : isPaused
-                  ? 'text-white/40 text-[4rem] sm:text-[6rem]'
-                  : 'text-white text-[4rem] sm:text-[6rem]'
-            }`}
-             style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
+            className={cn(
+              "font-mono font-black tabular-nums tracking-tighter transition-all duration-300",
+              seconds <= 3 && seconds > 0 ? "text-white text-5xl scale-110" : "text-white text-4xl"
+            )}
+            style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
             key={seconds <= 3 ? seconds : 'normal'}
           >
             {display}
@@ -143,26 +135,26 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
           
           <button
             onClick={onPauseToggle}
-            className="mt-4 sm:mt-6 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
+            className="mt-2 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
           >
-            {isPaused ? <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" /> : <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />}
+            {isPaused ? <Play className="w-5 h-5 fill-current ml-0.5" /> : <Pause className="w-5 h-5 fill-current" />}
           </button>
         </div>
       </div>
 
       {/* Action buttons: undo · skip */}
-      <div className="w-full px-4 mb-4 z-10 shrink-0 flex gap-2 sm:gap-3">
+      <div className="w-full px-2 pb-2 mt-auto shrink-0 flex gap-2">
         <Button
           variant="outline"
           onClick={onUndo}
-          className="flex-1 rounded-full h-[54px] sm:h-[68px] text-base sm:text-xl font-black uppercase tracking-tight bg-[#1A1A1A] border-0 text-white hover:bg-[#2A2A2A] active:scale-95 transition-all"
+          className="flex-1 rounded-full h-11 text-sm font-black uppercase tracking-tight bg-[#1A1A1A] border-0 text-white active:scale-95 transition-all"
         >
           Undo
         </Button>
 
         <Button
           onClick={onSkip}
-          className="flex-[2] rounded-full h-[54px] sm:h-[68px] text-base sm:text-xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+          className="flex-[1.5] rounded-full h-11 text-sm font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
         >
           Skip
         </Button>
