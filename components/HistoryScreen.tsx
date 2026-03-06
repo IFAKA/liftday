@@ -1,13 +1,11 @@
 'use client';
 
 import { useMemo, useEffect } from 'react';
-import { ArrowLeft, Trophy } from 'lucide-react';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { format, startOfWeek, addDays, subWeeks } from 'date-fns';
+import { ChevronLeft, Trophy } from 'lucide-react';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkoutData, WorkoutType } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
-import { formatDateKey } from '@/lib/workout-utils';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -21,13 +19,7 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
   legs: 'text-green-400',
 };
 
-const TYPE_BG: Record<Exclude<WorkoutType, 'rest'>, string> = {
-  push: 'bg-orange-400/10',
-  pull: 'bg-blue-400/10',
-  legs: 'bg-green-400/10',
-};
-
-export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps) {
+export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   useEffect(() => {
     const handlePopState = () => {
       onBack();
@@ -47,7 +39,7 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
     return Object.entries(data)
       .filter(([, s]) => s.logged_at)
       .sort(([a], [b]) => b.localeCompare(a))
-      .slice(0, 8);
+      .slice(0, 15);
   }, [data]);
 
   const prs = useMemo(() => {
@@ -65,124 +57,61 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
     return result;
   }, [data]);
 
-  const weeklyData = useMemo(() => {
-    return Array.from({ length: 8 }, (_, i) => {
-      const offset = 7 - i;
-      const weekStart = startOfWeek(subWeeks(currentDate, offset), { weekStartsOn: 1 });
-      let sessions = 0;
-      for (let d = 0; d < 7; d++) {
-        const key = formatDateKey(addDays(weekStart, d));
-        if (data[key]?.logged_at) sessions++;
-      }
-      const label =
-        offset === 0 ? 'This' : offset === 1 ? 'Last' : format(weekStart, 'MMM d');
-      return { label, sessions };
-    });
-  }, [data, currentDate]);
-
   return (
-    <div className="flex flex-col h-[100dvh] bg-background p-6 overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-black p-safe overflow-hidden relative">
       <div
-        className="flex items-center gap-4 pt-2 shrink-0 mb-8"
+        className="flex items-center gap-4 px-4 pt-4 pb-2 shrink-0 z-10 bg-black"
         style={{ animation: 'slide-down-in 260ms ease-out backwards' }}
       >
         <button
           onClick={onBack}
-          className="flex items-center gap-4 p-2 -ml-2 rounded-xl hover:bg-muted active:scale-95 transition-all"
+          className="w-12 h-12 flex items-center justify-center -ml-3 rounded-full active:bg-white/10 text-white transition-colors"
+          aria-label="Back"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <h1 className="text-lg font-bold tracking-tight uppercase">History</h1>
+          <ChevronLeft className="w-8 h-8" />
         </button>
-        <span className="ml-auto text-sm text-muted-foreground font-mono">
-          {totalSessions} sessions
-        </span>
+        <div className="flex flex-col">
+          <h1 className="text-xl font-bold tracking-tight uppercase text-white leading-none">History</h1>
+          <span className="text-[10px] text-white/50 font-mono tracking-widest mt-0.5">
+            {totalSessions} SESSIONS
+          </span>
+        </div>
       </div>
 
       {totalSessions === 0 ? (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">No sessions yet. Start training!</p>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-white/40 text-sm uppercase tracking-widest font-bold">No sessions yet.</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0 space-y-8">
-          {/* Weekly consistency chart */}
-          <div className="space-y-3" style={{ animation: 'slide-up-in 260ms ease-out 80ms backwards' }}>
-            <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground/60">
-                Weekly Sessions
-              </p>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground/50">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-sm bg-foreground inline-block" />
-                  5+
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-sm bg-muted-foreground inline-block" />
-                  3–4
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-sm bg-muted inline-block" />
-                  1–2
-                </span>
-              </div>
-            </div>
-            <div className="h-32">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyData} barSize={20} margin={{ left: -20 }}>
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: 'hsl(var(--card))',
-                      border: 'none',
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                    formatter={(value: number | undefined) => [`${value ?? 0} sessions`, '']}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
-                    cursor={{ fill: 'hsl(var(--muted))' }}
-                  />
-                  <Bar dataKey="sessions" radius={[4, 4, 0, 0]}>
-                    {weeklyData.map((entry, i) => (
-                      <Cell
-                        key={i}
-                        fill={
-                          entry.sessions >= 5
-                            ? 'hsl(var(--foreground))'
-                            : entry.sessions >= 3
-                              ? 'hsl(var(--muted-foreground))'
-                              : 'hsl(var(--muted))'
-                        }
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Personal Records */}
+        <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mask-fade-edges mt-4">
+          
+          {/* Personal Records - High Contrast Blocks */}
           {Object.keys(prs).length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground/60">
-                  Personal Records
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <Trophy className="w-4 h-4 text-yellow-500" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+                  Best Sets
                 </p>
-                <Trophy className="w-3.5 h-3.5 text-yellow-500" />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {EXERCISES.filter((ex) => prs[ex.key]).map((ex, i) => (
                   <div
                     key={ex.key}
-                    className={cn('rounded-lg p-3', TYPE_BG[ex.workoutType])}
-                    style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${120 + i * 60}ms` }}
+                    className="rounded-2xl p-4 bg-[#1A1A1A] flex flex-col justify-between aspect-square"
+                    style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
                   >
-                    <p className="text-xs text-muted-foreground truncate">{ex.name}</p>
-                    <p className="text-2xl font-mono font-bold mt-0.5">{prs[ex.key]}</p>
-                    <p className="text-xs text-muted-foreground/60">best set</p>
+                    <p className="text-xs font-bold text-white/60 leading-tight uppercase tracking-wide">
+                      {ex.name}
+                    </p>
+                    <div className="mt-auto">
+                      <p className="text-4xl font-black tabular-nums tracking-tighter text-white">
+                        {prs[ex.key]}
+                      </p>
+                      <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
+                        {ex.unit === 'seconds' ? 'Seconds' : 'Reps'}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -192,65 +121,44 @@ export function HistoryScreen({ data, currentDate, onBack }: HistoryScreenProps)
           {/* Recent sessions */}
           {recentSessions.length > 0 && (
             <div className="space-y-3">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground/60">
-                Recent Sessions
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 px-1">
+                Recent Workouts
               </p>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-3">
                 {recentSessions.map(([dateKey, session], i) => {
                   const wt = session.workout_type;
                   const exercises =
-                    wt === 'push'
-                      ? PUSH_EXERCISES
-                      : wt === 'pull'
-                        ? PULL_EXERCISES
-                        : LEGS_EXERCISES;
+                    wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
+                  
                   const totalReps = exercises.reduce((sum, ex) => {
                     const reps = session[ex.key];
                     return sum + (reps ? reps.reduce((s, r) => s + r, 0) : 0);
                   }, 0);
+                  
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
                     <div
                       key={dateKey}
-                      className="flex items-center gap-3 px-3 py-3 rounded-lg bg-card/50"
-                      style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${100 + i * 60}ms` }}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-[#1A1A1A]"
+                      style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
                     >
-                      <div className="flex flex-col items-center min-w-[3rem]">
-                        <span className="text-xs text-muted-foreground uppercase">
-                          {format(displayDate, 'EEE')}
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono mb-1">
+                          {format(displayDate, 'MMM d, EEE')}
                         </span>
-                        <span className="text-sm font-mono">
-                          {format(displayDate, 'MMM d')}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span
-                          className={cn(
-                            'text-sm font-medium uppercase tracking-wider',
-                            TYPE_COLOR[wt]
-                          )}
-                        >
+                        <span className={cn('text-2xl font-black uppercase tracking-tighter leading-none', TYPE_COLOR[wt])}>
                           {wt}
                         </span>
-                        <div className="flex gap-2 flex-wrap mt-0.5">
-                          {exercises.map((ex) => {
-                            const reps = session[ex.key];
-                            if (!reps) return null;
-                            return (
-                              <span
-                                key={ex.key}
-                                className="text-xs font-mono text-muted-foreground"
-                              >
-                                {reps.join('·')}
-                              </span>
-                            );
-                          })}
-                        </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-lg font-mono font-bold">{totalReps}</span>
-                        <p className="text-xs text-muted-foreground">reps</p>
+                      
+                      <div className="text-right">
+                        <span className="text-3xl font-black tabular-nums text-white leading-none">
+                          {totalReps}
+                        </span>
+                        <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest mt-1">
+                          TOTAL REPS
+                        </p>
                       </div>
                     </div>
                   );

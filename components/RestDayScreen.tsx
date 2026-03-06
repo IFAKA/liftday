@@ -1,6 +1,6 @@
 'use client';
 
-import { Moon, Play, Calendar } from 'lucide-react';
+import { Moon, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { MobilityFlow } from './MobilityFlow';
 import { SessionComplete } from './SessionComplete';
@@ -61,30 +61,28 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-[100dvh] bg-background p-6 gap-8 overflow-hidden">
-      <Moon className="w-12 h-12 text-muted-foreground" />
-      <h1 className="text-2xl font-bold tracking-tight">REST DAY</h1>
+    <div className="flex flex-col items-center justify-center h-[100dvh] bg-black p-safe relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center w-full">
+        <Moon className="w-20 h-20 text-white/30 mb-8" />
+        <h1 className="text-[64px] sm:text-[80px] font-black tracking-tighter uppercase text-white leading-none mb-4 text-center">
+          REST
+        </h1>
+        {nextTraining && (
+          <p className="text-sm font-bold text-white/40 uppercase tracking-widest mt-2 px-6 text-center">
+            NEXT: {nextTraining}
+          </p>
+        )}
+      </div>
 
-      <Button
-        size="lg"
-        onClick={mobility.startMobility}
-        className="rounded-full w-16 h-16 animate-pulse active:scale-95 transition-transform"
-      >
-        <Play className="w-8 h-8" />
-      </Button>
-      <p className="text-xs text-muted-foreground">5 MIN MOBILITY</p>
-
-      {nextTraining && (
-        <p className="text-sm text-muted-foreground mt-4">
-          NEXT: {nextTraining}
-        </p>
-      )}
-
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Calendar className="w-4 h-4" />
-        <span className="text-sm font-mono">
-          {weekCompleted}/{weekTotal} this week
-        </span>
+      <div className="w-full absolute bottom-8 px-4 z-10">
+        <Button
+          size="lg"
+          onClick={mobility.startMobility}
+          className="w-full h-[68px] rounded-full text-xl font-black uppercase tracking-tight bg-[#1A1A1A] text-white hover:bg-[#2A2A2A] active:scale-95 transition-all shadow-lg border border-white/10"
+        >
+          <Play className="w-5 h-5 mr-3 fill-current" />
+          5 MIN MOBILITY
+        </Button>
       </div>
     </div>
   );

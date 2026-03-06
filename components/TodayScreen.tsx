@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Dumbbell, Play, CheckCircle, Flame, ChartBar } from 'lucide-react';
+import { Dumbbell, CheckCircle, Flame, ChartBar, CalendarDays, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
@@ -25,9 +25,11 @@ export function TodayScreen() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
     if (!hasSeenOnboarding) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowOnboarding(true);
     }
   }, []);
@@ -49,8 +51,8 @@ export function TodayScreen() {
 
   if (!today) {
     return (
-      <div className="flex items-center justify-center h-[100dvh] bg-background">
-        <Dumbbell className="w-8 h-8 animate-pulse" />
+      <div className="flex items-center justify-center h-[100dvh] bg-black">
+        <Dumbbell className="w-8 h-8 text-white/50 animate-pulse" />
       </div>
     );
   }
@@ -63,12 +65,13 @@ function TodayContent({ date }: { date: Date }) {
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
   const firstSession = getFirstSessionDate();
-  const weekNumber = getWeekNumber(firstSession, date);
   const workoutType = getWorkoutType(date);
   const streak = getTrainingStreak(date, workout.data);
+  
   const [showHistory, setShowHistory] = useState(false);
+  const [showSplit, setShowSplit] = useState(false);
 
-  // History screen
+  // History screen overlay
   if (showHistory) {
     return (
       <HistoryScreen
@@ -76,6 +79,26 @@ function TodayContent({ date }: { date: Date }) {
         currentDate={date}
         onBack={() => setShowHistory(false)}
       />
+    );
+  }
+
+  // Weekly Split screen overlay
+  if (showSplit) {
+    return (
+      <div className="flex flex-col h-[100dvh] bg-black p-4">
+        <div className="flex items-center gap-4 shrink-0 mb-6 mt-2">
+          <button
+            onClick={() => setShowSplit(false)}
+            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-all"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-xl font-bold tracking-tight uppercase text-white">Schedule</h1>
+        </div>
+        <div className="flex-1 overflow-y-auto no-scrollbar mask-fade-edges pb-8">
+          <WeeklySplit currentDate={date} data={workout.data} />
+        </div>
+      </div>
     );
   }
 
@@ -146,83 +169,91 @@ function TodayContent({ date }: { date: Date }) {
 
   // Idle — ready to start (or already done today)
   const isDone = schedule.isDone;
+  
   return (
-    <div className="flex flex-col h-[100dvh] overflow-hidden bg-background relative p-4 pt-2 pb-6">
-      {/* Top content */}
-      <div className="flex flex-col items-center flex-shrink-0 w-full gap-4 mt-2">
-        {/* History button top-right */}
-        <div className="absolute top-2 right-2 z-20">
-          <button
-            onClick={() => setShowHistory(true)}
-            className="p-2 rounded-full hover:bg-muted active:scale-95 transition-all text-muted-foreground/60 hover:text-foreground"
-            aria-label="View history"
-          >
-            <ChartBar className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-black relative">
+      <div className="flex-1 flex flex-col justify-center items-center px-4 w-full">
+        {/* Date / Top Info */}
+        <p className="text-[12px] font-mono text-white/50 uppercase tracking-widest mb-2">
+          {formatDisplayDate(date)}
+        </p>
 
-        <div className="flex flex-col items-center gap-1.5 text-center">
-          {isDone ? (
-            <CheckCircle
-              className="w-10 h-10 text-green-500 mb-1"
-              style={{ animation: 'bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards' }}
-            />
-          ) : (
-            <div className="relative mb-1">
-              <Dumbbell
-                className="w-10 h-10 text-foreground"
-                style={{ animation: 'bounce-in 600ms ease-out backwards' }}
-              />
-            </div>
-          )}
-          <h1 className="text-xl font-black tracking-tighter uppercase text-foreground leading-none">
+        {/* Day Type (Massive checkmark if done) */}
+        {isDone ? (
+          <div className="flex flex-col items-center">
+            <CheckCircle className="w-24 h-24 text-green-500 mb-4" />
+            <h1 className="text-4xl font-black tracking-tighter uppercase text-white leading-none">
+              DONE
+            </h1>
+          </div>
+        ) : (
+          <h1 className="text-[64px] font-black tracking-tighter uppercase text-white leading-none mb-4">
             {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
           </h1>
-          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-mono font-medium">{formatDisplayDate(date)}</p>
-        </div>
-
-        <div
-          className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-mono font-bold uppercase tracking-wider"
-          style={{ animation: 'stagger-in 400ms ease-out 200ms backwards' }}
-        >
-          <span>WK {weekNumber}</span>
-          <span className="opacity-30">|</span>
-          <span>{workout.setsPerExercise} SETS</span>
-          {streak > 0 && (
-            <>
-              <span className="opacity-30">|</span>
-              <div className="flex items-center gap-1">
-                <Flame className="w-3 h-3 text-orange-500" />
-                <span className="text-orange-500">{streak}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        {!isDone && (
-          <div className="flex flex-col items-center gap-4 mt-2 mb-2">
-            <Button
-              size="lg"
-              onClick={workout.startWorkout}
-              className="rounded-full w-24 h-24 shadow-xl active:scale-[0.98] transition-all bg-foreground text-background hover:bg-foreground/90 border-0"
-            >
-              <Play className="w-12 h-12 fill-current ml-1" />
-            </Button>
-            {streak > 0 && (
-              <div className="flex flex-col items-center animate-pulse">
-                <p className="text-[10px] text-orange-500/80 font-black tracking-[0.2em] uppercase">
-                  STREAK AT RISK
-                </p>
-              </div>
-            )}
+        )}
+        
+        {/* Streak indicator if applicable */}
+        {!isDone && streak > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 mt-2">
+            <Flame className="w-3.5 h-3.5 text-orange-500" />
+            <span className="text-xs font-bold text-orange-500">{streak}</span>
           </div>
         )}
       </div>
 
-      {/* Weekly Split — scrollable, more compact for watch */}
-      <div className="flex-1 overflow-y-auto w-full max-w-sm mx-auto no-scrollbar mask-fade-edges">
-        <WeeklySplit currentDate={date} data={workout.data} />
-      </div>
+      {/* Primary Action Button (Edge-to-edge Pill) */}
+      {!isDone && (
+        <div className="w-full absolute bottom-8 px-4 z-10">
+          <Button
+            size="lg"
+            onClick={workout.startWorkout}
+            className="w-full h-[68px] rounded-full bg-white text-black hover:bg-white/90 active:scale-95 transition-all text-2xl font-black uppercase tracking-tight shadow-lg"
+          >
+            Start
+          </Button>
+        </div>
+      )}
+
+      {/* Secondary Actions (Top Corners for Watch) */}
+      {!isDone && (
+        <>
+          <div className="absolute top-6 left-4 z-20">
+            <button
+              onClick={() => setShowSplit(true)}
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
+              aria-label="Weekly Split"
+            >
+              <CalendarDays className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="absolute top-6 right-4 z-20">
+            <button
+              onClick={() => setShowHistory(true)}
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
+              aria-label="History"
+            >
+              <ChartBar className="w-4 h-4" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {isDone && (
+        <div className="w-full absolute bottom-8 px-4 flex justify-center gap-6">
+          <button
+            onClick={() => setShowSplit(true)}
+            className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors flex-col gap-1"
+          >
+            <CalendarDays className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => setShowHistory(true)}
+            className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors flex-col gap-1"
+          >
+            <ChartBar className="w-6 h-6" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

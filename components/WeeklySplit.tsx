@@ -1,7 +1,7 @@
 'use client';
 
 import { startOfWeek, addDays, isSameDay, format } from 'date-fns';
-import { CheckCircle2, Circle, Dumbbell } from 'lucide-react';
+import { Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getWorkoutType } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
@@ -16,7 +16,7 @@ const WORKOUT_TYPE_COLORS: Record<WorkoutType, string> = {
   push: 'text-orange-400',
   pull: 'text-blue-400',
   legs: 'text-green-400',
-  rest: 'text-muted-foreground/40',
+  rest: 'text-white/20',
 };
 
 const WORKOUT_TYPE_LABELS: Record<WorkoutType, string> = {
@@ -31,13 +31,15 @@ export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-2">
-      <div className="flex items-center justify-between text-xs text-muted-foreground/60 uppercase tracking-widest mb-3">
-        <span>This Week</span>
-        <Dumbbell className="w-3.5 h-3.5" />
+    <div className="w-full flex flex-col space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+          This Week
+        </span>
+        <Dumbbell className="w-3.5 h-3.5 text-white/30" />
       </div>
 
-      <div className="space-y-1">
+      <div className="flex flex-col gap-2">
         {days.map((day, i) => {
           const workoutType = getWorkoutType(day);
           const dateKey = formatDateKey(day);
@@ -50,41 +52,39 @@ export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
             <div
               key={dateKey}
               className={cn(
-                'flex items-center justify-between px-3 py-2 rounded-lg transition-colors',
-                isToday && 'bg-muted/50',
-                !isToday && 'opacity-60'
+                'flex items-center justify-between px-4 py-3 rounded-2xl transition-colors',
+                isToday ? 'bg-white/10 ring-1 ring-white/20' : 'bg-[#1A1A1A]',
+                isCompleted && 'opacity-50' // Dim days already done
               )}
-              style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 60}ms` }}
+              style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
             >
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col items-center min-w-[3rem]">
-                  <span className="text-xs text-muted-foreground uppercase">{dayName}</span>
-                  <span className="text-sm font-mono">{dayNumber}</span>
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center justify-center w-10">
+                  <span className="text-[10px] text-white/50 uppercase tracking-widest">{dayName}</span>
+                  <span className="text-xl font-black tabular-nums text-white leading-none mt-0.5">{dayNumber}</span>
                 </div>
 
-                <div className="flex flex-col">
+                <div className="flex flex-col justify-center border-l border-white/10 pl-4 h-10">
                   <span
                     className={cn(
-                      'text-sm font-medium uppercase tracking-wider',
-                      WORKOUT_TYPE_COLORS[workoutType]
+                      'text-lg font-black uppercase tracking-tight leading-none',
+                      WORKOUT_TYPE_COLORS[workoutType],
+                      isCompleted && 'text-white/40' // Override color if done
                     )}
                   >
                     {WORKOUT_TYPE_LABELS[workoutType]}
                   </span>
-                  {workoutType !== 'rest' && (
-                    <span className="text-xs text-muted-foreground/60">
-                      4 exercises
+                  {isCompleted && (
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
+                      COMPLETED
+                    </span>
+                  )}
+                  {isToday && !isCompleted && workoutType !== 'rest' && (
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest mt-1 animate-pulse">
+                      YOUR TURN
                     </span>
                   )}
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {isCompleted ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                ) : workoutType !== 'rest' ? (
-                  <Circle className="w-5 h-5 text-muted-foreground/30" />
-                ) : null}
               </div>
             </div>
           );
