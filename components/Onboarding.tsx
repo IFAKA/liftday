@@ -98,19 +98,19 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
             className="flex flex-col items-center text-center w-full"
           >
-            <div className="p-4 bg-white/5 rounded-full mb-4">
-              <Icon className="w-10 h-10 text-white" />
+            <div className="mb-2">
+              <Icon className="w-8 h-8 text-white" />
             </div>
 
-            <h1 className="text-[28px] font-black uppercase tracking-tight text-white mb-2 leading-none">
+            <h1 className="text-xl font-black uppercase tracking-tight text-white mb-1 leading-none">
               {currentStep.title}
             </h1>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
               {currentStep.description.map((line, i) => (
                 <p
                   key={i}
-                  className="text-[11px] font-bold text-white/50 uppercase tracking-widest"
+                  className="text-[9px] font-bold text-white/40 uppercase tracking-widest"
                 >
                   {line}
                 </p>
@@ -120,13 +120,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </AnimatePresence>
       </div>
 
-      <div className="w-full px-2 pb-2 shrink-0 flex flex-col items-center gap-3">
-        <div className="flex gap-1.5">
+      <div className="w-full px-2 pb-1 shrink-0 flex flex-col items-center gap-2">
+        <div className="flex gap-1">
           {steps.map((_, i) => (
             <div
               key={i}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === step ? 'w-4 bg-white' : 'w-1 bg-white/20'
+              className={`h-0.5 rounded-full transition-all duration-300 ${
+                i === step ? 'w-3 bg-white' : 'w-0.5 bg-white/20'
               }`}
             />
           ))}
@@ -134,7 +134,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
         <Button
           onClick={handleNext}
-          className="w-full h-11 rounded-full text-lg font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
+          className="w-full h-9 rounded-full text-[10px] font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
         >
           {currentStep.action}
         </Button>
