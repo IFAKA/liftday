@@ -151,31 +151,31 @@ export function MobilityFlow({
             }}
           >
             {/* Top Bar */}
-            <div className="w-full flex justify-between items-start p-4 shrink-0 mt-2">
+            <div className="w-full flex justify-between items-start p-2 sm:p-4 shrink-0 mt-1 sm:mt-2">
               <button
                 onClick={() => setShowQuitConfirm(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
+                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
                 aria-label="Quit mobility"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               <div className="flex flex-col items-center mt-1">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
                   {exerciseIndex + 1} OF {totalExercises}
                 </span>
-                <span className="text-sm font-black uppercase tracking-tighter text-white">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-tighter text-white">
                   {side ? `${side} SIDE` : 'MOBILITY'}
                 </span>
               </div>
 
-              <div className="w-10 h-10 flex items-center justify-center relative">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center relative">
                 <button
                   onClick={() => setShowTutorial(true)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full text-white/50 active:text-white transition-colors"
+                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-white/50 active:text-white transition-colors"
                   aria-label="How to do this exercise"
                 >
-                  <Info className="w-6 h-6" />
+                  <Info className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
                 {/* Swipe hint dot */}
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20 animate-pulse" />
@@ -184,13 +184,13 @@ export function MobilityFlow({
 
             {/* Core Display */}
             <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 px-4">
-              <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white/70 text-center mb-6">
+              <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-white/70 text-center mb-2 sm:mb-6">
                 {exercise.name}
               </h1>
 
               <div className="flex items-center justify-center relative">
                 <span
-                  className={`text-[120px] sm:text-[140px] font-mono leading-none font-black tabular-nums transition-opacity duration-300 ${
+                  className={`text-[80px] sm:text-[140px] font-mono leading-none font-black tabular-nums transition-opacity duration-300 ${
                     isPaused ? 'opacity-40 text-white' : 'text-white'
                   }`}
                 >
@@ -200,21 +200,21 @@ export function MobilityFlow({
             </div>
 
             {/* Bottom Action Buttons */}
-            <div className="w-full px-4 mb-8 shrink-0 flex gap-3 mt-auto">
+            <div className="w-full px-4 mb-4 sm:mb-8 shrink-0 flex gap-2 sm:gap-3 mt-auto">
               <Button
                 variant="outline"
                 onClick={isPaused ? onResume : onPause}
-                className="flex-1 rounded-full h-[68px] text-lg font-black uppercase tracking-tight bg-[#1A1A1A] border-0 text-white hover:bg-[#2A2A2A] active:scale-95 transition-all"
+                className="flex-1 rounded-full h-[54px] sm:h-[68px] text-sm sm:text-lg font-black uppercase tracking-tight bg-[#1A1A1A] border-0 text-white hover:bg-[#2A2A2A] active:scale-95 transition-all"
               >
-                {isPaused ? <Play className="w-6 h-6 mr-2 fill-current" /> : <Pause className="w-6 h-6 mr-2 fill-current" />}
+                {isPaused ? <Play className="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 fill-current" /> : <Pause className="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 fill-current" />}
                 {isPaused ? 'Resume' : 'Pause'}
               </Button>
 
               <Button
                 onClick={onSkip}
-                className="flex-[1.5] rounded-full h-[68px] text-lg font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+                className="flex-[1.5] rounded-full h-[54px] sm:h-[68px] text-sm sm:text-lg font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
               >
-                <SkipForward className="w-6 h-6 mr-2 fill-current" />
+                <SkipForward className="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 fill-current" />
                 Skip
               </Button>
             </div>

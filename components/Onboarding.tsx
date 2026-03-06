@@ -70,14 +70,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div className="flex flex-col items-center justify-center flex-1 px-6 w-full max-w-sm">
         <Icon
           key={`icon-${step}`}
-          className="w-24 h-24 sm:w-32 sm:h-32 text-white mb-8"
+          className="w-16 h-16 sm:w-32 sm:h-32 text-white mb-4 sm:mb-8"
           style={{ animation: 'bounce-in 400ms ease-out backwards' }}
         />
 
         <div className="text-center w-full">
           <h1
             key={`title-${step}`}
-            className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white mb-6"
+            className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white mb-3 sm:mb-6"
             style={{ animation: 'slide-up-in 300ms ease-out 100ms backwards' }}
           >
             {currentStep.title}
@@ -99,13 +99,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
       </div>
 
-      <div className="w-full px-4 mb-8 shrink-0 flex flex-col items-center gap-6">
+      <div className="w-full px-4 mb-4 sm:mb-8 shrink-0 flex flex-col items-center gap-4 sm:gap-6">
         <div className="flex gap-2">
           {steps.map((_, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step ? 'w-8 bg-white' : 'w-2 bg-white/20'
+                i === step ? 'w-6 sm:w-8 bg-white' : 'w-1.5 sm:w-2 bg-white/20'
               }`}
             />
           ))}
@@ -113,7 +113,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
         <Button
           onClick={handleNext}
-          className="w-full h-[68px] rounded-full text-2xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+          className="w-full h-[54px] sm:h-[68px] rounded-full text-xl sm:text-2xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
         >
           {currentStep.action}
         </Button>

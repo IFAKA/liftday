@@ -143,31 +143,31 @@ export function ExerciseScreen({
             }}
           >
             {/* Top Bar for Logging View */}
-            <div className="w-full flex justify-between items-start p-4 shrink-0 mt-2">
+            <div className="w-full flex justify-between items-start p-2 sm:p-4 shrink-0 mt-1 sm:mt-2">
               <button
                 onClick={() => setShowQuitConfirm(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
+                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
                 aria-label="Quit workout"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               <div className="flex flex-col items-center mt-1">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
                   {exercise.name}
                 </span>
-                <span className="text-sm font-black uppercase tracking-tighter text-white">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-tighter text-white">
                   SET {currentSet + 1} OF {setsPerExercise}
                 </span>
               </div>
 
-              <div className="w-10 h-10 flex items-center justify-center relative">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center relative">
                 <button
                   onClick={() => setShowTutorial(true)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full text-white/50 active:text-white transition-colors"
+                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-white/50 active:text-white transition-colors"
                   aria-label="How to do this exercise"
                 >
-                  <Info className="w-6 h-6" />
+                  <Info className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
                 {/* Swipe hint dot */}
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20 animate-pulse" />
@@ -199,10 +199,10 @@ export function ExerciseScreen({
             </div>
 
             {/* Bottom Action Button */}
-            <div className="w-full px-4 mb-4 shrink-0">
+            <div className="w-full px-4 mb-4 shrink-0 z-10">
               <Button
                 onClick={() => onLogSet(val)}
-                className="w-full h-[68px] rounded-full text-2xl font-black shadow-lg uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all"
+                className="w-full h-[54px] sm:h-[68px] rounded-full text-xl sm:text-2xl font-black shadow-lg uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all"
               >
                 LOG SET
               </Button>

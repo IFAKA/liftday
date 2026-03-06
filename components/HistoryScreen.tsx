@@ -60,19 +60,19 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   return (
     <div className="flex flex-col h-[100dvh] bg-black p-safe overflow-hidden relative">
       <div
-        className="flex items-center gap-4 px-4 pt-4 pb-2 shrink-0 z-10 bg-black"
+        className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 pt-2 sm:pt-4 pb-2 shrink-0 z-10 bg-black"
         style={{ animation: 'slide-down-in 260ms ease-out backwards' }}
       >
         <button
           onClick={onBack}
-          className="w-12 h-12 flex items-center justify-center -ml-3 rounded-full active:bg-white/10 text-white transition-colors"
+          className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center -ml-1 sm:-ml-3 rounded-full active:bg-white/10 text-white transition-colors"
           aria-label="Back"
         >
-          <ChevronLeft className="w-8 h-8" />
+          <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
         </button>
         <div className="flex flex-col">
-          <h1 className="text-xl font-bold tracking-tight uppercase text-white leading-none">History</h1>
-          <span className="text-[10px] text-white/50 font-mono tracking-widest mt-0.5">
+          <h1 className="text-base sm:text-xl font-bold tracking-tight uppercase text-white leading-none">History</h1>
+          <span className="text-[8px] sm:text-[10px] text-white/50 font-mono tracking-widest mt-0.5">
             {totalSessions} SESSIONS
           </span>
         </div>
@@ -98,17 +98,17 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                 {EXERCISES.filter((ex) => prs[ex.key]).map((ex, i) => (
                   <div
                     key={ex.key}
-                    className="rounded-2xl p-4 bg-[#1A1A1A] flex flex-col justify-between aspect-square"
+                    className="rounded-xl sm:rounded-2xl p-3 sm:p-4 bg-[#1A1A1A] flex flex-col justify-between aspect-square"
                     style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
                   >
-                    <p className="text-xs font-bold text-white/60 leading-tight uppercase tracking-wide">
+                    <p className="text-[10px] sm:text-xs font-bold text-white/60 leading-tight uppercase tracking-wide">
                       {ex.name}
                     </p>
                     <div className="mt-auto">
-                      <p className="text-4xl font-black tabular-nums tracking-tighter text-white">
+                      <p className="text-2xl sm:text-4xl font-black tabular-nums tracking-tighter text-white">
                         {prs[ex.key]}
                       </p>
-                      <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
+                      <p className="text-[8px] sm:text-[10px] font-mono text-white/30 uppercase tracking-widest">
                         {ex.unit === 'seconds' ? 'Seconds' : 'Reps'}
                       </p>
                     </div>
@@ -140,23 +140,23 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   return (
                     <div
                       key={dateKey}
-                      className="flex items-center justify-between p-4 rounded-2xl bg-[#1A1A1A]"
+                      className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#1A1A1A]"
                       style={{ animation: 'stagger-in 260ms ease-out backwards', animationDelay: `${i * 40}ms` }}
                     >
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono mb-1">
+                        <span className="text-[8px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mb-1">
                           {format(displayDate, 'MMM d, EEE')}
                         </span>
-                        <span className={cn('text-2xl font-black uppercase tracking-tighter leading-none', TYPE_COLOR[wt])}>
+                        <span className={cn('text-lg sm:text-2xl font-black uppercase tracking-tighter leading-none', TYPE_COLOR[wt])}>
                           {wt}
                         </span>
                       </div>
                       
                       <div className="text-right">
-                        <span className="text-3xl font-black tabular-nums text-white leading-none">
+                        <span className="text-xl sm:text-3xl font-black tabular-nums text-white leading-none">
                           {totalReps}
                         </span>
-                        <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest mt-1">
+                        <p className="text-[8px] sm:text-[10px] font-mono text-white/30 uppercase tracking-widest mt-1">
                           TOTAL REPS
                         </p>
                       </div>

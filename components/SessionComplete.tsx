@@ -33,25 +33,25 @@ export function SessionComplete(props: SessionCompleteProps) {
       {/* Center Content */}
       <div className="flex flex-col items-center justify-center w-full max-w-sm px-4 flex-1">
         <CheckCircle2
-          className="w-32 h-32 sm:w-40 sm:h-40 text-green-500 mb-8"
+          className="w-24 h-24 sm:w-40 sm:h-40 text-green-500 mb-4 sm:mb-8"
           style={{ animation: 'bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) 100ms backwards' }}
         />
         
         <h1
-          className="text-xl sm:text-2xl font-bold tracking-[0.2em] uppercase text-white/50 mb-2"
+          className="text-lg sm:text-2xl font-bold tracking-[0.2em] uppercase text-white/50 mb-1 sm:mb-2 text-center"
           style={{ animation: 'slide-up-in 300ms ease-out 200ms backwards' }}
         >
           {isWorkout ? 'SUMMARY' : 'MOBILITY DONE'}
         </h1>
         
         <p
-          className="text-[80px] sm:text-[100px] leading-none font-black tracking-tighter tabular-nums text-white text-center"
+          className="text-[64px] sm:text-[100px] leading-none font-black tracking-tighter tabular-nums text-white text-center"
           style={{ animation: 'slide-up-in 300ms ease-out 280ms backwards' }}
         >
           {isWorkout ? totalReps : `${mobilityProps?.weekCompleted}/${mobilityProps?.weekTotal}`}
         </p>
         <p
-          className="text-lg sm:text-xl font-bold tracking-[0.1em] uppercase text-white/30 mt-2"
+          className="text-sm sm:text-xl font-bold tracking-[0.1em] uppercase text-white/30 mt-1 sm:mt-2 text-center"
           style={{ animation: 'slide-up-in 300ms ease-out 360ms backwards' }}
         >
           {isWorkout ? 'TOTAL REPS' : 'DAYS'}
@@ -68,10 +68,10 @@ export function SessionComplete(props: SessionCompleteProps) {
       </div>
 
       {/* Primary Action Button (Edge-to-edge Pill) */}
-      <div className="w-full absolute bottom-8 px-4 z-10">
+      <div className="w-full absolute bottom-4 sm:bottom-8 px-4 z-10">
         <Button
           onClick={props.onDone}
-          className="w-full h-[68px] rounded-full text-2xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+          className="w-full h-[54px] sm:h-[68px] rounded-full text-xl sm:text-2xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
           style={{ animation: 'slide-up-in 300ms ease-out 500ms backwards' }}
         >
           DONE

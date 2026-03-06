@@ -172,29 +172,29 @@ function TodayContent({ date }: { date: Date }) {
   
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-black relative">
-      <div className="flex-1 flex flex-col justify-center items-center px-4 w-full">
+      <div className="flex-1 flex flex-col justify-center items-center px-2 w-full">
         {/* Date / Top Info */}
-        <p className="text-[12px] font-mono text-white/50 uppercase tracking-widest mb-2">
+        <p className="text-[10px] sm:text-[12px] font-mono font-bold text-white/50 uppercase tracking-widest mb-1 sm:mb-2 text-center mt-2 sm:mt-0">
           {formatDisplayDate(date)}
         </p>
 
         {/* Day Type (Massive checkmark if done) */}
         {isDone ? (
           <div className="flex flex-col items-center">
-            <CheckCircle className="w-24 h-24 text-green-500 mb-4" />
-            <h1 className="text-4xl font-black tracking-tighter uppercase text-white leading-none">
+            <CheckCircle className="w-16 h-16 sm:w-24 sm:h-24 text-green-500 mb-2 sm:mb-4" />
+            <h1 className="text-[40px] sm:text-[64px] font-black tracking-tighter uppercase text-white leading-none">
               DONE
             </h1>
           </div>
         ) : (
-          <h1 className="text-[64px] font-black tracking-tighter uppercase text-white leading-none mb-4">
+          <h1 className="text-[52px] sm:text-[64px] font-black tracking-tighter uppercase text-white leading-none -mt-1 sm:-mt-0">
             {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
           </h1>
         )}
         
         {/* Streak indicator if applicable */}
         {!isDone && streak > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 mt-2">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 mt-1 sm:mt-2">
             <Flame className="w-3.5 h-3.5 text-orange-500" />
             <span className="text-xs font-bold text-orange-500">{streak}</span>
           </div>
@@ -203,11 +203,11 @@ function TodayContent({ date }: { date: Date }) {
 
       {/* Primary Action Button (Edge-to-edge Pill) */}
       {!isDone && (
-        <div className="w-full absolute bottom-8 px-4 z-10">
+        <div className="w-full absolute bottom-4 sm:bottom-8 px-4 z-10">
           <Button
             size="lg"
             onClick={workout.startWorkout}
-            className="w-full h-[68px] rounded-full bg-white text-black hover:bg-white/90 active:scale-95 transition-all text-2xl font-black uppercase tracking-tight shadow-lg"
+            className="w-full h-[54px] sm:h-[68px] rounded-full bg-white text-black hover:bg-white/90 active:scale-95 transition-all text-xl sm:text-2xl font-black uppercase tracking-tight shadow-lg"
           >
             Start
           </Button>
@@ -217,40 +217,40 @@ function TodayContent({ date }: { date: Date }) {
       {/* Secondary Actions (Top Corners for Watch) */}
       {!isDone && (
         <>
-          <div className="absolute top-6 left-4 z-20">
+          <div className="absolute top-4 sm:top-6 left-3 sm:left-4 z-20">
             <button
               onClick={() => setShowSplit(true)}
-              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
               aria-label="Weekly Split"
             >
-              <CalendarDays className="w-4 h-4" />
+              <CalendarDays className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
           </div>
-          <div className="absolute top-6 right-4 z-20">
+          <div className="absolute top-4 sm:top-6 right-3 sm:right-4 z-20">
             <button
               onClick={() => setShowHistory(true)}
-              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
               aria-label="History"
             >
-              <ChartBar className="w-4 h-4" />
+              <ChartBar className="w-4 h-4 sm:w-4 sm:h-4" />
             </button>
           </div>
         </>
       )}
 
       {isDone && (
-        <div className="w-full absolute bottom-8 px-4 flex justify-center gap-6">
+        <div className="w-full absolute bottom-4 sm:bottom-8 px-4 flex justify-center gap-4 sm:gap-6 z-10">
           <button
             onClick={() => setShowSplit(true)}
-            className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors flex-col gap-1"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors flex-col gap-1"
           >
-            <CalendarDays className="w-6 h-6" />
+            <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <button
             onClick={() => setShowHistory(true)}
-            className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors flex-col gap-1"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors flex-col gap-1"
           >
-            <ChartBar className="w-6 h-6" />
+            <ChartBar className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
       )}

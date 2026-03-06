@@ -98,18 +98,18 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
   return (
     <div className="flex flex-col items-center justify-between h-[100dvh] bg-black p-safe relative overflow-hidden">
       {/* Top Label */}
-      <div className="flex w-full justify-between items-center p-4 z-10 shrink-0 mt-2">
+      <div className="flex w-full justify-between items-center p-2 sm:p-4 z-10 shrink-0 mt-1 sm:mt-2">
         <button
           onClick={() => setShowQuitConfirm(true)}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
+          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
           aria-label="Quit workout"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <h2 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white/50 absolute left-1/2 -translate-x-1/2">
           Resting
         </h2>
-        <div className="w-10 h-10" /> {/* Spacer */}
+        <div className="w-8 h-8 sm:w-10 sm:h-10" /> {/* Spacer */}
       </div>
 
       {/* Circular timer */}
@@ -130,12 +130,12 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
           <span
             className={`font-mono font-black tabular-nums tracking-tighter transition-colors duration-300 ${
               seconds <= 3 && seconds > 0
-                ? 'text-white text-7xl sm:text-8xl scale-110'
+                ? 'text-white text-6xl sm:text-8xl scale-110'
                 : isPaused
-                  ? 'text-white/40 text-[5rem] sm:text-[6rem]'
-                  : 'text-white text-[5rem] sm:text-[6rem]'
+                  ? 'text-white/40 text-[4rem] sm:text-[6rem]'
+                  : 'text-white text-[4rem] sm:text-[6rem]'
             }`}
-            style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
+             style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
             key={seconds <= 3 ? seconds : 'normal'}
           >
             {display}
@@ -143,26 +143,26 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
           
           <button
             onClick={onPauseToggle}
-            className="mt-6 w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
+            className="mt-4 sm:mt-6 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/10 flex items-center justify-center text-white active:bg-white/20 transition-colors"
           >
-            {isPaused ? <Play className="w-8 h-8 fill-current ml-1" /> : <Pause className="w-8 h-8 fill-current" />}
+            {isPaused ? <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" /> : <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />}
           </button>
         </div>
       </div>
 
       {/* Action buttons: undo · skip */}
-      <div className="w-full px-4 mb-4 z-10 shrink-0 flex gap-3">
+      <div className="w-full px-4 mb-4 z-10 shrink-0 flex gap-2 sm:gap-3">
         <Button
           variant="outline"
           onClick={onUndo}
-          className="flex-1 rounded-full h-[68px] text-lg sm:text-xl font-black uppercase tracking-tight bg-[#1A1A1A] border-0 text-white hover:bg-[#2A2A2A] active:scale-95 transition-all"
+          className="flex-1 rounded-full h-[54px] sm:h-[68px] text-base sm:text-xl font-black uppercase tracking-tight bg-[#1A1A1A] border-0 text-white hover:bg-[#2A2A2A] active:scale-95 transition-all"
         >
           Undo
         </Button>
 
         <Button
           onClick={onSkip}
-          className="flex-[2] rounded-full h-[68px] text-lg sm:text-xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+          className="flex-[2] rounded-full h-[54px] sm:h-[68px] text-base sm:text-xl font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
         >
           Skip
         </Button>
