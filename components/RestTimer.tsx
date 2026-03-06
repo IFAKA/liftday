@@ -100,18 +100,6 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
 
   return (
     <div className="flex flex-col items-center w-full h-full bg-black overflow-hidden relative">
-      {/* Absolute Edge Timer Ring (Apple Watch Style) */}
-      <div
-        className="absolute inset-0 pointer-events-none z-0"
-        style={{
-          '--timer-progress': progress,
-          background: `conic-gradient(from -90deg, white calc(var(--timer-progress) * 1%), transparent 0%)`,
-          WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 2px))',
-          mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 2px))',
-          transition: '--timer-progress 1s linear',
-        } as CSSProperties}
-      />
-
       <TopBar
         leftAction={
           <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/40 active:text-white transition-colors">
@@ -121,22 +109,8 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
         center={<span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">Resting</span>}
       />
 
-      {/* Large Centered Timer */}
-      <div className="flex-1 flex flex-col items-center justify-center z-10 -mt-2">
-        <span
-          className={cn(
-            "font-mono font-black tabular-nums tracking-tighter transition-all duration-300",
-            seconds <= 3 && seconds > 0 ? "text-white text-6xl scale-110" : "text-white text-5xl"
-          )}
-          style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
-          key={seconds <= 3 ? seconds : 'normal'}
-        >
-          {display}
-        </span>
-      </div>
-
-      {/* Ultra-compact Action buttons */}
-      <div className="w-full px-1 pb-1 shrink-0 flex gap-1 z-10">
+      {/* Action buttons at the top */}
+      <div className="w-full px-1 pb-2 shrink-0 flex gap-1 z-20">
         <Button
           variant="outline"
           onClick={onUndo}
@@ -151,6 +125,32 @@ export function RestTimer({ seconds, isPaused, onPauseToggle, onSkip, onQuit, on
         >
           Skip
         </Button>
+      </div>
+
+      {/* Large Timer area below buttons */}
+      <div className="flex-1 w-full flex flex-col items-center justify-center relative min-h-0">
+        {/* Edge Timer Ring (Contained to timer area) */}
+        <div
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{
+            '--timer-progress': progress,
+            background: `conic-gradient(from -90deg, white calc(var(--timer-progress) * 1%), transparent 0%)`,
+            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 2px))',
+            mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 2px))',
+            transition: '--timer-progress 1s linear',
+          } as CSSProperties}
+        />
+
+        <span
+          className={cn(
+            "font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10",
+            seconds <= 3 && seconds > 0 ? "text-white text-6xl scale-110" : "text-white text-5xl"
+          )}
+          style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
+          key={seconds <= 3 ? seconds : 'normal'}
+        >
+          {display}
+        </span>
       </div>
 
       <QuitConfirmDialog
