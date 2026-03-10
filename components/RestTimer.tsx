@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { CSSProperties } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
@@ -91,6 +90,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
   const secs = seconds % 60;
   const display = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   const progress = ((REST_DURATION - seconds) / REST_DURATION) * 100;
+  const circumference = 2 * Math.PI * 45;
 
   return (
     <motion.div
@@ -117,16 +117,19 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
           className="relative flex items-center justify-center"
           style={{ width: 'min(75vw, 45dvh)', height: 'min(75vw, 45dvh)' }}
         >
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{
-              '--timer-progress': progress,
-              background: `conic-gradient(from -90deg, white calc(var(--timer-progress) * 1%), transparent 0%)`,
-              WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
-              mask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
-              transition: '--timer-progress 1s linear',
-            } as CSSProperties}
-          />
+          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" />
+            <circle
+              cx="50" cy="50" r="45"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference * (1 - progress / 100)}
+              style={{ transition: 'stroke-dashoffset 1s linear' }}
+            />
+          </svg>
 
           <span
             className={`font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10 text-fluid-timer text-white${seconds <= 3 && seconds > 0 ? ' scale-110' : ''}`}
