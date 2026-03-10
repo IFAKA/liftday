@@ -146,10 +146,9 @@ export function ExerciseScreen({
                 </button>
               }
               center={
-                <div className="flex flex-col items-center">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/40 truncate w-24 text-center">{exercise.name}</span>
-                  <span className="text-[10px] font-black uppercase text-white -mt-0.5">SET {currentSet + 1}/{setsPerExercise}</span>
-                </div>
+                <span className="text-xs font-black uppercase text-white/40 tracking-widest">
+                  SET {currentSet + 1}/{setsPerExercise}
+                </span>
               }
               rightAction={
                 <button onClick={() => setShowTutorial(true)} className="p-2 -mr-2 text-white/50 active:text-white transition-colors">
@@ -157,6 +156,12 @@ export function ExerciseScreen({
                 </button>
               }
             />
+
+            <div className="w-full px-6 pt-2 shrink-0">
+              <h2 className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight text-center sm:text-left">
+                {exercise.name}
+              </h2>
+            </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
               <NumberInput
@@ -168,16 +173,16 @@ export function ExerciseScreen({
               />
 
               {previousRep !== null && !flashColor && (
-                <div className="absolute bottom-2 flex items-center gap-1.5 text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
-                  <span className="text-[9px] font-mono font-bold tracking-widest">{previousRep} PREV</span>
+                <div className="absolute bottom-4 flex items-center gap-1.5 text-white/30 bg-white/5 px-3 py-1 rounded-full">
+                  <span className="text-xs font-mono font-bold tracking-widest">{previousRep} PREVIOUS BEST</span>
                 </div>
               )}
             </div>
 
-            <div className="w-full px-2 pb-2 shrink-0 z-10">
+            <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
               <Button
                 onClick={() => onLogSet(val)}
-                className="w-full h-11 rounded-full text-lg font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all"
+                className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >
                 LOG SET
               </Button>

@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geist.variable} ${geistMono.variable} font-mono antialiased bg-black text-foreground overflow-hidden h-[100dvh]`}>
-        <div className="w-full h-full overflow-hidden bg-background relative flex flex-col p-safe">
+        <div className="w-full h-full overflow-hidden bg-background relative flex flex-col">
           <WakeLockProvider>{children}</WakeLockProvider>
         </div>
       </body>

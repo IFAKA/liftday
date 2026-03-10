@@ -240,8 +240,35 @@ input[type="number"] {
 }
 
 /* ============================================================================
-   RESPONSIVE UTILITIES
+   RESPONSIVE & SAFE AREA UTILITIES
    ============================================================================ */
+
+.pt-safe { padding-top: env(safe-area-inset-top, 16px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+.pl-safe { padding-left: env(safe-area-inset-left, 16px); }
+.pr-safe { padding-right: env(safe-area-inset-right, 16px); }
+.px-safe { 
+  padding-left: env(safe-area-inset-left, 16px);
+  padding-right: env(safe-area-inset-right, 16px);
+}
+
+/* Fluid Typography */
+.text-fluid-title {
+  font-size: clamp(44px, 12vw, 80px);
+}
+
+.text-fluid-exercise {
+  font-size: clamp(24px, 6vw, 40px);
+}
+
+.text-fluid-timer {
+  font-size: clamp(60px, 18vw, 120px);
+}
+
+/* Responsive Touch Targets */
+.btn-fluid {
+  @apply h-12 sm:h-14 md:h-16 text-lg sm:text-xl;
+}
 
 /* Smartwatch-specific styles (≤320px) */
 @media (max-width: 320px) {

@@ -203,23 +203,23 @@ function TodayContent({ date }: { date: Date }) {
         }
       />
 
-      <div className="flex-1 flex flex-col justify-center items-center px-2">
+      <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-8">
         {isDone ? (
           <div className="flex flex-col items-center">
-            <CheckCircle className="w-12 h-12 text-green-500 mb-2" />
-            <h1 className="text-[32px] font-black tracking-tighter uppercase text-white leading-none">
+            <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+            <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none">
               DONE
             </h1>
           </div>
         ) : (
           <>
-            <h1 className="text-[44px] font-black tracking-tighter uppercase text-white leading-none">
+            <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none text-center">
               {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
             </h1>
             {streak > 0 && (
-              <div className="flex items-center gap-1 mt-1">
-                <Flame className="w-3 h-3 text-orange-500" />
-                <span className="text-[10px] font-bold text-orange-500">{streak}</span>
+              <div className="flex items-center gap-2 mt-2">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span className="text-xs font-bold text-orange-500">{streak}</span>
               </div>
             )}
           </>
@@ -227,10 +227,10 @@ function TodayContent({ date }: { date: Date }) {
       </div>
 
       {!isDone && (
-        <div className="w-full px-2 pb-2 shrink-0">
+        <div className="w-full px-4 pb-safe mb-4 shrink-0">
           <Button
             onClick={workout.startWorkout}
-            className="w-full h-11 rounded-full bg-white text-black active:scale-95 transition-all text-lg font-black uppercase tracking-tight shadow-lg"
+            className="w-full btn-fluid rounded-full bg-white text-black active:scale-95 transition-all font-black uppercase tracking-tight shadow-xl"
           >
             Start
           </Button>

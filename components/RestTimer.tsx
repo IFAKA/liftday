@@ -118,14 +118,14 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
       <TopBar
         leftAction={
           <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/40 active:text-white transition-colors">
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         }
-        center={<span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">Resting</span>}
+        center={<span className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Resting</span>}
       />
 
       {/* Large Timer area (Above buttons) */}
-      <div className="flex-1 w-full flex flex-col items-center justify-center relative min-h-0 -mt-2">
+      <div className="flex-1 w-full flex flex-col items-center justify-center relative min-h-0">
         {/* Edge Timer Ring (Apple Watch Style) */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
@@ -140,8 +140,8 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
 
         <span
           className={cn(
-            "font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10",
-            seconds <= 3 && seconds > 0 ? "text-white text-6xl scale-110" : "text-white text-5xl"
+            "font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10 text-fluid-timer",
+            seconds <= 3 && seconds > 0 ? "text-white scale-110" : "text-white"
           )}
           style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
           key={seconds <= 3 ? seconds : 'normal'}
@@ -150,21 +150,21 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
         </span>
       </div>
 
-      {/* Action buttons at the bottom */}
-      <div className="w-full px-1 pb-1 shrink-0 flex gap-1 z-20">
+      {/* Action buttons at the bottom - Stacked Column */}
+      <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-3 z-20">
+        <Button
+          onClick={onSkip}
+          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+        >
+          Skip Rest
+        </Button>
+        
         <Button
           variant="outline"
           onClick={onUndo}
-          className="flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-tight bg-white/5 border-0 text-white/60 active:bg-white/10 active:scale-95 transition-all"
+          className="w-full h-11 sm:h-12 rounded-full text-xs font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
         >
-          Undo
-        </Button>
-
-        <Button
-          onClick={onSkip}
-          className="flex-[1.5] rounded-full h-9 text-[10px] font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
-        >
-          Skip
+          Undo Last Set
         </Button>
       </div>
 

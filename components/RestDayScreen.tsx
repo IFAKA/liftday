@@ -61,24 +61,23 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-[100dvh] bg-black p-safe relative overflow-hidden">
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
-        <Moon className="w-12 h-12 sm:w-20 sm:h-20 text-white/30 mb-4 sm:mb-8" />
-        <h1 className="text-[56px] sm:text-[80px] font-black tracking-tighter uppercase text-white leading-none mb-2 sm:mb-4 text-center">
+    <div className="flex flex-col items-center justify-center h-[100dvh] bg-black px-safe pt-safe pb-safe relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
+        <Moon className="w-16 h-16 sm:w-20 sm:h-20 text-white/30 mb-6 sm:mb-8" />
+        <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none mb-4 text-center">
           REST
         </h1>
         {nextTraining && (
-          <p className="text-[10px] sm:text-sm font-bold text-white/40 uppercase tracking-widest mt-1 sm:mt-2 px-6 text-center">
+          <p className="text-xs sm:text-sm font-bold text-white/40 uppercase tracking-widest px-6 text-center">
             NEXT: {nextTraining}
           </p>
         )}
       </div>
 
-      <div className="w-full absolute bottom-4 sm:bottom-8 px-4 z-10">
+      <div className="w-full absolute bottom-4 sm:bottom-8 px-4 pb-safe z-10">
         <Button
-          size="lg"
           onClick={mobility.startMobility}
-          className="w-full h-[54px] sm:h-[68px] rounded-full text-base sm:text-xl font-black uppercase tracking-tight bg-[#1A1A1A] text-white hover:bg-[#2A2A2A] active:scale-95 transition-all shadow-lg border border-white/10"
+          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-[#1A1A1A] text-white hover:bg-[#2A2A2A] active:scale-95 transition-all shadow-xl border border-white/10"
         >
           <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 fill-current" />
           5 MIN MOBILITY
