@@ -90,7 +90,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-                  <Card key={ex.key} className="rounded-2xl p-4 flex-col justify-between aspect-square min-h-0 gap-0 py-0 border-white/5">
+                  <Card key={ex.key} className="rounded-2xl p-4 flex-col justify-between aspect-square min-h-0 gap-0 border-white/5">
                     <p className="text-fluid-label font-bold text-white/60 leading-tight uppercase truncate">{ex.name}</p>
                     <div className="mt-auto">
                       <p className="text-fluid-exercise font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>

@@ -97,10 +97,8 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                 </div>
                 
                 <div className="flex flex-col items-end shrink-0 ml-4">
-                  {isCompleted ? (
+                  {isCompleted && (
                     <span className="text-fluid-label font-black text-white/60 uppercase tracking-widest leading-none">DONE</span>
-                  ) : (
-                    <span className="text-fluid-exercise font-black tabular-nums text-white leading-none">--</span>
                   )}
                   {isToday && !isCompleted && workoutType !== 'rest' && (
                     <span className="text-fluid-label font-black text-white uppercase tracking-widest mt-2 bg-white/20 px-2 py-0.5 rounded animate-pulse">TODAY</span>
