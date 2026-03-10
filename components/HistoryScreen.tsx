@@ -69,32 +69,32 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
         }
         center={
           <div className="flex flex-col items-center">
-            <span className="text-xs font-bold uppercase tracking-tight text-white">History</span>
-            <span className="text-[10px] text-white/40 font-mono tracking-widest -mt-0.5">{totalSessions} SESSIONS</span>
+            <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">History</span>
+            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{totalSessions} SESSIONS</span>
           </div>
         }
       />
 
       {totalSessions === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
-          <p className="text-white/40 text-xs uppercase tracking-widest font-bold">No sessions yet.</p>
+          <p className="text-white/40 text-fluid-ui uppercase tracking-widest font-bold">No sessions yet.</p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
-          {/* Best Sets - Compact Grid */}
+          {/* Best Sets - Grid */}
           {Object.keys(prs).length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Trophy className="w-4 h-4 text-yellow-500" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Personal Bests</p>
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4 px-1">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+                <p className="text-fluid-label font-bold uppercase tracking-widest text-white/40">Personal Bests</p>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-                  <div key={ex.key} className="rounded-2xl p-3 bg-[#111] flex flex-col justify-between aspect-square min-h-0">
-                    <p className="text-[10px] font-bold text-white/60 leading-tight uppercase truncate">{ex.name}</p>
+                  <div key={ex.key} className="rounded-2xl p-4 bg-[#111] flex flex-col justify-between aspect-square min-h-0">
+                    <p className="text-fluid-label font-bold text-white/60 leading-tight uppercase truncate">{ex.name}</p>
                     <div className="mt-auto">
-                      <p className="text-2xl font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>
-                      <p className="text-[8px] font-mono text-white/30 uppercase tracking-widest mt-1">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</p>
+                      <p className="text-3xl font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>
+                      <p className="text-fluid-label font-mono text-white/30 uppercase tracking-widest mt-2">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</p>
                     </div>
                   </div>
                 ))}
@@ -104,9 +104,9 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 
           {/* Recent Workouts - List */}
           {recentSessions.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">Recent Sessions</p>
-              <div className="flex flex-col gap-2">
+            <div className="space-y-4">
+              <p className="text-fluid-label font-bold uppercase tracking-widest text-white/40 px-1">Recent Sessions</p>
+              <div className="flex flex-col gap-3">
                 {recentSessions.map(([dateKey, session]) => {
                   const wt = session.workout_type;
                   const exercises = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
@@ -117,14 +117,14 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
-                    <div key={dateKey} className="flex items-center justify-between p-4 rounded-2xl bg-[#111]">
+                    <div key={dateKey} className="flex items-center justify-between p-5 rounded-2xl bg-[#111]">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-white/40 uppercase tracking-widest font-mono mb-1">{format(displayDate, 'MMM d, EEE')}</span>
-                        <span className={cn('text-lg font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
+                        <span className="text-fluid-label text-white/40 uppercase tracking-widest font-mono mb-2">{format(displayDate, 'MMM d, EEE')}</span>
+                        <span className={cn('text-xl font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-2xl font-black tabular-nums text-white leading-none">{totalReps}</span>
-                        <p className="text-[8px] font-mono text-white/30 uppercase tracking-widest mt-1">TOTAL REPS</p>
+                        <span className="text-3xl font-black tabular-nums text-white leading-none">{totalReps}</span>
+                        <p className="text-fluid-label font-mono text-white/30 uppercase tracking-widest mt-2">TOTAL REPS</p>
                       </div>
                     </div>
                   );

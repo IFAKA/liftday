@@ -75,14 +75,14 @@ export function NumberInput({
   return (
     <div className="flex flex-col items-center justify-center w-full flex-1 relative min-h-0">
       {/* Massive number in center */}
-      <div className="flex items-center justify-center pointer-events-none z-10 -mt-2">
-        <span className="font-mono font-black text-[100px] tracking-tighter tabular-nums leading-none">
+      <div className="flex items-center justify-center pointer-events-none z-10 -mt-4">
+        <span className="font-mono font-black text-fluid-timer tracking-tighter tabular-nums leading-none">
           {value}
         </span>
       </div>
       
-      {/* Label under number (very small) */}
-      <span className="text-[10px] uppercase tracking-widest text-white/40 font-mono -mt-1 z-10">
+      {/* Label under number */}
+      <span className="text-fluid-label uppercase tracking-widest text-white/40 font-mono -mt-2 z-10">
         {label}
       </span>
 

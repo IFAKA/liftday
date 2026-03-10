@@ -254,15 +254,23 @@ input[type="number"] {
 
 /* Fluid Typography */
 .text-fluid-title {
-  font-size: clamp(44px, 12vw, 80px);
+  font-size: clamp(48px, 15vw, 96px);
 }
 
 .text-fluid-exercise {
-  font-size: clamp(24px, 6vw, 40px);
+  font-size: clamp(28px, 8vw, 48px);
 }
 
 .text-fluid-timer {
-  font-size: clamp(60px, 18vw, 120px);
+  font-size: clamp(100px, 30vw, 180px);
+}
+
+.text-fluid-ui {
+  font-size: clamp(14px, 4vw, 20px);
+}
+
+.text-fluid-label {
+  font-size: clamp(10px, 3vw, 14px);
 }
 
 /* Responsive Touch Targets */

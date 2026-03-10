@@ -55,14 +55,14 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
         }
         center={
           <div className="flex flex-col items-center">
-            <span className="text-xs font-bold uppercase tracking-tight text-white">Schedule</span>
-            <span className="text-[10px] text-white/40 font-mono tracking-widest -mt-0.5">THIS WEEK</span>
+            <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Schedule</span>
+            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">THIS WEEK</span>
           </div>
         }
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {days.map((day) => {
             const workoutType = getWorkoutType(day);
             const dateKey = formatDateKey(day);
@@ -75,18 +75,18 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
               <div
                 key={dateKey}
                 className={cn(
-                  'flex items-center justify-between p-4 rounded-2xl transition-colors',
+                  'flex items-center justify-between p-5 rounded-2xl transition-colors',
                   isToday ? 'bg-white/10 ring-1 ring-white/20' : 'bg-[#111]',
                   isCompleted && 'opacity-40'
                 )}
               >
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[10px] text-white/40 uppercase tracking-widest font-mono mb-1">
+                  <span className="text-fluid-label text-white/40 uppercase tracking-widest font-mono mb-2">
                     {dayName}, {dayNumber}
                   </span>
                   <span
                     className={cn(
-                      'text-lg font-black uppercase tracking-tight leading-none truncate',
+                      'text-xl font-black uppercase tracking-tight leading-none truncate',
                       WORKOUT_TYPE_COLORS[workoutType],
                       isCompleted && 'text-white/40'
                     )}
@@ -97,12 +97,12 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                 
                 <div className="flex flex-col items-end shrink-0 ml-4">
                   {isCompleted ? (
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none">DONE</span>
+                    <span className="text-fluid-label font-bold text-white/40 uppercase tracking-widest leading-none">DONE</span>
                   ) : (
-                    <span className="text-xl font-black tabular-nums text-white leading-none">--</span>
+                    <span className="text-2xl font-black tabular-nums text-white leading-none">--</span>
                   )}
                   {isToday && !isCompleted && workoutType !== 'rest' && (
-                    <span className="text-[8px] font-bold text-white uppercase tracking-widest mt-1.5 animate-pulse">TODAY</span>
+                    <span className="text-fluid-label font-bold text-white uppercase tracking-widest mt-2 animate-pulse">TODAY</span>
                   )}
                 </div>
               </div>

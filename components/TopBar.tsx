@@ -20,7 +20,7 @@ export function TopBar({ leftAction, center, rightAction, className }: TopBarPro
         {leftAction}
       </div>
       
-      <div className="flex-[2] flex flex-col items-center justify-center min-w-0">
+      <div className="flex-[3] flex flex-col items-center justify-center min-w-0 text-fluid-ui font-black uppercase tracking-tight">
         {center}
       </div>
 
