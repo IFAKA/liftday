@@ -189,16 +189,16 @@ function TodayContent({ date }: { date: Date }) {
           </button>
         }
         center={
-          <span className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest">
+          <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
             {formatDisplayDate(date)}
           </span>
         }
         rightAction={
           <button
             onClick={() => setShowHistory(true)}
-            className="p-2 -mr-2 text-white/50 active:text-white transition-colors"
+            className="p-2 -mr-2 text-white/60 active:text-white transition-colors scale-110"
           >
-            <ChartBar className="w-5 h-5" />
+            <ChartBar className="w-6 h-6" />
           </button>
         }
       />
@@ -206,7 +206,7 @@ function TodayContent({ date }: { date: Date }) {
       <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-8">
         {isDone ? (
           <div className="flex flex-col items-center">
-            <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+            <CheckCircle className="w-20 h-20 text-green-500 mb-6" />
             <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none">
               DONE
             </h1>
@@ -217,9 +217,9 @@ function TodayContent({ date }: { date: Date }) {
               {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
             </h1>
             {streak > 0 && (
-              <div className="flex items-center gap-2 mt-2">
-                <Flame className="w-4 h-4 text-orange-500" />
-                <span className="text-xs font-bold text-orange-500">{streak}</span>
+              <div className="flex items-center gap-2 mt-4 bg-orange-500/10 px-4 py-1.5 rounded-full border border-orange-500/20">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <span className="text-fluid-label font-black text-orange-500 uppercase tracking-widest">{streak} DAY STREAK</span>
               </div>
             )}
           </>

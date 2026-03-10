@@ -146,18 +146,18 @@ export function ExerciseScreen({
                 </button>
               }
               center={
-                <span className="text-xs font-black uppercase text-white/40 tracking-widest">
-                  SET {currentSet + 1}/{setsPerExercise}
+                <span className="text-fluid-label font-black uppercase text-white tracking-[0.15em]">
+                  SET {currentSet + 1} OF {setsPerExercise}
                 </span>
               }
               rightAction={
-                <button onClick={() => setShowTutorial(true)} className="p-2 -mr-2 text-white/50 active:text-white transition-colors">
-                  <Info className="w-5 h-5" />
+                <button onClick={() => setShowTutorial(true)} className="p-2 -mr-2 text-white active:bg-white/20 transition-colors">
+                  <Info className="w-6 h-6" />
                 </button>
               }
             />
 
-            <div className="w-full px-6 pt-2 shrink-0">
+            <div className="w-full px-6 pt-4 shrink-0">
               <h2 className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight text-center sm:text-left">
                 {exercise.name}
               </h2>
@@ -173,8 +173,8 @@ export function ExerciseScreen({
               />
 
               {previousRep !== null && !flashColor && (
-                <div className="absolute bottom-4 flex items-center gap-1.5 text-white/30 bg-white/5 px-3 py-1 rounded-full">
-                  <span className="text-xs font-mono font-bold tracking-widest">{previousRep} PREVIOUS BEST</span>
+                <div className="absolute bottom-8 flex items-center gap-2 text-white/80 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
+                  <span className="text-fluid-label font-mono font-bold tracking-widest">{previousRep} PREVIOUS BEST</span>
                 </div>
               )}
             </div>

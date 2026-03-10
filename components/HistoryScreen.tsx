@@ -105,7 +105,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
           {/* Recent Workouts - List */}
           {recentSessions.length > 0 && (
             <div className="space-y-4">
-              <p className="text-fluid-label font-bold uppercase tracking-widest text-white/40 px-1">Recent Sessions</p>
+              <p className="text-fluid-label font-black uppercase tracking-widest text-white/80 px-1">Recent Sessions</p>
               <div className="flex flex-col gap-3">
                 {recentSessions.map(([dateKey, session]) => {
                   const wt = session.workout_type;
@@ -117,14 +117,14 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
-                    <div key={dateKey} className="flex items-center justify-between p-5 rounded-2xl bg-[#111]">
+                    <div key={dateKey} className="flex items-center justify-between p-6 rounded-2xl bg-[#1A1A1A] border border-white/5 shadow-lg">
                       <div className="flex flex-col">
-                        <span className="text-fluid-label text-white/40 uppercase tracking-widest font-mono mb-2">{format(displayDate, 'MMM d, EEE')}</span>
-                        <span className={cn('text-xl font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
+                        <span className="text-fluid-label text-white/60 uppercase tracking-widest font-mono font-black mb-2">{format(displayDate, 'MMM d, EEE')}</span>
+                        <span className={cn('text-2xl font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
                       </div>
                       <div className="text-right">
                         <span className="text-3xl font-black tabular-nums text-white leading-none">{totalReps}</span>
-                        <p className="text-fluid-label font-mono text-white/30 uppercase tracking-widest mt-2">TOTAL REPS</p>
+                        <p className="text-fluid-label font-black font-mono text-white/50 uppercase tracking-widest mt-2">TOTAL REPS</p>
                       </div>
                     </div>
                   );

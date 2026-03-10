@@ -36,21 +36,23 @@ export function SessionComplete(props: SessionCompleteProps) {
           style={{ animation: 'bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards' }}
         />
         
-        <h1 className="text-xs font-bold tracking-[0.2em] uppercase text-white/40 mb-2 text-center">
+        <h1 className="text-fluid-label font-black tracking-[0.2em] uppercase text-white/80 mb-3 text-center">
           {isWorkout ? 'SESSION COMPLETE' : 'MOBILITY COMPLETE'}
         </h1>
         
         <p className="text-fluid-timer leading-none font-black tracking-tighter tabular-nums text-white text-center">
           {isWorkout ? totalReps : `${mobilityProps?.weekCompleted}/${mobilityProps?.weekTotal}`}
         </p>
-        <p className="text-sm font-bold tracking-[0.1em] uppercase text-white/30 text-center">
+        <p className="text-fluid-ui font-black tracking-[0.1em] uppercase text-white/60 text-center mt-2">
           {isWorkout ? 'TOTAL REPS' : 'DAYS DONE'}
         </p>
 
         {isWorkout && workoutPropsTyped?.advancedTiers && workoutPropsTyped.advancedTiers.length > 0 && (
-          <p className="text-xs text-green-400 uppercase tracking-widest font-mono text-center mt-6 px-4">
-            ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
-          </p>
+          <div className="mt-8 bg-green-500/10 border border-green-500/20 px-6 py-3 rounded-2xl">
+            <p className="text-fluid-label text-green-400 uppercase tracking-widest font-black text-center">
+              ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
+            </p>
+          </div>
         )}
       </div>
 

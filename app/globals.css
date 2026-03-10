@@ -252,25 +252,30 @@ input[type="number"] {
   padding-right: env(safe-area-inset-right, 16px);
 }
 
-/* Fluid Typography */
+/* Fluid Typography - Higher Minimums for Accessibility */
 .text-fluid-title {
-  font-size: clamp(48px, 15vw, 96px);
+  font-size: clamp(52px, 15vw, 100px);
 }
 
 .text-fluid-exercise {
-  font-size: clamp(28px, 8vw, 48px);
+  font-size: clamp(32px, 8vw, 52px);
 }
 
 .text-fluid-timer {
-  font-size: clamp(100px, 30vw, 180px);
+  font-size: clamp(110px, 30vw, 200px);
 }
 
 .text-fluid-ui {
-  font-size: clamp(14px, 4vw, 20px);
+  font-size: clamp(18px, 4.5vw, 26px);
 }
 
 .text-fluid-label {
-  font-size: clamp(10px, 3vw, 14px);
+  font-size: clamp(13px, 3.5vw, 18px);
+}
+
+/* Thicker Icons Global Style */
+svg {
+  stroke-width: 2.5px !important;
 }
 
 /* Responsive Touch Targets */

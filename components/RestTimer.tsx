@@ -117,11 +117,11 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
     >
       <TopBar
         leftAction={
-          <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/40 active:text-white transition-colors">
-            <X className="w-5 h-5" />
+          <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/60 active:text-white transition-colors">
+            <X className="w-6 h-6" />
           </button>
         }
-        center={<span className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Resting</span>}
+        center={<span className="text-fluid-label font-black uppercase tracking-[0.2em] text-white/80">Resting</span>}
       />
 
       {/* Large Timer area (Above buttons) */}
@@ -132,8 +132,8 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
           style={{
             '--timer-progress': progress,
             background: `conic-gradient(from -90deg, white calc(var(--timer-progress) * 1%), transparent 0%)`,
-            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 2px))',
-            mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 2px))',
+            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
+            mask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
             transition: '--timer-progress 1s linear',
           } as CSSProperties}
         />
@@ -151,10 +151,10 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
       </div>
 
       {/* Action buttons at the bottom - Stacked Column */}
-      <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-3 z-20">
+      <div className="w-full px-6 pb-safe mb-6 shrink-0 flex flex-col gap-4 z-20">
         <Button
           onClick={onSkip}
-          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+          className="w-full h-16 sm:h-20 rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-2xl text-xl"
         >
           Skip Rest
         </Button>
@@ -162,7 +162,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
         <Button
           variant="outline"
           onClick={onUndo}
-          className="w-full h-11 sm:h-12 rounded-full text-xs font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
+          className="w-full h-14 sm:h-16 rounded-full text-sm font-black uppercase tracking-widest bg-white/10 border-white/20 text-white/80 active:bg-white/20 active:scale-95 transition-all border"
         >
           Undo Last Set
         </Button>
