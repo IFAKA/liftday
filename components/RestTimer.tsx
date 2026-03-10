@@ -112,25 +112,30 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
         center={<span className="text-fluid-label font-black uppercase tracking-[0.2em] text-white/80">Resting</span>}
       />
 
-      <div className="flex-1 w-full flex flex-col items-center justify-center relative min-h-0">
+      <div className="flex-1 w-full flex items-center justify-center min-h-0">
         <div
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            '--timer-progress': progress,
-            background: `conic-gradient(from -90deg, white calc(var(--timer-progress) * 1%), transparent 0%)`,
-            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
-            mask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
-            transition: '--timer-progress 1s linear',
-          } as CSSProperties}
-        />
-
-        <span
-          className={`font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10 text-fluid-timer text-white${seconds <= 3 && seconds > 0 ? ' scale-110' : ''}`}
-          style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
-          key={seconds <= 3 ? seconds : 'normal'}
+          className="relative flex items-center justify-center"
+          style={{ width: 'min(75vw, 45dvh)', height: 'min(75vw, 45dvh)' }}
         >
-          {display}
-        </span>
+          <div
+            className="absolute inset-0 pointer-events-none z-0"
+            style={{
+              '--timer-progress': progress,
+              background: `conic-gradient(from -90deg, white calc(var(--timer-progress) * 1%), transparent 0%)`,
+              WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
+              mask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px))',
+              transition: '--timer-progress 1s linear',
+            } as CSSProperties}
+          />
+
+          <span
+            className={`font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10 text-fluid-timer text-white${seconds <= 3 && seconds > 0 ? ' scale-110' : ''}`}
+            style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
+            key={seconds <= 3 ? seconds : 'normal'}
+          >
+            {display}
+          </span>
+        </div>
       </div>
 
       <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-3 z-20">

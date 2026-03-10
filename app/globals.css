@@ -262,7 +262,7 @@ input[type="number"] {
 }
 
 .text-fluid-timer {
-  font-size: clamp(120px, 22dvh, 280px);
+  font-size: clamp(56px, 18vw, 100px);
 }
 
 .text-fluid-ui {
