@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Pause, Play, SkipForward, X, ChevronLeft, Info } from 'lucide-react';
+import { X, ChevronLeft, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { MobilityExercise } from '@/lib/types';
 import { ExerciseDemo } from './ExerciseDemo';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface MobilityFlowProps {
   exercise: MobilityExercise;
@@ -76,7 +77,7 @@ export function MobilityFlow({
   );
 
   return (
-    <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col p-safe">
+    <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col px-safe pb-safe">
       {/* Absolute Edge Progress Bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-50">
         <div
@@ -93,7 +94,7 @@ export function MobilityFlow({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-            className="absolute inset-0 z-40 bg-black flex flex-col pt-4"
+            className="absolute inset-0 z-40 bg-black flex flex-col pt-safe"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
@@ -104,7 +105,7 @@ export function MobilityFlow({
             }}
           >
             {/* Tutorial Header */}
-            <div className="px-4 flex items-center shrink-0 mb-4">
+            <div className="px-4 flex items-center shrink-0 mb-4 h-12">
               <button
                 onClick={() => setShowTutorial(false)}
                 className="w-12 h-12 flex items-center justify-center -ml-2 rounded-full active:bg-white/10 text-white transition-colors"
@@ -115,12 +116,12 @@ export function MobilityFlow({
             </div>
 
             {/* Tutorial Content */}
-            <div className="flex-1 overflow-y-auto px-4 pb-8 flex flex-col items-center">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-6 text-center">
+            <div className="flex-1 overflow-y-auto px-6 pb-8 flex flex-col items-center">
+              <h2 className="text-2xl font-black uppercase tracking-tight text-white mb-6 text-center">
                 {exercise.name}
               </h2>
               {exercise.youtubeId && (
-                <div className="w-full max-w-md aspect-video mb-6 rounded-2xl overflow-hidden bg-white/5">
+                <div className="w-full max-w-md aspect-video mb-6 rounded-2xl overflow-hidden bg-white/5 shadow-2xl">
                   <ExerciseDemo
                     youtubeId={exercise.youtubeId}
                     title={exercise.name}
@@ -128,7 +129,7 @@ export function MobilityFlow({
                   />
                 </div>
               )}
-              <p className="text-sm text-white/70 text-center leading-relaxed">
+              <p className="text-base text-white/70 text-center leading-relaxed">
                 {exercise.instruction}
               </p>
             </div>
@@ -140,7 +141,7 @@ export function MobilityFlow({
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-            className="absolute inset-0 flex flex-col items-center"
+            className="absolute inset-0 flex flex-col items-center pt-safe"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
@@ -151,71 +152,66 @@ export function MobilityFlow({
             }}
           >
             {/* Top Bar */}
-            <div className="w-full flex justify-between items-start p-2 sm:p-4 shrink-0 mt-1 sm:mt-2">
+            <div className="w-full flex justify-between items-center px-4 h-12 shrink-0">
               <button
                 onClick={() => setShowQuitConfirm(true)}
-                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors"
+                className="p-2 -ml-2 text-white/40 active:text-white transition-colors"
                 aria-label="Quit mobility"
               >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                <X className="w-5 h-5" />
               </button>
               
-              <div className="flex flex-col items-center mt-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
                   {exerciseIndex + 1} OF {totalExercises}
                 </span>
-                <span className="text-xs sm:text-sm font-black uppercase tracking-tighter text-white">
+                <span className="text-xs font-black uppercase text-white">
                   {side ? `${side} SIDE` : 'MOBILITY'}
                 </span>
               </div>
 
-              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center relative">
-                <button
-                  onClick={() => setShowTutorial(true)}
-                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-white/50 active:text-white transition-colors"
-                  aria-label="How to do this exercise"
-                >
-                  <Info className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-                {/* Swipe hint dot */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20 animate-pulse" />
-              </div>
+              <button
+                onClick={() => setShowTutorial(true)}
+                className="p-2 -mr-2 text-white/40 active:text-white transition-colors"
+                aria-label="How to do this exercise"
+              >
+                <Info className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Core Display */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 px-4">
-              <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-white/70 text-center mb-2 sm:mb-6">
+            <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 px-6">
+              <h1 className="text-fluid-exercise font-black uppercase tracking-tight text-white/80 text-center mb-4 leading-tight">
                 {exercise.name}
               </h1>
 
               <div className="flex items-center justify-center relative">
                 <span
-                  className={`text-[80px] sm:text-[140px] font-mono leading-none font-black tabular-nums transition-opacity duration-300 ${
-                    isPaused ? 'opacity-40 text-white' : 'text-white'
-                  }`}
+                  className={cn(
+                    "font-mono leading-none font-black tabular-nums transition-all duration-300 text-fluid-timer",
+                    isPaused ? "opacity-30" : "text-white"
+                  )}
                 >
                   {timer}
                 </span>
               </div>
             </div>
 
-            {/* Bottom Action Buttons */}
-            <div className="w-full px-4 mb-4 sm:mb-8 shrink-0 flex gap-2 sm:gap-3 mt-auto">
+            {/* Bottom Action Buttons - Stacked */}
+            <div className="w-full px-4 mb-4 pb-safe shrink-0 flex flex-col gap-3 mt-auto">
               <Button
-                variant="outline"
-                onClick={isPaused ? onResume : onPause}
-                className="flex-1 rounded-full h-[54px] sm:h-[68px] text-sm sm:text-lg font-black uppercase tracking-tight bg-[#1A1A1A] border-0 text-white hover:bg-[#2A2A2A] active:scale-95 transition-all"
+                onClick={onSkip}
+                className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >
-                {isPaused ? <Play className="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 fill-current" /> : <Pause className="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 fill-current" />}
-                {isPaused ? 'Resume' : 'Pause'}
+                Skip Exercise
               </Button>
 
               <Button
-                onClick={onSkip}
-                className="flex-[1.5] rounded-full h-[54px] sm:h-[68px] text-sm sm:text-lg font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+                variant="outline"
+                onClick={isPaused ? onResume : onPause}
+                className="w-full h-11 sm:h-12 rounded-full text-xs font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
               >
-                <SkipForward className="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 fill-current" />
-                Skip
+                {isPaused ? 'Resume' : 'Pause Session'}
               </Button>
             </div>
           </motion.div>

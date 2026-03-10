@@ -46,7 +46,7 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden relative">
+    <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
         leftAction={
           <button onClick={onBack} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
@@ -55,13 +55,13 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
         }
         center={
           <div className="flex flex-col items-center">
-            <span className="text-[10px] font-bold uppercase tracking-tight text-white">Schedule</span>
-            <span className="text-[8px] text-white/40 font-mono tracking-widest -mt-0.5">THIS WEEK</span>
+            <span className="text-xs font-bold uppercase tracking-tight text-white">Schedule</span>
+            <span className="text-[10px] text-white/40 font-mono tracking-widest -mt-0.5">THIS WEEK</span>
           </div>
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-2 pb-4 no-scrollbar mt-2">
+      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
         <div className="flex flex-col gap-2">
           {days.map((day) => {
             const workoutType = getWorkoutType(day);
@@ -75,18 +75,18 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
               <div
                 key={dateKey}
                 className={cn(
-                  'flex items-center justify-between p-2 rounded-xl transition-colors',
+                  'flex items-center justify-between p-4 rounded-2xl transition-colors',
                   isToday ? 'bg-white/10 ring-1 ring-white/20' : 'bg-[#111]',
                   isCompleted && 'opacity-40'
                 )}
               >
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[8px] text-white/40 uppercase tracking-widest font-mono mb-0.5">
+                  <span className="text-[10px] text-white/40 uppercase tracking-widest font-mono mb-1">
                     {dayName}, {dayNumber}
                   </span>
                   <span
                     className={cn(
-                      'text-sm font-black uppercase tracking-tight leading-none truncate',
+                      'text-lg font-black uppercase tracking-tight leading-none truncate',
                       WORKOUT_TYPE_COLORS[workoutType],
                       isCompleted && 'text-white/40'
                     )}
@@ -95,14 +95,14 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                   </span>
                 </div>
                 
-                <div className="flex flex-col items-end shrink-0 ml-2">
+                <div className="flex flex-col items-end shrink-0 ml-4">
                   {isCompleted ? (
-                    <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest leading-none">DONE</span>
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none">DONE</span>
                   ) : (
-                    <span className="text-sm font-black tabular-nums text-white leading-none">--</span>
+                    <span className="text-xl font-black tabular-nums text-white leading-none">--</span>
                   )}
                   {isToday && !isCompleted && workoutType !== 'rest' && (
-                    <span className="text-[7px] font-bold text-white uppercase tracking-widest mt-0.5 animate-pulse">TODAY</span>
+                    <span className="text-[8px] font-bold text-white uppercase tracking-widest mt-1.5 animate-pulse">TODAY</span>
                   )}
                 </div>
               </div>
