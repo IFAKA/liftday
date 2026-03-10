@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play } from 'lucide-react';
+import { Button } from './ui/button';
 
 // Load YouTube IFrame API once globally
 let ytApiLoaded = false;
@@ -108,10 +109,10 @@ export function ExerciseDemo({ youtubeId, title, onPlayingChange }: ExerciseDemo
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       onClick={handleTap}
-      className="relative block w-full rounded-lg overflow-hidden group"
+      className="relative block w-full h-auto rounded-lg overflow-hidden p-0 hover:bg-transparent"
       aria-label={`Watch ${title} demo`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -126,6 +127,6 @@ export function ExerciseDemo({ youtubeId, title, onPlayingChange }: ExerciseDemo
           <Play className="w-5 h-5 text-black fill-black ml-0.5" />
         </div>
       </div>
-    </button>
+    </Button>
   );
 }

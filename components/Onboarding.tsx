@@ -68,23 +68,27 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <TopBar
         leftAction={
           step > 0 ? (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleBack}
-              className="p-2 -ml-2 text-white/40 active:text-white transition-colors"
+              className="-ml-2 text-white/40 hover:text-white hover:bg-transparent active:text-white"
               aria-label="Previous step"
             >
               <ChevronLeft className="w-5 h-5" />
-            </button>
+            </Button>
           ) : null
         }
         rightAction={
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onComplete}
-            className="p-2 -mr-2 text-white/40 active:text-white transition-colors"
+            className="-mr-2 text-white/40 hover:text-white hover:bg-transparent active:text-white"
             aria-label="Skip onboarding"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         }
       />
 

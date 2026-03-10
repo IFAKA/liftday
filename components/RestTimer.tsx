@@ -117,9 +117,9 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
     >
       <TopBar
         leftAction={
-          <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/60 active:text-white transition-colors">
+          <Button variant="ghost" size="icon" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/60 hover:text-white hover:bg-transparent active:text-white">
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         }
         center={<span className="text-fluid-label font-black uppercase tracking-[0.2em] text-white/80">Resting</span>}
       />

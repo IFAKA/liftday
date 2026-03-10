@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft, Info } from 'lucide-react';
 import { Button } from './ui/button';
+import { Progress } from './ui/progress';
 import type { Exercise } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ExerciseDemo } from './ExerciseDemo';
@@ -71,12 +72,10 @@ export function ExerciseScreen({
   return (
     <div className="relative w-full h-full bg-black overflow-hidden flex flex-col">
       {/* Subtle Progress Bar */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/10 z-50">
-        <div
-          className="h-full bg-white transition-all duration-500 ease-out"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
+      <Progress
+        value={progressPercent}
+        className="absolute top-0 left-0 right-0 h-0.5 rounded-none bg-white/10 z-50 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-indicator]]:transition-all [&_[data-slot=progress-indicator]]:duration-500"
+      />
 
       <AnimatePresence initial={false} mode="popLayout">
         {showTutorial ? (
@@ -96,9 +95,9 @@ export function ExerciseScreen({
           >
             <TopBar
               leftAction={
-                <button onClick={() => setShowTutorial(false)} className="p-2 -ml-2 text-white active:bg-white/10 rounded-full">
+                <Button variant="ghost" size="icon" onClick={() => setShowTutorial(false)} className="-ml-2 text-white hover:bg-white/10 hover:text-white">
                   <ChevronLeft className="w-6 h-6" />
-                </button>
+                </Button>
               }
               center={<span className="text-[10px] font-black uppercase tracking-tight truncate w-full text-center px-2">{exercise.name}</span>}
             />
@@ -141,9 +140,9 @@ export function ExerciseScreen({
           >
             <TopBar
               leftAction={
-                <button onClick={() => setShowQuitConfirm(true)} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
+                <Button variant="ghost" size="icon" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               }
               center={
                 <span className="text-fluid-label font-black uppercase text-white tracking-[0.15em]">
@@ -151,9 +150,9 @@ export function ExerciseScreen({
                 </span>
               }
               rightAction={
-                <button onClick={() => setShowTutorial(true)} className="p-2 -mr-2 text-white active:bg-white/20 transition-colors">
+                <Button variant="ghost" size="icon" onClick={() => setShowTutorial(true)} className="-mr-2 text-white hover:bg-white/20 hover:text-white">
                   <Info className="w-6 h-6" />
-                </button>
+                </Button>
               }
             />
 

@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkoutData, WorkoutType } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -63,9 +65,9 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
         leftAction={
-          <button onClick={onBack} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
+          <Button variant="ghost" size="icon" onClick={onBack} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </Button>
         }
         center={
           <div className="flex flex-col items-center">
@@ -90,13 +92,13 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-                  <div key={ex.key} className="rounded-2xl p-4 bg-[#111] flex flex-col justify-between aspect-square min-h-0">
+                  <Card key={ex.key} className="rounded-2xl p-4 bg-[#111] flex-col justify-between aspect-square min-h-0 gap-0 py-0 border-white/5">
                     <p className="text-fluid-label font-bold text-white/60 leading-tight uppercase truncate">{ex.name}</p>
                     <div className="mt-auto">
                       <p className="text-3xl font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>
                       <p className="text-fluid-label font-mono text-white/30 uppercase tracking-widest mt-2">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</p>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -117,7 +119,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
-                    <div key={dateKey} className="flex items-center justify-between p-6 rounded-2xl bg-[#1A1A1A] border border-white/5 shadow-lg">
+                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-[#1A1A1A] border-white/5 shadow-lg">
                       <div className="flex flex-col">
                         <span className="text-fluid-label text-white/60 uppercase tracking-widest font-mono font-black mb-2">{format(displayDate, 'MMM d, EEE')}</span>
                         <span className={cn('text-2xl font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
@@ -126,7 +128,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                         <span className="text-3xl font-black tabular-nums text-white leading-none">{totalReps}</span>
                         <p className="text-fluid-label font-black font-mono text-white/50 uppercase tracking-widest mt-2">TOTAL REPS</p>
                       </div>
-                    </div>
+                    </Card>
                   );
                 })}
               </div>

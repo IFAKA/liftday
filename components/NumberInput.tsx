@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface NumberInputProps {
   defaultValue: number;
@@ -88,8 +89,9 @@ export function NumberInput({
 
       {/* Split touch zones (Left = Minus, Right = Plus) */}
       <div className="absolute inset-0 flex z-20">
-        <button
-          className="flex-1 h-full flex items-center justify-start pl-2 active:bg-white/5 transition-colors group"
+        <Button
+          variant="ghost"
+          className="flex-1 h-full justify-start pl-2 rounded-none active:bg-white/5 group"
           onPointerDown={(e) => { e.preventDefault(); startAdjust(-1); }}
           onPointerUp={stopAdjust}
           onPointerCancel={stopAdjust}
@@ -97,10 +99,11 @@ export function NumberInput({
           aria-label="Decrease"
         >
           <Minus className="w-8 h-8 text-white opacity-20 group-active:opacity-100 transition-opacity" />
-        </button>
+        </Button>
 
-        <button
-          className="flex-1 h-full flex items-center justify-end pr-2 active:bg-white/5 transition-colors group"
+        <Button
+          variant="ghost"
+          className="flex-1 h-full justify-end pr-2 rounded-none active:bg-white/5 group"
           onPointerDown={(e) => { e.preventDefault(); startAdjust(1); }}
           onPointerUp={stopAdjust}
           onPointerCancel={stopAdjust}
@@ -108,7 +111,7 @@ export function NumberInput({
           aria-label="Increase"
         >
           <Plus className="w-8 h-8 text-white opacity-20 group-active:opacity-100 transition-opacity" />
-        </button>
+        </Button>
       </div>
     </div>
   );

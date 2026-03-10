@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { X, ChevronLeft, Info } from 'lucide-react';
 import { Button } from './ui/button';
+import { Progress } from './ui/progress';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { MobilityExercise } from '@/lib/types';
 import { ExerciseDemo } from './ExerciseDemo';
@@ -79,12 +80,10 @@ export function MobilityFlow({
   return (
     <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col px-safe pb-safe">
       {/* Absolute Edge Progress Bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-50">
-        <div
-          className="h-full bg-white transition-all duration-500 ease-out"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
+      <Progress
+        value={progressPercent}
+        className="absolute top-0 left-0 right-0 h-1 rounded-none bg-white/10 z-50 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-indicator]]:transition-all [&_[data-slot=progress-indicator]]:duration-500"
+      />
 
       <AnimatePresence initial={false} mode="popLayout">
         {showTutorial ? (
@@ -106,13 +105,15 @@ export function MobilityFlow({
           >
             {/* Tutorial Header */}
             <div className="px-4 flex items-center shrink-0 mb-4 h-12">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowTutorial(false)}
-                className="w-12 h-12 flex items-center justify-center -ml-2 rounded-full active:bg-white/10 text-white transition-colors"
+                className="-ml-2 w-12 h-12 text-white hover:bg-white/10 hover:text-white"
                 aria-label="Back to mobility"
               >
                 <ChevronLeft className="w-8 h-8" />
-              </button>
+              </Button>
             </div>
 
             {/* Tutorial Content */}
@@ -153,14 +154,16 @@ export function MobilityFlow({
           >
             {/* Top Bar */}
             <div className="w-full flex justify-between items-center px-4 h-12 shrink-0">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowQuitConfirm(true)}
-                className="p-2 -ml-2 text-white/40 active:text-white transition-colors"
+                className="-ml-2 text-white/40 hover:text-white hover:bg-transparent active:text-white"
                 aria-label="Quit mobility"
               >
                 <X className="w-5 h-5" />
-              </button>
-              
+              </Button>
+
               <div className="flex flex-col items-center">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
                   {exerciseIndex + 1} OF {totalExercises}
@@ -170,13 +173,15 @@ export function MobilityFlow({
                 </span>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowTutorial(true)}
-                className="p-2 -mr-2 text-white/40 active:text-white transition-colors"
+                className="-mr-2 text-white/40 hover:text-white hover:bg-transparent active:text-white"
                 aria-label="How to do this exercise"
               >
                 <Info className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Core Display */}

@@ -181,12 +181,14 @@ function TodayContent({ date }: { date: Date }) {
     >
       <TopBar
         leftAction={
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setShowSplit(true)}
-            className="p-2 -ml-2 text-white/50 active:text-white transition-colors"
+            className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
           >
             <CalendarDays className="w-5 h-5" />
-          </button>
+          </Button>
         }
         center={
           <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
@@ -194,12 +196,14 @@ function TodayContent({ date }: { date: Date }) {
           </span>
         }
         rightAction={
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setShowHistory(true)}
-            className="p-2 -mr-2 text-white/60 active:text-white transition-colors scale-110"
+            className="-mr-2 text-white/60 hover:text-white hover:bg-transparent active:text-white scale-110"
           >
             <ChartBar className="w-6 h-6" />
-          </button>
+          </Button>
         }
       />
 

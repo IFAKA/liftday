@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { getWorkoutType } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
 import { WorkoutData, WorkoutType } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface WeeklySplitProps {
   currentDate: Date;
@@ -49,9 +51,9 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
         leftAction={
-          <button onClick={onBack} className="p-2 -ml-2 text-white/50 active:text-white transition-colors">
+          <Button variant="ghost" size="icon" onClick={onBack} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </Button>
         }
         center={
           <div className="flex flex-col items-center">
@@ -72,10 +74,10 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
             const dayNumber = format(day, 'd');
 
             return (
-              <div
+              <Card
                 key={dateKey}
                 className={cn(
-                  'flex items-center justify-between p-6 rounded-2xl transition-colors shadow-lg border',
+                  'flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl transition-colors shadow-lg',
                   isToday ? 'bg-white/20 ring-2 ring-white/30 border-transparent' : 'bg-[#1A1A1A] border-white/5',
                   isCompleted && 'opacity-30'
                 )}
@@ -105,7 +107,7 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                     <span className="text-fluid-label font-black text-white uppercase tracking-widest mt-2 bg-white/20 px-2 py-0.5 rounded animate-pulse">TODAY</span>
                   )}
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
