@@ -99,16 +99,16 @@ export function ExerciseScreen({
                   <ChevronLeft className="w-6 h-6" />
                 </Button>
               }
-              center={<span className="text-[10px] font-black uppercase tracking-tight truncate w-full text-center px-2">{exercise.name}</span>}
+              center={<span className="text-fluid-label font-black uppercase tracking-tight truncate w-full text-center px-2">{exercise.name}</span>}
             />
 
-            <div className="flex-1 overflow-y-auto px-2 pb-4 flex flex-col items-center">
+            <div className="flex-1 overflow-y-auto px-4 pb-safe pb-4 flex flex-col gap-4">
               {exercise.youtubeId && (
-                <div className="w-full aspect-video mb-3 rounded-lg overflow-hidden bg-white/5 shrink-0">
+                <div className="w-full aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0">
                   <ExerciseDemo youtubeId={exercise.youtubeId} title={exercise.name} />
                 </div>
               )}
-              <p className="text-[11px] text-white/70 text-center leading-snug">
+              <p className="text-fluid-label text-white/70 leading-relaxed">
                 {exercise.instruction}
               </p>
             </div>
