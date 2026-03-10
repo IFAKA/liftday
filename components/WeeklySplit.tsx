@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 
-import { startOfWeek, addDays, isSameDay, format } from 'date-fns';
-import { ChevronLeft } from 'lucide-react';
+import { startOfWeek, addDays, isSameDay, isBefore, format } from 'date-fns';
+import { ChevronLeft, CheckCircle2, Circle, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getWorkoutType } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
@@ -69,6 +69,8 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
             const dateKey = formatDateKey(day);
             const isCompleted = !!data[dateKey]?.logged_at;
             const isToday = isSameDay(day, currentDate);
+            const isPast = !isToday && isBefore(day, currentDate);
+            const isMissed = isPast && !isCompleted && workoutType !== 'rest';
             const dayName = format(day, 'EEE');
             const dayNumber = format(day, 'd');
 
@@ -78,7 +80,6 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                 className={cn(
                   'flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl transition-colors shadow-lg',
                   isToday ? 'bg-white/20 ring-2 ring-white/30 border-transparent' : 'bg-white/10 border-white/5',
-                  isCompleted && 'opacity-30'
                 )}
               >
                 <div className="flex flex-col min-w-0 flex-1">
@@ -89,20 +90,22 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                     className={cn(
                       'text-fluid-exercise font-black uppercase tracking-tight leading-none truncate',
                       WORKOUT_TYPE_COLORS[workoutType],
-                      isCompleted && 'text-white/60'
                     )}
                   >
                     {WORKOUT_TYPE_LABELS[workoutType]}
                   </span>
                 </div>
-                
-                <div className="flex flex-col items-end shrink-0 ml-4">
-                  {isCompleted && (
-                    <span className="text-fluid-label font-black text-white/60 uppercase tracking-widest leading-none">DONE</span>
-                  )}
-                  {isToday && !isCompleted && workoutType !== 'rest' && (
-                    <span className="text-fluid-label font-black text-white uppercase tracking-widest mt-2 bg-white/20 px-2 py-0.5 rounded animate-pulse">TODAY</span>
-                  )}
+
+                <div className="flex flex-col items-center shrink-0 ml-4">
+                  {isCompleted ? (
+                    <CheckCircle2 className="w-6 h-6 text-green-500" />
+                  ) : workoutType === 'rest' ? (
+                    <Minus className="w-5 h-5 text-white/20" />
+                  ) : isMissed ? (
+                    <Circle className="w-6 h-6 text-white/20" />
+                  ) : isToday ? (
+                    <span className="text-fluid-label font-black text-white uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded animate-pulse">TODAY</span>
+                  ) : null}
                 </div>
               </Card>
             );
