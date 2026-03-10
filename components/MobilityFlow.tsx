@@ -9,7 +9,6 @@ import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { MobilityExercise } from '@/lib/types';
 import { ExerciseDemo } from './ExerciseDemo';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
 
 interface MobilityFlowProps {
   exercise: MobilityExercise;
@@ -189,10 +188,7 @@ export function MobilityFlow({
               </h1>
 
               <span
-                className={cn(
-                  "font-mono leading-none font-black tabular-nums transition-all duration-300 text-fluid-timer",
-                  isPaused ? "opacity-30" : "text-white"
-                )}
+                className={`font-mono leading-none font-black tabular-nums transition-all duration-300 text-fluid-timer text-white${isPaused ? ' opacity-30' : ''}`}
               >
                 {timer}
               </span>

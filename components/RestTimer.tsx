@@ -7,7 +7,6 @@ import { Button } from './ui/button';
 import { TopBar } from './TopBar';
 import { REST_DURATION } from '@/lib/constants';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
 interface RestTimerProps {
@@ -126,10 +125,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
         />
 
         <span
-          className={cn(
-            "font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10 text-fluid-timer",
-            seconds <= 3 && seconds > 0 ? "text-white scale-110" : "text-white"
-          )}
+          className={`font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10 text-fluid-timer text-white${seconds <= 3 && seconds > 0 ? ' scale-110' : ''}`}
           style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
           key={seconds <= 3 ? seconds : 'normal'}
         >
