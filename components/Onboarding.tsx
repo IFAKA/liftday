@@ -124,7 +124,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </AnimatePresence>
       </div>
 
-      <div className="w-full px-2 pb-1 shrink-0 flex flex-col items-center gap-2">
+      <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col items-center gap-3">
         <div className="flex gap-1">
           {steps.map((_, i) => (
             <div
@@ -138,7 +138,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
         <Button
           onClick={handleNext}
-          className="w-full h-9 rounded-full text-[10px] font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-lg"
+          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
         >
           {currentStep.action}
         </Button>
