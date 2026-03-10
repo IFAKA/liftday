@@ -2,6 +2,7 @@
 
 import { CheckCircle2 } from 'lucide-react';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 import { EXERCISES } from '@/lib/constants';
 import { WorkoutData } from '@/lib/types';
 
@@ -48,11 +49,9 @@ export function SessionComplete(props: SessionCompleteProps) {
         </p>
 
         {isWorkout && workoutPropsTyped?.advancedTiers && workoutPropsTyped.advancedTiers.length > 0 && (
-          <div className="mt-8 bg-green-500/10 border border-green-500/20 px-6 py-3 rounded-2xl">
-            <p className="text-fluid-label text-green-400 uppercase tracking-widest font-black text-center">
-              ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
-            </p>
-          </div>
+          <Badge variant="ghost" className="mt-8 bg-green-500/10 border-green-500/20 px-6 py-3 rounded-2xl text-fluid-label text-green-400 uppercase tracking-widest font-black">
+            ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
+          </Badge>
         )}
       </div>
 

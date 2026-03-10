@@ -18,6 +18,7 @@ import { formatDisplayDate } from '@/lib/workout-utils';
 import { saveUserProfile, getDefaultProfile } from '@/lib/storage';
 import { getWorkoutType, getTrainingStreak } from '@/lib/schedule';
 import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -221,10 +222,10 @@ function TodayContent({ date }: { date: Date }) {
               {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
             </h1>
             {streak > 0 && (
-              <div className="flex items-center gap-2 mt-4 bg-orange-500/10 px-4 py-1.5 rounded-full border border-orange-500/20">
+              <Badge variant="ghost" className="mt-4 bg-orange-500/10 border-orange-500/20 text-fluid-label font-black text-orange-500 uppercase tracking-widest">
                 <Flame className="w-5 h-5 text-orange-500" />
-                <span className="text-fluid-label font-black text-orange-500 uppercase tracking-widest">{streak} DAY STREAK</span>
-              </div>
+                {streak} DAY STREAK
+              </Badge>
             )}
           </>
         )}

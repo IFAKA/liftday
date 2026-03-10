@@ -10,6 +10,7 @@ import { ExerciseDemo } from './ExerciseDemo';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Badge } from './ui/badge';
 
 interface ExerciseScreenProps {
   exercise: Exercise;
@@ -172,9 +173,9 @@ export function ExerciseScreen({
               />
 
               {previousRep !== null && !flashColor && (
-                <div className="absolute bottom-8 flex items-center gap-2 text-white/80 bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
-                  <span className="text-fluid-label font-mono font-bold tracking-widest">{previousRep} PREVIOUS BEST</span>
-                </div>
+                <Badge variant="ghost" className="absolute bottom-8 border-white/20 text-fluid-label font-mono font-bold tracking-widest">
+                  {previousRep} PREVIOUS BEST
+                </Badge>
               )}
             </div>
 
