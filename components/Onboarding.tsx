@@ -106,7 +106,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <Icon className="w-8 h-8 text-white" />
             </div>
 
-            <h1 className="text-xl font-black uppercase tracking-tight text-white mb-1 leading-none">
+            <h1 className="text-fluid-ui font-black uppercase tracking-tight text-white mb-1 leading-none">
               {currentStep.title}
             </h1>
 
@@ -114,7 +114,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               {currentStep.description.map((line, i) => (
                 <p
                   key={i}
-                  className="text-[9px] font-bold text-white/40 uppercase tracking-widest"
+                  className="text-fluid-label font-bold text-white/40 uppercase tracking-widest"
                 >
                   {line}
                 </p>

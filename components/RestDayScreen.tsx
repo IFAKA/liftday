@@ -68,7 +68,7 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
           REST
         </h1>
         {nextTraining && (
-          <p className="text-xs sm:text-sm font-bold text-white/40 uppercase tracking-widest px-6 text-center">
+          <p className="text-fluid-label font-bold text-white/40 uppercase tracking-widest px-6 text-center">
             NEXT: {nextTraining}
           </p>
         )}
@@ -77,7 +77,7 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
       <div className="w-full absolute bottom-4 sm:bottom-8 px-4 pb-safe z-10">
         <Button
           onClick={mobility.startMobility}
-          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-[#1A1A1A] text-white hover:bg-[#2A2A2A] active:scale-95 transition-all shadow-xl border border-white/10"
+          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-all shadow-xl border border-white/10"
         >
           <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 fill-current" />
           5 MIN MOBILITY

@@ -77,7 +77,7 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                 key={dateKey}
                 className={cn(
                   'flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl transition-colors shadow-lg',
-                  isToday ? 'bg-white/20 ring-2 ring-white/30 border-transparent' : 'bg-[#1A1A1A] border-white/5',
+                  isToday ? 'bg-white/20 ring-2 ring-white/30 border-transparent' : 'bg-white/10 border-white/5',
                   isCompleted && 'opacity-30'
                 )}
               >
@@ -87,7 +87,7 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                   </span>
                   <span
                     className={cn(
-                      'text-2xl font-black uppercase tracking-tight leading-none truncate',
+                      'text-fluid-exercise font-black uppercase tracking-tight leading-none truncate',
                       WORKOUT_TYPE_COLORS[workoutType],
                       isCompleted && 'text-white/60'
                     )}
@@ -100,7 +100,7 @@ export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
                   {isCompleted ? (
                     <span className="text-fluid-label font-black text-white/60 uppercase tracking-widest leading-none">DONE</span>
                   ) : (
-                    <span className="text-3xl font-black tabular-nums text-white leading-none">--</span>
+                    <span className="text-fluid-exercise font-black tabular-nums text-white leading-none">--</span>
                   )}
                   {isToday && !isCompleted && workoutType !== 'rest' && (
                     <span className="text-fluid-label font-black text-white uppercase tracking-widest mt-2 bg-white/20 px-2 py-0.5 rounded animate-pulse">TODAY</span>

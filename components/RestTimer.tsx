@@ -148,7 +148,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
         <Button
           variant="outline"
           onClick={onUndo}
-          className="w-full h-12 rounded-full text-sm font-black uppercase tracking-widest bg-white/10 border-white/20 text-white/80 active:bg-white/20 active:scale-95 transition-all"
+          className="w-full h-12 rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/10 border-white/20 text-white/80 active:bg-white/20 active:scale-95 transition-all"
         >
           Undo Last Set
         </Button>

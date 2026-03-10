@@ -116,7 +116,7 @@ export function MobilityFlow({
             />
 
             <div className="flex-1 overflow-y-auto px-6 pb-8 flex flex-col items-center">
-              <h2 className="text-2xl font-black uppercase tracking-tight text-white mb-6 text-center">
+              <h2 className="text-fluid-exercise font-black uppercase tracking-tight text-white mb-6 text-center">
                 {exercise.name}
               </h2>
               {exercise.youtubeId && (
@@ -128,7 +128,7 @@ export function MobilityFlow({
                   />
                 </div>
               )}
-              <p className="text-base text-white/70 text-center leading-relaxed">
+              <p className="text-fluid-label text-white/70 text-center leading-relaxed">
                 {exercise.instruction}
               </p>
             </div>
@@ -209,7 +209,7 @@ export function MobilityFlow({
               <Button
                 variant="outline"
                 onClick={isPaused ? onResume : onPause}
-                className="w-full h-12 rounded-full text-xs font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
+                className="w-full h-12 rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
               >
                 {isPaused ? 'Resume' : 'Pause Session'}
               </Button>

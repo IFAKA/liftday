@@ -90,10 +90,10 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-                  <Card key={ex.key} className="rounded-2xl p-4 bg-[#111] flex-col justify-between aspect-square min-h-0 gap-0 py-0 border-white/5">
+                  <Card key={ex.key} className="rounded-2xl p-4 flex-col justify-between aspect-square min-h-0 gap-0 py-0 border-white/5">
                     <p className="text-fluid-label font-bold text-white/60 leading-tight uppercase truncate">{ex.name}</p>
                     <div className="mt-auto">
-                      <p className="text-3xl font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>
+                      <p className="text-fluid-exercise font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>
                       <p className="text-fluid-label font-mono text-white/30 uppercase tracking-widest mt-2">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</p>
                     </div>
                   </Card>
@@ -117,13 +117,13 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
-                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-[#1A1A1A] border-white/5 shadow-lg">
+                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg">
                       <div className="flex flex-col">
                         <span className="text-fluid-label text-white/60 uppercase tracking-widest font-mono font-black mb-2">{format(displayDate, 'MMM d, EEE')}</span>
-                        <span className={cn('text-2xl font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
+                        <span className={cn('text-fluid-exercise font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-3xl font-black tabular-nums text-white leading-none">{totalReps}</span>
+                        <span className="text-fluid-exercise font-black tabular-nums text-white leading-none">{totalReps}</span>
                         <p className="text-fluid-label font-black font-mono text-white/50 uppercase tracking-widest mt-2">TOTAL REPS</p>
                       </div>
                     </Card>

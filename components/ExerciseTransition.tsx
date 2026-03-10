@@ -21,8 +21,8 @@ export function ExerciseTransition({ exerciseName, onComplete }: ExerciseTransit
       onClick={onComplete}
     >
       <div className="flex-1 flex flex-col items-center justify-center w-full px-2 text-center min-h-0">
-        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/40 mb-1">Next Up</p>
-        <h1 className="text-2xl font-black tracking-tight text-white leading-tight uppercase line-clamp-2">
+        <p className="text-fluid-label uppercase tracking-[0.2em] font-bold text-white/40 mb-1">Next Up</p>
+        <h1 className="text-fluid-exercise font-black tracking-tight text-white leading-tight uppercase line-clamp-2">
           {exerciseName}
         </h1>
       </div>
