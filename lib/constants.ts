@@ -1,4 +1,4 @@
-import { Exercise, MobilityExercise, MicroBreakExercise } from './types';
+import { Exercise, MobilityExercise } from './types';
 
 // PUSH DAY EXERCISES
 export const PUSH_EXERCISES: Exercise[] = [
@@ -252,39 +252,5 @@ export const MOBILITY_EXERCISES: MobilityExercise[] = [
     sides: false,
     instruction: 'Clasp hands behind back. Lift arms up 20x. Then doorway stretch, pulse gently 15x. Active mobilization.',
     youtubeId: '8wiZpixdHPU',
-  },
-];
-
-// Evidence-based micro-breaks (every 30 min, 2-3 min duration)
-export const MICRO_BREAK_EXERCISES: MicroBreakExercise[] = [
-  {
-    name: 'WALK + ARM CIRCLES',
-    duration: 150,
-    instruction: 'Walk around room. Every 10 steps: 5 big arm circles forward, 5 backward. Keep moving entire time.',
-    youtubeId: 'oMSVe7PWJ3o',
-  },
-  {
-    name: 'WALK + LEG SWINGS',
-    duration: 150,
-    instruction: 'Walk 20 steps. Stop, hold wall. 10 leg swings each leg (forward/back). Repeat. Stay active.',
-    youtubeId: 'QWwiOHexU8I',
-  },
-  {
-    name: 'WALK + TORSO TWISTS',
-    duration: 150,
-    instruction: 'Walk while twisting torso side to side. Every 10 steps: 5 deep squats. Keep moving.',
-    youtubeId: 'iZ1eZBY4fwM',
-  },
-  {
-    name: 'STAIRS OR MARCHING',
-    duration: 150,
-    instruction: 'Walk up/down stairs if available. Otherwise: march in place, knees high. Add arm pumps. Continuous.',
-    youtubeId: '8wiZpixdHPU',
-  },
-  {
-    name: 'WALK + SHOULDER ROLLS',
-    duration: 150,
-    instruction: 'Walk continuously. Roll shoulders backward 10x, forward 10x. Shake arms out. Repeat while walking.',
-    youtubeId: 'oMSVe7PWJ3o',
   },
 ];

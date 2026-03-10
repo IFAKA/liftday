@@ -8,10 +8,10 @@ import { WorkoutData, WorkoutType } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { TopBar } from './TopBar';
 
 interface HistoryScreenProps {
   data: WorkoutData;
-  currentDate: Date;
   onBack: () => void;
 }
 
@@ -20,8 +20,6 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
   pull: 'text-blue-400',
   legs: 'text-green-400',
 };
-
-import { TopBar } from './TopBar';
 
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   useEffect(() => {

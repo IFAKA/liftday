@@ -11,6 +11,7 @@ import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from './ui/badge';
+import { TopBar } from './TopBar';
 
 interface ExerciseScreenProps {
   exercise: Exercise;
@@ -24,8 +25,6 @@ interface ExerciseScreenProps {
   onLogSet: (value: number) => void;
   onQuit: () => void;
 }
-
-import { TopBar } from './TopBar';
 
 export function ExerciseScreen({
   exercise,
@@ -90,7 +89,7 @@ export function ExerciseScreen({
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.1}
-            onDragEnd={(e, { offset, velocity }) => {
+            onDragEnd={(_, { offset, velocity }) => {
               if (offset.x > 30 || velocity.x > 400) setShowTutorial(false);
             }}
           >
@@ -128,8 +127,7 @@ export function ExerciseScreen({
             drag
             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
             dragElastic={0.1}
-            onDragEnd={(e, { offset, velocity }) => {
-              // Horizontal: Swipe left for tutorial
+            onDragEnd={(_, { offset, velocity }) => {
               if (offset.x < -40 || velocity.x < -400) {
                 setShowTutorial(true);
               }

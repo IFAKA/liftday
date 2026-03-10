@@ -10,6 +10,7 @@ import { formatDateKey } from '@/lib/workout-utils';
 import { WorkoutData, WorkoutType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { TopBar } from './TopBar';
 
 interface WeeklySplitProps {
   currentDate: Date;
@@ -30,8 +31,6 @@ const WORKOUT_TYPE_LABELS: Record<WorkoutType, string> = {
   legs: 'LEGS',
   rest: 'REST',
 };
-
-import { TopBar } from './TopBar';
 
 export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
   useEffect(() => {

@@ -17,7 +17,7 @@ export function ExerciseTransition({ exerciseName, onComplete }: ExerciseTransit
 
   return (
     <div
-      className="flex flex-col items-center justify-between w-full h-full bg-black p-2 cursor-pointer select-none overflow-hidden relative"
+      className="flex flex-col items-center justify-between w-full h-full bg-black p-2 overflow-hidden relative"
       onClick={onComplete}
     >
       <div className="flex-1 flex flex-col items-center justify-center w-full px-2 text-center min-h-0">
@@ -27,10 +27,10 @@ export function ExerciseTransition({ exerciseName, onComplete }: ExerciseTransit
         </h1>
       </div>
 
-      <div className="w-full shrink-0 z-10">
+      <div className="w-full shrink-0 z-10" onClick={(e) => e.stopPropagation()}>
         <Button
           onClick={onComplete}
-          className="w-full h-11 rounded-full bg-white/10 text-white active:scale-95 transition-all text-sm font-bold uppercase tracking-widest border border-white/5"
+          className="w-full btn-fluid rounded-full bg-white/10 text-white active:scale-95 transition-all font-black uppercase tracking-widest border border-white/5"
         >
           <Play className="w-4 h-4 mr-2 fill-current" />
           Start

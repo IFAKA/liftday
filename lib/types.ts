@@ -76,13 +76,6 @@ export interface MobilityExercise {
   youtubeId?: string;
 }
 
-export interface MicroBreakExercise {
-  name: string;
-  duration: number;
-  instruction: string;
-  youtubeId?: string;
-}
-
 export interface StorageAdapter {
   loadWorkoutData(): Promise<WorkoutData>;
   saveSession(dateKey: string, session: WorkoutSession): Promise<void>;

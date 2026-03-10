@@ -19,6 +19,7 @@ import { saveUserProfile, getDefaultProfile } from '@/lib/storage';
 import { getWorkoutType, getTrainingStreak } from '@/lib/schedule';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { TopBar } from './TopBar';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -62,8 +63,6 @@ export function TodayScreen() {
   return <TodayContent date={today} />;
 }
 
-import { TopBar } from './TopBar';
-
 function TodayContent({ date }: { date: Date }) {
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
@@ -79,7 +78,6 @@ function TodayContent({ date }: { date: Date }) {
     return (
       <HistoryScreen
         data={workout.data}
-        currentDate={date}
         onBack={() => setShowHistory(false)}
       />
     );
@@ -169,15 +167,9 @@ function TodayContent({ date }: { date: Date }) {
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.1}
-      onDragEnd={(e, { offset, velocity }) => {
-        // Swipe Left (reveals history on the right)
-        if (offset.x < -40 || velocity.x < -400) {
-          setShowHistory(true);
-        }
-        // Swipe Right (reveals weekly split on the left)
-        if (offset.x > 40 || velocity.x > 400) {
-          setShowSplit(true);
-        }
+      onDragEnd={(_, { offset, velocity }) => {
+        if (offset.x < -40 || velocity.x < -400) setShowHistory(true);
+        if (offset.x > 40 || velocity.x > 400) setShowSplit(true);
       }}
     >
       <TopBar
