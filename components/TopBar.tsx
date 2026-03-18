@@ -13,7 +13,7 @@ interface TopBarProps {
 export function TopBar({ leftAction, center, rightAction, className }: TopBarProps) {
   return (
     <div className={cn(
-      "w-full h-14 sm:h-16 shrink-0 flex items-center justify-between px-4 sm:px-6 pt-safe relative z-50",
+      "w-full h-16 sm:h-20 md:h-14 shrink-0 flex items-center justify-between px-4 sm:px-6 pt-safe relative z-50",
       className
     )}>
       <div className="flex-1 flex justify-start scale-110">

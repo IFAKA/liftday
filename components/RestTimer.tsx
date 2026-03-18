@@ -105,8 +105,8 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
     >
       <TopBar
         leftAction={
-          <Button variant="ghost" size="icon" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/60 hover:text-white hover:bg-transparent active:text-white">
-            <X className="w-6 h-6" />
+          <Button variant="ghost" size="icon-xl" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/60 hover:text-white hover:bg-transparent active:text-white">
+            <X className="icon-lg" />
           </Button>
         }
         center={<span className="text-fluid-label font-black uppercase tracking-[0.2em] text-white/80">Resting</span>}
@@ -141,10 +141,10 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
         </div>
       </div>
 
-      <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-3 z-20">
+      <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-4 z-20">
         <Button
           onClick={onSkip}
-          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
         >
           Skip Rest
         </Button>
@@ -152,7 +152,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
         <Button
           variant="outline"
           onClick={onUndo}
-          className="w-full h-12 rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/10 border-white/20 text-white/80 active:bg-white/20 active:scale-95 transition-all"
+          className="w-full btn-mobile-secondary rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/10 border-white/20 text-white/80 active:bg-white/20 active:scale-95 transition-all"
         >
           Undo Last Set
         </Button>

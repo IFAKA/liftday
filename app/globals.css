@@ -337,8 +337,8 @@ svg {
 
 @media (min-width: 321px) {
   .touch-target {
-    min-height: 48px;
-    min-width: 48px;
+    min-height: 56px;
+    min-width: 56px;
   }
 }
 
@@ -396,4 +396,32 @@ svg {
   .responsive-spacing-lg {
     @apply gap-6 p-8;
   }
+}
+
+/* ============================================================================
+   MOBILE ACCESSIBILITY - Larger buttons, icons, touch targets for readability
+   ============================================================================ */
+
+.btn-mobile-accessible {
+  @apply h-16 sm:h-20 md:h-16 text-base sm:text-xl md:text-base;
+}
+
+.btn-mobile-secondary {
+  @apply h-14 sm:h-16 md:h-14 text-sm sm:text-lg md:text-sm;
+}
+
+.icon-btn-lg {
+  @apply w-14 h-14 sm:w-16 sm:h-16 md:w-12 md:h-12;
+}
+
+.icon-btn-md {
+  @apply w-12 h-12 sm:w-14 sm:h-14 md:w-10 md:h-10;
+}
+
+.icon-lg {
+  @apply w-8 h-8 sm:w-10 sm:h-10 md:w-6 md:h-6;
+}
+
+.icon-md {
+  @apply w-6 h-6 sm:w-8 sm:h-8 md:w-5 md:h-5;
 }

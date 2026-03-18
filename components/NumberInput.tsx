@@ -98,7 +98,7 @@ export function NumberInput({
           onContextMenu={(e) => e.preventDefault()}
           aria-label="Decrease"
         >
-          <Minus className="w-8 h-8 text-white opacity-20 group-active:opacity-100 transition-opacity" />
+          <Minus className="icon-lg text-white opacity-20 group-active:opacity-100 transition-opacity" />
         </Button>
 
         <Button
@@ -110,7 +110,7 @@ export function NumberInput({
           onContextMenu={(e) => e.preventDefault()}
           aria-label="Increase"
         >
-          <Plus className="w-8 h-8 text-white opacity-20 group-active:opacity-100 transition-opacity" />
+          <Plus className="icon-lg text-white opacity-20 group-active:opacity-100 transition-opacity" />
         </Button>
       </div>
     </div>

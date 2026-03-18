@@ -95,8 +95,8 @@ export function ExerciseScreen({
           >
             <TopBar
               leftAction={
-                <Button variant="ghost" size="icon" onClick={() => setShowTutorial(false)} className="-ml-2 text-white hover:bg-white/10 hover:text-white">
-                  <ChevronLeft className="w-6 h-6" />
+                <Button variant="ghost" size="icon-xl" onClick={() => setShowTutorial(false)} className="-ml-2 text-white hover:bg-white/10 hover:text-white">
+                  <ChevronLeft className="icon-lg" />
                 </Button>
               }
               center={<span className="text-fluid-label font-black uppercase tracking-tight truncate w-full text-center px-2">{exercise.name}</span>}
@@ -139,8 +139,8 @@ export function ExerciseScreen({
           >
             <TopBar
               leftAction={
-                <Button variant="ghost" size="icon" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
-                  <X className="w-5 h-5" />
+                <Button variant="ghost" size="icon-xl" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+                  <X className="icon-lg" />
                 </Button>
               }
               center={
@@ -149,8 +149,8 @@ export function ExerciseScreen({
                 </span>
               }
               rightAction={
-                <Button variant="ghost" size="icon" onClick={() => setShowTutorial(true)} className="-mr-2 text-white hover:bg-white/20 hover:text-white">
-                  <Info className="w-6 h-6" />
+                <Button variant="ghost" size="icon-xl" onClick={() => setShowTutorial(true)} className="-mr-2 text-white hover:bg-white/20 hover:text-white">
+                  <Info className="icon-lg" />
                 </Button>
               }
             />
@@ -180,7 +180,7 @@ export function ExerciseScreen({
             <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
               <Button
                 onClick={() => onLogSet(val)}
-                className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+                className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >
                 LOG SET
               </Button>

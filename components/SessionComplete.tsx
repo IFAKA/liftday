@@ -33,7 +33,7 @@ export function SessionComplete(props: SessionCompleteProps) {
     <div className="flex flex-col items-center justify-between w-full h-full bg-black px-safe pt-safe pb-safe overflow-hidden relative">
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 py-8">
         <CheckCircle2
-          className="w-20 h-20 text-green-500 mb-4"
+          className="w-24 h-24 sm:w-28 sm:h-28 text-green-500 mb-4"
           style={{ animation: 'bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards' }}
         />
         
@@ -58,7 +58,7 @@ export function SessionComplete(props: SessionCompleteProps) {
       <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
         <Button
           onClick={props.onDone}
-          className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
         >
           DONE
         </Button>

@@ -194,10 +194,10 @@ export function MobilityFlow({
               </span>
             </div>
 
-            <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-3">
+            <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-4">
               <Button
                 onClick={onSkip}
-                className="w-full btn-fluid rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+                className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >
                 Skip Exercise
               </Button>
@@ -205,7 +205,7 @@ export function MobilityFlow({
               <Button
                 variant="outline"
                 onClick={isPaused ? onResume : onPause}
-                className="w-full h-12 rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
+                className="w-full btn-mobile-secondary rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
               >
                 {isPaused ? 'Resume' : 'Pause Session'}
               </Button>
