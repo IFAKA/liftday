@@ -56,10 +56,63 @@ export const PUSH_EXERCISES: Exercise[] = [
     instruction: 'Face anchor, lean back 45°, arms straight. Keeping arms extended, elevate shoulders as high as possible. Hold 1 sec at top, lower slowly. Upper trap isolation — key for neck-to-shoulder thickness perceived as physical dominance.',
     workoutType: 'push',
   },
+  {
+    key: 'pushup',
+    name: 'PUSH-UP',
+    unit: 'reps',
+    instruction: 'Hands shoulder-width, body straight. Lower chest to floor, elbows at 45°. Press back up. The core horizontal push — master form here before elevating feet.',
+    youtubeId: 'IODxDxX7oi4',
+    workoutType: 'push',
+  },
+  {
+    key: 'pushup_feet_elevated',
+    name: 'FEET-ELEVATED PUSH-UP',
+    unit: 'reps',
+    instruction: 'Feet on bench, hands shoulder-width. Lower chest to floor, press back up. Shifts more load to upper chest and shoulders. Keep core tight throughout.',
+    workoutType: 'push',
+  },
+  {
+    key: 'bench_dip',
+    name: 'BENCH DIP',
+    unit: 'reps',
+    instruction: 'Hands on bench behind you, fingers forward. Feet extended forward on ground. Lower until elbows reach 90°, press back up. Back close to bench throughout. Entry-level compound for triceps + lower chest.',
+    youtubeId: 'JnLFSFurrpQ',
+    workoutType: 'push',
+  },
+  {
+    key: 'dip',
+    name: 'PARALLEL BAR DIP',
+    unit: 'reps',
+    instruction: 'Grip parallel bars, arms straight. Lean slightly forward, lower until elbows reach 90°. Press up hard. Best compound for triceps + lower chest at the park — full bodyweight loaded.',
+    youtubeId: 'wjUmnZH528M',
+    workoutType: 'push',
+  },
 ];
 
 // PULL DAY EXERCISES
 export const PULL_EXERCISES: Exercise[] = [
+  {
+    key: 'negative_pullup',
+    name: 'PULL-UP NEGATIVE',
+    unit: 'reps',
+    instruction: 'Jump or step up with chin over bar. Cross feet, brace core. Lower as slowly as possible — minimum 5 seconds, aim for 8–10. Full extension at bottom. Each session add 1 sec per rep. This is the direct path to your first pull-up.',
+    youtubeId: '1SBB8C2KJ9k',
+    workoutType: 'pull',
+  },
+  {
+    key: 'trx_curl_assisted',
+    name: 'TRX BICEP CURL (ASSISTED)',
+    unit: 'reps',
+    instruction: 'Face anchor, nearly upright, slight lean back. Palms up, arms extended. Curl handles toward shoulders — elbows stay fixed at your sides. Upright angle reduces load, build the movement pattern here.',
+    workoutType: 'pull',
+  },
+  {
+    key: 'trx_curl',
+    name: 'TRX BICEP CURL',
+    unit: 'reps',
+    instruction: 'Face anchor, lean back 45°. Palms up, arms extended. Curl handles toward shoulders — only forearms move, elbows fixed. Squeeze biceps hard at top. Full load version.',
+    workoutType: 'pull',
+  },
   {
     key: 'trx_row_steep',
     name: 'TRX ROW (STEEP)',
@@ -172,6 +225,21 @@ export const LEGS_EXERCISES: Exercise[] = [
     unit: 'reps',
     instruction: 'Stand on edge of step, hold TRX for balance. Raise up on toes. Lower heels below step. Full range.',
     youtubeId: 'k8ipHzKeAkQ',
+    workoutType: 'legs',
+  },
+  {
+    key: 'hip_thrust',
+    name: 'HIP THRUST',
+    unit: 'reps',
+    instruction: 'Upper back on bench, feet flat, knees 90°. Drive hips up explosively, squeeze glutes hard at top for 1 sec. Lower controlled. The bench allows full hip extension range — significantly better glute activation than a floor bridge.',
+    youtubeId: 'xDmFkJxPzeM',
+    workoutType: 'legs',
+  },
+  {
+    key: 'nordic_curl',
+    name: 'NORDIC CURL',
+    unit: 'reps',
+    instruction: 'Kneel, feet anchored under a bar or bench. Arms crossed on chest. Lower torso toward floor as slowly as possible — minimum 3 seconds. Catch with hands if needed. Pull back up using hamstrings, assist with hands only enough to complete the rep. The most effective hamstring builder in calisthenics.',
     workoutType: 'legs',
   },
   {

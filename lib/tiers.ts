@@ -3,11 +3,18 @@ import { TierChain, TierMap, WorkoutType, ExerciseKey } from './types';
 export const TIER_CHAINS: TierChain[] = [
   // ── PUSH DAY ──────────────────────────────────────────────────────────────
   {
-    slotId: 'push_press',
+    slotId: 'push_horizontal',
     workoutType: 'push',
     fixed: false,
-    priority: 'support',
-    exercises: ['incline_pushup', 'trx_pushup', 'pike_pushup'],
+    priority: 'critical',
+    exercises: ['incline_pushup', 'pushup', 'pushup_feet_elevated'],
+  },
+  {
+    slotId: 'push_dip',
+    workoutType: 'push',
+    fixed: false,
+    priority: 'high',
+    exercises: ['bench_dip', 'dip'],
   },
   {
     slotId: 'push_overhead',
@@ -35,16 +42,23 @@ export const TIER_CHAINS: TierChain[] = [
   {
     slotId: 'pull_vertical',
     workoutType: 'pull',
-    fixed: false,
+    fixed: true,
     priority: 'critical',
-    exercises: ['trx_row_steep', 'trx_kneeling_lat_pulldown', 'trx_straight_arm_pulldown'],
+    exercises: ['negative_pullup'],
   },
   {
     slotId: 'pull_row',
     workoutType: 'pull',
+    fixed: false,
+    priority: 'critical',
+    exercises: ['trx_row_steep', 'trx_row'],
+  },
+  {
+    slotId: 'pull_lat',
+    workoutType: 'pull',
     fixed: true,
     priority: 'high',
-    exercises: ['trx_row'],
+    exercises: ['trx_kneeling_lat_pulldown'],
   },
   {
     slotId: 'pull_rear_delt',
@@ -54,18 +68,11 @@ export const TIER_CHAINS: TierChain[] = [
     exercises: ['face_pull'],
   },
   {
-    slotId: 'pull_t_raise',
-    workoutType: 'pull',
-    fixed: true,
-    priority: 'high',
-    exercises: ['trx_t_raise'],
-  },
-  {
-    slotId: 'pull_forearm',
+    slotId: 'pull_bicep',
     workoutType: 'pull',
     fixed: false,
     priority: 'high',
-    exercises: ['trx_reverse_curl_assisted', 'trx_reverse_curl'],
+    exercises: ['trx_curl_assisted', 'trx_curl'],
   },
 
   // ── LEGS DAY ──────────────────────────────────────────────────────────────
@@ -73,15 +80,22 @@ export const TIER_CHAINS: TierChain[] = [
     slotId: 'legs_squat',
     workoutType: 'legs',
     fixed: false,
-    priority: 'indirect',
+    priority: 'critical',
     exercises: ['trx_assisted_squat', 'bulgarian_split_squat', 'pistol_squat_progression'],
   },
   {
     slotId: 'legs_posterior',
     workoutType: 'legs',
     fixed: false,
-    priority: 'indirect',
-    exercises: ['glute_bridge', 'trx_hamstring_curl'],
+    priority: 'critical',
+    exercises: ['glute_bridge', 'hip_thrust', 'trx_hamstring_curl'],
+  },
+  {
+    slotId: 'legs_hamstring',
+    workoutType: 'legs',
+    fixed: true,
+    priority: 'high',
+    exercises: ['nordic_curl'],
   },
   {
     slotId: 'legs_calf',

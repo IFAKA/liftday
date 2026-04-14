@@ -2,33 +2,42 @@
 export type PushExerciseKey =
   | 'incline_pushup'
   | 'trx_pushup'
+  | 'pushup'
+  | 'pushup_feet_elevated'
   | 'pike_pushup'
   | 'decline_pike_pushup'
+  | 'bench_dip'
+  | 'dip'
   | 'trx_y_raise'
   | 'trx_upright_row'   // side delts + upper traps
   | 'trx_shrug';        // upper trap isolation
 
 // Pull exercises
 export type PullExerciseKey =
+  | 'negative_pullup'
   | 'trx_kneeling_lat_pulldown'
   | 'trx_straight_arm_pulldown'
   | 'trx_row'
   | 'trx_row_steep'
   | 'face_pull'
-  | 'trx_t_raise'               // MOVED from push — rear delts (pull movement)
-  | 'trx_reverse_curl'          // forearm hypertrophy (loaded)
-  | 'trx_reverse_curl_assisted'; // forearm entry tier (unloaded)
+  | 'trx_t_raise'
+  | 'trx_curl_assisted'
+  | 'trx_curl'
+  | 'trx_reverse_curl'
+  | 'trx_reverse_curl_assisted';
 
 // Legs exercises
 export type LegsExerciseKey =
   | 'bulgarian_split_squat'
   | 'pistol_squat_progression'
   | 'trx_hamstring_curl'
+  | 'hip_thrust'
+  | 'nordic_curl'
   | 'calf_raise'
   | 'trx_assisted_squat'
   | 'glute_bridge'
-  | 'neck_iso_flex'   // isometric neck flexion (front)
-  | 'neck_iso_ext';   // isometric neck extension (back)
+  | 'neck_iso_flex'
+  | 'neck_iso_ext';
 
 export type ExerciseKey = PushExerciseKey | PullExerciseKey | LegsExerciseKey;
 
