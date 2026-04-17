@@ -24,6 +24,7 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
 
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [showPBs, setShowPBs] = useState(false);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -61,6 +62,40 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     }
     return result;
   }, [data]);
+
+  // Personal Bests list view
+  if (showPBs) {
+    return (
+      <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
+        <TopBar
+          leftAction={
+            <Button variant="ghost" size="icon" onClick={() => setShowPBs(false)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          }
+          center={
+            <div className="flex flex-col items-center">
+              <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Personal Bests</span>
+              <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{Object.keys(prs).length} EXERCISES</span>
+            </div>
+          }
+        />
+        <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
+          <div className="flex flex-col gap-3">
+            {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
+              <div key={ex.key} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5">
+                <span className="text-fluid-ui font-black uppercase tracking-tight text-white truncate">{ex.name}</span>
+                <div className="flex items-baseline gap-2 shrink-0 ml-3">
+                  <span className="text-fluid-exercise font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</span>
+                  <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Session detail view
   if (selectedSession) {
@@ -114,20 +149,26 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
           {/* Best Sets - Grid */}
           {Object.keys(prs).length > 0 && (
             <div className="mb-8">
-              <div className="flex items-center gap-2 mb-4 px-1">
+              <button onClick={() => setShowPBs(true)} className="flex items-center gap-2 mb-4 px-1 active:opacity-70 transition-opacity">
                 <Trophy className="w-5 h-5 text-yellow-500" />
                 <p className="text-fluid-label font-bold uppercase tracking-widest text-white/40">Personal Bests</p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-                  <Card key={ex.key} className="rounded-2xl p-4 flex-col justify-between aspect-square min-h-0 gap-0 border-white/5">
-                    <p className="text-fluid-label font-bold text-white/60 leading-tight uppercase truncate">{ex.name}</p>
-                    <div className="mt-auto">
-                      <p className="text-fluid-exercise font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</p>
-                      <p className="text-fluid-label font-mono text-white/30 uppercase tracking-widest mt-2">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</p>
+                <ChevronLeft className="w-4 h-4 text-white/20 rotate-180 ml-auto" />
+              </button>
+              <div className="flex flex-col gap-3">
+                {EXERCISES.filter((ex) => prs[ex.key]).slice(0, 4).map((ex) => (
+                  <div key={ex.key} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5">
+                    <span className="text-fluid-ui font-black uppercase tracking-tight text-white truncate">{ex.name}</span>
+                    <div className="flex items-baseline gap-2 shrink-0 ml-3">
+                      <span className="text-fluid-exercise font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</span>
+                      <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</span>
                     </div>
-                  </Card>
+                  </div>
                 ))}
+                {EXERCISES.filter((ex) => prs[ex.key]).length > 4 && (
+                  <button onClick={() => setShowPBs(true)} className="text-fluid-label font-black uppercase tracking-widest text-white/30 py-2 active:opacity-70 transition-opacity text-center">
+                    +{EXERCISES.filter((ex) => prs[ex.key]).length - 4} more
+                  </button>
+                )}
               </div>
             </div>
           )}
