@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dumbbell, CheckCircle, Flame, ChartBar, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
@@ -9,9 +10,6 @@ import { ExerciseTransition } from '@/components/ExerciseTransition';
 import { SessionComplete } from '@/components/SessionComplete';
 import { RestDayScreen } from '@/components/RestDayScreen';
 import { Onboarding } from '@/components/Onboarding';
-import { WeeklySplit } from '@/components/WeeklySplit';
-import { HistoryScreen } from '@/components/HistoryScreen';
-import { RoutineScreen } from '@/components/RoutineScreen';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
@@ -65,50 +63,12 @@ export function TodayScreen() {
 }
 
 function TodayContent({ date }: { date: Date }) {
+  const router = useRouter();
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
   const workoutType = getWorkoutType(date);
   const streak = getTrainingStreak(date, workout.data);
-  
-  const [showHistory, setShowHistory] = useState(false);
-  const [showSplit, setShowSplit] = useState(false);
-  const [showRoutine, setShowRoutine] = useState(false);
-
-  // Routine preview overlay
-  if (showRoutine) {
-    const typeColor = workoutType === 'push' ? 'text-orange-400' : workoutType === 'pull' ? 'text-blue-400' : 'text-green-400';
-    return (
-      <RoutineScreen
-        exercises={workout.exercises}
-        title={workoutType === 'push' ? 'Push' : workoutType === 'pull' ? 'Pull' : 'Legs'}
-        titleColor={typeColor}
-        subtitle={`${workout.exercises.length} EXERCISES · ${workout.setsPerExercise} SETS`}
-        onBack={() => setShowRoutine(false)}
-      />
-    );
-  }
-
-  // History screen overlay
-  if (showHistory) {
-    return (
-      <HistoryScreen
-        data={workout.data}
-        onBack={() => setShowHistory(false)}
-      />
-    );
-  }
-
-  // Weekly Split screen overlay
-  if (showSplit) {
-    return (
-      <WeeklySplit 
-        currentDate={date} 
-        data={workout.data} 
-        onBack={() => setShowSplit(false)} 
-      />
-    );
-  }
 
   // Rest day
   if (!schedule.isTraining) {
@@ -185,8 +145,8 @@ function TodayContent({ date }: { date: Date }) {
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.1}
       onDragEnd={(_, { offset, velocity }) => {
-        if (offset.x < -40 || velocity.x < -400) setShowHistory(true);
-        if (offset.x > 40 || velocity.x > 400) setShowSplit(true);
+        if (offset.x < -40 || velocity.x < -400) router.push('/history');
+        if (offset.x > 40 || velocity.x > 400) router.push('/split');
       }}
     >
       <TopBar
@@ -195,7 +155,7 @@ function TodayContent({ date }: { date: Date }) {
             variant="ghost"
             size="icon"
             aria-label="Weekly split"
-            onClick={() => setShowSplit(true)}
+            onClick={() => router.push('/split')}
             className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
           >
             <CalendarDays className="w-5 h-5" />
@@ -211,7 +171,7 @@ function TodayContent({ date }: { date: Date }) {
             variant="ghost"
             size="icon"
             aria-label="History"
-            onClick={() => setShowHistory(true)}
+            onClick={() => router.push('/history')}
             className="-mr-2 text-white/60 hover:text-white hover:bg-transparent active:text-white scale-110"
           >
             <ChartBar className="w-6 h-6" />
@@ -234,7 +194,7 @@ function TodayContent({ date }: { date: Date }) {
             </h1>
             <Button
               variant="ghost"
-              onClick={() => setShowRoutine(true)}
+              onClick={() => router.push('/routine')}
               className="mt-3 text-white/40 hover:text-white/70 hover:bg-transparent active:text-white text-fluid-label font-black uppercase tracking-widest px-4 py-2"
             >
               View Routine
