@@ -194,6 +194,7 @@ function TodayContent({ date }: { date: Date }) {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Weekly split"
             onClick={() => setShowSplit(true)}
             className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
           >
@@ -209,6 +210,7 @@ function TodayContent({ date }: { date: Date }) {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="History"
             onClick={() => setShowHistory(true)}
             className="-mr-2 text-white/60 hover:text-white hover:bg-transparent active:text-white scale-110"
           >

@@ -69,7 +69,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
         <TopBar
           leftAction={
-            <Button variant="ghost" size="icon" onClick={() => setShowPBs(false)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+            <Button variant="ghost" size="icon" aria-label="Back" onClick={() => setShowPBs(false)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
               <ChevronLeft className="w-5 h-5" />
             </Button>
           }
@@ -128,7 +128,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
         leftAction={
-          <Button variant="ghost" size="icon" onClick={onBack} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+          <Button variant="ghost" size="icon" aria-label="Back" onClick={onBack} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }

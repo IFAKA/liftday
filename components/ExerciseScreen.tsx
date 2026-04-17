@@ -95,7 +95,7 @@ export function ExerciseScreen({
           >
             <TopBar
               leftAction={
-                <Button variant="ghost" size="icon-xl" onClick={() => setShowTutorial(false)} className="-ml-2 text-white hover:bg-white/10 hover:text-white">
+                <Button variant="ghost" size="icon-xl" aria-label="Back" onClick={() => setShowTutorial(false)} className="-ml-2 text-white hover:bg-white/10 hover:text-white">
                   <ChevronLeft className="icon-lg" />
                 </Button>
               }
@@ -139,7 +139,7 @@ export function ExerciseScreen({
           >
             <TopBar
               leftAction={
-                <Button variant="ghost" size="icon-xl" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+                <Button variant="ghost" size="icon-xl" aria-label="Quit workout" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
                   <X className="icon-lg" />
                 </Button>
               }
@@ -149,7 +149,7 @@ export function ExerciseScreen({
                 </span>
               }
               rightAction={
-                <Button variant="ghost" size="icon-xl" onClick={() => setShowTutorial(true)} className="-mr-2 text-white hover:bg-white/20 hover:text-white">
+                <Button variant="ghost" size="icon-xl" aria-label="Exercise tutorial" onClick={() => setShowTutorial(true)} className="-mr-2 text-white hover:bg-white/20 hover:text-white">
                   <Info className="icon-lg" />
                 </Button>
               }

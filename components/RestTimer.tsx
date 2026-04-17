@@ -106,7 +106,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
     >
       <TopBar
         leftAction={
-          <Button variant="ghost" size="icon-xl" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/60 hover:text-white hover:bg-transparent active:text-white">
+          <Button variant="ghost" size="icon-xl" aria-label="Quit workout" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/60 hover:text-white hover:bg-transparent active:text-white">
             <X className="icon-lg" />
           </Button>
         }

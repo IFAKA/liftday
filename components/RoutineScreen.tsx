@@ -35,6 +35,7 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Back"
             onClick={onBack}
             className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
           >
