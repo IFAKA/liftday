@@ -1,15 +1,15 @@
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { WorkoutData, WorkoutType, Exercise } from '@/lib/types';
+import { WorkoutData, WorkoutType } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TopBar } from './TopBar';
-import { RoutineScreen } from './RoutineScreen';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -23,18 +23,7 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
 };
 
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
-  const [selectedSession, setSelectedSession] = useState<string | null>(null);
-  const [showPBs, setShowPBs] = useState(false);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      onBack();
-      window.history.pushState({ history: true }, '');
-    };
-    window.history.pushState({ history: true }, '');
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [onBack]);
+  const router = useRouter();
 
   const totalSessions = useMemo(
     () => Object.values(data).filter((s) => s.logged_at).length,
@@ -63,67 +52,6 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     return result;
   }, [data]);
 
-  // Personal Bests list view
-  if (showPBs) {
-    return (
-      <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
-        <TopBar
-          leftAction={
-            <Button variant="ghost" size="icon" aria-label="Back" onClick={() => setShowPBs(false)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          }
-          center={
-            <div className="flex flex-col items-center">
-              <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Personal Bests</span>
-              <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{Object.keys(prs).length} EXERCISES</span>
-            </div>
-          }
-        />
-        <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
-          <div className="flex flex-col gap-3">
-            {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-              <div key={ex.key} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5">
-                <span className="text-fluid-ui font-black uppercase tracking-tight text-white truncate">{ex.name}</span>
-                <div className="flex items-baseline gap-2 shrink-0 ml-3">
-                  <span className="text-fluid-exercise font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</span>
-                  <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Session detail view
-  if (selectedSession) {
-    const session = data[selectedSession];
-    const wt = session?.workout_type;
-    const allExercises: Exercise[] = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
-    const exercisesWithReps = allExercises.filter((ex) => {
-      const reps = session?.[ex.key];
-      return reps && reps.length > 0;
-    });
-    const loggedReps: Record<string, number[]> = {};
-    for (const ex of exercisesWithReps) {
-      const reps = session?.[ex.key];
-      if (reps) loggedReps[ex.key] = reps;
-    }
-    const displayDate = new Date(selectedSession + 'T12:00:00');
-    return (
-      <RoutineScreen
-        exercises={exercisesWithReps}
-        title={wt?.toUpperCase() ?? ''}
-        titleColor={wt ? TYPE_COLOR[wt] : 'text-white'}
-        subtitle={format(displayDate, 'MMM d, EEE').toUpperCase()}
-        loggedReps={loggedReps}
-        onBack={() => setSelectedSession(null)}
-      />
-    );
-  }
-
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
@@ -149,7 +77,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
           {/* Personal Bests — single list item */}
           {Object.keys(prs).length > 0 && (
             <div className="mb-4">
-              <Card className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg cursor-pointer active:scale-95 transition-transform" onClick={() => setShowPBs(true)}>
+              <Card className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg cursor-pointer active:scale-95 transition-transform" onClick={() => router.push('/history/personal-bests')}>
                 <div className="flex items-center gap-3">
                   <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
                   <span className="text-fluid-exercise font-black uppercase tracking-tight text-white leading-none">Personal Bests</span>
@@ -177,7 +105,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
-                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg cursor-pointer active:scale-95 transition-transform" onClick={() => setSelectedSession(dateKey)}>
+                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg cursor-pointer active:scale-95 transition-transform" onClick={() => router.push(`/history/${dateKey}`)}>
                       <div className="flex flex-col">
                         <span className="text-fluid-label text-white/60 uppercase tracking-widest font-mono font-black mb-2">{format(displayDate, 'MMM d, EEE')}</span>
                         <span className={cn('text-fluid-exercise font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
