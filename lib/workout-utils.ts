@@ -6,7 +6,7 @@ export function formatDateKey(date: Date): string {
 }
 
 export function formatDisplayDate(date: Date): string {
-  return format(date, 'EEEE d MMM').toUpperCase();
+  return format(date, 'EEE d MMM').toUpperCase();
 }
 
 export function getWeekNumber(firstSessionDate: string | null, currentDate: Date): number {
