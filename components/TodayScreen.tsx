@@ -17,6 +17,7 @@ import { getWorkoutType, getTrainingStreak } from '@/lib/schedule';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
+import { useNavContext } from '@/lib/nav-context';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -55,6 +56,13 @@ function TodayContent({ date }: { date: Date }) {
   const mobility = useMobility();
   const workoutType = getWorkoutType(date);
   const streak = getTrainingStreak(date, workout.data);
+  const { setHideNav } = useNavContext();
+
+  useEffect(() => {
+    const active = ['exercising', 'resting', 'transitioning', 'complete'].includes(workout.state);
+    setHideNav(active);
+    return () => setHideNav(false);
+  }, [workout.state, setHideNav]);
 
   // Rest day
   if (!schedule.isTraining) {
