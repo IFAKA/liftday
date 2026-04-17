@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { RoutineScreen } from '@/components/RoutineScreen';
@@ -17,11 +17,7 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
 export default function HistoryDetailPage() {
   const params = useParams<{ date: string }>();
   const dateKey = params.date;
-  const [data, setData] = useState<WorkoutData>({});
-
-  useEffect(() => {
-    setData(loadWorkoutData());
-  }, []);
+  const [data] = useState<WorkoutData>(() => loadWorkoutData());
 
   const session = data[dateKey];
   if (!session) return null;
