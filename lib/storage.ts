@@ -1,4 +1,4 @@
-import { StorageAdapter, WorkoutData, WorkoutSession, UserProfile } from './types';
+import { StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId } from './types';
 import { STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY } from './constants';
 import { formatDateKey } from './workout-utils';
 
@@ -53,10 +53,19 @@ export function loadUserProfile(): UserProfile | null {
     if (typeof window === 'undefined') return null;
     const raw = localStorage.getItem(USER_PROFILE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as UserProfile;
+    const profile = JSON.parse(raw) as UserProfile;
+    if (!profile.activeRoutine) profile.activeRoutine = 'calisthenics';
+    return profile;
   } catch {
     return null;
   }
+}
+
+export function setActiveRoutine(id: RoutineId): void {
+  const profile = loadUserProfile();
+  if (!profile) return;
+  profile.activeRoutine = id;
+  saveUserProfile(profile);
 }
 
 export function saveUserProfile(profile: UserProfile): void {

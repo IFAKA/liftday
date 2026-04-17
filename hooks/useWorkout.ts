@@ -91,7 +91,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (wt === 'rest') {
       return { workoutType: wt, exercises: [] as Exercise[] };
     }
-    const chains = getChainsForWorkout(wt);
+    const chains = getChainsForWorkout(wt, userProfile?.activeRoutine ?? 'calisthenics');
     const tiers = userProfile?.tiers ?? {};
     const exs = chains.map((chain) => {
       const key = resolveExerciseKey(chain, tiers);
@@ -160,7 +160,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     // Evaluate tier progress for non-fixed chains
     if (workoutType !== 'rest' && userProfileRef.current) {
-      const chains = getChainsForWorkout(workoutType);
+      const chains = getChainsForWorkout(workoutType, userProfileRef.current.activeRoutine ?? 'calisthenics');
       const oldProfile = userProfileRef.current;
       let updatedProfile = oldProfile;
       for (const chain of chains) {

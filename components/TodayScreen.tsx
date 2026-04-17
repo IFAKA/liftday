@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dumbbell, CheckCircle, Flame, ChartBar, CalendarDays } from 'lucide-react';
+import { Dumbbell, CheckCircle, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
@@ -125,43 +125,20 @@ function TodayContent({ date }: { date: Date }) {
   const isDone = schedule.isDone;
   
   return (
-    <motion.div 
+    <motion.div
       className="flex flex-col h-full overflow-hidden bg-black relative"
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.1}
       onDragEnd={(_, { offset, velocity }) => {
         if (offset.x < -40 || velocity.x < -400) router.push('/history');
-        if (offset.x > 40 || velocity.x > 400) router.push('/split');
       }}
     >
       <TopBar
-        leftAction={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Weekly split"
-            onClick={() => router.push('/split')}
-            className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
-          >
-            <CalendarDays className="w-5 h-5" />
-          </Button>
-        }
         center={
           <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
             {formatDisplayDate(date)}
           </span>
-        }
-        rightAction={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="History"
-            onClick={() => router.push('/history')}
-            className="-mr-2 text-white/60 hover:text-white hover:bg-transparent active:text-white scale-110"
-          >
-            <ChartBar className="w-6 h-6" />
-          </Button>
         }
       />
 
@@ -178,13 +155,6 @@ function TodayContent({ date }: { date: Date }) {
             <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none text-center">
               {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
             </h1>
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/routine')}
-              className="mt-3 text-white/40 hover:text-white/70 hover:bg-transparent active:text-white text-fluid-label font-black uppercase tracking-widest px-4 py-2"
-            >
-              View Routine
-            </Button>
             {streak > 0 && (
               <Badge variant="ghost" className="mt-2 bg-orange-500/10 border-orange-500/20 text-fluid-label font-black text-orange-500 uppercase tracking-widest">
                 <Flame className="w-5 h-5 text-orange-500" />

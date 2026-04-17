@@ -1,21 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
-
 import { startOfWeek, addDays, isSameDay, isBefore, format } from 'date-fns';
-import { ChevronLeft, CheckCircle2, Circle, Minus } from 'lucide-react';
+import { CheckCircle2, Circle, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getWorkoutType } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
 import { WorkoutData, WorkoutType } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { TopBar } from './TopBar';
 
 interface WeeklySplitProps {
   currentDate: Date;
   data: WorkoutData;
-  onBack: () => void;
 }
 
 const WORKOUT_TYPE_COLORS: Record<WorkoutType, string> = {
@@ -32,36 +27,12 @@ const WORKOUT_TYPE_LABELS: Record<WorkoutType, string> = {
   rest: 'REST',
 };
 
-export function WeeklySplit({ currentDate, data, onBack }: WeeklySplitProps) {
-  useEffect(() => {
-    const handlePopState = () => {
-      onBack();
-      window.history.pushState({ split: true }, '');
-    };
-    window.history.pushState({ split: true }, '');
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [onBack]);
-
+export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
-      <TopBar
-        leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={onBack} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-        }
-        center={
-          <div className="flex flex-col items-center">
-            <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Schedule</span>
-            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">THIS WEEK</span>
-          </div>
-        }
-      />
-
+    <div className="flex flex-col h-full bg-black overflow-hidden relative">
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
         <div className="flex flex-col gap-3">
           {days.map((day) => {

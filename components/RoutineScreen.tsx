@@ -14,26 +14,43 @@ interface RoutineScreenProps {
   subtitle?: string;
   /** If provided, show logged reps next to each exercise (history view) */
   loggedReps?: Record<string, number[]>;
+  /** Hide the top bar — used when embedded inside another page that has its own header */
+  hideTopBar?: boolean;
 }
 
-export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedReps }: RoutineScreenProps) {
+export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedReps, hideTopBar }: RoutineScreenProps) {
   const router = useRouter();
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
-      <TopBar
-        leftAction={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Back"
-            onClick={() => router.back()}
-            className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-        }
-        center={
-          <div className="flex flex-col items-center">
+      {!hideTopBar && (
+        <TopBar
+          leftAction={
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Back"
+              onClick={() => router.back()}
+              className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          }
+          center={
+            <div className="flex flex-col items-center">
+              <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', titleColor ?? 'text-white')}>
+                {title}
+              </span>
+              {subtitle && (
+                <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{subtitle}</span>
+              )}
+            </div>
+          }
+        />
+      )}
+
+      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
+        {hideTopBar && (
+          <div className="flex flex-col items-start mb-4">
             <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', titleColor ?? 'text-white')}>
               {title}
             </span>
@@ -41,10 +58,7 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
               <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{subtitle}</span>
             )}
           </div>
-        }
-      />
-
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
+        )}
         <div className="flex flex-col gap-3">
           {exercises.map((ex, i) => {
             const reps = loggedReps?.[ex.key];
