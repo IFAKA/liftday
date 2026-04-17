@@ -2,34 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { loadUserProfile, setActiveRoutine } from '@/lib/storage';
-import { RoutineId } from '@/lib/types';
+import { ROUTINES } from '@/lib/routines';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
 import { Dumbbell, PersonStanding } from 'lucide-react';
 
-const ROUTINES: { id: RoutineId; label: string; description: string }[] = [
-  {
-    id: 'calisthenics',
-    label: 'Calisthenics + TRX',
-    description: 'Bodyweight progression at a calisthenics park. Pull-up negatives, TRX rows, push-ups, dips, pistol squats.',
-  },
-  {
-    id: 'gym',
-    label: 'Gym',
-    description: 'Free weights and machines. Bench press, barbell squat, deadlift, lat pulldown, cable work.',
-  },
-];
+const ICONS = {
+  dumbbell: Dumbbell,
+  'person-standing': PersonStanding,
+} as const;
 
 export default function ProfilePage() {
-  const [activeRoutine, setActiveRoutineState] = useState<RoutineId>('calisthenics');
+  const [activeRoutineId, setActiveRoutineId] = useState('calisthenics');
 
   useEffect(() => {
     const profile = loadUserProfile();
-    setActiveRoutineState(profile?.activeRoutine ?? 'calisthenics');
+    setActiveRoutineId(profile?.activeRoutine ?? 'calisthenics');
   }, []);
 
-  function handleSelect(id: RoutineId) {
-    setActiveRoutineState(id);
+  function handleSelect(id: string) {
+    setActiveRoutineId(id);
     setActiveRoutine(id);
   }
 
@@ -47,8 +39,9 @@ export default function ProfilePage() {
         </p>
 
         <div className="flex flex-col gap-3">
-          {ROUTINES.map(({ id, label, description }) => {
-            const isActive = activeRoutine === id;
+          {ROUTINES.map(({ id, name, description, icon }) => {
+            const isActive = activeRoutineId === id;
+            const Icon = ICONS[icon];
             return (
               <button
                 key={id}
@@ -61,15 +54,11 @@ export default function ProfilePage() {
                 )}
               >
                 <div className={cn('mt-0.5 shrink-0', isActive ? 'text-white' : 'text-white/30')}>
-                  {id === 'gym' ? (
-                    <Dumbbell className="w-5 h-5" />
-                  ) : (
-                    <PersonStanding className="w-5 h-5" />
-                  )}
+                  <Icon className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col gap-1 min-w-0">
                   <span className={cn('text-fluid-ui font-black uppercase tracking-tight', isActive ? 'text-white' : 'text-white/40')}>
-                    {label}
+                    {name}
                   </span>
                   <span className="text-fluid-label text-white/40 font-mono leading-relaxed">
                     {description}
@@ -84,7 +73,7 @@ export default function ProfilePage() {
         </div>
 
         <p className="text-fluid-label text-white/20 font-mono mt-8 leading-relaxed">
-          Switching routines preserves all progress. Your calisthenics and gym tiers are tracked independently.
+          Switching routines preserves all progress. Your tiers are tracked independently per routine.
         </p>
       </div>
     </div>

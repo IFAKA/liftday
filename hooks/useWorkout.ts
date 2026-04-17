@@ -8,6 +8,7 @@ import { getTargets, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutType } from '@/lib/schedule';
 import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
 import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
+import { getRoutine } from '@/lib/routines';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -87,11 +88,12 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const setsPerExercise = getSetsForWeek(weekNumber);
 
   const { workoutType, exercises } = useMemo(() => {
-    const wt = getWorkoutType(date);
+    const routine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
+    const wt = getWorkoutType(date, routine.schedule);
     if (wt === 'rest') {
       return { workoutType: wt, exercises: [] as Exercise[] };
     }
-    const chains = getChainsForWorkout(wt, userProfile?.activeRoutine ?? 'calisthenics');
+    const chains = getChainsForWorkout(wt, routine.id);
     const tiers = userProfile?.tiers ?? {};
     const exs = chains.map((chain) => {
       const key = resolveExerciseKey(chain, tiers);

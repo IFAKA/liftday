@@ -7,6 +7,7 @@ import { loadUserProfile, loadWorkoutData } from '@/lib/storage';
 import { getWorkoutType } from '@/lib/schedule';
 import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
 import { EXERCISES } from '@/lib/constants';
+import { getRoutine } from '@/lib/routines';
 import { Exercise, WorkoutData } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
@@ -28,14 +29,14 @@ export default function ProgramPage() {
   useEffect(() => {
     setData(loadWorkoutData());
     const today = new Date();
-    const wt = getWorkoutType(today);
+    const profile = loadUserProfile();
+    const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
+    const wt = getWorkoutType(today, routine.schedule);
     setWorkoutType(wt);
     if (wt === 'rest') return;
 
-    const profile = loadUserProfile();
     const tiers = profile?.tiers ?? {};
-    const activeRoutine = profile?.activeRoutine ?? 'calisthenics';
-    const chains = getChainsForWorkout(wt, activeRoutine);
+    const chains = getChainsForWorkout(wt, routine.id);
     const exs = chains
       .map((chain) => {
         const key = resolveExerciseKey(chain, tiers);

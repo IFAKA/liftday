@@ -2,16 +2,14 @@ import { getDay, addDays, startOfWeek, subDays } from 'date-fns';
 import { WorkoutType } from './types';
 import { formatDateKey, formatDisplayDate } from './workout-utils';
 
-/**
- * 6-day PPL cycle: Push → Pull → Legs → Push → Pull → Legs → Rest (Sunday)
- */
-export function getWorkoutType(date: Date): WorkoutType {
+const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['push', 'pull', 'legs', 'push', 'pull', 'legs'];
+
+/** Returns the workout type for a given date using the routine's schedule (or the default 6-day PPL). */
+export function getWorkoutType(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[]): WorkoutType {
   const day = getDay(date); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-
-  if (day === 0) return 'rest'; // Sunday is rest day
-
-  const cycle = ['push', 'pull', 'legs', 'push', 'pull', 'legs'] as const;
-  return cycle[(day - 1) % 6];
+  if (day === 0) return 'rest'; // Sunday is always rest
+  const cycle = schedule ?? DEFAULT_SCHEDULE;
+  return cycle[(day - 1) % cycle.length];
 }
 
 export function isTrainingDay(date: Date): boolean {

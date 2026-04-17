@@ -70,7 +70,18 @@ export type GymLegsExerciseKey =
   | 'leg_extension_machine'
   | 'standing_calf_raise_machine';
 
-export type RoutineId = 'calisthenics' | 'gym';
+export type RoutineId = string;
+
+export interface RoutineConfig {
+  id: string;
+  name: string;
+  description: string;
+  /** Lucide icon name shown in the profile picker */
+  icon: 'dumbbell' | 'person-standing';
+  /** Mon–Sat workout types (index 0 = Monday). Sunday is always rest. */
+  schedule: Exclude<WorkoutType, 'rest'>[];
+  tierChains: TierChain[];
+}
 
 export type ExerciseKey =
   | PushExerciseKey
