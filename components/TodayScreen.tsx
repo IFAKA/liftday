@@ -9,12 +9,10 @@ import { RestTimer } from '@/components/RestTimer';
 import { ExerciseTransition } from '@/components/ExerciseTransition';
 import { SessionComplete } from '@/components/SessionComplete';
 import { RestDayScreen } from '@/components/RestDayScreen';
-import { Onboarding } from '@/components/Onboarding';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
 import { formatDisplayDate } from '@/lib/workout-utils';
-import { saveUserProfile, getDefaultProfile } from '@/lib/storage';
 import { getWorkoutType, getTrainingStreak } from '@/lib/schedule';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -24,32 +22,20 @@ const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
 export function TodayScreen() {
   const [mounted, setMounted] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
     if (!hasSeenOnboarding) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setShowOnboarding(true);
+      router.replace('/onboarding');
     }
-  }, []);
+  }, [router]);
 
   const today = useMemo(() => {
     if (!mounted) return null;
     return new Date();
   }, [mounted]);
-
-  const handleCompleteOnboarding = () => {
-    localStorage.setItem(ONBOARDING_KEY, 'true');
-    saveUserProfile(getDefaultProfile());
-    setShowOnboarding(false);
-  };
-
-  if (showOnboarding) {
-    return <Onboarding onComplete={handleCompleteOnboarding} />;
-  }
 
   if (!today) {
     return (
