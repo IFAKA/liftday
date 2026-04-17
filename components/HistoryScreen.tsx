@@ -1,14 +1,15 @@
 'use client';
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { ChevronLeft, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { WorkoutData, WorkoutType } from '@/lib/types';
+import { WorkoutData, WorkoutType, Exercise } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TopBar } from './TopBar';
+import { RoutineScreen } from './RoutineScreen';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -22,6 +23,8 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
 };
 
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+
   useEffect(() => {
     const handlePopState = () => {
       onBack();
@@ -58,6 +61,33 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     }
     return result;
   }, [data]);
+
+  // Session detail view
+  if (selectedSession) {
+    const session = data[selectedSession];
+    const wt = session?.workout_type;
+    const allExercises: Exercise[] = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
+    const exercisesWithReps = allExercises.filter((ex) => {
+      const reps = session?.[ex.key];
+      return reps && reps.length > 0;
+    });
+    const loggedReps: Record<string, number[]> = {};
+    for (const ex of exercisesWithReps) {
+      const reps = session?.[ex.key];
+      if (reps) loggedReps[ex.key] = reps;
+    }
+    const displayDate = new Date(selectedSession + 'T12:00:00');
+    return (
+      <RoutineScreen
+        exercises={exercisesWithReps}
+        title={wt?.toUpperCase() ?? ''}
+        titleColor={wt ? TYPE_COLOR[wt] : 'text-white'}
+        subtitle={format(displayDate, 'MMM d, EEE').toUpperCase()}
+        loggedReps={loggedReps}
+        onBack={() => setSelectedSession(null)}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
@@ -117,7 +147,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
                   return (
-                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg">
+                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg cursor-pointer active:scale-95 transition-transform" onClick={() => setSelectedSession(dateKey)}>
                       <div className="flex flex-col">
                         <span className="text-fluid-label text-white/60 uppercase tracking-widest font-mono font-black mb-2">{format(displayDate, 'MMM d, EEE')}</span>
                         <span className={cn('text-fluid-exercise font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>

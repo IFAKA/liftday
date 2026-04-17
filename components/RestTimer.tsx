@@ -14,6 +14,7 @@ interface RestTimerProps {
   onSkip: () => void;
   onQuit: () => void;
   onUndo: () => void;
+  nextExerciseName?: string | null;
 }
 
 let restNotificationTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -43,7 +44,7 @@ function cancelRestNotification() {
   }
 }
 
-export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTimerProps) {
+export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName }: RestTimerProps) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const showQuitConfirmRef = useRef(false);
 
@@ -140,6 +141,13 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo }: RestTim
           </span>
         </div>
       </div>
+
+      {nextExerciseName && (
+        <div className="w-full px-4 shrink-0 flex flex-col items-center gap-1 mb-2">
+          <span className="text-fluid-label font-mono uppercase tracking-widest text-white/30">Next exercise</span>
+          <span className="text-fluid-ui font-black uppercase tracking-tight text-white/80 text-center">{nextExerciseName}</span>
+        </div>
+      )}
 
       <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-4 z-20">
         <Button

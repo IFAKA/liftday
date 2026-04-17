@@ -28,7 +28,9 @@ export interface UseWorkoutReturn {
   weekNumber: number;
   data: WorkoutData;
   totalExercises: number;
+  exercises: Exercise[];
   nextExerciseName: string;
+  nextExerciseAfterRestName: string | null;
   timerPaused: boolean;
   advancedTiers: string[];
   startWorkout: () => void;
@@ -314,9 +316,17 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     storageAdapter.loadWorkoutData().then(setData);
   }, [storageAdapter]);
 
+  const nextExerciseAfterRestName = useMemo(() => {
+    if (state !== 'resting') return null;
+    const isLastSet = currentSet + 1 >= setsPerExercise;
+    if (!isLastSet) return null;
+    return exercises[exerciseIndex + 1]?.name ?? null;
+  }, [state, currentSet, setsPerExercise, exercises, exerciseIndex]);
+
   return {
     state, exerciseIndex, currentSet, setsPerExercise, timer, currentExercise, currentTarget,
-    previousRep, flashColor, sessionReps, weekNumber, data, totalExercises: exercises.length, nextExerciseName, timerPaused,
+    previousRep, flashColor, sessionReps, weekNumber, data, totalExercises: exercises.length,
+    exercises, nextExerciseName, nextExerciseAfterRestName, timerPaused,
     advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
   };

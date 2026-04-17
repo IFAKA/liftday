@@ -11,6 +11,7 @@ import { RestDayScreen } from '@/components/RestDayScreen';
 import { Onboarding } from '@/components/Onboarding';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { HistoryScreen } from '@/components/HistoryScreen';
+import { RoutineScreen } from '@/components/RoutineScreen';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
@@ -72,6 +73,21 @@ function TodayContent({ date }: { date: Date }) {
   
   const [showHistory, setShowHistory] = useState(false);
   const [showSplit, setShowSplit] = useState(false);
+  const [showRoutine, setShowRoutine] = useState(false);
+
+  // Routine preview overlay
+  if (showRoutine) {
+    const typeColor = workoutType === 'push' ? 'text-orange-400' : workoutType === 'pull' ? 'text-blue-400' : 'text-green-400';
+    return (
+      <RoutineScreen
+        exercises={workout.exercises}
+        title={workoutType === 'push' ? 'Push' : workoutType === 'pull' ? 'Pull' : 'Legs'}
+        titleColor={typeColor}
+        subtitle={`${workout.exercises.length} EXERCISES · ${workout.setsPerExercise} SETS`}
+        onBack={() => setShowRoutine(false)}
+      />
+    );
+  }
 
   // History screen overlay
   if (showHistory) {
@@ -141,6 +157,7 @@ function TodayContent({ date }: { date: Date }) {
         onSkip={workout.skipTimer}
         onQuit={workout.quitWorkout}
         onUndo={workout.undoLastSet}
+        nextExerciseName={workout.nextExerciseAfterRestName}
       />
     );
   }
@@ -213,8 +230,15 @@ function TodayContent({ date }: { date: Date }) {
             <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none text-center">
               {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
             </h1>
+            <Button
+              variant="ghost"
+              onClick={() => setShowRoutine(true)}
+              className="mt-3 text-white/40 hover:text-white/70 hover:bg-transparent active:text-white text-fluid-label font-black uppercase tracking-widest px-4 py-2"
+            >
+              View Routine
+            </Button>
             {streak > 0 && (
-              <Badge variant="ghost" className="mt-4 bg-orange-500/10 border-orange-500/20 text-fluid-label font-black text-orange-500 uppercase tracking-widest">
+              <Badge variant="ghost" className="mt-2 bg-orange-500/10 border-orange-500/20 text-fluid-label font-black text-orange-500 uppercase tracking-widest">
                 <Flame className="w-5 h-5 text-orange-500" />
                 {streak} DAY STREAK
               </Badge>
