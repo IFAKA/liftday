@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { loadUserProfile } from '@/lib/storage';
 import { getWorkoutType } from '@/lib/schedule';
@@ -16,7 +15,6 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 export default function RoutinePage() {
-  const router = useRouter();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [workoutType, setWorkoutType] = useState('');
 
@@ -48,7 +46,6 @@ export default function RoutinePage() {
       title={label}
       titleColor={TYPE_COLOR[workoutType]}
       subtitle={`${exercises.length} EXERCISES`}
-      onBack={() => router.push('/')}
     />
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { loadWorkoutData } from '@/lib/storage';
@@ -15,7 +15,6 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
 };
 
 export default function HistoryDetailPage() {
-  const router = useRouter();
   const params = useParams<{ date: string }>();
   const dateKey = params.date;
   const [data, setData] = useState<WorkoutData>({});
@@ -47,7 +46,6 @@ export default function HistoryDetailPage() {
       titleColor={wt ? TYPE_COLOR[wt] : 'text-white'}
       subtitle={format(displayDate, 'MMM d, EEE').toUpperCase()}
       loggedReps={loggedReps}
-      onBack={() => router.back()}
     />
   );
 }

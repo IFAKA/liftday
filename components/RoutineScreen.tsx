@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Exercise } from '@/lib/types';
@@ -14,20 +14,10 @@ interface RoutineScreenProps {
   subtitle?: string;
   /** If provided, show logged reps next to each exercise (history view) */
   loggedReps?: Record<string, number[]>;
-  onBack: () => void;
 }
 
-export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedReps, onBack }: RoutineScreenProps) {
-  useEffect(() => {
-    const handlePopState = () => {
-      onBack();
-      window.history.pushState({ routine: true }, '');
-    };
-    window.history.pushState({ routine: true }, '');
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [onBack]);
-
+export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedReps }: RoutineScreenProps) {
+  const router = useRouter();
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
@@ -36,7 +26,7 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
             variant="ghost"
             size="icon"
             aria-label="Back"
-            onClick={onBack}
+            onClick={() => router.back()}
             className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
           >
             <ChevronLeft className="w-5 h-5" />
