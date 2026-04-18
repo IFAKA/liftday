@@ -18,6 +18,7 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
 import { useNavContext } from '@/lib/nav-context';
+import { buildSupersetPairs } from '@/lib/superset';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -133,7 +134,8 @@ function TodayContent({ date }: { date: Date }) {
 
   // Idle — ready to start (or already done today)
   const isDone = schedule.isDone;
-  
+  const supersetPairs = buildSupersetPairs(workout.exercises);
+
   return (
     <motion.div
       className="flex flex-col h-full overflow-hidden bg-black relative"
@@ -176,14 +178,38 @@ function TodayContent({ date }: { date: Date }) {
       </div>
 
       {!isDone && (
-        <div className="w-full px-4 pb-safe mb-4 shrink-0">
-          <Button
-            onClick={workout.startWorkout}
-            className="w-full btn-mobile-accessible rounded-full bg-white text-black active:scale-95 transition-all font-black uppercase tracking-tight shadow-xl"
-          >
-            Start
-          </Button>
-        </div>
+        <>
+          {supersetPairs.length > 0 && (
+            <div className="w-full px-4 mb-3">
+              <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2 font-mono">
+                Superset Suggestions
+              </p>
+              <div className="space-y-1">
+                {supersetPairs.map((pair, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+                    <span className="text-zinc-200">{pair.a.name}</span>
+                    {pair.b ? (
+                      <>
+                        <span className="text-zinc-700">↔</span>
+                        <span className="text-zinc-200">{pair.b.name}</span>
+                      </>
+                    ) : (
+                      <span className="text-zinc-600 text-[10px]">solo</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="w-full px-4 pb-safe mb-4 shrink-0">
+            <Button
+              onClick={workout.startWorkout}
+              className="w-full btn-mobile-accessible rounded-full bg-white text-black active:scale-95 transition-all font-black uppercase tracking-tight shadow-xl"
+            >
+              Start
+            </Button>
+          </div>
+        </>
       )}
     </motion.div>
   );
