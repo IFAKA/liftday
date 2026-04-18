@@ -112,12 +112,14 @@ export interface Exercise {
   instruction: string;
   youtubeId?: string;
   workoutType: Exclude<WorkoutType, 'rest'>;
+  primaryMuscle: MuscleGroup;
 }
 
 export type WorkoutSession = {
   [K in ExerciseKey]?: SetEntry[];
 } & {
   logged_at: string;
+  started_at?: string;
   week_number: number;
   workout_type: Exclude<WorkoutType, 'rest'>;
 };
@@ -159,6 +161,11 @@ export interface StorageAdapter {
 
 // Training priority levels — determines how fast a slot advances tiers
 export type TrainingPriority = 'critical' | 'high' | 'support' | 'indirect' | 'aesthetic';
+
+export type MuscleGroup =
+  | 'chest' | 'shoulders' | 'side_delt' | 'triceps'
+  | 'lats' | 'mid_back' | 'rear_delt' | 'biceps' | 'upper_back'
+  | 'quads' | 'hamstrings' | 'glutes' | 'calves' | 'neck';
 
 // A tier chain defines a progression of exercises for one workout slot
 export interface TierChain {
