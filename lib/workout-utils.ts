@@ -85,3 +85,49 @@ export function getWeeklyStats(
     vsLastWeek: prevSessions > 0 ? sessionsCompleted - prevSessions : null,
   };
 }
+
+
+export interface WorkoutPatterns {
+  avgStartHour: number | null;
+  avgDurationMin: number | null;
+  usualDays: string[];
+  isPeakHour: boolean;
+  sessionCount: number;
+}
+
+const PEAK_HOURS = [17, 18, 19, 20, 21];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+export function getWorkoutPatterns(data: WorkoutData): WorkoutPatterns {
+  const sessions = Object.entries(data);
+  const sessionCount = sessions.length;
+
+  const dayCounts: Record<number, number> = {};
+  for (const [dateKey] of sessions) {
+    const day = new Date(dateKey).getDay();
+    dayCounts[day] = (dayCounts[day] ?? 0) + 1;
+  }
+  const usualDays = Object.entries(dayCounts)
+    .filter(([, count]) => count >= 2)
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([day]) => DAYS[Number(day)]);
+
+  const timed = sessions.filter(([, s]) => s.started_at);
+
+  const startHours = timed.map(([, s]) => new Date(s.started_at!).getHours());
+  const avgStartHour = startHours.length >= 3
+    ? Math.round(startHours.reduce((a, b) => a + b, 0) / startHours.length)
+    : null;
+
+  const durations = timed
+    .map(([, s]) => (new Date(s.logged_at).getTime() - new Date(s.started_at!).getTime()) / 60000)
+    .filter(d => d > 5 && d < 180);
+
+  const avgDurationMin = durations.length >= 3
+    ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+    : null;
+
+  const isPeakHour = avgStartHour !== null && PEAK_HOURS.includes(avgStartHour);
+
+  return { avgStartHour, avgDurationMin, usualDays, isPeakHour, sessionCount };
+}
