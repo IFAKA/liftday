@@ -54,7 +54,7 @@ export function loadUserProfile(): UserProfile | null {
     const raw = localStorage.getItem(USER_PROFILE_KEY);
     if (!raw) return null;
     const profile = JSON.parse(raw) as UserProfile;
-    if (!profile.activeRoutine) profile.activeRoutine = 'calisthenics';
+    if (!profile.activeRoutine) profile.activeRoutine = 'gym';
     return profile;
   } catch {
     return null;

@@ -47,7 +47,8 @@ export type GymPushExerciseKey =
   | 'barbell_ohp'
   | 'db_lateral_raise'
   | 'cable_tricep_pushdown'
-  | 'overhead_tricep_ext';
+  | 'overhead_tricep_ext'
+  | 'cable_fly';
 
 // Gym pull exercises
 export type GymPullExerciseKey =
@@ -58,12 +59,15 @@ export type GymPullExerciseKey =
   | 'cable_face_pull'
   | 'db_curl'
   | 'barbell_curl'
-  | 'straight_arm_pulldown_cable';
+  | 'straight_arm_pulldown_cable'
+  | 'cable_curl'
+  | 'hammer_curl';
 
 // Gym legs exercises
 export type GymLegsExerciseKey =
   | 'goblet_squat'
   | 'barbell_squat'
+  | 'leg_press'
   | 'front_squat'
   | 'romanian_deadlift'
   | 'barbell_deadlift'

@@ -355,6 +355,15 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     youtubeId: 'YbX7Wd8jQ-Q',
     workoutType: 'push',
   },
+  {
+    key: 'cable_fly',
+    name: 'CABLE FLY',
+    unit: 'weighted',
+    primaryMuscle: 'chest',
+    instruction: 'Set both cables to shoulder height. Split stance, one cable in each hand. Slight elbow bend throughout — never change the angle. Bring hands together in front of chest like hugging a tree. Squeeze hard at the middle. Return slowly with full stretch. The bench press builds mass; this carves the detail.',
+    youtubeId: 'Iwe6AmxVf7o',
+    workoutType: 'push',
+  },
 ];
 
 // GYM PULL EXERCISES
@@ -431,6 +440,24 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     youtubeId: 'MrL7odiwMEY',
     workoutType: 'pull',
   },
+  {
+    key: 'cable_curl',
+    name: 'CABLE CURL',
+    unit: 'weighted',
+    primaryMuscle: 'biceps',
+    instruction: 'Low cable, EZ bar or straight bar attachment. Elbows pinned at sides throughout. Curl to chest, squeeze hard at top. Lower fully — the cable keeps tension at the bottom stretch where dumbbells go slack. That constant tension is why cables outperform dumbbells for bicep size.',
+    youtubeId: 'av7-8CzC9Fk',
+    workoutType: 'pull',
+  },
+  {
+    key: 'hammer_curl',
+    name: 'HAMMER CURL',
+    unit: 'weighted',
+    primaryMuscle: 'biceps',
+    instruction: 'Neutral grip — thumbs up the entire rep. Curl up without rotating the forearm at any point. Targets brachialis and brachioradialis, the muscles that push the bicep up and create visible arm thickness from the front and the side. Don\'t supinate at the top.',
+    youtubeId: 'TwD-YGVP4Bk',
+    workoutType: 'pull',
+  },
 ];
 
 // GYM LEGS EXERCISES
@@ -505,6 +532,15 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
     primaryMuscle: 'quads',
     instruction: 'Bar in front rack: fingertips on bar, elbows high and parallel to floor. Elbows must stay up throughout — any drop dumps the bar forward. Squat to depth, torso stays upright. More quad-dominant and upper-back demanding than back squat. Attempt only after consistent back squat form.',
     youtubeId: 'uYumuL_G_V0',
+    workoutType: 'legs',
+  },
+  {
+    key: 'leg_press',
+    name: 'LEG PRESS',
+    unit: 'weighted',
+    primaryMuscle: 'quads',
+    instruction: 'Feet hip-width on platform, toes slightly out. Lower sled until knees reach 90° — don\'t let lower back peel off the pad. Press through heels to near-lockout, don\'t fully lock knees. Allows the heaviest quad loading in the gym. Use it to drive volume and overload on top of squat without taxing your lower back further.',
+    youtubeId: 'IZxyjW7MPJQ',
     workoutType: 'legs',
   },
   {

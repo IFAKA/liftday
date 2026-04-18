@@ -23,6 +23,13 @@ export const gymRoutine: RoutineConfig = {
       exercises: ['db_incline_press'],
     },
     {
+      slotId: 'gym_push_fly',
+      workoutType: 'push',
+      fixed: true,
+      priority: 'high',
+      exercises: ['cable_fly'],
+    },
+    {
       slotId: 'gym_push_overhead',
       workoutType: 'push',
       fixed: false,
@@ -67,18 +74,25 @@ export const gymRoutine: RoutineConfig = {
       exercises: ['cable_face_pull'],
     },
     {
-      slotId: 'gym_pull_bicep',
-      workoutType: 'pull',
-      fixed: false,
-      priority: 'high',
-      exercises: ['db_curl', 'barbell_curl'],
-    },
-    {
       slotId: 'gym_pull_lat',
       workoutType: 'pull',
       fixed: true,
       priority: 'high',
       exercises: ['straight_arm_pulldown_cable'],
+    },
+    {
+      slotId: 'gym_pull_bicep',
+      workoutType: 'pull',
+      fixed: false,
+      priority: 'high',
+      exercises: ['cable_curl', 'barbell_curl'],
+    },
+    {
+      slotId: 'gym_pull_hammer',
+      workoutType: 'pull',
+      fixed: true,
+      priority: 'high',
+      exercises: ['hammer_curl'],
     },
 
     // ── LEGS ──────────────────────────────────────────────────────────────────
@@ -87,7 +101,14 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'legs',
       fixed: false,
       priority: 'critical',
-      exercises: ['goblet_squat', 'barbell_squat', 'front_squat'],
+      exercises: ['barbell_squat', 'front_squat'],
+    },
+    {
+      slotId: 'gym_legs_press',
+      workoutType: 'legs',
+      fixed: true,
+      priority: 'high',
+      exercises: ['leg_press'],
     },
     {
       slotId: 'gym_legs_hinge',
