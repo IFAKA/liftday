@@ -64,8 +64,10 @@ export type GymPullExerciseKey =
 export type GymLegsExerciseKey =
   | 'goblet_squat'
   | 'barbell_squat'
+  | 'front_squat'
   | 'romanian_deadlift'
   | 'barbell_deadlift'
+  | 'sumo_deadlift'
   | 'leg_curl_machine'
   | 'leg_extension_machine'
   | 'standing_calf_raise_machine';

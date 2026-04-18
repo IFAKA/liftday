@@ -444,6 +444,22 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
     youtubeId: 'gwLzBJYoWlI',
     workoutType: 'legs',
   },
+  {
+    key: 'front_squat',
+    name: 'FRONT SQUAT',
+    unit: 'reps',
+    instruction: 'Bar in front rack: fingertips on bar, elbows high and parallel to floor. Elbows must stay up throughout — any drop dumps the bar forward. Squat to depth, torso stays upright. More quad-dominant and upper-back demanding than back squat. Attempt only after consistent back squat form.',
+    youtubeId: 'uYumuL_G_V0',
+    workoutType: 'legs',
+  },
+  {
+    key: 'sumo_deadlift',
+    name: 'SUMO DEADLIFT',
+    unit: 'reps',
+    instruction: 'Wide stance, toes out 45°, grip inside legs. Chest up, brace hard. Push knees out as you drive the floor away — think "spread the floor." More hip and adductor dominant than conventional. Shorter ROM allows heavier loads. Use to break conventional deadlift plateaus or as a glute-focused variation.',
+    youtubeId: 'b8-Wdqa6BDs',
+    workoutType: 'legs',
+  },
 ];
 
 // All exercises combined
