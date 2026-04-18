@@ -26,6 +26,7 @@ interface ExerciseScreenProps {
   flashColor: 'green' | 'red' | null;
   onLogSet: (reps: number, weight?: number) => void;
   onQuit: () => void;
+  onOccupied?: () => void;
 }
 
 export function ExerciseScreen({
@@ -41,6 +42,7 @@ export function ExerciseScreen({
   flashColor,
   onLogSet,
   onQuit,
+  onOccupied,
 }: ExerciseScreenProps) {
   const isWeighted = exercise.unit === 'weighted';
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
@@ -167,6 +169,14 @@ export function ExerciseScreen({
               <h2 className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight text-center sm:text-left">
                 {exercise.name}
               </h2>
+              {onOccupied && (
+                <button
+                  onClick={onOccupied}
+                  className="mt-1 text-xs text-white/30 hover:text-white/60 transition-colors w-full text-center sm:text-left"
+                >
+                  machine occupied → swap
+                </button>
+              )}
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">

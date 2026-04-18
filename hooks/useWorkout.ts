@@ -7,7 +7,8 @@ import { formatDateKey, getWeekNumber, getSetsForWeek } from '@/lib/workout-util
 import { getTargets, getWeightTarget, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutType } from '@/lib/schedule';
 import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
-import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
+import { getChainsForWorkout, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
+import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
@@ -44,6 +45,7 @@ export interface UseWorkoutReturn {
   finishTransition: () => void;
   togglePauseTimer: () => void;
   undoLastSet: () => void;
+  swapCurrentForOccupied: () => void;
 }
 
 export function useWorkout(date: Date): UseWorkoutReturn {
@@ -61,6 +63,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [timerPaused, setTimerPaused] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [advancedTiers, setAdvancedTiers] = useState<string[]>([]);
+  const [unavailableEquipment, setUnavailableEquipment] = useState<EquipmentKey[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownPlayedRef = useRef<Set<number>>(new Set());
@@ -99,11 +102,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const chains = getChainsForWorkout(wt, routine.id);
     const tiers = userProfile?.tiers ?? {};
     const exs = chains.map((chain) => {
-      const key = resolveExerciseKey(chain, tiers);
+      const key = resolveExerciseKeyWithEquipment(chain, tiers, unavailableEquipment);
       return EXERCISES.find((e) => e.key === key)!;
     }).filter(Boolean);
     return { workoutType: wt, exercises: exs };
-  }, [date, userProfile]);
+  }, [date, userProfile, unavailableEquipment]);
 
   const currentExercise = exercises[exerciseIndex];
   const targets = currentExercise ? getTargets(currentExercise.key, weekNumber, date, data) : [];
@@ -331,6 +334,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     storageAdapter.loadWorkoutData().then(setData);
   }, [storageAdapter]);
 
+  const swapCurrentForOccupied = useCallback(() => {
+    const ex = exercises[exerciseIndex];
+    if (!ex) return;
+    const required = getRequiredEquipment(ex.key);
+    setUnavailableEquipment((prev) => [...new Set([...prev, ...required])]);
+  }, [exercises, exerciseIndex]);
+
   const nextExerciseAfterRestName = useMemo(() => {
     if (state !== 'resting') return null;
     const isLastSet = currentSet + 1 >= setsPerExercise;
@@ -344,5 +354,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     totalExercises: exercises.length, exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
+    swapCurrentForOccupied,
   };
 }
