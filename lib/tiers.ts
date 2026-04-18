@@ -1,6 +1,8 @@
 import { TierMap, WorkoutType, ExerciseKey, TierChain } from './types';
 import { ROUTINES } from './routines';
 import { EquipmentKey, canPerformExercise } from './equipment';
+import { EXERCISES } from './constants';
+import { getExerciseSMVScore } from './smv';
 
 /** Returns the ordered list of chains for a given workout type and routine. */
 export function getChainsForWorkout(
@@ -35,11 +37,15 @@ export function resolveExerciseKeyWithEquipment(
   if (unavailable.length === 0) return baseKey;
   if (canPerformExercise(baseKey, unavailable)) return baseKey;
 
-  // Try all tiers, highest first, for an available fallback
-  const sorted = [...chain.exercises].reverse();
-  for (const key of sorted) {
-    if (canPerformExercise(key, unavailable)) return key;
-  }
+  // Pick the available exercise with the highest SMV score
+  const available = chain.exercises.filter((key) => canPerformExercise(key, unavailable));
+  if (available.length === 0) return baseKey;
 
-  return baseKey;
+  return available.reduce((best, key) => {
+    const ex = EXERCISES.find((e) => e.key === key);
+    const bestEx = EXERCISES.find((e) => e.key === best);
+    if (!ex) return best;
+    if (!bestEx) return key;
+    return getExerciseSMVScore(ex) >= getExerciseSMVScore(bestEx) ? key : best;
+  }, available[0]);
 }

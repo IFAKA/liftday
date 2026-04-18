@@ -21,6 +21,60 @@ export const MUSCLE_SMV_SCORE: Record<MuscleGroup, number> = {
   neck:        2, // traps = #14 (last) in Durkee
 };
 
+// Sets/week floor — below this, proportion penalty applies (chicken legs problem)
+export const MUSCLE_MIN_WEEKLY_SETS: Partial<Record<MuscleGroup, number>> = {
+  quads:      6,
+  hamstrings: 4,
+  glutes:     4,
+  calves:     2,
+};
+
+// SMV points lost per set below the floor (penalty rate)
+export const MUSCLE_PROPORTION_PENALTY: Partial<Record<MuscleGroup, number>> = {
+  quads:      4,
+  hamstrings: 3,
+  glutes:     3,
+  calves:     2,
+};
+
+export interface MuscleScoreEntry {
+  sets: number;
+  gross: number;
+  penalty: number;
+  net: number;
+}
+
+export interface RoutineScoreResult {
+  total: number;
+  gross: number;
+  penalty: number;
+  breakdown: Partial<Record<MuscleGroup, MuscleScoreEntry>>;
+}
+
+export function scoreWeeklyVolume(
+  setsPerMuscle: Partial<Record<MuscleGroup, number>>
+): RoutineScoreResult {
+  let gross = 0;
+  let penalty = 0;
+  const breakdown: Partial<Record<MuscleGroup, MuscleScoreEntry>> = {};
+
+  for (const [muscle, smv] of Object.entries(MUSCLE_SMV_SCORE) as [MuscleGroup, number][]) {
+    const sets = setsPerMuscle[muscle] ?? 0;
+    const penaltyRate = MUSCLE_PROPORTION_PENALTY[muscle] ?? 0;
+    const floor = MUSCLE_MIN_WEEKLY_SETS[muscle] ?? 0;
+
+    const muscleGross = smv * sets;
+    const deficit = Math.max(0, floor - sets);
+    const musclePenalty = deficit * penaltyRate;
+
+    gross += muscleGross;
+    penalty += musclePenalty;
+    breakdown[muscle] = { sets, gross: muscleGross, penalty: musclePenalty, net: muscleGross - musclePenalty };
+  }
+
+  return { total: gross - penalty, gross, penalty, breakdown };
+}
+
 export function getExerciseSMVScore(exercise: Exercise): number {
   return MUSCLE_SMV_SCORE[exercise.primaryMuscle] ?? 1;
 }
