@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkoutData, WorkoutType, setEntryReps } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
+import { getWorkoutPatterns } from '@/lib/workout-utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TopBar } from './TopBar';
@@ -22,8 +23,16 @@ const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
   legs: 'text-green-400',
 };
 
+function formatHour(h: number): string {
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:00 ${period}`;
+}
+
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   const router = useRouter();
+
+  const patterns = useMemo(() => getWorkoutPatterns(data), [data]);
 
   const totalSessions = useMemo(
     () => Object.values(data).filter((s) => s.logged_at).length,
@@ -74,6 +83,38 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
+          {/* Workout Patterns */}
+          {patterns.sessionCount >= 3 && (
+            <div className="w-full rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-2 mb-4">
+              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">Your Patterns</p>
+              {patterns.usualDays.length > 0 && (
+                <p className="text-sm text-zinc-400 font-mono">
+                  Usually trains{' '}
+                  <span className="text-white">{patterns.usualDays.join(' · ')}</span>
+                </p>
+              )}
+              {patterns.avgStartHour !== null && (
+                <p className="text-sm text-zinc-400 font-mono flex items-center gap-2">
+                  <span>
+                    Usually at{' '}
+                    <span className="text-white">{formatHour(patterns.avgStartHour)}</span>
+                  </span>
+                  {patterns.isPeakHour && (
+                    <span className="text-[10px] text-amber-400 border border-amber-400/30 rounded px-1.5 py-0.5">
+                      peak hours
+                    </span>
+                  )}
+                </p>
+              )}
+              {patterns.avgDurationMin !== null && (
+                <p className="text-sm text-zinc-400 font-mono">
+                  Avg session{' '}
+                  <span className="text-white">{patterns.avgDurationMin} min</span>
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Personal Bests — single list item */}
           {Object.keys(prs).length > 0 && (
             <div className="mb-4">
