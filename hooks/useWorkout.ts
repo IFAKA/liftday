@@ -68,6 +68,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const timerPauseStartRef = useRef<number | null>(null);
   const sessionRepsRef = useRef<Record<string, SetEntry[]>>({});
   const userProfileRef = useRef<UserProfile | null>(null);
+  const startedAtRef = useRef<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -159,6 +160,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const reps = sessionRepsRef.current;
     const session: WorkoutData[string] = {
       logged_at: new Date().toISOString(),
+      started_at: startedAtRef.current ?? undefined,
       week_number: weekNumber,
       workout_type: workoutType as Exclude<typeof workoutType, 'rest'>,
     };
@@ -250,6 +252,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const startWorkout = useCallback(() => {
     unlockAudio();
     playStart();
+    startedAtRef.current = new Date().toISOString();
     sessionRepsRef.current = {};
     setExerciseIndex(0);
     setCurrentSet(0);
