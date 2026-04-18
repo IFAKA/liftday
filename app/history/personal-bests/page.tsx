@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { loadWorkoutData } from '@/lib/storage';
 import { EXERCISES } from '@/lib/constants';
-import { WorkoutData } from '@/lib/types';
+import { WorkoutData, setEntryReps, setEntryWeight } from '@/lib/types';
 
 export default function PersonalBestsPage() {
   const router = useRouter();
@@ -18,14 +18,25 @@ export default function PersonalBestsPage() {
   }, []);
 
   const prs = useMemo(() => {
-    const result: Record<string, number> = {};
+    const result: Record<string, { reps: number; weight?: number }> = {};
     for (const session of Object.values(data)) {
       if (!session.logged_at) continue;
       for (const ex of EXERCISES) {
-        const reps = session[ex.key];
-        if (reps && reps.length > 0) {
-          const best = Math.max(...reps);
-          if (!result[ex.key] || best > result[ex.key]) result[ex.key] = best;
+        const sets = session[ex.key];
+        if (!sets || sets.length === 0) continue;
+        if (ex.unit === 'weighted') {
+          // Best set by estimated 1RM (weight × reps as proxy)
+          for (const entry of sets) {
+            const w = setEntryWeight(entry);
+            const r = setEntryReps(entry);
+            if (w === null) continue;
+            const prev = result[ex.key];
+            const prevScore = prev?.weight !== undefined ? prev.weight * prev.reps : 0;
+            if (!prev || w * r > prevScore) result[ex.key] = { reps: r, weight: w };
+          }
+        } else {
+          const best = Math.max(...sets.map(setEntryReps));
+          if (!result[ex.key] || best > (result[ex.key].reps ?? 0)) result[ex.key] = { reps: best };
         }
       }
     }
@@ -53,8 +64,17 @@ export default function PersonalBestsPage() {
             <div key={ex.key} onClick={() => router.push(`/exercises/${ex.key}`)} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5 cursor-pointer active:bg-white/10 transition-colors">
               <span className="text-fluid-ui font-black uppercase tracking-tight text-white truncate">{ex.name}</span>
               <div className="flex items-baseline gap-2 shrink-0 ml-3">
-                <span className="text-fluid-ui font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</span>
-                <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</span>
+                {prs[ex.key].weight !== undefined ? (
+                  <>
+                    <span className="text-fluid-ui font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key].weight}kg</span>
+                    <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">× {prs[ex.key].reps}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-fluid-ui font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key].reps}</span>
+                    <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</span>
+                  </>
+                )}
               </div>
             </div>
           ))}

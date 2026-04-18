@@ -20,9 +20,11 @@ interface ExerciseScreenProps {
   currentSet: number;
   setsPerExercise: number;
   currentTarget: number;
+  currentWeightTarget: number;
   previousRep: number | null;
+  previousWeight: number | null;
   flashColor: 'green' | 'red' | null;
-  onLogSet: (value: number) => void;
+  onLogSet: (reps: number, weight?: number) => void;
   onQuit: () => void;
 }
 
@@ -33,23 +35,29 @@ export function ExerciseScreen({
   currentSet,
   setsPerExercise,
   currentTarget,
+  currentWeightTarget,
   previousRep,
+  previousWeight,
   flashColor,
   onLogSet,
   onQuit,
 }: ExerciseScreenProps) {
+  const isWeighted = exercise.unit === 'weighted';
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [val, setVal] = useState(currentTarget);
+  const [weight, setWeight] = useState(currentWeightTarget);
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setVal(currentTarget);
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWeight(currentWeightTarget);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowQuitConfirm(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowTutorial(false);
-  }, [exerciseIndex, currentSet, currentTarget]);
+  }, [exerciseIndex, currentSet, currentTarget, currentWeightTarget]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -162,24 +170,48 @@ export function ExerciseScreen({
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
-              <NumberInput
-                key={`${exerciseIndex}-${currentSet}`}
-                defaultValue={currentTarget}
-                max={exercise.unit === 'seconds' ? 120 : 40}
-                label={exercise.unit === 'seconds' ? 'Seconds' : 'Reps'}
-                onChange={setVal}
-              />
+              {isWeighted ? (
+                <div className="flex-1 flex flex-col w-full min-h-0">
+                  <NumberInput
+                    key={`${exerciseIndex}-${currentSet}-weight`}
+                    defaultValue={currentWeightTarget}
+                    min={0}
+                    max={500}
+                    step={2.5}
+                    label="KG"
+                    compact
+                    onChange={setWeight}
+                  />
+                  <NumberInput
+                    key={`${exerciseIndex}-${currentSet}-reps`}
+                    defaultValue={currentTarget}
+                    min={1}
+                    max={40}
+                    label="REPS"
+                    compact
+                    onChange={setVal}
+                  />
+                </div>
+              ) : (
+                <NumberInput
+                  key={`${exerciseIndex}-${currentSet}`}
+                  defaultValue={currentTarget}
+                  max={exercise.unit === 'seconds' ? 120 : 40}
+                  label={exercise.unit === 'seconds' ? 'Seconds' : 'Reps'}
+                  onChange={setVal}
+                />
+              )}
 
               {previousRep !== null && !flashColor && (
                 <Badge variant="ghost" className="absolute bottom-8 border-white/20 text-fluid-label font-mono font-bold tracking-widest">
-                  {previousRep} PREVIOUS BEST
+                  {previousWeight !== null ? `${previousWeight}kg × ${previousRep}` : previousRep} PREV
                 </Badge>
               )}
             </div>
 
             <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
               <Button
-                onClick={() => onLogSet(val)}
+                onClick={() => onLogSet(val, isWeighted ? weight : undefined)}
                 className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >
                 LOG SET

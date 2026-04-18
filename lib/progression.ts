@@ -1,4 +1,4 @@
-import { WorkoutData, ExerciseKey, TrainingPriority, UserProfile, TierChain } from './types';
+import { WorkoutData, ExerciseKey, TrainingPriority, UserProfile, TierChain, SetEntry, setEntryReps, setEntryWeight } from './types';
 import { getPreviousSessionDate, getSetsForWeek } from './workout-utils';
 
 const MIN_REPS = 6;
@@ -21,9 +21,10 @@ export function getTargets(
 
   if (!prevDateKey) return Array(sets).fill(START_REPS);
 
-  const prevReps = data[prevDateKey]?.[exerciseKey];
-  if (!prevReps || prevReps.length === 0) return Array(sets).fill(START_REPS);
+  const prevSets = data[prevDateKey]?.[exerciseKey];
+  if (!prevSets || prevSets.length === 0) return Array(sets).fill(START_REPS);
 
+  const prevReps = prevSets.map(setEntryReps);
   const avg = Math.floor(prevReps.reduce((sum, r) => sum + r, 0) / prevReps.length);
 
   if (isDeloadWeek(weekNumber)) {
@@ -31,6 +32,23 @@ export function getTargets(
   }
 
   return Array(sets).fill(Math.min(MAX_REPS, Math.max(MIN_REPS, avg + 1)));
+}
+
+const DEFAULT_WEIGHT = 20;
+
+/** Returns the average weight used in the last session for this exercise. */
+export function getWeightTarget(
+  exerciseKey: ExerciseKey,
+  currentDate: Date,
+  data: WorkoutData
+): number {
+  const prevDateKey = getPreviousSessionDate(currentDate, data);
+  if (!prevDateKey) return DEFAULT_WEIGHT;
+  const prevSets = data[prevDateKey]?.[exerciseKey];
+  if (!prevSets || prevSets.length === 0) return DEFAULT_WEIGHT;
+  const weights = prevSets.map(setEntryWeight).filter((w): w is number => w !== null);
+  if (weights.length === 0) return DEFAULT_WEIGHT;
+  return Math.round(weights.reduce((s, w) => s + w, 0) / weights.length);
 }
 
 /** How many consecutive max-rep sessions are needed to advance a tier. */
@@ -50,7 +68,7 @@ export function getSessionsToAdvance(priority: TrainingPriority): number {
  */
 export function evaluateTierProgress(
   slotId: string,
-  sessionReps: number[],
+  sessionReps: SetEntry[],
   profile: UserProfile,
   chain: TierChain,
   weekNumber: number
@@ -66,8 +84,9 @@ export function evaluateTierProgress(
   let consecutiveMaxSessions = existing?.consecutiveMaxSessions ?? 0;
   let consecutiveMinSessions = existing?.consecutiveMinSessions ?? 0;
 
-  const allMax = sessionReps.length > 0 && sessionReps.every((r) => r >= MAX_REPS);
-  const anyMin = sessionReps.some((r) => r < MIN_REPS);
+  const repValues = sessionReps.map(setEntryReps);
+  const allMax = repValues.length > 0 && repValues.every((r) => r >= MAX_REPS);
+  const anyMin = repValues.some((r) => r < MIN_REPS);
 
   if (allMax) {
     consecutiveMaxSessions++;
@@ -104,8 +123,8 @@ export function evaluateTierProgress(
 
 export function shouldIncreaseDifficulty(exerciseKey: ExerciseKey, data: WorkoutData): boolean {
   for (const d of Object.keys(data).sort().reverse()) {
-    const reps = data[d]?.[exerciseKey];
-    if (reps && reps.length > 0) return reps.every((r) => r >= MAX_REPS);
+    const sets = data[d]?.[exerciseKey];
+    if (sets && sets.length > 0) return sets.map(setEntryReps).every((r) => r >= MAX_REPS);
   }
   return false;
 }

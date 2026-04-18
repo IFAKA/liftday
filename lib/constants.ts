@@ -263,7 +263,7 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
     key: 'barbell_bench_press',
     name: 'BARBELL BENCH PRESS',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Lie on flat bench, bar at chest height. Grip slightly wider than shoulder-width. Lower bar to chest with control, elbows at 45°. Press to lockout. Core tight, feet flat on floor.',
     youtubeId: 'rT7DggyJ4ow',
     workoutType: 'push',
@@ -271,7 +271,7 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
     key: 'db_incline_press',
     name: 'INCLINE DUMBBELL PRESS',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Bench at 30-45°. Dumbbells at chest height, elbows at 60°. Press up and slightly together. Superior upper chest activation compared to flat — builds the shelf that\'s visible in a T-shirt.',
     youtubeId: 'DbFgADa2PL8',
     workoutType: 'push',
@@ -279,7 +279,7 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
     key: 'db_shoulder_press',
     name: 'DUMBBELL SHOULDER PRESS',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Seated or standing. Dumbbells at ear height, elbows at 90°. Press overhead to near-lockout, don\'t lock out fully. Greater stabilizer demand than barbell. Start here before progressing to OHP.',
     youtubeId: '6Z15_WdXmVw',
     workoutType: 'push',
@@ -287,7 +287,7 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
     key: 'barbell_ohp',
     name: 'BARBELL OVERHEAD PRESS',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Standing, barbell at collarbone, just outside shoulders. Brace core hard. Press overhead to full lockout, bar slightly behind the ear line at top. Most demanding overhead press — heaviest shoulder builder.',
     youtubeId: '2yjwXTZQDDI',
     workoutType: 'push',
@@ -295,7 +295,7 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
     key: 'db_lateral_raise',
     name: 'DUMBBELL LATERAL RAISE',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Slight elbow bend, lift arms to shoulder height at sides. Lead with elbows not hands — pour water from a jug. Pause 1 sec at top. Lower slowly (3 sec). Primary side delt isolation — the exercise that widens shoulders the most.',
     youtubeId: 'kDqklk1ZESo',
     workoutType: 'push',
@@ -303,7 +303,7 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
     key: 'cable_tricep_pushdown',
     name: 'CABLE TRICEP PUSHDOWN',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Face cable machine, bar or rope at upper chest height. Tuck elbows at sides — keep them pinned throughout. Extend forearms down to full lockout. Squeeze triceps hard at bottom. The safest, most consistent tricep isolation.',
     youtubeId: 'kiuVA0gs3EI',
     workoutType: 'push',
@@ -311,7 +311,7 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
     key: 'overhead_tricep_ext',
     name: 'OVERHEAD TRICEP EXTENSION',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Cable behind head or EZ bar. Arms overhead, elbows by ears. Lower behind head until forearms are parallel, then extend fully. Long-head stretch at bottom is key — this is the largest portion of the tricep, visible from behind.',
     youtubeId: 'YbX7Wd8jQ-Q',
     workoutType: 'push',
@@ -323,7 +323,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'lat_pulldown',
     name: 'LAT PULLDOWN',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Wide grip, lean back slightly (15°). Drive elbows down and back toward hips as you pull bar to upper chest. Full stretch at top — don\'t shortchange the range. Machine pull-up: master the pattern here before transitioning to bodyweight.',
     youtubeId: 'CAwf7n6Luuc',
     workoutType: 'pull',
@@ -331,7 +331,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'pullup',
     name: 'PULL-UP',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Dead hang, grip shoulder-width or slightly wider. Pull until chin clears bar, squeeze lats at top. Lower with full control — don\'t drop. No kipping. The gold standard of vertical pulling strength.',
     youtubeId: 'eGo4IYlbE5g',
     workoutType: 'pull',
@@ -339,7 +339,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'cable_row',
     name: 'SEATED CABLE ROW',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Sit tall, slight lean forward at start. Pull handle to lower sternum, drive elbows back past your sides. Fully extend arms between reps — don\'t bounce. Controls the eccentric. Upper back, rhomboids, rear delts, biceps.',
     youtubeId: 'GZbfZ033f74',
     workoutType: 'pull',
@@ -347,7 +347,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'barbell_row',
     name: 'BARBELL ROW',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Hip hinge to 45°, bar hanging below chest. Pull bar to lower sternum, elbows at 45°. Don\'t jerk — control the lower. Heavier horizontal pulling load than cable. Major back mass builder.',
     youtubeId: '9efgcAjQe7E',
     workoutType: 'pull',
@@ -355,7 +355,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'cable_face_pull',
     name: 'CABLE FACE PULL',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Rope attachment at face height. Step back, pull handles toward face with elbows high and wide. Externally rotate at the top — think "show off your biceps" at the end. Rear delts + external rotators. Non-negotiable for shoulder health under heavy pressing load.',
     youtubeId: 'rep-qVOkqgk',
     workoutType: 'pull',
@@ -363,7 +363,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'db_curl',
     name: 'DUMBBELL CURL',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Dumbbells at sides, palms forward. Curl up, fully supinate (twist palm up) as you go. Squeeze biceps at top. Lower fully — full extension is the key rep most people skip. Don\'t swing.',
     youtubeId: 'ykJmrZ5v0Oo',
     workoutType: 'pull',
@@ -371,7 +371,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'barbell_curl',
     name: 'BARBELL CURL',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'EZ bar or straight bar, shoulder-width grip. Elbows fixed at sides. Curl to chest, squeeze at top. Lower with control — 2 sec eccentric. Greater load potential than dumbbells, allowing progressive overload over months.',
     youtubeId: 'kwG2ipFRgfo',
     workoutType: 'pull',
@@ -379,7 +379,7 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
   {
     key: 'straight_arm_pulldown_cable',
     name: 'STRAIGHT-ARM PULLDOWN',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Face high cable, straight bar or rope. Arms straight throughout — elbows locked. Drive hands down to hips in an arc. Squeeze lats hard at bottom. Full lat stretch at top. Isolates lats without involving biceps.',
     youtubeId: 'MrL7odiwMEY',
     workoutType: 'pull',
@@ -391,7 +391,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'goblet_squat',
     name: 'GOBLET SQUAT',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Hold dumbbell or kettlebell at chest with both hands. Feet hip-width, toes out 15°. Squat deep — elbows inside knees at bottom. Tall torso. Best beginner squat for learning depth and positioning before loading a barbell.',
     youtubeId: 'MxsFDhcyFyE',
     workoutType: 'legs',
@@ -399,7 +399,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'barbell_squat',
     name: 'BARBELL SQUAT',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Bar on upper traps (high bar). Brace core hard, take a big breath before descent. Squat to parallel or below — hips below knees. Drive knees out. Stand up through the heels. King of compound leg exercises.',
     youtubeId: 'ultWZbUMPL8',
     workoutType: 'legs',
@@ -407,7 +407,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'romanian_deadlift',
     name: 'ROMANIAN DEADLIFT',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Hold bar at hips, soft knee bend. Hinge at hips, bar stays close to legs, lower until strong hamstring stretch (mid-shin for most). Drive hips forward to return — squeeze glutes at top. Primary hamstring + glute hypertrophy exercise.',
     youtubeId: 'JCXUYuzwNrM',
     workoutType: 'legs',
@@ -415,7 +415,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'barbell_deadlift',
     name: 'BARBELL DEADLIFT',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Bar over mid-foot, hip-width stance. Hinge down, grip outside legs. Brace core maximally — fill belly with air. Push floor away as you stand, bar drags up the shins. Lockout: hips and knees extend simultaneously. Most total muscle mass recruited of any single exercise.',
     youtubeId: 'op9kVnSso6Q',
     workoutType: 'legs',
@@ -423,7 +423,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'leg_curl_machine',
     name: 'LEG CURL',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Seated or prone. Pad just above heels. Curl heels toward glutes, squeeze hamstrings hard at peak. Lower slowly — 3 sec eccentric. Full extension at bottom. Hamstring isolation: the only machine movement that truly isolates the hamstrings through full range.',
     youtubeId: 'ELOCsoDSmrg',
     workoutType: 'legs',
@@ -431,7 +431,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'leg_extension_machine',
     name: 'LEG EXTENSION',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Seated, pad on shins just above ankles. Extend legs to full lockout — toes pointed slightly in for better quad engagement. Squeeze quads hard at top for 1 sec. Lower slowly. Direct quad isolation: the terminal knee extension most compound movements miss.',
     youtubeId: 'YyvSfVjQeL0',
     workoutType: 'legs',
@@ -439,7 +439,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'standing_calf_raise_machine',
     name: 'STANDING CALF RAISE',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Shoulder pads on traps, balls of feet on platform edge. Lower heels fully below platform (full stretch), rise to toes, pause 2 sec at top. Don\'t bounce at the bottom. Full range only — partial reps are almost useless for calves. Gastrocnemius primary.',
     youtubeId: 'gwLzBJYoWlI',
     workoutType: 'legs',
@@ -447,7 +447,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'front_squat',
     name: 'FRONT SQUAT',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Bar in front rack: fingertips on bar, elbows high and parallel to floor. Elbows must stay up throughout — any drop dumps the bar forward. Squat to depth, torso stays upright. More quad-dominant and upper-back demanding than back squat. Attempt only after consistent back squat form.',
     youtubeId: 'uYumuL_G_V0',
     workoutType: 'legs',
@@ -455,7 +455,7 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
   {
     key: 'sumo_deadlift',
     name: 'SUMO DEADLIFT',
-    unit: 'reps',
+    unit: 'weighted',
     instruction: 'Wide stance, toes out 45°, grip inside legs. Chest up, brace hard. Push knees out as you drive the floor away — think "spread the floor." More hip and adductor dominant than conventional. Shorter ROM allows heavier loads. Use to break conventional deadlift plateaus or as a glute-focused variation.',
     youtubeId: 'b8-Wdqa6BDs',
     workoutType: 'legs',

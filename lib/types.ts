@@ -95,17 +95,27 @@ export type ExerciseKey =
 
 export type WorkoutType = 'push' | 'pull' | 'legs' | 'rest';
 
+export type SetEntry = number | { reps: number; weight: number };
+
+export function setEntryReps(e: SetEntry): number {
+  return typeof e === 'number' ? e : e.reps;
+}
+
+export function setEntryWeight(e: SetEntry): number | null {
+  return typeof e === 'number' ? null : e.weight;
+}
+
 export interface Exercise {
   key: ExerciseKey;
   name: string;
-  unit: 'reps' | 'seconds';
+  unit: 'reps' | 'seconds' | 'weighted';
   instruction: string;
   youtubeId?: string;
   workoutType: Exclude<WorkoutType, 'rest'>;
 }
 
 export type WorkoutSession = {
-  [K in ExerciseKey]?: number[];
+  [K in ExerciseKey]?: SetEntry[];
 } & {
   logged_at: string;
   week_number: number;

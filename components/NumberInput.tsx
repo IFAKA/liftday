@@ -8,7 +8,9 @@ interface NumberInputProps {
   defaultValue: number;
   min?: number;
   max: number;
+  step?: number;
   label: string;
+  compact?: boolean;
   onChange?: (value: number) => void;
 }
 
@@ -16,7 +18,9 @@ export function NumberInput({
   defaultValue,
   min = 0,
   max,
+  step = 1,
   label,
+  compact = false,
   onChange,
 }: NumberInputProps) {
   const [value, setValue] = useState(() => Math.min(Math.max(defaultValue, min), max));
@@ -33,7 +37,8 @@ export function NumberInput({
   const updateValue = useCallback(
     (delta: number) => {
       setValue((current) => {
-        const next = Math.min(Math.max(current + delta, min), max);
+        const raw = current + delta * step;
+        const next = Math.min(Math.max(Math.round(raw * 100) / 100, min), max);
         if (next !== current) {
           hapticTick();
           if (onChange) onChange(next);
@@ -77,8 +82,8 @@ export function NumberInput({
     <div className="flex flex-col items-center justify-center w-full flex-1 relative min-h-0">
       {/* Massive number in center */}
       <div className="flex items-center justify-center pointer-events-none z-10 -mt-4">
-        <span className="font-mono font-black text-fluid-timer tracking-tighter tabular-nums leading-none">
-          {value}
+        <span className={`font-mono font-black tracking-tighter tabular-nums leading-none ${compact ? 'text-fluid-exercise' : 'text-fluid-timer'}`}>
+          {Number.isInteger(value) ? value : value.toFixed(1)}
         </span>
       </div>
       

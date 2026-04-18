@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { loadWorkoutData } from '@/lib/storage';
-import { WorkoutData, WorkoutType, Exercise } from '@/lib/types';
+import { WorkoutData, WorkoutType, Exercise, SetEntry } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES } from '@/lib/constants';
 
 const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
@@ -28,7 +28,7 @@ export default function HistoryDetailPage() {
     const reps = session[ex.key];
     return reps && reps.length > 0;
   });
-  const loggedReps: Record<string, number[]> = {};
+  const loggedReps: Record<string, SetEntry[]> = {};
   for (const ex of exercisesWithReps) {
     const reps = session[ex.key];
     if (reps) loggedReps[ex.key] = reps;

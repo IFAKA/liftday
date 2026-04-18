@@ -4,12 +4,12 @@ import { CheckCircle2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { EXERCISES } from '@/lib/constants';
-import { WorkoutData } from '@/lib/types';
+import { WorkoutData, SetEntry, setEntryReps } from '@/lib/types';
 
 type SessionCompleteProps =
   | {
       mode: 'workout';
-      sessionReps: Record<string, number[]>;
+      sessionReps: Record<string, SetEntry[]>;
       data: WorkoutData;
       date: Date;
       advancedTiers?: string[];
@@ -24,8 +24,8 @@ export function SessionComplete(props: SessionCompleteProps) {
 
   const totalReps = isWorkout && workoutPropsTyped
     ? EXERCISES.reduce((sum, ex) => {
-        const reps = workoutPropsTyped.sessionReps[ex.key];
-        return sum + (reps ? reps.reduce((s, r) => s + r, 0) : 0);
+        const sets = workoutPropsTyped.sessionReps[ex.key];
+        return sum + (sets ? sets.reduce<number>((s, e) => s + setEntryReps(e), 0) : 0);
       }, 0)
     : 0;
 

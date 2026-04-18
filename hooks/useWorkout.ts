@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile } from '@/lib/types';
+import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
 import { EXERCISES, REST_DURATION } from '@/lib/constants';
 import { formatDateKey, getWeekNumber, getSetsForWeek } from '@/lib/workout-utils';
-import { getTargets, evaluateTierProgress } from '@/lib/progression';
+import { getTargets, getWeightTarget, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutType } from '@/lib/schedule';
 import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
 import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
@@ -23,9 +23,11 @@ export interface UseWorkoutReturn {
   timer: number;
   currentExercise: Exercise | undefined;
   currentTarget: number;
+  currentWeightTarget: number;
   previousRep: number | null;
+  previousWeight: number | null;
   flashColor: 'green' | 'red' | null;
-  sessionReps: Record<string, number[]>;
+  sessionReps: Record<string, SetEntry[]>;
   weekNumber: number;
   data: WorkoutData;
   totalExercises: number;
@@ -35,7 +37,7 @@ export interface UseWorkoutReturn {
   timerPaused: boolean;
   advancedTiers: string[];
   startWorkout: () => void;
-  logSet: (value: number) => void;
+  logSet: (reps: number, weight?: number) => void;
   skipTimer: () => void;
   quitWorkout: () => void;
   refreshData: () => void;
@@ -51,7 +53,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(0);
   const [timer, setTimer] = useState(REST_DURATION);
-  const [sessionReps, setSessionReps] = useState<Record<string, number[]>>({});
+  const [sessionReps, setSessionReps] = useState<Record<string, SetEntry[]>>({});
   const [data, setData] = useState<WorkoutData>({});
   const [flashColor, setFlashColor] = useState<'green' | 'red' | null>(null);
   const [nextExerciseName, setNextExerciseName] = useState('');
@@ -64,7 +66,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const countdownPlayedRef = useRef<Set<number>>(new Set());
   const timerEndRef = useRef<number | null>(null);
   const timerPauseStartRef = useRef<number | null>(null);
-  const sessionRepsRef = useRef<Record<string, number[]>>({});
+  const sessionRepsRef = useRef<Record<string, SetEntry[]>>({});
   const userProfileRef = useRef<UserProfile | null>(null);
 
   useEffect(() => {
@@ -105,14 +107,21 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const currentExercise = exercises[exerciseIndex];
   const targets = currentExercise ? getTargets(currentExercise.key, weekNumber, date, data) : [];
   const currentTarget = targets[currentSet] ?? targets[0] ?? 10;
+  const currentWeightTarget = useMemo(() => {
+    if (!currentExercise || currentExercise.unit !== 'weighted') return 0;
+    return getWeightTarget(currentExercise.key, date, data);
+  }, [currentExercise, date, data]);
 
-  const previousRep = useMemo(() => {
+  const previousEntry = useMemo(() => {
     if (!currentExercise) return null;
     const prev = Object.keys(data).filter((d) => d < dateKey && data[d].logged_at).sort().reverse()[0];
     if (!prev) return null;
-    const reps = data[prev]?.[currentExercise.key as ExerciseKey];
-    return reps && reps.length > currentSet ? reps[currentSet] : null;
+    const sets = data[prev]?.[currentExercise.key as ExerciseKey];
+    return sets && sets.length > currentSet ? sets[currentSet] : null;
   }, [data, dateKey, currentExercise, currentSet]);
+
+  const previousRep = previousEntry !== null ? setEntryReps(previousEntry) : null;
+  const previousWeight = previousEntry !== null ? setEntryWeight(previousEntry) : null;
 
   useEffect(() => { if (state !== 'resting') setTimerPaused(false); }, [state]);
 
@@ -248,15 +257,16 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setState('exercising');
   }, []);
 
-  const logSet = useCallback((value: number) => {
+  const logSet = useCallback((reps: number, weight?: number) => {
     if (!currentExercise) return;
     const key = currentExercise.key;
-    const hitTarget = value >= currentTarget;
+    const entry: SetEntry = weight !== undefined ? { reps, weight } : reps;
+    const hitTarget = reps >= currentTarget;
     setFlashColor(hitTarget ? 'green' : 'red');
     playSetLogged(hitTarget);
     setTimeout(() => setFlashColor(null), 600);
 
-    const newReps = { ...sessionRepsRef.current, [key]: [...(sessionRepsRef.current[key] || []), value] };
+    const newReps = { ...sessionRepsRef.current, [key]: [...(sessionRepsRef.current[key] || []), entry] };
     sessionRepsRef.current = newReps;
     setSessionReps(newReps);
 
@@ -327,9 +337,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   return {
     state, exerciseIndex, currentSet, setsPerExercise, timer, currentExercise, currentTarget,
-    previousRep, flashColor, sessionReps, weekNumber, data, totalExercises: exercises.length,
-    exercises, nextExerciseName, nextExerciseAfterRestName, timerPaused,
-    advancedTiers,
+    currentWeightTarget, previousRep, previousWeight, flashColor, sessionReps, weekNumber, data,
+    totalExercises: exercises.length, exercises, nextExerciseName, nextExerciseAfterRestName,
+    timerPaused, advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
   };
 }

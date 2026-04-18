@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Exercise } from '@/lib/types';
+import { Exercise, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { TopBar } from './TopBar';
 
@@ -12,8 +12,8 @@ interface RoutineScreenProps {
   title: string;
   titleColor?: string;
   subtitle?: string;
-  /** If provided, show logged reps next to each exercise (history view) */
-  loggedReps?: Record<string, number[]>;
+  /** If provided, show logged sets next to each exercise (history view) */
+  loggedReps?: Record<string, SetEntry[]>;
   /** Hide the top bar — used when embedded inside another page that has its own header */
   hideTopBar?: boolean;
 }
@@ -78,7 +78,10 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
                 </div>
                 {reps && reps.length > 0 && (
                   <span className="text-fluid-label font-mono text-white/50 tabular-nums shrink-0 ml-3">
-                    {reps.join(' / ')}
+                    {reps.map((e) => {
+                      const w = setEntryWeight(e);
+                      return w !== null ? `${w}×${setEntryReps(e)}` : setEntryReps(e);
+                    }).join(' / ')}
                   </span>
                 )}
               </div>

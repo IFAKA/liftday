@@ -86,7 +86,9 @@ function TodayContent({ date }: { date: Date }) {
         currentSet={workout.currentSet}
         setsPerExercise={workout.setsPerExercise}
         currentTarget={workout.currentTarget}
+        currentWeightTarget={workout.currentWeightTarget}
         previousRep={workout.previousRep}
+        previousWeight={workout.previousWeight}
         flashColor={workout.flashColor}
         onLogSet={workout.logSet}
         onQuit={workout.quitWorkout}

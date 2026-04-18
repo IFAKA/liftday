@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { WorkoutData, WorkoutType } from '@/lib/types';
+import { WorkoutData, WorkoutType, setEntryReps } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -42,9 +42,9 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     for (const session of Object.values(data)) {
       if (!session.logged_at) continue;
       for (const ex of EXERCISES) {
-        const reps = session[ex.key];
-        if (reps && reps.length > 0) {
-          const best = Math.max(...reps);
+        const sets = session[ex.key];
+        if (sets && sets.length > 0) {
+          const best = Math.max(...sets.map(setEntryReps));
           if (!result[ex.key] || best > result[ex.key]) result[ex.key] = best;
         }
       }
@@ -102,8 +102,8 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                   const wt = session.workout_type;
                   const exercises = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
                   const totalReps = exercises.reduce((sum, ex) => {
-                    const reps = session[ex.key];
-                    return sum + (reps ? reps.reduce((s, r) => s + r, 0) : 0);
+                    const sets = session[ex.key];
+                    return sum + (sets ? sets.reduce<number>((s, e) => s + setEntryReps(e), 0) : 0);
                   }, 0);
                   const displayDate = new Date(dateKey + 'T12:00:00');
 
