@@ -62,8 +62,7 @@ export function loadUserProfile(): UserProfile | null {
 }
 
 export function setActiveRoutine(id: RoutineId): void {
-  const profile = loadUserProfile();
-  if (!profile) return;
+  const profile = loadUserProfile() ?? getDefaultProfile();
   profile.activeRoutine = id;
   saveUserProfile(profile);
 }

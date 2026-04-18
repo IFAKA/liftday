@@ -43,7 +43,7 @@ export default function PersonalBestsPage() {
         center={
           <div className="flex flex-col items-center">
             <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Personal Bests</span>
-            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{Object.keys(prs).length} EXERCISES</span>
+            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">ALL-TIME REP RECORDS</span>
           </div>
         }
       />
