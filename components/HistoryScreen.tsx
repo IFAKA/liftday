@@ -81,7 +81,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
                 <div className="flex items-center gap-3">
                   <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-fluid-exercise font-black uppercase tracking-tight text-white leading-none">Personal Bests</span>
+                    <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Personal Bests</span>
                     <span className="text-fluid-label font-mono text-white/40">All-time records per exercise</span>
                   </div>
                 </div>
