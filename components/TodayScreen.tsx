@@ -94,6 +94,8 @@ function TodayContent({ date }: { date: Date }) {
         onLogSet={workout.logSet}
         onQuit={workout.quitWorkout}
         onOccupied={workout.swapCurrentForOccupied}
+        onRequeue={workout.requeueCurrent}
+        hasSwapAlternative={workout.hasSwapAlternative}
       />
     );
   }

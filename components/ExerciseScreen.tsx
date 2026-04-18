@@ -27,6 +27,8 @@ interface ExerciseScreenProps {
   onLogSet: (reps: number, weight?: number) => void;
   onQuit: () => void;
   onOccupied?: () => void;
+  onRequeue?: () => void;
+  hasSwapAlternative?: boolean;
 }
 
 export function ExerciseScreen({
@@ -43,6 +45,8 @@ export function ExerciseScreen({
   onLogSet,
   onQuit,
   onOccupied,
+  onRequeue,
+  hasSwapAlternative,
 }: ExerciseScreenProps) {
   const isWeighted = exercise.unit === 'weighted';
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
@@ -169,12 +173,12 @@ export function ExerciseScreen({
               <h2 className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight text-center sm:text-left">
                 {exercise.name}
               </h2>
-              {onOccupied && (
+              {(onOccupied || onRequeue) && (
                 <button
-                  onClick={onOccupied}
+                  onClick={hasSwapAlternative ? onOccupied : onRequeue}
                   className="mt-1 text-xs text-white/30 hover:text-white/60 transition-colors w-full text-center sm:text-left"
                 >
-                  machine occupied → swap
+                  {hasSwapAlternative ? 'machine occupied → swap' : 'machine occupied → move to end'}
                 </button>
               )}
             </div>
