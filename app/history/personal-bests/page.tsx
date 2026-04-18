@@ -50,7 +50,7 @@ export default function PersonalBestsPage() {
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
         <div className="flex flex-col gap-3">
           {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-            <div key={ex.key} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5">
+            <div key={ex.key} onClick={() => router.push(`/exercises/${ex.key}`)} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5 cursor-pointer active:bg-white/10 transition-colors">
               <span className="text-fluid-ui font-black uppercase tracking-tight text-white truncate">{ex.name}</span>
               <div className="flex items-baseline gap-2 shrink-0 ml-3">
                 <span className="text-fluid-exercise font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key]}</span>

@@ -65,7 +65,8 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
             return (
               <div
                 key={ex.key}
-                className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5"
+                onClick={() => router.push(`/exercises/${ex.key}`)}
+                className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5 cursor-pointer active:bg-white/10 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-fluid-label font-mono text-white/30 tabular-nums w-5 shrink-0 text-right">
