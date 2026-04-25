@@ -364,6 +364,15 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     youtubeId: 'Iwe6AmxVf7o',
     workoutType: 'push',
   },
+  {
+    key: 'cable_lateral_raise',
+    name: 'CABLE LATERAL RAISE',
+    unit: 'weighted',
+    primaryMuscle: 'side_delt',
+    instruction: 'Low cable at your side, D-handle in opposite hand. Raise arm straight out to shoulder height — lead with the elbow, not the hand. Pause 1 sec at top. Lower slowly under control (3 sec). Cable keeps constant tension through the full range, unlike dumbbells that go slack at the bottom. Run this as a second lateral raise slot to double side delt volume — the highest-SMV muscle in the system.',
+    youtubeId: 'PPjDFHf2sCc',
+    workoutType: 'push',
+  },
 ];
 
 // GYM PULL EXERCISES
@@ -550,6 +559,22 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
     primaryMuscle: 'hamstrings',
     instruction: 'Wide stance, toes out 45°, grip inside legs. Chest up, brace hard. Push knees out as you drive the floor away — think "spread the floor." More hip and adductor dominant than conventional. Shorter ROM allows heavier loads. Use to break conventional deadlift plateaus or as a glute-focused variation.',
     youtubeId: 'b8-Wdqa6BDs',
+    workoutType: 'legs',
+  },
+  {
+    key: 'cable_glute_kickback',
+    name: 'CABLE GLUTE KICKBACK',
+    unit: 'weighted',
+    primaryMuscle: 'glutes',
+    instruction: 'Ankle cuff on low cable. Hold the machine for balance, slight forward lean. Kick leg straight back — squeeze glute hard at peak. Do NOT let hip rotate or torso twist. Slow return. Isolates glute max through a different angle than hip thrust — high peak contraction at full extension. Run after hip thrust.',
+    workoutType: 'legs',
+  },
+  {
+    key: 'hip_abduction_machine',
+    name: 'HIP ABDUCTION MACHINE',
+    unit: 'weighted',
+    primaryMuscle: 'glutes',
+    instruction: 'Sit upright, pads on outer thighs. Push legs apart as wide as possible, squeeze glutes at peak. Return slowly — 3 sec. Targets gluteus medius, the muscle that creates the visible outer glute curve and hip width from behind. Don\'t lean forward — upright posture maximises glute med activation over TFL.',
     workoutType: 'legs',
   },
 ];
