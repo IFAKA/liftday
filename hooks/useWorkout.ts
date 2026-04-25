@@ -48,6 +48,7 @@ export interface UseWorkoutReturn {
   undoLastSet: () => void;
   swapCurrentForOccupied: () => void;
   requeueCurrent: () => void;
+  adjustTimer: (delta: number) => void;
 }
 
 export function useWorkout(date: Date): UseWorkoutReturn {
@@ -369,6 +370,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setUnavailableEquipment((prev) => [...new Set([...prev, ...required])]);
   }, [exercises, exerciseIndex]);
 
+  const adjustTimer = useCallback((delta: number) => {
+    if (timerEndRef.current !== null) {
+      timerEndRef.current = Math.max(Date.now() + 3000, timerEndRef.current + delta * 1000);
+    }
+    setTimer((prev) => Math.max(5, prev + delta));
+  }, []);
+
   const requeueCurrent = useCallback(() => {
     const ex = exercises[exerciseIndex];
     if (!ex) return;
@@ -403,6 +411,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     totalExercises: exercises.length, exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
-    swapCurrentForOccupied, requeueCurrent, hasSwapAlternative,
+    swapCurrentForOccupied, requeueCurrent, hasSwapAlternative, adjustTimer,
   };
 }

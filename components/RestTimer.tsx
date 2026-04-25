@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
-import { REST_DURATION } from '@/lib/constants';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { motion } from 'framer-motion';
 
@@ -14,6 +13,7 @@ interface RestTimerProps {
   onSkip: () => void;
   onQuit: () => void;
   onUndo: () => void;
+  onAdjustTimer?: (delta: number) => void;
   nextExerciseName?: string | null;
 }
 
@@ -44,8 +44,12 @@ function cancelRestNotification() {
   }
 }
 
-export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName }: RestTimerProps) {
+export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, onAdjustTimer, nextExerciseName }: RestTimerProps) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const maxSecondsRef = useRef(seconds);
+  useEffect(() => {
+    if (seconds > maxSecondsRef.current) maxSecondsRef.current = seconds;
+  }, [seconds]);
   const showQuitConfirmRef = useRef(false);
 
   useEffect(() => {
@@ -90,7 +94,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   const display = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  const progress = ((REST_DURATION - seconds) / REST_DURATION) * 100;
+  const progress = ((maxSecondsRef.current - seconds) / maxSecondsRef.current) * 100;
   const circumference = 2 * Math.PI * 45;
 
   return (
@@ -141,6 +145,25 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
           </span>
         </div>
       </div>
+
+      {onAdjustTimer && (
+        <div className="w-full px-4 shrink-0 flex justify-center gap-4 mb-2">
+          <Button
+            variant="ghost"
+            onClick={() => onAdjustTimer(-15)}
+            className="text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20 font-black text-fluid-ui rounded-full px-5"
+          >
+            −15s
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => onAdjustTimer(15)}
+            className="text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20 font-black text-fluid-ui rounded-full px-5"
+          >
+            +15s
+          </Button>
+        </div>
+      )}
 
       {nextExerciseName && (
         <div className="w-full px-4 shrink-0 flex flex-col items-center gap-1 mb-2">
