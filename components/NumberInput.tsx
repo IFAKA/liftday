@@ -82,13 +82,13 @@ export function NumberInput({
     <div className="flex flex-col items-center justify-center w-full flex-1 relative min-h-0">
       {/* Massive number in center */}
       <div className="flex items-center justify-center pointer-events-none z-10 -mt-4">
-        <span className={`font-mono font-black tracking-tighter tabular-nums leading-none ${compact ? 'text-fluid-exercise' : 'text-fluid-timer'}`}>
+        <span className={`font-mono font-black tracking-tighter tabular-nums leading-none ${compact ? 'text-fluid-compact-number' : 'text-fluid-timer'}`}>
           {Number.isInteger(value) ? value : value.toFixed(1)}
         </span>
       </div>
-      
+
       {/* Label under number */}
-      <span className="text-fluid-label uppercase tracking-widest text-white/40 font-mono -mt-2 z-10">
+      <span className={`${compact ? 'text-fluid-compact-label' : 'text-fluid-label'} uppercase tracking-widest text-white/40 font-mono -mt-2 z-10`}>
         {label}
       </span>
 
