@@ -48,6 +48,7 @@ export interface UseWorkoutReturn {
   undoLastSet: () => void;
   swapCurrentForOccupied: () => void;
   requeueCurrent: () => void;
+  handleMachineOccupied: () => void;
 }
 
 export function useWorkout(date: Date): UseWorkoutReturn {
@@ -392,6 +393,14 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     }
   }, [exercises, exerciseIndex, derivedExercises.length, chainIndexMap, saveAndComplete]);
 
+  const handleMachineOccupied = useCallback(() => {
+    if (hasSwapAlternative) {
+      swapCurrentForOccupied();
+    } else {
+      requeueCurrent();
+    }
+  }, [hasSwapAlternative, swapCurrentForOccupied, requeueCurrent]);
+
   const nextExerciseAfterRestName = useMemo(() => {
     if (state !== 'resting') return null;
     const isLastSet = currentSet + 1 >= setsPerExercise;
@@ -405,6 +414,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     totalExercises: exercises.length, exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
-    swapCurrentForOccupied, requeueCurrent, hasSwapAlternative,
+    swapCurrentForOccupied, requeueCurrent, hasSwapAlternative, handleMachineOccupied,
   };
 }

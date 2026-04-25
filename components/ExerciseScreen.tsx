@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, Info } from 'lucide-react';
+import { X, ChevronLeft, Info, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import type { Exercise } from '@/lib/types';
@@ -26,9 +26,7 @@ interface ExerciseScreenProps {
   flashColor: 'green' | 'red' | null;
   onLogSet: (reps: number, weight?: number) => void;
   onQuit: () => void;
-  onOccupied?: () => void;
-  onRequeue?: () => void;
-  hasSwapAlternative?: boolean;
+  onMachineOccupied?: () => void;
 }
 
 export function ExerciseScreen({
@@ -44,9 +42,7 @@ export function ExerciseScreen({
   flashColor,
   onLogSet,
   onQuit,
-  onOccupied,
-  onRequeue,
-  hasSwapAlternative,
+  onMachineOccupied,
 }: ExerciseScreenProps) {
   const isWeighted = exercise.unit === 'weighted';
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
@@ -173,12 +169,13 @@ export function ExerciseScreen({
               <h2 className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight text-center sm:text-left">
                 {exercise.name}
               </h2>
-              {(onOccupied || onRequeue) && (
+              {onMachineOccupied && (
                 <button
-                  onClick={hasSwapAlternative ? onOccupied : onRequeue}
-                  className="mt-1 text-xs text-white/30 hover:text-white/60 transition-colors w-full text-center sm:text-left"
+                  onClick={onMachineOccupied}
+                  className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-all"
                 >
-                  {hasSwapAlternative ? 'machine occupied → swap' : 'machine occupied → move to end'}
+                  <AlertCircle className="size-3.5 shrink-0" />
+                  Machine occupied
                 </button>
               )}
             </div>

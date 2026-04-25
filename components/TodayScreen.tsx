@@ -93,9 +93,7 @@ function TodayContent({ date }: { date: Date }) {
         flashColor={workout.flashColor}
         onLogSet={workout.logSet}
         onQuit={workout.quitWorkout}
-        onOccupied={workout.swapCurrentForOccupied}
-        onRequeue={workout.requeueCurrent}
-        hasSwapAlternative={workout.hasSwapAlternative}
+        onMachineOccupied={workout.handleMachineOccupied}
       />
     );
   }
