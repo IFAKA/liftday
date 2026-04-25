@@ -213,7 +213,7 @@ export const LEGS_EXERCISES: Exercise[] = [
   {
     key: 'bulgarian_split_squat',
     name: 'BULGARIAN SPLIT SQUAT',
-    unit: 'reps',
+    unit: 'weighted',
     primaryMuscle: 'quads',
     instruction: 'Rear foot elevated on chair/couch. Lower front knee to 90°. Press back up. Start with your weaker leg — match the rep count on both sides, weaker side sets the cap.',
     youtubeId: 'hiLF_pF3EJM',
@@ -258,7 +258,7 @@ export const LEGS_EXERCISES: Exercise[] = [
   {
     key: 'hip_thrust',
     name: 'HIP THRUST',
-    unit: 'reps',
+    unit: 'weighted',
     primaryMuscle: 'glutes',
     instruction: 'Upper back on bench, feet flat, knees 90°. Drive hips up explosively, squeeze glutes hard at top for 1 sec. Lower controlled. The bench allows full hip extension range — significantly better glute activation than a floor bridge.',
     youtubeId: 'xDmFkJxPzeM',

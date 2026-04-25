@@ -44,7 +44,7 @@ export function ExerciseScreen({
   onQuit,
   onMachineOccupied,
 }: ExerciseScreenProps) {
-  const isWeighted = exercise.unit === 'weighted';
+  const isSeconds = exercise.unit === 'seconds';
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [val, setVal] = useState(currentTarget);
   const [weight, setWeight] = useState(currentWeightTarget);
@@ -194,7 +194,15 @@ export function ExerciseScreen({
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
-              {isWeighted ? (
+              {isSeconds ? (
+                <NumberInput
+                  key={`${exerciseIndex}-${currentSet}`}
+                  defaultValue={currentTarget}
+                  max={120}
+                  label="Seconds"
+                  onChange={setVal}
+                />
+              ) : (
                 <div className="flex-1 flex flex-col w-full min-h-0">
                   <NumberInput
                     key={`${exerciseIndex}-${currentSet}-weight`}
@@ -216,14 +224,6 @@ export function ExerciseScreen({
                     onChange={setVal}
                   />
                 </div>
-              ) : (
-                <NumberInput
-                  key={`${exerciseIndex}-${currentSet}`}
-                  defaultValue={currentTarget}
-                  max={exercise.unit === 'seconds' ? 120 : 40}
-                  label={exercise.unit === 'seconds' ? 'Seconds' : 'Reps'}
-                  onChange={setVal}
-                />
               )}
 
               {previousRep !== null && !flashColor && (
@@ -238,7 +238,7 @@ export function ExerciseScreen({
                 onClick={() => {
                   setLastLoggedVal(val);
                   setLastLoggedWeight(weight);
-                  onLogSet(val, isWeighted ? weight : undefined);
+                  onLogSet(val, isSeconds ? undefined : weight);
                 }}
                 className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >
