@@ -14,7 +14,8 @@ export type EquipmentKey =
   | 'leg_curl_machine'
   | 'leg_extension_machine'
   | 'calf_raise_machine'
-  | 'leg_press_machine';
+  | 'leg_press_machine'
+  | 'hip_abduction_machine';
 
 export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   // Bodyweight
@@ -86,6 +87,9 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   leg_extension_machine: ['leg_extension_machine'],
   standing_calf_raise_machine: ['calf_raise_machine'],
   leg_press: ['leg_press_machine'],
+  cable_lateral_raise: ['cable_machine'],
+  cable_glute_kickback: ['cable_machine'],
+  hip_abduction_machine: ['hip_abduction_machine'],
 };
 
 export function getRequiredEquipment(key: ExerciseKey): EquipmentKey[] {

@@ -46,6 +46,7 @@ export type GymPushExerciseKey =
   | 'db_shoulder_press'
   | 'barbell_ohp'
   | 'db_lateral_raise'
+  | 'cable_lateral_raise'
   | 'cable_tricep_pushdown'
   | 'overhead_tricep_ext'
   | 'cable_fly';
@@ -74,7 +75,9 @@ export type GymLegsExerciseKey =
   | 'sumo_deadlift'
   | 'leg_curl_machine'
   | 'leg_extension_machine'
-  | 'standing_calf_raise_machine';
+  | 'standing_calf_raise_machine'
+  | 'cable_glute_kickback'
+  | 'hip_abduction_machine';
 
 export type RoutineId = string;
 
