@@ -49,14 +49,30 @@ export function ExerciseScreen({
   const [val, setVal] = useState(currentTarget);
   const [weight, setWeight] = useState(currentWeightTarget);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [lastLoggedVal, setLastLoggedVal] = useState<number | null>(null);
+  const [lastLoggedWeight, setLastLoggedWeight] = useState<number | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // When the exercise changes, reset to progression targets and clear last-logged memory.
+    // Within the same exercise, sets will pre-fill from the last logged set instead.
+    setLastLoggedVal(null);
+    setLastLoggedWeight(null);
     setVal(currentTarget);
     setWeight(currentWeightTarget);
     setShowQuitConfirm(false);
     setShowTutorial(false);
-  }, [exerciseIndex, currentSet, currentTarget, currentWeightTarget]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exerciseIndex]);
+
+  useEffect(() => {
+    // Between sets of the same exercise, prefer last logged values over progression target.
+    if (currentSet === 0) return;
+    setVal(lastLoggedVal ?? currentTarget);
+    setWeight(lastLoggedWeight ?? currentWeightTarget);
+    setShowQuitConfirm(false);
+    setShowTutorial(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSet]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -219,7 +235,11 @@ export function ExerciseScreen({
 
             <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
               <Button
-                onClick={() => onLogSet(val, isWeighted ? weight : undefined)}
+                onClick={() => {
+                  setLastLoggedVal(val);
+                  setLastLoggedWeight(weight);
+                  onLogSet(val, isWeighted ? weight : undefined);
+                }}
                 className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >
                 LOG SET
