@@ -181,7 +181,7 @@ export function ExerciseScreen({
               {isWeighted ? (
                 <div className="flex-1 flex flex-col w-full min-h-0">
                   <NumberInput
-                    key={`${exerciseIndex}-${currentSet}-weight`}
+                    key={`${exercise.key}-${currentSet}-weight`}
                     defaultValue={currentWeightTarget}
                     min={0}
                     max={500}
@@ -191,7 +191,7 @@ export function ExerciseScreen({
                     onChange={setWeight}
                   />
                   <NumberInput
-                    key={`${exerciseIndex}-${currentSet}-reps`}
+                    key={`${exercise.key}-${currentSet}-reps`}
                     defaultValue={currentTarget}
                     min={1}
                     max={40}
@@ -202,7 +202,7 @@ export function ExerciseScreen({
                 </div>
               ) : (
                 <NumberInput
-                  key={`${exerciseIndex}-${currentSet}`}
+                  key={`${exercise.key}-${currentSet}`}
                   defaultValue={currentTarget}
                   max={exercise.unit === 'seconds' ? 120 : 40}
                   label={exercise.unit === 'seconds' ? 'Seconds' : 'Reps'}
