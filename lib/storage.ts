@@ -73,6 +73,12 @@ export function setRestDuration(seconds: number): void {
   saveUserProfile(profile);
 }
 
+export function setSetsPerExercise(sets: number): void {
+  const profile = loadUserProfile() ?? getDefaultProfile();
+  profile.setsPerExercise = sets;
+  saveUserProfile(profile);
+}
+
 export function saveUserProfile(profile: UserProfile): void {
   try {
     if (typeof window === 'undefined') return;

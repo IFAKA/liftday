@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const [routineName, setRoutineName] = useState('');
   const [restDuration, setRestDurationState] = useState(REST_DURATION);
+  const [setsPerExercise, setSetsPerExercise] = useState(2);
 
   useEffect(() => {
     const profile = loadUserProfile();
@@ -19,6 +20,7 @@ export default function SettingsPage() {
     const routine = ROUTINES.find((r) => r.id === routineId);
     setRoutineName(routine?.name ?? routineId);
     setRestDurationState(profile?.restDuration ?? REST_DURATION);
+    setSetsPerExercise(profile?.setsPerExercise ?? 2);
   }, []);
 
   const mins = Math.floor(restDuration / 60);
@@ -50,6 +52,17 @@ export default function SettingsPage() {
           <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
             <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Rest</span>
             <span className="text-fluid-ui font-black uppercase tracking-tight text-white">{restDisplay}</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/30 shrink-0" />
+        </button>
+
+        <button
+          onClick={() => router.push('/settings/sets')}
+          className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl bg-white/5 border border-white/5 active:bg-white/10 transition-all"
+        >
+          <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
+            <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Sets</span>
+            <span className="text-fluid-ui font-black uppercase tracking-tight text-white">{setsPerExercise} per exercise</span>
           </div>
           <ChevronRight className="w-5 h-5 text-white/30 shrink-0" />
         </button>

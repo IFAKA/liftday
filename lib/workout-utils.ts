@@ -16,7 +16,8 @@ export function getWeekNumber(firstSessionDate: string | null, currentDate: Date
   return Math.max(1, weeks + 1);
 }
 
-export function getSetsForWeek(weekNumber: number): number {
+export function getSetsForWeek(weekNumber: number, override?: number): number {
+  if (override !== undefined) return override;
   return weekNumber <= 4 ? 2 : 3;
 }
 

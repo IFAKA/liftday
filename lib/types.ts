@@ -200,4 +200,5 @@ export interface UserProfile {
   tierProgress: { [slotId: string]: TierProgress };
   createdAt: string;
   restDuration?: number;
+  setsPerExercise?: number;
 }

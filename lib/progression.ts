@@ -1,5 +1,6 @@
 import { WorkoutData, ExerciseKey, TrainingPriority, UserProfile, TierChain, SetEntry, setEntryReps, setEntryWeight } from './types';
 import { getPreviousSessionDate, getSetsForWeek } from './workout-utils';
+import { loadUserProfile } from './storage';
 
 const MIN_REPS = 6;
 const MAX_REPS = 20;
@@ -16,7 +17,7 @@ export function getTargets(
   currentDate: Date,
   data: WorkoutData
 ): number[] {
-  const sets = getSetsForWeek(weekNumber);
+  const sets = getSetsForWeek(weekNumber, loadUserProfile()?.setsPerExercise);
   const prevDateKey = getPreviousSessionDate(currentDate, data);
 
   if (!prevDateKey) return Array(sets).fill(START_REPS);
