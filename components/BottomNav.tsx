@@ -10,14 +10,14 @@ const tabs = [
   { href: '/', label: 'Today', icon: Home },
   { href: '/history', label: 'History', icon: ChartBar },
   { href: '/program', label: 'Program', icon: CalendarDays },
-  { href: '/profile', label: 'Profile', icon: User },
+  { href: '/settings', label: 'Settings', icon: User },
 ] as const;
 
 function isTabActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   if (href === '/history') return pathname.startsWith('/history');
   if (href === '/program') return pathname === '/program' || pathname === '/split' || pathname === '/routine';
-  if (href === '/profile') return pathname === '/profile';
+  if (href === '/settings') return pathname.startsWith('/settings');
   return false;
 }
 
