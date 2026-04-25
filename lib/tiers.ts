@@ -1,6 +1,6 @@
 import { TierMap, WorkoutType, ExerciseKey, TierChain } from './types';
 import { ROUTINES } from './routines';
-import { EquipmentKey, canPerformExercise } from './equipment';
+import { EquipmentKey, canPerformExercise, getRequiredEquipment } from './equipment';
 import { EXERCISES } from './constants';
 import { getExerciseSMVScore } from './smv';
 
@@ -23,22 +23,33 @@ export function resolveExerciseKey(chain: TierChain, tiers: TierMap): ExerciseKe
   return chain.exercises[clamped];
 }
 
+// Equipment that counts as "non-gym" — excluded from alternatives when gymOnly is true
+const NON_GYM_EQUIPMENT = new Set<EquipmentKey>(['none', 'pullup_bar', 'dip_bars', 'trx']);
+
 /**
  * Like resolveExerciseKey but skips exercises that need unavailable equipment.
  * Prefers higher tiers (harder variants) when looking for fallbacks.
  * Returns the base key unchanged if no suitable alternative exists in the chain.
+ * When gymOnly is true, bodyweight/bar/TRX alternatives are ignored.
  */
 export function resolveExerciseKeyWithEquipment(
   chain: TierChain,
   tiers: TierMap,
-  unavailable: EquipmentKey[]
+  unavailable: EquipmentKey[],
+  gymOnly = false,
 ): ExerciseKey {
   const baseKey = resolveExerciseKey(chain, tiers);
   if (unavailable.length === 0) return baseKey;
   if (canPerformExercise(baseKey, unavailable)) return baseKey;
 
   // Pick the available exercise with the highest SMV score
-  const available = chain.exercises.filter((key) => canPerformExercise(key, unavailable));
+  let available = chain.exercises.filter((key) => canPerformExercise(key, unavailable));
+  if (gymOnly) {
+    const gymOnly = available.filter((key) =>
+      getRequiredEquipment(key).some((eq) => !NON_GYM_EQUIPMENT.has(eq))
+    );
+    if (gymOnly.length > 0) available = gymOnly;
+  }
   if (available.length === 0) return baseKey;
 
   return available.reduce((best, key) => {

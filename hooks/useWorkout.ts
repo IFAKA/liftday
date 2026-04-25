@@ -112,7 +112,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const idxMap: number[] = [];
     chains.forEach((chain, chainIdx) => {
       if (skippedChainIndices.has(chainIdx)) return;
-      const key = resolveExerciseKeyWithEquipment(chain, tiers, unavailableEquipment);
+      const key = resolveExerciseKeyWithEquipment(chain, tiers, unavailableEquipment, routine.id === 'gym');
       const ex = EXERCISES.find((e) => e.key === key);
       if (ex) { exs.push(ex); idxMap.push(chainIdx); }
     });
@@ -361,7 +361,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const chain = chains[chainIdx];
     if (!chain) return false;
     const tiers = userProfile?.tiers ?? {};
-    const newKey = resolveExerciseKeyWithEquipment(chain, tiers, newUnavailable);
+    const newKey = resolveExerciseKeyWithEquipment(chain, tiers, newUnavailable, routine.id === 'gym');
     return newKey !== ex.key;
   }, [derivedExercises, exerciseIndex, unavailableEquipment, userProfile, workoutType, chainIndexMap]);
 
