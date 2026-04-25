@@ -13,7 +13,6 @@ interface RestTimerProps {
   onSkip: () => void;
   onQuit: () => void;
   onUndo: () => void;
-  onAdjustTimer?: (delta: number) => void;
   nextExerciseName?: string | null;
 }
 
@@ -44,7 +43,7 @@ function cancelRestNotification() {
   }
 }
 
-export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, onAdjustTimer, nextExerciseName }: RestTimerProps) {
+export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName }: RestTimerProps) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const maxSecondsRef = useRef(seconds);
   useEffect(() => {
@@ -145,25 +144,6 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, onAdjustT
           </span>
         </div>
       </div>
-
-      {onAdjustTimer && (
-        <div className="w-full px-4 shrink-0 flex justify-center gap-4 mb-2">
-          <Button
-            variant="ghost"
-            onClick={() => onAdjustTimer(-15)}
-            className="text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20 font-black text-fluid-ui rounded-full px-5"
-          >
-            −15s
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => onAdjustTimer(15)}
-            className="text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20 font-black text-fluid-ui rounded-full px-5"
-          >
-            +15s
-          </Button>
-        </div>
-      )}
 
       {nextExerciseName && (
         <div className="w-full px-4 shrink-0 flex flex-col items-center gap-1 mb-2">

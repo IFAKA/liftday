@@ -48,7 +48,6 @@ export interface UseWorkoutReturn {
   undoLastSet: () => void;
   swapCurrentForOccupied: () => void;
   requeueCurrent: () => void;
-  adjustTimer: (delta: number) => void;
 }
 
 export function useWorkout(date: Date): UseWorkoutReturn {
@@ -77,6 +76,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const sessionRepsRef = useRef<Record<string, SetEntry[]>>({});
   const userProfileRef = useRef<UserProfile | null>(null);
   const startedAtRef = useRef<string | null>(null);
+  const restDurationRef = useRef(REST_DURATION);
 
   useEffect(() => {
     let mounted = true;
@@ -89,6 +89,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (mounted) {
       setUserProfile(profile);
       userProfileRef.current = profile;
+      restDurationRef.current = profile?.restDuration ?? REST_DURATION;
     }
     return () => { mounted = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,9 +143,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   useEffect(() => {
     if (state === 'resting' && timer > 0 && !timerPaused) {
-      if (timer === REST_DURATION) {
+      if (timer === restDurationRef.current) {
         countdownPlayedRef.current = new Set();
-        timerEndRef.current = Date.now() + REST_DURATION * 1000;
+        timerEndRef.current = Date.now() + restDurationRef.current * 1000;
       }
       timerRef.current = setInterval(() => {
         const remaining = timerEndRef.current
@@ -168,7 +169,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, timer === REST_DURATION, timerPaused]);
+  }, [state, timer === restDurationRef.current, timerPaused]);
 
   const saveAndComplete = useCallback(async () => {
     const reps = sessionRepsRef.current;
@@ -294,7 +295,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       if (isLastSet && isLastExercise) {
         saveAndComplete();
       } else {
-        setTimer(REST_DURATION);
+        setTimer(restDurationRef.current);
         setState('resting');
       }
     }, 700);
@@ -370,13 +371,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setUnavailableEquipment((prev) => [...new Set([...prev, ...required])]);
   }, [exercises, exerciseIndex]);
 
-  const adjustTimer = useCallback((delta: number) => {
-    if (timerEndRef.current !== null) {
-      timerEndRef.current = Math.max(Date.now() + 3000, timerEndRef.current + delta * 1000);
-    }
-    setTimer((prev) => Math.max(5, prev + delta));
-  }, []);
-
   const requeueCurrent = useCallback(() => {
     const ex = exercises[exerciseIndex];
     if (!ex) return;
@@ -411,6 +405,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     totalExercises: exercises.length, exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
-    swapCurrentForOccupied, requeueCurrent, hasSwapAlternative, adjustTimer,
+    swapCurrentForOccupied, requeueCurrent, hasSwapAlternative,
   };
 }

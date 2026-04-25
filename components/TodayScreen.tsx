@@ -117,8 +117,7 @@ function TodayContent({ date }: { date: Date }) {
         onSkip={workout.skipTimer}
         onQuit={workout.quitWorkout}
         onUndo={workout.undoLastSet}
-        onAdjustTimer={workout.adjustTimer}
-        nextExerciseName={workout.nextExerciseAfterRestName}
+nextExerciseName={workout.nextExerciseAfterRestName}
       />
     );
   }
