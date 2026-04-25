@@ -27,6 +27,7 @@ export function TodayScreen() {
   const router = useRouter();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
     if (!hasSeenOnboarding) {

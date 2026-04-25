@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadUserProfile, setRestDuration } from '@/lib/storage';
 import { REST_DURATION } from '@/lib/constants';
@@ -14,12 +14,10 @@ const REST_MAX = 300;
 
 export default function RestSettingPage() {
   const router = useRouter();
-  const [duration, setDuration] = useState(REST_DURATION);
-
-  useEffect(() => {
-    const profile = loadUserProfile();
-    setDuration(profile?.restDuration ?? REST_DURATION);
-  }, []);
+  const [duration, setDuration] = useState(() => {
+    if (typeof window === 'undefined') return REST_DURATION;
+    return loadUserProfile()?.restDuration ?? REST_DURATION;
+  });
 
   function adjust(delta: number) {
     setDuration((prev) => {

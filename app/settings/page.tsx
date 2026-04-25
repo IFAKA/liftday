@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadUserProfile } from '@/lib/storage';
 import { ROUTINES } from '@/lib/routines';
@@ -10,18 +10,17 @@ import { ChevronRight } from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [routineName, setRoutineName] = useState('');
-  const [restDuration, setRestDurationState] = useState(REST_DURATION);
-  const [setsPerExercise, setSetsPerExercise] = useState(2);
-
-  useEffect(() => {
+  const [{ routineName, restDuration, setsPerExercise }] = useState(() => {
+    if (typeof window === 'undefined') return { routineName: '', restDuration: REST_DURATION, setsPerExercise: 2 };
     const profile = loadUserProfile();
     const routineId = profile?.activeRoutine ?? 'calisthenics';
     const routine = ROUTINES.find((r) => r.id === routineId);
-    setRoutineName(routine?.name ?? routineId);
-    setRestDurationState(profile?.restDuration ?? REST_DURATION);
-    setSetsPerExercise(profile?.setsPerExercise ?? 2);
-  }, []);
+    return {
+      routineName: routine?.name ?? routineId,
+      restDuration: profile?.restDuration ?? REST_DURATION,
+      setsPerExercise: profile?.setsPerExercise ?? 2,
+    };
+  });
 
   const mins = Math.floor(restDuration / 60);
   const secs = restDuration % 60;

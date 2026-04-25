@@ -53,11 +53,8 @@ export function ExerciseScreen({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setVal(currentTarget);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setWeight(currentWeightTarget);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowQuitConfirm(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowTutorial(false);
   }, [exerciseIndex, currentSet, currentTarget, currentWeightTarget]);
 

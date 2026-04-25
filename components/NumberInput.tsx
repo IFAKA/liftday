@@ -46,7 +46,7 @@ export function NumberInput({
         return next;
       });
     },
-    [max, min, onChange, hapticTick]
+    [max, min, step, onChange, hapticTick]
   );
 
   const startAdjust = useCallback(

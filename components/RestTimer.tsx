@@ -45,10 +45,7 @@ function cancelRestNotification() {
 
 export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName }: RestTimerProps) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-  const maxSecondsRef = useRef(seconds);
-  useEffect(() => {
-    if (seconds > maxSecondsRef.current) maxSecondsRef.current = seconds;
-  }, [seconds]);
+  const [maxSeconds] = useState(seconds);
   const showQuitConfirmRef = useRef(false);
 
   useEffect(() => {
@@ -93,7 +90,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   const display = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  const progress = ((maxSecondsRef.current - seconds) / maxSecondsRef.current) * 100;
+  const progress = ((maxSeconds - seconds) / maxSeconds) * 100;
   const circumference = 2 * Math.PI * 45;
 
   return (

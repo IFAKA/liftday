@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadUserProfile, setActiveRoutine } from '@/lib/storage';
 import { ROUTINES } from '@/lib/routines';
@@ -16,12 +16,10 @@ const ICONS = {
 
 export default function RoutineSettingPage() {
   const router = useRouter();
-  const [activeRoutineId, setActiveRoutineId] = useState('calisthenics');
-
-  useEffect(() => {
-    const profile = loadUserProfile();
-    setActiveRoutineId(profile?.activeRoutine ?? 'calisthenics');
-  }, []);
+  const [activeRoutineId, setActiveRoutineId] = useState(() => {
+    if (typeof window === 'undefined') return 'calisthenics';
+    return loadUserProfile()?.activeRoutine ?? 'calisthenics';
+  });
 
   function handleSelect(id: string) {
     setActiveRoutineId(id);

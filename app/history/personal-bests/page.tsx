@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,7 @@ import { WorkoutData, setEntryReps, setEntryWeight } from '@/lib/types';
 
 export default function PersonalBestsPage() {
   const router = useRouter();
-  const [data, setData] = useState<WorkoutData>({});
-
-  useEffect(() => {
-    setData(loadWorkoutData());
-  }, []);
+  const [data] = useState<WorkoutData>(() => typeof window !== 'undefined' ? loadWorkoutData() : {});
 
   const prs = useMemo(() => {
     const result: Record<string, { reps: number; weight?: number }> = {};

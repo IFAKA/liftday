@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { loadUserProfile, loadWorkoutData } from '@/lib/storage';
@@ -24,20 +24,18 @@ type Tab = 'today' | 'week';
 
 export default function ProgramPage() {
   const [activeTab, setActiveTab] = useState<Tab>('today');
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [workoutType, setWorkoutType] = useState('');
-  const [data, setData] = useState<WorkoutData>({});
-  const [smvScore, setSmvScore] = useState<RoutineScoreResult | null>(null);
-
-  useEffect(() => {
-    setData(loadWorkoutData());
+  const [{ exercises, workoutType, data, smvScore }] = useState<{
+    exercises: Exercise[];
+    workoutType: string;
+    data: WorkoutData;
+    smvScore: RoutineScoreResult | null;
+  }>(() => {
+    if (typeof window === 'undefined') return { exercises: [], workoutType: '', data: {}, smvScore: null };
     const today = new Date();
     const profile = loadUserProfile();
     const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
     const wt = getWorkoutType(today, routine.schedule);
-    setWorkoutType(wt);
-    if (wt === 'rest') return;
-
+    if (wt === 'rest') return { exercises: [], workoutType: wt, data: loadWorkoutData(), smvScore: null };
     const tiers = profile?.tiers ?? {};
     const chains = getChainsForWorkout(wt, routine.id);
     const exs = chains
@@ -46,9 +44,8 @@ export default function ProgramPage() {
         return EXERCISES.find((e) => e.key === key)!;
       })
       .filter(Boolean);
-    setExercises(exs);
-    setSmvScore(scoreRoutine(routine));
-  }, []);
+    return { exercises: exs, workoutType: wt, data: loadWorkoutData(), smvScore: scoreRoutine(routine) };
+  });
 
   const label = workoutType === 'push' ? 'Push' : workoutType === 'pull' ? 'Pull' : workoutType === 'legs' ? 'Legs' : 'Rest';
 

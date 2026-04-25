@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadUserProfile, setSetsPerExercise } from '@/lib/storage';
 import { TopBar } from '@/components/TopBar';
@@ -9,12 +9,10 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function SetsSettingPage() {
   const router = useRouter();
-  const [sets, setSets] = useState(2);
-
-  useEffect(() => {
-    const profile = loadUserProfile();
-    setSets(profile?.setsPerExercise ?? 2);
-  }, []);
+  const [sets, setSets] = useState(() => {
+    if (typeof window === 'undefined') return 2;
+    return loadUserProfile()?.setsPerExercise ?? 2;
+  });
 
   function select(n: number) {
     setSets(n);
