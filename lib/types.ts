@@ -201,4 +201,14 @@ export interface UserProfile {
   createdAt: string;
   restDuration?: number;
   setsPerExercise?: number;
+  heightCm?: number;
+  weightKg?: number;
+  age?: number;
+  sex?: 'male' | 'female';
+  bodyComposition?: 'skinny_fat' | 'lean' | 'overweight' | 'muscular';
+  trainingBackground?: string;
+  gymAccess?: boolean;
+  injuryStatus?: string;
+  maxWorkoutMinutes?: number;
+  goal?: string;
 }

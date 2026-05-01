@@ -23,13 +23,6 @@ export const gymRoutine: RoutineConfig = {
       exercises: ['db_incline_press'],
     },
     {
-      slotId: 'gym_push_fly',
-      workoutType: 'push',
-      fixed: true,
-      priority: 'high',
-      exercises: ['cable_fly'],
-    },
-    {
       slotId: 'gym_push_overhead',
       workoutType: 'push',
       fixed: false,
@@ -42,6 +35,13 @@ export const gymRoutine: RoutineConfig = {
       fixed: true,
       priority: 'critical',
       exercises: ['db_lateral_raise'],
+    },
+    {
+      slotId: 'gym_push_fly',
+      workoutType: 'push',
+      fixed: true,
+      priority: 'high',
+      exercises: ['cable_fly'],
     },
     {
       slotId: 'gym_push_lateral_cable',
@@ -132,13 +132,6 @@ export const gymRoutine: RoutineConfig = {
       exercises: ['hip_thrust'],
     },
     {
-      slotId: 'gym_legs_unilateral',
-      workoutType: 'legs',
-      fixed: false,
-      priority: 'high',
-      exercises: ['bulgarian_split_squat'],
-    },
-    {
       slotId: 'gym_legs_hamstring',
       workoutType: 'legs',
       fixed: true,
@@ -158,20 +151,6 @@ export const gymRoutine: RoutineConfig = {
       fixed: true,
       priority: 'aesthetic',
       exercises: ['standing_calf_raise_machine'],
-    },
-    {
-      slotId: 'gym_legs_glute_kickback',
-      workoutType: 'legs',
-      fixed: true,
-      priority: 'high',
-      exercises: ['cable_glute_kickback'],
-    },
-    {
-      slotId: 'gym_legs_glute_abduction',
-      workoutType: 'legs',
-      fixed: true,
-      priority: 'high',
-      exercises: ['hip_abduction_machine'],
     },
   ],
 };

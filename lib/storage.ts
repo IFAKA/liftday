@@ -55,6 +55,17 @@ export function loadUserProfile(): UserProfile | null {
     if (!raw) return null;
     const profile = JSON.parse(raw) as UserProfile;
     if (!profile.activeRoutine) profile.activeRoutine = 'gym';
+    if (!profile.setsPerExercise || profile.setsPerExercise < 3) profile.setsPerExercise = 3;
+    if (!profile.heightCm) profile.heightCm = 172;
+    if (!profile.weightKg) profile.weightKg = 66.6;
+    if (!profile.age) profile.age = 26;
+    if (!profile.sex) profile.sex = 'male';
+    if (!profile.bodyComposition) profile.bodyComposition = 'skinny_fat';
+    if (!profile.trainingBackground) profile.trainingBackground = 'Rugby 15 years; intermittent gym blocks';
+    if (profile.gymAccess === undefined) profile.gymAccess = true;
+    if (!profile.injuryStatus) profile.injuryStatus = 'No injuries or pain';
+    if (!profile.maxWorkoutMinutes) profile.maxWorkoutMinutes = 105;
+    if (!profile.goal) profile.goal = 'Maximize SMV efficient frontier as fast as recoverable';
     return profile;
   } catch {
     return null;
@@ -73,9 +84,25 @@ export function setRestDuration(seconds: number): void {
   saveUserProfile(profile);
 }
 
-export function setSetsPerExercise(sets: number): void {
+export function setBodyMetrics(heightCm: number, weightKg: number): void {
   const profile = loadUserProfile() ?? getDefaultProfile();
-  profile.setsPerExercise = sets;
+  profile.heightCm = heightCm;
+  profile.weightKg = weightKg;
+  saveUserProfile(profile);
+}
+
+export function setTrainingProfile(input: {
+  age: number;
+  sex: 'male' | 'female';
+  bodyComposition: 'skinny_fat' | 'lean' | 'overweight' | 'muscular';
+  trainingBackground: string;
+  gymAccess: boolean;
+  injuryStatus: string;
+  maxWorkoutMinutes: number;
+  goal: string;
+}): void {
+  const profile = loadUserProfile() ?? getDefaultProfile();
+  Object.assign(profile, input);
   saveUserProfile(profile);
 }
 
@@ -91,9 +118,21 @@ export function saveUserProfile(profile: UserProfile): void {
 /** Default profile for brand-new users — all tiers start at 0. */
 export function getDefaultProfile(): UserProfile {
   return {
+    activeRoutine: 'gym',
     tiers: {},
     tierProgress: {},
     createdAt: new Date().toISOString(),
+    setsPerExercise: 3,
+    heightCm: 172,
+    weightKg: 66.6,
+    age: 26,
+    sex: 'male',
+    bodyComposition: 'skinny_fat',
+    trainingBackground: 'Rugby 15 years; intermittent gym blocks',
+    gymAccess: true,
+    injuryStatus: 'No injuries or pain',
+    maxWorkoutMinutes: 105,
+    goal: 'Maximize SMV efficient frontier as fast as recoverable',
   };
 }
 

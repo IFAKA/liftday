@@ -19,8 +19,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       title: 'LiftDay',
       description: [
         '6-day PPL split',
-        'Bodyweight & TRX',
-        '30-40 min sessions',
+        'Gym-first routine',
+        'Up to 105 min sessions',
       ],
       action: 'Next',
     },
@@ -29,8 +29,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       title: 'Progressive',
       description: [
         '6-20 rep range',
-        'Weeks 1-4: 2 sets',
-        'Weeks 5+: 3 sets',
+        '3 hard sets',
+        'SMV efficient frontier',
       ],
       action: 'Next',
     },

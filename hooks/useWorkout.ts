@@ -98,7 +98,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const dateKey = formatDateKey(date);
   const weekNumber = getWeekNumber(firstSessionDate, date);
-  const setsPerExercise = getSetsForWeek(weekNumber);
+  const setsPerExercise = getSetsForWeek(weekNumber, userProfile?.setsPerExercise);
 
   const { workoutType, derivedExercises, chainIndexMap } = useMemo(() => {
     const routine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
