@@ -123,11 +123,20 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const currentExercise = exercises[exerciseIndex];
   const targets = currentExercise ? getTargets(currentExercise.key, weekNumber, date, data) : [];
-  const currentTarget = targets[currentSet] ?? targets[0] ?? 10;
+  const previousLoggedSet = useMemo(() => {
+    if (!currentExercise || currentSet === 0) return null;
+    const loggedSets = sessionReps[currentExercise.key] ?? [];
+    return loggedSets[currentSet - 1] ?? null;
+  }, [currentExercise, currentSet, sessionReps]);
+  const currentTarget = previousLoggedSet !== null
+    ? setEntryReps(previousLoggedSet)
+    : targets[currentSet] ?? targets[0] ?? 10;
   const currentWeightTarget = useMemo(() => {
     if (!currentExercise || currentExercise.unit !== 'weighted') return 0;
+    const previousWeight = previousLoggedSet !== null ? setEntryWeight(previousLoggedSet) : null;
+    if (previousWeight !== null) return previousWeight;
     return getWeightTarget(currentExercise.key, date, data);
-  }, [currentExercise, date, data]);
+  }, [currentExercise, previousLoggedSet, date, data]);
 
   const previousEntry = useMemo(() => {
     if (!currentExercise) return null;
