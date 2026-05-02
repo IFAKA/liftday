@@ -26,6 +26,43 @@ export interface ProgressFrontier {
   action: ProgressSignal;
 }
 
+export interface ExerciseProgressDiagnosis {
+  key: ExerciseKey;
+  name: string;
+  muscle: string;
+  latest: number;
+  previous: number;
+  best: number;
+  changePct: number;
+  latestLabel: string;
+  previousLabel: string;
+  bestLabel: string;
+  status: 'up' | 'flat' | 'down';
+  action: string;
+}
+
+export interface MuscleVolumeDiagnosis {
+  muscle: string;
+  sets: number;
+  target: number;
+  deficit: number;
+  action: string;
+}
+
+export interface ProgressDiagnosis {
+  label: string;
+  summary: string;
+  tone: string;
+  averageChangePct: number | null;
+  improvingCount: number;
+  flatCount: number;
+  decliningCount: number;
+  trackedCount: number;
+  priorityExercises: ExerciseProgressDiagnosis[];
+  volumeGaps: MuscleVolumeDiagnosis[];
+  nextActions: string[];
+}
+
 export function getProgressSignal(data: WorkoutData, exercises: Exercise[]): ProgressSignal {
   const tracked = exercises
     .filter((exercise) => ['lats', 'side_delt', 'chest', 'biceps', 'triceps'].includes(exercise.primaryMuscle))
@@ -67,6 +104,109 @@ export function getProgressSignal(data: WorkoutData, exercises: Exercise[]): Pro
     summary: 'Progress is flat but not crashing.',
     nextAction: 'Keep volume fixed. Chase cleaner reps before adding exercises.',
     tone: 'text-yellow-400',
+  };
+}
+
+export function getProgressDiagnosis(
+  data: WorkoutData,
+  exercises: Exercise[],
+  score: RoutineScoreResult
+): ProgressDiagnosis {
+  const exerciseProgress = exercises
+    .map((exercise) => getExerciseDiagnosis(data, exercise))
+    .filter((entry): entry is ExerciseProgressDiagnosis => entry !== null);
+  const meaningful = exerciseProgress.filter((entry) => Math.abs(entry.changePct) >= 1);
+  const averageChangePct = meaningful.length === 0
+    ? null
+    : roundOneDecimal(average(meaningful.map((entry) => entry.changePct)));
+  const improving = exerciseProgress.filter((entry) => entry.status === 'up');
+  const flat = exerciseProgress.filter((entry) => entry.status === 'flat');
+  const declining = exerciseProgress.filter((entry) => entry.status === 'down');
+  const volumeGaps = getVolumeGaps(score);
+  const priorityExercises = [
+    ...declining.sort((a, b) => a.changePct - b.changePct),
+    ...flat.sort((a, b) => a.changePct - b.changePct),
+    ...improving.sort((a, b) => b.changePct - a.changePct),
+  ].slice(0, 5);
+
+  const nextActions = getDiagnosisActions(priorityExercises, volumeGaps);
+
+  if (exerciseProgress.length < 3) {
+    return {
+      label: 'Need more logs',
+      summary: 'Log the same exercises for two weeks before judging progress.',
+      tone: 'text-white/45',
+      averageChangePct,
+      improvingCount: improving.length,
+      flatCount: flat.length,
+      decliningCount: declining.length,
+      trackedCount: exerciseProgress.length,
+      priorityExercises,
+      volumeGaps,
+      nextActions,
+    };
+  }
+
+  if (declining.length >= 3 || (averageChangePct !== null && averageChangePct < -2)) {
+    return {
+      label: 'Underperforming',
+      summary: `${declining.length} tracked exercises dropped versus last time.`,
+      tone: 'text-red-400',
+      averageChangePct,
+      improvingCount: improving.length,
+      flatCount: flat.length,
+      decliningCount: declining.length,
+      trackedCount: exerciseProgress.length,
+      priorityExercises,
+      volumeGaps,
+      nextActions,
+    };
+  }
+
+  if (averageChangePct !== null && averageChangePct >= 8 && improving.length >= Math.ceil(exerciseProgress.length / 2)) {
+    return {
+      label: 'Overperforming',
+      summary: 'Progress is moving fast. Keep jumps small so form does not decay.',
+      tone: 'text-sky-400',
+      averageChangePct,
+      improvingCount: improving.length,
+      flatCount: flat.length,
+      decliningCount: declining.length,
+      trackedCount: exerciseProgress.length,
+      priorityExercises,
+      volumeGaps,
+      nextActions,
+    };
+  }
+
+  if (improving.length >= Math.ceil(exerciseProgress.length / 2)) {
+    return {
+      label: 'Doing well',
+      summary: `${improving.length} of ${exerciseProgress.length} tracked exercises improved.`,
+      tone: 'text-green-400',
+      averageChangePct,
+      improvingCount: improving.length,
+      flatCount: flat.length,
+      decliningCount: declining.length,
+      trackedCount: exerciseProgress.length,
+      priorityExercises,
+      volumeGaps,
+      nextActions,
+    };
+  }
+
+  return {
+    label: 'Flat',
+    summary: 'Progress is not falling, but most exercises are not moving up yet.',
+    tone: 'text-yellow-400',
+    averageChangePct,
+    improvingCount: improving.length,
+    flatCount: flat.length,
+    decliningCount: declining.length,
+    trackedCount: exerciseProgress.length,
+    priorityExercises,
+    volumeGaps,
+    nextActions,
   };
 }
 
@@ -182,6 +322,47 @@ function getExerciseProgress(data: WorkoutData, key: ExerciseKey): { latest: num
   };
 }
 
+function getExerciseDiagnosis(data: WorkoutData, exercise: Exercise): ExerciseProgressDiagnosis | null {
+  const sessions = Object.keys(data)
+    .filter((date) => data[date]?.[exercise.key]?.length)
+    .sort()
+    .map((date) => {
+      const sets = data[date]?.[exercise.key] ?? [];
+      return {
+        score: scoreSessionSets(sets),
+        bestSet: getBestSetScore(sets),
+        label: formatBestSet(sets, exercise),
+      };
+    })
+    .filter((entry) => entry.score > 0);
+
+  if (sessions.length < 2) return null;
+
+  const previous = sessions[sessions.length - 2];
+  const latest = sessions[sessions.length - 1];
+  const best = sessions.reduce((max, entry) => Math.max(max, entry.bestSet), 0);
+  const bestLabel = sessions
+    .filter((entry) => entry.bestSet === best)
+    .at(-1)?.label ?? latest.label;
+  const changePct = previous.score === 0 ? 0 : roundOneDecimal(((latest.score - previous.score) / previous.score) * 100);
+  const status = changePct > 2 ? 'up' : changePct < -2 ? 'down' : 'flat';
+
+  return {
+    key: exercise.key,
+    name: exercise.name,
+    muscle: formatMuscleName(exercise.primaryMuscle),
+    latest: roundOneDecimal(latest.score),
+    previous: roundOneDecimal(previous.score),
+    best: roundOneDecimal(best),
+    changePct,
+    latestLabel: latest.label,
+    previousLabel: previous.label,
+    bestLabel,
+    status,
+    action: getExerciseAction(status, exercise),
+  };
+}
+
 function getWeeklyProgressIndex(data: WorkoutData, exercises: Exercise[]): { actual: number }[] {
   const exerciseKeys = new Set(exercises.map((exercise) => exercise.key));
   const baselineByExercise: Partial<Record<ExerciseKey, number>> = {};
@@ -210,6 +391,80 @@ function getWeeklyProgressIndex(data: WorkoutData, exercises: Exercise[]): { act
     .map((week) => ({
       actual: roundOneDecimal(average(weekScores[week])),
     }));
+}
+
+function getBestSetScore(sets: SetEntry[]): number {
+  return Math.max(...sets.map((entry) => {
+    const reps = setEntryReps(entry);
+    const weight = setEntryWeight(entry);
+    return weight === null ? reps : reps * Math.max(1, weight);
+  }));
+}
+
+function formatBestSet(sets: SetEntry[], exercise: Exercise): string {
+  const best = sets
+    .map((entry) => {
+      const reps = setEntryReps(entry);
+      const weight = setEntryWeight(entry);
+      const score = weight === null ? reps : reps * Math.max(1, weight);
+      const label = weight === null
+        ? `${reps} ${exercise.unit === 'seconds' ? 'sec' : 'reps'}`
+        : `${weight}kg x ${reps}`;
+      return { score, label };
+    })
+    .sort((a, b) => b.score - a.score)[0];
+
+  return best?.label ?? '--';
+}
+
+function getExerciseAction(status: ExerciseProgressDiagnosis['status'], exercise: Exercise): string {
+  if (status === 'up') return 'Keep the same slot. Add the smallest load or rep jump only after all sets hit target.';
+  if (status === 'down') return exercise.unit === 'weighted'
+    ? 'Repeat the previous weight next session. Stop adding load until reps return.'
+    : 'Repeat the same variation next session. Stop advancing tiers until reps return.';
+  return exercise.unit === 'weighted'
+    ? 'Use the same weight and add 1 rep across the first working sets.'
+    : 'Use the same variation and add 1 clean rep or 5 seconds total.';
+}
+
+function getVolumeGaps(score: RoutineScoreResult): MuscleVolumeDiagnosis[] {
+  return Object.entries(score.breakdown)
+    .map(([muscle, entry]) => {
+      if (!entry) return null;
+      const deficit = roundOneDecimal(Math.max(0, entry.target - entry.sets));
+      if (deficit === 0) return null;
+      const label = formatMuscleName(muscle as Exercise['primaryMuscle']);
+      return {
+        muscle: label,
+        sets: entry.sets,
+        target: entry.target,
+        deficit,
+        action: `Add ${deficit} quality set${deficit === 1 ? '' : 's'} per week for ${label}.`,
+      };
+    })
+    .filter((entry): entry is MuscleVolumeDiagnosis => entry !== null)
+    .sort((a, b) => b.deficit - a.deficit)
+    .slice(0, 4);
+}
+
+function getDiagnosisActions(
+  exercises: ExerciseProgressDiagnosis[],
+  volumeGaps: MuscleVolumeDiagnosis[]
+): string[] {
+  const actions: string[] = [];
+  const declining = exercises.find((entry) => entry.status === 'down');
+  const flat = exercises.find((entry) => entry.status === 'flat');
+
+  if (declining) actions.push(`${declining.name}: ${declining.action}`);
+  if (flat) actions.push(`${flat.name}: ${flat.action}`);
+  if (volumeGaps[0]) actions.push(volumeGaps[0].action);
+  if (actions.length === 0) actions.push('Keep the routine fixed and progress load or reps gradually.');
+
+  return actions.slice(0, 3);
+}
+
+function formatMuscleName(muscle: Exercise['primaryMuscle']): string {
+  return muscle.replaceAll('_', ' ');
 }
 
 function getProgressWeekKey(dateKey: string): string {

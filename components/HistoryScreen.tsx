@@ -16,7 +16,7 @@ import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
 import { getRoutine } from '@/lib/routines';
 import { resolveExerciseKey } from '@/lib/tiers';
 import { scoreRoutine } from '@/lib/routine-score';
-import { formatProgressForPrompt, getProgressFrontier, getProgressSignal } from '@/lib/progress-insights';
+import { formatProgressForPrompt, getProgressDiagnosis, getProgressFrontier, getProgressSignal } from '@/lib/progress-insights';
 import { ProgressFrontierGraph } from './ProgressFrontierGraph';
 
 interface HistoryScreenProps {
@@ -59,6 +59,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 
     return {
       signal,
+      diagnosis: getProgressDiagnosis(data, weeklyExercises, score),
       frontier: getProgressFrontier(data, weeklyExercises, score, signal),
       prompt: formatProgressForPrompt(data, weeklyExercises, signal),
     };
@@ -122,7 +123,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       ) : (
         <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
           <div className="w-full rounded-2xl bg-white/5 border border-white/5 p-5 mb-4">
-            <ProgressFrontierGraph frontier={progress.frontier} />
+            <ProgressFrontierGraph frontier={progress.frontier} diagnosis={progress.diagnosis} />
           </div>
 
           <details className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
