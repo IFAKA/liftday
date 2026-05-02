@@ -75,6 +75,8 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       .sort(([a], [b]) => b.localeCompare(a))
       .slice(0, 15);
   }, [data]);
+  const visibleSessions = recentSessions.slice(0, 6);
+  const olderSessions = recentSessions.slice(6);
 
   const prs = useMemo(() => {
     const result: Record<string, number> = {};
@@ -121,6 +123,12 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
         <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
           <div className="w-full rounded-2xl bg-white/5 border border-white/5 p-5 mb-4">
             <ProgressFrontierGraph frontier={progress.frontier} />
+          </div>
+
+          <details className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+            <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+              Details
+            </summary>
             <Button
               type="button"
               variant="ghost"
@@ -134,45 +142,43 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               <span className="text-[11px] font-black uppercase tracking-widest font-mono">{copied ? 'Copied' : 'Copy Progress'}</span>
             </Button>
-          </div>
-
-          <div className="w-full rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-1 mb-4">
-            <p className={cn('text-[10px] uppercase tracking-widest font-mono', progress.signal.tone)}>{progress.signal.label}</p>
-            <p className="text-sm text-zinc-300 font-mono">{progress.signal.summary}</p>
-            <p className="text-xs text-zinc-500 font-mono">{progress.signal.nextAction}</p>
-          </div>
-
-          {/* Workout Patterns */}
-          {patterns.sessionCount >= 3 && (
-            <div className="w-full rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-2 mb-4">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">Your Patterns</p>
-              {patterns.usualDays.length > 0 && (
-                <p className="text-sm text-zinc-400 font-mono">
-                  Usually trains{' '}
-                  <span className="text-white">{patterns.usualDays.join(' · ')}</span>
-                </p>
-              )}
-              {patterns.avgStartHour !== null && (
-                <p className="text-sm text-zinc-400 font-mono flex items-center gap-2">
-                  <span>
-                    Usually at{' '}
-                    <span className="text-white">{formatHour(patterns.avgStartHour)}</span>
-                  </span>
-                  {patterns.isPeakHour && (
-                    <span className="text-[10px] text-amber-400 border border-amber-400/30 rounded px-1.5 py-0.5">
-                      peak hours
-                    </span>
-                  )}
-                </p>
-              )}
-              {patterns.avgDurationMin !== null && (
-                <p className="text-sm text-zinc-400 font-mono">
-                  Avg session{' '}
-                  <span className="text-white">{patterns.avgDurationMin} min</span>
-                </p>
-              )}
+            <div className="mt-3 w-full rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-1">
+              <p className={cn('text-[10px] uppercase tracking-widest font-mono', progress.signal.tone)}>{progress.signal.label}</p>
+              <p className="text-sm text-zinc-300 font-mono">{progress.signal.summary}</p>
+              <p className="text-xs text-zinc-500 font-mono">{progress.signal.nextAction}</p>
             </div>
-          )}
+
+            {patterns.sessionCount >= 3 && (
+              <div className="mt-3 w-full rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-2">
+                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">Your Patterns</p>
+                {patterns.usualDays.length > 0 && (
+                  <p className="text-sm text-zinc-400 font-mono">
+                    Usually trains{' '}
+                    <span className="text-white">{patterns.usualDays.join(' · ')}</span>
+                  </p>
+                )}
+                {patterns.avgStartHour !== null && (
+                  <p className="text-sm text-zinc-400 font-mono flex items-center gap-2">
+                    <span>
+                      Usually at{' '}
+                      <span className="text-white">{formatHour(patterns.avgStartHour)}</span>
+                    </span>
+                    {patterns.isPeakHour && (
+                      <span className="text-[10px] text-amber-400 border border-amber-400/30 rounded px-1.5 py-0.5">
+                        peak hours
+                      </span>
+                    )}
+                  </p>
+                )}
+                {patterns.avgDurationMin !== null && (
+                  <p className="text-sm text-zinc-400 font-mono">
+                    Avg session{' '}
+                    <span className="text-white">{patterns.avgDurationMin} min</span>
+                  </p>
+                )}
+              </div>
+            )}
+          </details>
 
           {/* Personal Bests — single list item */}
           {Object.keys(prs).length > 0 && (
@@ -198,34 +204,66 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
             <div className="space-y-4">
               <p className="text-fluid-label font-black uppercase tracking-widest text-white/80 px-1">Recent Sessions</p>
               <div className="flex flex-col gap-3">
-                {recentSessions.map(([dateKey, session]) => {
-                  const wt = session.workout_type;
-                  const exercises = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
-                  const totalReps = exercises.reduce((sum, ex) => {
-                    const sets = session[ex.key];
-                    return sum + (sets ? sets.reduce<number>((s, e) => s + setEntryReps(e), 0) : 0);
-                  }, 0);
-                  const displayDate = new Date(dateKey + 'T12:00:00');
-
-                  return (
-                    <Card key={dateKey} className="flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg cursor-pointer active:scale-95 transition-transform" onClick={() => router.push(`/history/${dateKey}`)}>
-                      <div className="flex flex-col">
-                        <span className="text-fluid-label text-white/60 uppercase tracking-widest font-mono font-black mb-2">{format(displayDate, 'MMM d, EEE')}</span>
-                        <span className={cn('text-fluid-exercise font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-fluid-exercise font-black tabular-nums text-white leading-none">{totalReps}</span>
-                        <p className="text-fluid-label font-black font-mono text-white/50 uppercase tracking-widest mt-2">TOTAL REPS</p>
-                      </div>
-                    </Card>
-                  );
-                })}
+                {visibleSessions.map(([dateKey, session]) => (
+                  <SessionRow key={dateKey} dateKey={dateKey} session={session} onOpen={() => router.push(`/history/${dateKey}`)} />
+                ))}
               </div>
+              {olderSessions.length > 0 && (
+                <details className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+                    Older Sessions
+                  </summary>
+                  <div className="mt-3 flex flex-col gap-3">
+                    {olderSessions.map(([dateKey, session]) => (
+                      <SessionRow key={dateKey} dateKey={dateKey} session={session} onOpen={() => router.push(`/history/${dateKey}`)} compact />
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+function SessionRow({
+  dateKey,
+  session,
+  onOpen,
+  compact = false,
+}: {
+  dateKey: string;
+  session: WorkoutData[string];
+  onOpen: () => void;
+  compact?: boolean;
+}) {
+  const wt = session.workout_type;
+  const exercises = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
+  const totalReps = exercises.reduce((sum, ex) => {
+    const sets = session[ex.key];
+    return sum + (sets ? sets.reduce<number>((s, e) => s + setEntryReps(e), 0) : 0);
+  }, 0);
+  const displayDate = new Date(dateKey + 'T12:00:00');
+
+  return (
+    <Card
+      className={cn(
+        'flex-row items-center justify-between gap-0 rounded-2xl bg-white/10 border-white/5 shadow-lg cursor-pointer active:scale-95 transition-transform',
+        compact ? 'px-4 py-4' : 'px-6 py-6'
+      )}
+      onClick={onOpen}
+    >
+      <div className="flex flex-col">
+        <span className="text-fluid-label text-white/60 uppercase tracking-widest font-mono font-black mb-2">{format(displayDate, 'MMM d, EEE')}</span>
+        <span className={cn('text-fluid-exercise font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
+      </div>
+      <div className="text-right">
+        <span className="text-fluid-exercise font-black tabular-nums text-white leading-none">{totalReps}</span>
+        <p className="text-fluid-label font-black font-mono text-white/50 uppercase tracking-widest mt-2">TOTAL REPS</p>
+      </div>
+    </Card>
   );
 }
 

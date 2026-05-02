@@ -61,7 +61,7 @@ export default function ProgramPage() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text">
         {routine && (
-          <ProgramBlock eyebrow="Plan" title="Active Routine">
+          <ProgramBlock eyebrow="Plan" title="Routine">
             <Link
               href="/settings/routine"
               className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-5 active:bg-white/10"
@@ -76,41 +76,48 @@ export default function ProgramPage() {
           </ProgramBlock>
         )}
 
-        {smvScore && (
-          <ProgramBlock eyebrow="Efficiency" title="SMV Score">
-            <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} />
-          </ProgramBlock>
-        )}
-
         <ProgramBlock eyebrow="Calendar" title="Weekly Split">
           <WeeklySplit currentDate={new Date()} data={data} embedded />
         </ProgramBlock>
 
-        {routine && (
-          <ProgramBlock eyebrow="Exercises" title="Routine Slots">
-            <RoutineSlots routine={routine} profile={profile} />
-          </ProgramBlock>
-        )}
+        <details className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+            Details
+          </summary>
+          <div className="mt-4">
+            {smvScore && (
+              <ProgramBlock eyebrow="Efficiency" title="SMV Score">
+                <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} />
+              </ProgramBlock>
+            )}
 
-        {smvScore && (
-          <ProgramBlock eyebrow="Diagnostics" title="Muscle Volume">
-            <MuscleVolumeList score={smvScore} />
-          </ProgramBlock>
-        )}
+            {routine && (
+              <ProgramBlock eyebrow="Exercises" title="Routine Slots">
+                <RoutineSlots routine={routine} profile={profile} />
+              </ProgramBlock>
+            )}
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleCopyRoutine}
-          className={cn(
-            'mt-2 w-full rounded-xl border bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white active:scale-[0.98]',
-            copied && 'text-green-400 border-green-400/30 bg-green-400/10'
-          )}
-        >
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          <span className="text-[11px] font-black uppercase tracking-widest font-mono">{copied ? 'Copied' : 'Copy Routine'}</span>
-        </Button>
+            {smvScore && (
+              <ProgramBlock eyebrow="Diagnostics" title="Muscle Volume">
+                <MuscleVolumeList score={smvScore} />
+              </ProgramBlock>
+            )}
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyRoutine}
+              className={cn(
+                'w-full rounded-xl border bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white active:scale-[0.98]',
+                copied && 'text-green-400 border-green-400/30 bg-green-400/10'
+              )}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span className="text-[11px] font-black uppercase tracking-widest font-mono">{copied ? 'Copied' : 'Copy Routine'}</span>
+            </Button>
+          </div>
+        </details>
       </div>
     </div>
   );

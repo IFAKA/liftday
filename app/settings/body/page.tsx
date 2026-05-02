@@ -93,67 +93,77 @@ export default function BodySettingsPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white/5 border border-white/5 p-5 mb-3">
-          <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Your profile</span>
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <MetricInput
-              label="Age"
-              value={age}
-              unit="yr"
-              onChange={(value) => {
-                const next = Number(value);
-                if (!Number.isFinite(next)) return;
-                setMetrics((prev) => ({ ...prev, age: next }));
-              }}
-              onBlur={persistTrainingProfile}
-            />
-            <MetricInput
-              label="Max time"
-              value={maxWorkoutMinutes}
-              unit="min"
-              onChange={(value) => {
-                const next = Number(value);
-                if (!Number.isFinite(next)) return;
-                setMetrics((prev) => ({ ...prev, maxWorkoutMinutes: next }));
-              }}
-              onBlur={persistTrainingProfile}
-            />
-          </div>
-          <div className="mt-3 flex flex-col gap-2">
-            <Readout label="Sex" value={sex} />
-            <Readout label="Body comp" value="skinny fat / recomp" />
-            <Readout label="Equipment" value="gym" />
-            <Readout label="Training" value={trainingBackground} />
-            <Readout label="Injuries" value={injuryStatus} />
-          </div>
-        </section>
+        <details className="mb-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+            Profile
+          </summary>
+          <section className="mt-4 rounded-2xl bg-white/5 border border-white/5 p-5">
+            <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Your profile</span>
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <MetricInput
+                label="Age"
+                value={age}
+                unit="yr"
+                onChange={(value) => {
+                  const next = Number(value);
+                  if (!Number.isFinite(next)) return;
+                  setMetrics((prev) => ({ ...prev, age: next }));
+                }}
+                onBlur={persistTrainingProfile}
+              />
+              <MetricInput
+                label="Max time"
+                value={maxWorkoutMinutes}
+                unit="min"
+                onChange={(value) => {
+                  const next = Number(value);
+                  if (!Number.isFinite(next)) return;
+                  setMetrics((prev) => ({ ...prev, maxWorkoutMinutes: next }));
+                }}
+                onBlur={persistTrainingProfile}
+              />
+            </div>
+            <div className="mt-3 flex flex-col gap-2">
+              <Readout label="Sex" value={sex} />
+              <Readout label="Body comp" value="skinny fat / recomp" />
+              <Readout label="Equipment" value="gym" />
+              <Readout label="Training" value={trainingBackground} />
+              <Readout label="Injuries" value={injuryStatus} />
+            </div>
+          </section>
+        </details>
 
-        <section className="rounded-2xl bg-white/5 border border-white/5 p-5 mb-3">
-          <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Goal</span>
-          <p className="mt-2 text-fluid-ui font-black uppercase tracking-tight leading-tight text-white">
-            Maximize SMV efficiently: lats, side delts, chest, arms, then proportional lower body.
-          </p>
-          <p className="mt-3 text-fluid-label font-mono uppercase tracking-wide leading-relaxed text-white/35">
-            {goal}. The app uses 3 hard sets per exercise, 6 PPL sessions per week, and your 105-minute cap.
-          </p>
-          <p className="mt-3 text-fluid-label font-mono uppercase tracking-wide leading-relaxed text-white/35">
-            Skinny-fat means the default path is recomp: progressive overload, high protein, no aggressive bulk until waist and body-fat trend are controlled.
-          </p>
-        </section>
+        <details className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+            Goal & Targets
+          </summary>
+          <section className="mt-4 rounded-2xl bg-white/5 border border-white/5 p-5">
+            <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Goal</span>
+            <p className="mt-2 text-fluid-ui font-black uppercase tracking-tight leading-tight text-white">
+              Maximize SMV efficiently: lats, side delts, chest, arms, then proportional lower body.
+            </p>
+            <p className="mt-3 text-fluid-label font-mono uppercase tracking-wide leading-relaxed text-white/35">
+              {goal}. The app uses 3 hard sets per exercise, 6 PPL sessions per week, and your 105-minute cap.
+            </p>
+            <p className="mt-3 text-fluid-label font-mono uppercase tracking-wide leading-relaxed text-white/35">
+              Skinny-fat means the default path is recomp: progressive overload, high protein, no aggressive bulk until waist and body-fat trend are controlled.
+            </p>
+          </section>
 
-        <section className="rounded-2xl bg-white/5 border border-white/5 p-5">
-          <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Weekly targets</span>
-          <div className="mt-4 flex flex-col gap-2">
-            {Object.entries(MUSCLE_TARGET_WEEKLY_SETS).map(([muscle, sets]) => (
-              <div key={muscle} className="flex items-center justify-between gap-4">
-                <span className="text-fluid-label font-mono uppercase tracking-wide text-white/35 truncate">
-                  {muscle.replace('_', ' ')}
-                </span>
-                <span className="text-fluid-label font-mono tabular-nums text-white/70">{sets} sets</span>
-              </div>
-            ))}
-          </div>
-        </section>
+          <section className="mt-3 rounded-2xl bg-white/5 border border-white/5 p-5">
+            <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Weekly targets</span>
+            <div className="mt-4 flex flex-col gap-2">
+              {Object.entries(MUSCLE_TARGET_WEEKLY_SETS).map(([muscle, sets]) => (
+                <div key={muscle} className="flex items-center justify-between gap-4">
+                  <span className="text-fluid-label font-mono uppercase tracking-wide text-white/35 truncate">
+                    {muscle.replace('_', ' ')}
+                  </span>
+                  <span className="text-fluid-label font-mono tabular-nums text-white/70">{sets} sets</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </details>
       </div>
     </div>
   );

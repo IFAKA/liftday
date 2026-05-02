@@ -63,31 +63,38 @@ export default function SyncPage() {
         center={<span className="text-fluid-ui font-black uppercase tracking-tight">Sync</span>}
       />
 
-      <main className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar">
-        <section className="px-1 pb-5">
-          <p className="text-3xl font-black leading-none tracking-tight text-white">Bring phone progress here</p>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/50">
-            Start on the Mac to receive. Use the phone to send. The phone is never overwritten.
+      <main className="flex-1 overflow-y-auto px-4 pb-8 pt-1 no-scrollbar">
+        <section className="px-1 pb-4 text-center">
+          <p className="text-fluid-ui font-black leading-none tracking-tight text-white">
+            {mode === 'laptop' ? 'Receive from phone' : 'Send to laptop'}
+          </p>
+          <p className="mt-2 text-fluid-label leading-snug text-white/40">
+            {mode === 'laptop' ? 'Scan with the phone.' : 'Scan the laptop QR.'}
           </p>
         </section>
 
         {!pairToken && (
-          <section className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5">
-            <ModeButton
-              active={mode === 'laptop'}
-              icon={<Laptop />}
-              label="Receive"
-              sublabel="Show QR"
-              onClick={() => setMode('laptop')}
-            />
-            <ModeButton
-              active={mode === 'phone'}
-              icon={<Smartphone />}
-              label="Send"
-              sublabel="Scan QR"
-              onClick={() => setMode('phone')}
-            />
-          </section>
+          <details className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+            <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+              Direction
+            </summary>
+            <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/40 p-1.5">
+              <ModeButton
+                active={mode === 'laptop'}
+                icon={<Laptop />}
+                label="Receive"
+                sublabel="Show QR"
+                onClick={() => setMode('laptop')}
+              />
+              <ModeButton
+                active={mode === 'phone'}
+                icon={<Smartphone />}
+                label="Send"
+                sublabel="Scan QR"
+                onClick={() => setMode('phone')}
+              />
+            </div>
+          </details>
         )}
 
         {mode === 'laptop' ? (
@@ -204,24 +211,18 @@ function LaptopSyncPanel() {
   }
 
   return (
-    <section className="mt-5">
-      <div className="grid grid-cols-3 gap-2">
-        <Metric label="Sessions" value={summary.sessionCount.toString()} />
-        <Metric label="First" value={summary.firstSessionDate ?? '-'} />
-        <Metric label="Latest" value={summary.latestSessionDate ?? '-'} />
-      </div>
-
-      <div className="mt-5 rounded-[28px] border border-white/10 bg-white/[0.04] p-4">
+    <section>
+      <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase tracking-widest text-white/35">Receive</p>
-            <p className="mt-1 text-xl font-black tracking-tight text-white">Scan from your phone</p>
+            <p className="mt-1 text-xl font-black tracking-tight text-white">Phone scan</p>
           </div>
           <StatusPill state={state} />
         </div>
 
-        <div className="mt-5 flex justify-center">
-          <div className="grid size-72 place-items-center rounded-[24px] bg-white p-4 shadow-[0_18px_60px_rgba(255,255,255,0.08)]">
+        <div className="mt-4 flex justify-center">
+          <div className="grid aspect-square w-full max-w-64 place-items-center rounded-[24px] bg-white p-4 shadow-[0_18px_60px_rgba(255,255,255,0.08)]">
             {qrSrc ? (
               <Image
                 src={qrSrc}
@@ -238,11 +239,6 @@ function LaptopSyncPanel() {
         </div>
 
         <p className="mx-auto mt-5 max-w-xs text-center text-sm leading-relaxed text-white/55">{message}</p>
-        {isLocalPairUrl(pairUrl) && (
-          <p className="mx-auto mt-2 max-w-xs text-center text-xs leading-relaxed text-amber-200/80">
-            This QR uses localhost, which phones cannot reach. Open the Mac on its network address.
-          </p>
-        )}
 
         <Button
           type="button"
@@ -255,11 +251,26 @@ function LaptopSyncPanel() {
         </Button>
       </div>
 
-      <ManualImportFallback onImported={() => {
-        setSummary(getLocalSyncSummary());
-        setState('done');
-        setMessage('Manual import complete. Phone unchanged.');
-      }} />
+      <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+        <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+          Details
+        </summary>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <Metric label="Sessions" value={summary.sessionCount.toString()} />
+          <Metric label="First" value={summary.firstSessionDate ?? '-'} />
+          <Metric label="Latest" value={summary.latestSessionDate ?? '-'} />
+        </div>
+        {isLocalPairUrl(pairUrl) && (
+          <p className="mt-3 text-xs leading-relaxed text-amber-200/80">
+            This QR uses localhost, which phones cannot reach. Open the Mac on its network address.
+          </p>
+        )}
+        <ManualImportFallback onImported={() => {
+          setSummary(getLocalSyncSummary());
+          setState('done');
+          setMessage('Manual import complete. Phone unchanged.');
+        }} compact />
+      </details>
     </section>
   );
 }
@@ -308,7 +319,7 @@ function AutoSendPanel({ pairToken }: { pairToken: string }) {
   }, [pairToken]);
 
   return (
-    <section className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.04] px-5 py-8 text-center">
+    <section className="rounded-[28px] border border-white/10 bg-white/[0.04] px-5 py-8 text-center">
       <div className="mx-auto grid size-20 place-items-center rounded-full bg-white text-black">
         {state === 'done' ? (
           <Check className="size-9" />
@@ -403,7 +414,7 @@ function ScannerPanel() {
   }, [scanning]);
 
   return (
-    <section className="mt-6">
+    <section>
       <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center gap-3">
           <div className="grid size-11 place-items-center rounded-full bg-white text-black">
@@ -411,7 +422,7 @@ function ScannerPanel() {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-black uppercase tracking-widest text-white/35">Send</p>
-            <p className="text-xl font-black tracking-tight text-white">Scan the QR</p>
+            <p className="text-xl font-black tracking-tight text-white">Laptop QR</p>
           </div>
         </div>
 
@@ -438,12 +449,17 @@ function ScannerPanel() {
         </Button>
       </div>
 
-      <PhoneExportFallback />
+      <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+        <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+          Details
+        </summary>
+        <PhoneExportFallback compact />
+      </details>
     </section>
   );
 }
 
-function ManualImportFallback({ onImported }: { onImported: () => void }) {
+function ManualImportFallback({ onImported, compact = false }: { onImported: () => void; compact?: boolean }) {
   const [rawImport, setRawImport] = useState('');
 
   async function readImportFile(event: ChangeEvent<HTMLInputElement>) {
@@ -460,7 +476,7 @@ function ManualImportFallback({ onImported }: { onImported: () => void }) {
   }
 
   return (
-    <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+    <details className={compact ? 'mt-3' : 'mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3'}>
       <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
         Import from file
       </summary>
@@ -482,7 +498,7 @@ function ManualImportFallback({ onImported }: { onImported: () => void }) {
   );
 }
 
-function PhoneExportFallback() {
+function PhoneExportFallback({ compact = false }: { compact?: boolean }) {
   function downloadExport() {
     const blob = new Blob([JSON.stringify(createSyncSnapshot('phone'), null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -494,10 +510,12 @@ function PhoneExportFallback() {
   }
 
   return (
-    <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-      <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
-        Backup file
-      </summary>
+    <div className={compact ? 'mt-3' : 'mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3'}>
+      {!compact && (
+        <p className="text-xs font-black uppercase tracking-widest text-white/35">
+          Backup file
+        </p>
+      )}
       <Button
         type="button"
         onClick={downloadExport}
@@ -507,7 +525,7 @@ function PhoneExportFallback() {
         <Download />
         Save progress file
       </Button>
-    </details>
+    </div>
   );
 }
 
