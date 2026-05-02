@@ -154,9 +154,6 @@
     justify-content: center;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro", system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    user-select: none;
-    -webkit-user-select: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
