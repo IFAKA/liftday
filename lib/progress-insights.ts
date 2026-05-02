@@ -63,6 +63,14 @@ export interface ProgressDiagnosis {
   nextActions: string[];
 }
 
+export interface RoutineAdjustmentDecision {
+  label: string;
+  summary: string;
+  nextAction: string;
+  automation: string;
+  tone: string;
+}
+
 export function getProgressSignal(data: WorkoutData, exercises: Exercise[]): ProgressSignal {
   const tracked = exercises
     .filter((exercise) => ['lats', 'side_delt', 'chest', 'biceps', 'triceps'].includes(exercise.primaryMuscle))
@@ -207,6 +215,75 @@ export function getProgressDiagnosis(
     priorityExercises,
     volumeGaps,
     nextActions,
+  };
+}
+
+export function getRoutineAdjustmentDecision(
+  data: WorkoutData,
+  diagnosis: ProgressDiagnosis,
+  score: RoutineScoreResult,
+  progressSignal: ProgressSignal | null
+): RoutineAdjustmentDecision {
+  const loggedSessions = Object.values(data).filter((session) => session.logged_at).length;
+  const priorityDeficit = getPriorityDeficit(score);
+  const costly = score.cost.longSessionSets > 0 || score.cost.equipmentChanges > 24 || score.cost.totalSets > 126;
+
+  if (loggedSessions < 12 || diagnosis.trackedCount < 3) {
+    return {
+      label: 'Build baseline',
+      summary: 'Do not tweak the routine yet.',
+      nextAction: 'Repeat the same slots until two full weeks are logged.',
+      automation: 'Auto-update reps and load only.',
+      tone: 'text-white/45',
+    };
+  }
+
+  if (progressSignal?.label === 'Recovery limit' || diagnosis.label === 'Underperforming') {
+    return {
+      label: 'Hold structure',
+      summary: 'Progress is limited by recovery, not exercise choice.',
+      nextAction: 'Keep exercises fixed. Reduce load jumps and protect sleep, food, and rest.',
+      automation: 'Block added volume for now.',
+      tone: 'text-red-400',
+    };
+  }
+
+  if (progressSignal?.label === 'Frontier push' || diagnosis.label === 'Doing well' || diagnosis.label === 'Overperforming') {
+    return {
+      label: 'No routine tweak',
+      summary: 'Priority lifts are moving.',
+      nextAction: 'Keep the split and let targets climb when sets hit the rep range.',
+      automation: 'Auto-progress load/reps, not slots.',
+      tone: 'text-green-400',
+    };
+  }
+
+  if (priorityDeficit && diagnosis.decliningCount === 0) {
+    return {
+      label: 'Review volume',
+      summary: `${priorityDeficit.label} is below target.`,
+      nextAction: `If this stays flat for two more sessions, add targeted ${priorityDeficit.label} work.`,
+      automation: 'Recommend before changing.',
+      tone: 'text-yellow-400',
+    };
+  }
+
+  if (costly) {
+    return {
+      label: 'Trim cost',
+      summary: 'The routine is more expensive than it needs to be.',
+      nextAction: 'Keep priority lifts. Remove low-priority work only if sessions run long.',
+      automation: 'Ask before removing slots.',
+      tone: 'text-yellow-400',
+    };
+  }
+
+  return {
+    label: 'Hold routine',
+    summary: 'Progress is stable enough to keep the plan.',
+    nextAction: 'Chase cleaner reps before adding exercises or swapping slots.',
+    automation: 'Auto-update targets only.',
+    tone: 'text-yellow-400',
   };
 }
 

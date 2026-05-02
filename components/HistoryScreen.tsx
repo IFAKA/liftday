@@ -13,7 +13,7 @@ import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
 import { getRoutine } from '@/lib/routines';
 import { resolveExerciseKey } from '@/lib/tiers';
 import { scoreRoutine } from '@/lib/routine-score';
-import { getProgressDiagnosis, getProgressSignal } from '@/lib/progress-insights';
+import { getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -38,10 +38,12 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       .filter(Boolean);
     const score = scoreRoutine(routine, { tiers, setsPerExercise });
     const signal = getProgressSignal(data, weeklyExercises);
+    const diagnosis = getProgressDiagnosis(data, weeklyExercises, score);
 
     return {
       signal,
-      diagnosis: getProgressDiagnosis(data, weeklyExercises, score),
+      diagnosis,
+      routineDecision: getRoutineAdjustmentDecision(data, diagnosis, score, signal),
     };
   }, [data]);
 
@@ -95,6 +97,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       ) : (
         <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-2">
           <ProgressSummary signal={progress.signal} diagnosis={progress.diagnosis} />
+          <RoutineDecisionSummary decision={progress.routineDecision} />
 
           <button
             type="button"
@@ -146,6 +149,36 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function RoutineDecisionSummary({
+  decision,
+}: {
+  decision: ReturnType<typeof getRoutineAdjustmentDecision>;
+}) {
+  return (
+    <div className="w-full rounded-2xl bg-white/[0.03] border border-white/5 p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className={cn('text-fluid-label font-mono uppercase tracking-widest', decision.tone)}>
+            {decision.label}
+          </p>
+          <p className="mt-1 text-fluid-ui font-black uppercase tracking-tight text-white leading-tight">
+            {decision.summary}
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full border border-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white/45">
+          Auto
+        </span>
+      </div>
+      <p className="mt-4 text-fluid-label font-mono uppercase tracking-wide text-white/50">
+        {decision.nextAction}
+      </p>
+      <p className="mt-3 text-[10px] font-mono uppercase tracking-widest text-white/30">
+        {decision.automation}
+      </p>
     </div>
   );
 }
