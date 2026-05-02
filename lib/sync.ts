@@ -57,6 +57,10 @@ export function parseSyncSnapshot(raw: string): SyncSnapshot {
   return parsed;
 }
 
+export function validateSyncSnapshot(value: unknown): SyncSnapshot | null {
+  return isSyncSnapshot(value) ? value : null;
+}
+
 export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
   if (typeof window === 'undefined') {
     throw new Error('Sync import only works in the browser.');
