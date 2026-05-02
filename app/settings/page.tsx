@@ -51,6 +51,17 @@ export default function SettingsPage() {
           </div>
           <ChevronRight className="w-5 h-5 text-white/30 shrink-0" />
         </button>
+
+        <button
+          onClick={() => router.push('/sync')}
+          className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl bg-white/5 border border-white/5 active:bg-white/10 transition-all"
+        >
+          <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
+            <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Sync</span>
+            <span className="text-fluid-ui font-black uppercase tracking-tight text-white">Phone to laptop</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/30 shrink-0" />
+        </button>
       </div>
     </div>
   );
