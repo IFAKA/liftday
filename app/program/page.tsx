@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { getFirstSessionDate, loadUserProfile, loadWorkoutData } from '@/lib/storage';
@@ -50,6 +51,15 @@ export default function ProgramPage() {
     <div className="flex flex-col h-full bg-black overflow-hidden">
       <TopBar
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program</span>}
+        rightAction={
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            className="-mr-2 flex size-11 items-center justify-center rounded-full text-white/55 active:bg-white/10 active:text-white"
+          >
+            <Settings className="w-5 h-5" />
+          </Link>
+        }
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-2">
@@ -63,8 +73,8 @@ export default function ProgramPage() {
 
         <WatchListItem
           href="/program/detail"
-          label="Diagnostics"
-          title="Training Detail"
+          label="Program"
+          title="Detail"
           subtle
         />
 

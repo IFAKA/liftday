@@ -58,7 +58,7 @@ export function ProgramDetailScreen() {
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Training Detail</span>}
+        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program Detail</span>}
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-5">

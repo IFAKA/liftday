@@ -34,13 +34,13 @@ export function BottomNav() {
             key={href}
             href={href}
             className={cn(
-              'flex-1 flex flex-col items-center justify-center py-2 gap-1 transition-colors min-h-[44px] min-[390px]:min-h-[52px] min-[390px]:py-3',
+              'flex-1 flex flex-col items-center justify-center py-2 gap-1 transition-colors min-h-[44px] min-[390px]:min-h-[56px] min-[390px]:py-2.5',
               active ? 'text-white' : 'text-white/30 active:text-white/60'
             )}
             aria-label={label}
           >
             <Icon className={cn('w-5 h-5', active && 'stroke-[2.5]')} />
-            <span className="sr-only">
+            <span className="sr-only min-[390px]:not-sr-only min-[390px]:text-[10px] min-[390px]:font-black min-[390px]:uppercase min-[390px]:leading-none">
               {label}
             </span>
           </Link>

@@ -18,7 +18,7 @@ import { WatchListItem, WatchPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
   data: WorkoutData;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
@@ -78,11 +78,11 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
-        leftAction={
+        leftAction={onBack ? (
           <Button variant="ghost" size="icon" aria-label="Back" onClick={onBack} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
             <ChevronLeft className="w-5 h-5" />
           </Button>
-        }
+        ) : null}
         center={
           <div className="flex flex-col items-center">
             <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Progress</span>
@@ -102,8 +102,8 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 
           <WatchListItem
             onClick={() => router.push('/history/detail')}
-            label="Diagnostics"
-            title="Training Detail"
+            label="Progress"
+            title="Detail"
             subtle
           />
 

@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { loadWorkoutData } from '@/lib/storage';
 import { WorkoutData, WorkoutType, Exercise, SetEntry } from '@/lib/types';
-import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES } from '@/lib/constants';
+import { EXERCISES } from '@/lib/constants';
 
 const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
   push: 'text-orange-400',
@@ -20,11 +20,20 @@ export default function HistoryDetailPage() {
   const [data] = useState<WorkoutData>(() => loadWorkoutData());
 
   const session = data[dateKey];
-  if (!session) return null;
+  if (!session) {
+    return (
+      <RoutineScreen
+        exercises={[]}
+        title="Not Found"
+        subtitle="SESSION"
+        emptyMessage="No logged session for this date."
+      />
+    );
+  }
 
   const wt = session.workout_type;
-  const allExercises: Exercise[] = wt === 'push' ? PUSH_EXERCISES : wt === 'pull' ? PULL_EXERCISES : LEGS_EXERCISES;
-  const exercisesWithReps = allExercises.filter((ex) => {
+  const exercisesWithReps: Exercise[] = EXERCISES.filter((ex) => {
+    if (ex.workoutType !== wt) return false;
     const reps = session[ex.key];
     return reps && reps.length > 0;
   });

@@ -60,7 +60,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Training Detail</span>}
+        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Progress Detail</span>}
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
