@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Exercise, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { TopBar } from './TopBar';
+import { WatchListItem } from './WatchSurface';
 
 interface RoutineScreenProps {
   exercises: Exercise[];
@@ -63,28 +64,20 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
           {exercises.map((ex, i) => {
             const reps = loggedReps?.[ex.key];
             return (
-              <div
+              <WatchListItem
                 key={ex.key}
                 onClick={() => router.push(`/exercises/${ex.key}`)}
-                className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5 cursor-pointer active:bg-white/10 transition-colors"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-fluid-label font-mono text-white/30 tabular-nums w-5 shrink-0 text-right">
-                    {i + 1}
-                  </span>
-                  <span className="text-fluid-ui font-black uppercase tracking-tight text-white truncate">
-                    {ex.name}
-                  </span>
-                </div>
-                {reps && reps.length > 0 && (
-                  <span className="text-fluid-label font-mono text-white/50 tabular-nums shrink-0 ml-3">
-                    {reps.map((e) => {
+                label={`${i + 1}`}
+                title={ex.name}
+                metric={
+                  reps && reps.length > 0
+                    ? reps.map((e) => {
                       const w = setEntryWeight(e);
                       return w !== null ? `${w}×${setEntryReps(e)}` : setEntryReps(e);
-                    }).join(' / ')}
-                  </span>
-                )}
-              </div>
+                    }).join(' / ')
+                    : undefined
+                }
+              />
             );
           })}
         </div>

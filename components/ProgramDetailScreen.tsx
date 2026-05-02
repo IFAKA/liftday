@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
 import { ExerciseKey, RoutineConfig, UserProfile } from '@/lib/types';
 import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
 import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
+import { WatchPanel, WatchSection } from './WatchSurface';
 
 export function ProgramDetailScreen() {
   const router = useRouter();
@@ -62,21 +63,21 @@ export function ProgramDetailScreen() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-5">
         {smvScore && (
-          <ProgramBlock title="Efficiency">
+          <WatchSection title="Efficiency">
             <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} />
-          </ProgramBlock>
+          </WatchSection>
         )}
 
         {routine && (
-          <ProgramBlock title="Exercises">
+          <WatchSection title="Exercises">
             <RoutineSlots routine={routine} profile={profile} />
-          </ProgramBlock>
+          </WatchSection>
         )}
 
         {smvScore && (
-          <ProgramBlock title="Muscle Volume">
+          <WatchSection title="Muscle Volume">
             <MuscleVolumeList score={smvScore} />
-          </ProgramBlock>
+          </WatchSection>
         )}
 
         <Button
@@ -105,13 +106,13 @@ function SmvOverview({
   verdict: { label: string; summary: string; nextAction: string; tone: string };
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5">
+    <WatchPanel>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <span className={cn('text-fluid-label font-mono uppercase tracking-widest', verdict.tone)}>
+          <span className={cn('text-fluid-label font-mono uppercase', verdict.tone)}>
             {verdict.label}
           </span>
-          <p className="mt-1 text-fluid-ui font-black uppercase tracking-tight text-white">
+          <p className="mt-1 text-fluid-ui font-black uppercase text-white">
             {verdict.summary}
           </p>
         </div>
@@ -121,7 +122,7 @@ function SmvOverview({
         </div>
       </div>
 
-      <p className="mb-4 text-fluid-label font-mono uppercase tracking-wide text-white/35">
+      <p className="mb-4 text-fluid-label font-mono uppercase text-white/35">
         {verdict.nextAction}
       </p>
 
@@ -130,7 +131,7 @@ function SmvOverview({
         <SmvMetric label="moves" value={formatOneDecimal(score.cost.equipmentChanges)} />
         <SmvMetric label={score.penalty > 0 ? 'penalty' : 'cost'} value={score.penalty > 0 ? `-${formatOneDecimal(score.penalty)}` : formatOneDecimal(score.cost.total)} />
       </div>
-    </div>
+    </WatchPanel>
   );
 }
 
@@ -144,8 +145,8 @@ function RoutineSlots({ routine, profile }: { routine: RoutineConfig; profile: U
         if (chains.length === 0) return null;
 
         return (
-          <div key={workoutType} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <p className={cn('mb-3 text-fluid-label font-black uppercase tracking-widest', getWorkoutTone(workoutType))}>
+          <WatchPanel key={workoutType} subtle>
+            <p className={cn('mb-3 text-fluid-label font-black uppercase', getWorkoutTone(workoutType))}>
               {workoutType}
             </p>
             <div className="flex flex-col gap-2">
@@ -155,8 +156,8 @@ function RoutineSlots({ routine, profile }: { routine: RoutineConfig; profile: U
                 return (
                   <div key={chain.slotId} className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-fluid-label font-black uppercase tracking-wide text-white/70">{active}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-white/25">
+                      <p className="truncate text-fluid-label font-black uppercase text-white/70">{active}</p>
+                      <p className="text-xs font-mono uppercase text-white/25">
                         {[chain.priority, formatCadence(chain.cadence)].filter(Boolean).join(' - ')}
                       </p>
                     </div>
@@ -167,7 +168,7 @@ function RoutineSlots({ routine, profile }: { routine: RoutineConfig; profile: U
                 );
               })}
             </div>
-          </div>
+          </WatchPanel>
         );
       })}
     </div>
@@ -180,7 +181,7 @@ function MuscleVolumeList({ score }: { score: RoutineScoreResult }) {
     .sort(([, a], [, b]) => b.net - a.net);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <WatchPanel subtle>
       <div className="flex flex-col gap-2">
         {muscles.map(([muscle, v]) => {
           const max = score.gross > 0 ? score.gross : 1;
@@ -188,7 +189,7 @@ function MuscleVolumeList({ score }: { score: RoutineScoreResult }) {
           const hasPenalty = v.penalty > 0;
           return (
             <div key={muscle} className="flex items-center gap-3">
-              <span className="text-fluid-label font-mono text-white/30 w-20 shrink-0 uppercase tracking-wide truncate">
+              <span className="text-fluid-label font-mono text-white/30 w-20 shrink-0 uppercase truncate">
                 {muscle.replace('_', ' ')}
               </span>
               <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -207,18 +208,7 @@ function MuscleVolumeList({ score }: { score: RoutineScoreResult }) {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function ProgramBlock({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section>
-      <div className="mb-2 px-1">
-        <span className="text-fluid-label font-black uppercase tracking-widest text-white/40">{title}</span>
-      </div>
-      {children}
-    </section>
+    </WatchPanel>
   );
 }
 
@@ -342,7 +332,7 @@ function formatSetCount(value: number): string {
 function SmvMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-black/30 border border-white/5 px-3 py-2">
-      <div className="text-fluid-label font-mono uppercase tracking-widest text-white/25">{label}</div>
+      <div className="text-fluid-label font-mono uppercase text-white/25">{label}</div>
       <div className="text-fluid-ui font-black tabular-nums text-white/70">{value}</div>
     </div>
   );

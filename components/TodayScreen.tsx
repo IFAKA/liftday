@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
 import { useNavContext } from '@/lib/nav-context';
 import { buildSupersetPairs } from '@/lib/superset';
+import { WatchPanel } from './WatchSurface';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -159,19 +160,19 @@ nextExerciseName={workout.nextExerciseAfterRestName}
       <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-8">
         {isDone ? (
           <div className="flex flex-col items-center">
-            <CheckCircle className="w-20 h-20 text-green-500 mb-6" />
-            <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none">
+            <CheckCircle className="w-16 h-16 text-green-500 mb-5" />
+            <h1 className="text-fluid-title font-black uppercase text-white leading-none">
               DONE
             </h1>
           </div>
         ) : (
           <>
-            <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none text-center">
+            <h1 className="text-fluid-title font-black uppercase text-white leading-none text-center">
               {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
             </h1>
             {streak > 0 && (
-              <Badge variant="ghost" className="mt-2 bg-orange-500/10 border-orange-500/20 text-fluid-label font-black text-orange-500 uppercase tracking-widest">
-                <Flame className="w-5 h-5 text-orange-500" />
+              <Badge variant="ghost" className="mt-3 rounded-full bg-orange-500/10 border-orange-500/20 text-fluid-label font-black text-orange-500 uppercase">
+                <Flame className="w-4 h-4 text-orange-500" />
                 {streak} DAY STREAK
               </Badge>
             )}
@@ -183,24 +184,13 @@ nextExerciseName={workout.nextExerciseAfterRestName}
         <>
           {supersetPairs.length > 0 && (
             <div className="w-full px-4 mb-3">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2 font-mono">
-                Superset Suggestions
-              </p>
-              <div className="space-y-1">
-                {supersetPairs.map((pair, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
-                    <span className="text-zinc-200">{pair.a.name}</span>
-                    {pair.b ? (
-                      <>
-                        <span className="text-zinc-700">↔</span>
-                        <span className="text-zinc-200">{pair.b.name}</span>
-                      </>
-                    ) : (
-                      <span className="text-zinc-600 text-[10px]">solo</span>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <WatchPanel subtle className="py-3">
+                <p className="text-fluid-label text-zinc-500 uppercase font-mono">First pair</p>
+                <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
+                  {supersetPairs[0].a.name}
+                  {supersetPairs[0].b ? ` + ${supersetPairs[0].b.name}` : ''}
+                </p>
+              </WatchPanel>
             </div>
           )}
           <div className="w-full px-4 pb-safe mb-4 shrink-0">

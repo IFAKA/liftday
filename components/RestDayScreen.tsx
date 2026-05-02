@@ -63,12 +63,12 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
   return (
     <div className="flex flex-col items-center justify-center h-[100dvh] bg-black px-safe pt-safe pb-safe relative overflow-hidden">
       <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
-        <Moon className="w-20 h-20 sm:w-24 sm:h-24 text-white/30 mb-6 sm:mb-8" />
-        <h1 className="text-fluid-title font-black tracking-tighter uppercase text-white leading-none mb-4 text-center">
+        <Moon className="w-16 h-16 sm:w-20 sm:h-20 text-white/30 mb-5 sm:mb-6" />
+        <h1 className="text-fluid-title font-black uppercase text-white leading-none mb-4 text-center">
           REST
         </h1>
         {nextTraining && (
-          <p className="text-fluid-label font-bold text-white/40 uppercase tracking-widest px-6 text-center">
+          <p className="text-fluid-label font-bold text-white/40 uppercase px-6 text-center">
             NEXT: {nextTraining}
           </p>
         )}

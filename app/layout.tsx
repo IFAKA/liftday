@@ -46,7 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geist.variable} ${geistMono.variable} font-mono antialiased bg-black text-foreground overflow-hidden h-[100dvh]`}>
+      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-black text-foreground overflow-hidden h-[100dvh]`}>
         <MotionConfig reducedMotion="user">
           <NavProvider>
             <div className="w-full h-full overflow-hidden bg-background relative flex flex-col">

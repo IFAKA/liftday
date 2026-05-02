@@ -139,6 +139,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    letter-spacing: 0 !important;
   }
 
   html, body {
@@ -249,33 +250,57 @@ input[type="number"] {
   padding-right: env(safe-area-inset-right, 16px);
 }
 
-/* Fluid Typography - Higher Minimums for Accessibility */
+/* Watch-sized typography. Avoid viewport-driven type so content remains stable
+   across Apple Watch, phone, and desktop preview widths. */
 .text-fluid-title {
-  font-size: clamp(52px, 15vw, 100px);
+  font-size: 3.75rem;
+  line-height: 0.9;
 }
 
 .text-fluid-exercise {
-  font-size: clamp(32px, 8vw, 52px);
+  font-size: 2rem;
+  line-height: 1;
 }
 
 .text-fluid-compact-number {
-  font-size: clamp(52px, 14vw, 84px);
+  font-size: 3.75rem;
+  line-height: 0.9;
 }
 
 .text-fluid-compact-label {
-  font-size: clamp(16px, 4.5vw, 24px);
+  font-size: 1rem;
+  line-height: 1.1;
 }
 
 .text-fluid-timer {
-  font-size: clamp(56px, 18vw, 100px);
+  font-size: 4rem;
+  line-height: 0.9;
 }
 
 .text-fluid-ui {
-  font-size: clamp(18px, 4.5vw, 26px);
+  font-size: 1.125rem;
+  line-height: 1.1;
 }
 
 .text-fluid-label {
-  font-size: clamp(13px, 3.5vw, 18px);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.text-fluid-heading {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+@media (min-width: 390px) {
+  .text-fluid-title { font-size: 4.5rem; }
+  .text-fluid-exercise { font-size: 2.5rem; }
+  .text-fluid-compact-number { font-size: 4.25rem; }
+  .text-fluid-compact-label { font-size: 1.125rem; }
+  .text-fluid-timer { font-size: 4.75rem; }
+  .text-fluid-ui { font-size: 1.25rem; }
+  .text-fluid-label { font-size: 0.875rem; }
+  .text-fluid-heading { font-size: 1.75rem; }
 }
 
 /* Thicker Icons Global Style */
@@ -408,7 +433,7 @@ svg {
    ============================================================================ */
 
 .btn-mobile-accessible {
-  @apply h-16 sm:h-20 md:h-16 text-base sm:text-xl md:text-base;
+  @apply h-14 sm:h-16 md:h-14 text-base sm:text-xl md:text-base;
 }
 
 .btn-mobile-secondary {
@@ -429,4 +454,14 @@ svg {
 
 .icon-md {
   @apply w-6 h-6 sm:w-8 sm:h-8 md:w-5 md:h-5;
+}
+
+@media (max-width: 320px) {
+  .btn-mobile-accessible {
+    @apply h-12 text-sm;
+  }
+
+  .btn-mobile-secondary {
+    @apply h-11 text-xs;
+  }
 }

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
+import { ChevronLeft, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WorkoutData, setEntryReps } from '@/lib/types';
 import { EXERCISES } from '@/lib/constants';
@@ -14,6 +14,7 @@ import { getRoutine } from '@/lib/routines';
 import { resolveExerciseKey } from '@/lib/tiers';
 import { scoreRoutine } from '@/lib/routine-score';
 import { getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
+import { WatchListItem, WatchPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -99,53 +100,33 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
           <ProgressSummary signal={progress.signal} diagnosis={progress.diagnosis} />
           <RoutineDecisionSummary decision={progress.routineDecision} />
 
-          <button
-            type="button"
-            className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl bg-white/[0.03] border border-white/5 active:bg-white/10 transition-all text-left"
+          <WatchListItem
             onClick={() => router.push('/history/detail')}
-          >
-            <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
-              <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Diagnostics</span>
-              <span className="text-fluid-ui font-black uppercase tracking-tight text-white">Training Detail</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-white/30 shrink-0" />
-          </button>
+            label="Diagnostics"
+            title="Training Detail"
+            subtle
+          />
 
           {/* Personal Bests — single list item */}
           {Object.keys(prs).length > 0 && (
-            <button
-              type="button"
-              className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl bg-white/5 border border-white/5 active:bg-white/10 transition-all text-left"
+            <WatchListItem
               onClick={() => router.push('/history/personal-bests')}
-            >
-              <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
-              <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
-                <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Records</span>
-                <span className="text-fluid-ui font-black uppercase tracking-tight text-white">Personal Bests</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-fluid-label font-mono text-white/40 tabular-nums">{Object.keys(prs).length}</span>
-                <ChevronRight className="w-5 h-5 text-white/30" />
-              </div>
-            </button>
+              icon={Trophy}
+              label="Records"
+              title="Personal Bests"
+              metric={Object.keys(prs).length}
+            />
           )}
 
           {/* Recent Workouts - List */}
           {recentSessions.length > 0 && (
-            <button
-              type="button"
-              className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl bg-white/[0.03] border border-white/5 active:bg-white/10 transition-all text-left"
+            <WatchListItem
               onClick={() => router.push('/history/sessions')}
-            >
-              <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
-                <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">History</span>
-                <span className="text-fluid-ui font-black uppercase tracking-tight text-white">Recent Sessions</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-fluid-label font-mono text-white/40 tabular-nums">{recentSessions.length}</span>
-                <ChevronRight className="w-5 h-5 text-white/30" />
-              </div>
-            </button>
+              label="History"
+              title="Recent Sessions"
+              metric={recentSessions.length}
+              subtle
+            />
           )}
         </div>
       )}
@@ -159,27 +140,24 @@ function RoutineDecisionSummary({
   decision: ReturnType<typeof getRoutineAdjustmentDecision>;
 }) {
   return (
-    <div className="w-full rounded-2xl bg-white/[0.03] border border-white/5 p-5">
+    <WatchPanel subtle>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className={cn('text-fluid-label font-mono uppercase tracking-widest', decision.tone)}>
+          <p className={cn('text-fluid-label font-mono uppercase', decision.tone)}>
             {decision.label}
           </p>
-          <p className="mt-1 text-fluid-ui font-black uppercase tracking-tight text-white leading-tight">
+          <p className="mt-1 text-fluid-ui font-black uppercase text-white leading-tight">
             {decision.summary}
           </p>
         </div>
-        <span className="shrink-0 rounded-full border border-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white/45">
+        <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-xs font-black uppercase text-white/45">
           Auto
         </span>
       </div>
-      <p className="mt-4 text-fluid-label font-mono uppercase tracking-wide text-white/50">
+      <p className="mt-3 text-fluid-label font-mono uppercase text-white/50">
         {decision.nextAction}
       </p>
-      <p className="mt-3 text-[10px] font-mono uppercase tracking-widest text-white/30">
-        {decision.automation}
-      </p>
-    </div>
+    </WatchPanel>
   );
 }
 
@@ -195,13 +173,13 @@ function ProgressSummary({
     : `${diagnosis.averageChangePct > 0 ? '+' : ''}${diagnosis.averageChangePct.toFixed(1)}%`;
 
   return (
-    <div className="w-full rounded-2xl bg-white/5 border border-white/5 p-5">
+    <WatchPanel>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className={cn('text-fluid-label font-mono uppercase tracking-widest', signal.tone)}>
+          <p className={cn('text-fluid-label font-mono uppercase', signal.tone)}>
             {signal.label}
           </p>
-          <p className="mt-1 text-fluid-ui font-black uppercase tracking-tight text-white leading-tight">
+          <p className="mt-1 text-fluid-ui font-black uppercase text-white leading-tight">
             {signal.summary}
           </p>
         </div>
@@ -209,30 +187,18 @@ function ProgressSummary({
           <p className={cn('text-fluid-ui font-black tabular-nums leading-none', diagnosis.averageChangePct === null ? 'text-white/35' : diagnosis.tone)}>
             {changeLabel}
           </p>
-          <p className="mt-1 text-fluid-label font-mono uppercase tracking-widest text-white/30">
+          <p className="mt-1 text-fluid-label font-mono uppercase text-white/30">
             Avg
           </p>
         </div>
       </div>
 
-      <p className="mt-4 text-fluid-label font-mono uppercase tracking-wide text-white/50">
+      <p className="mt-3 text-fluid-label font-mono uppercase text-white/50">
         {signal.nextAction}
       </p>
-
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <ProgressPill label="up" value={diagnosis.improvingCount.toString()} tone="text-green-400" />
-        <ProgressPill label="flat" value={diagnosis.flatCount.toString()} tone="text-yellow-400" />
-        <ProgressPill label="down" value={diagnosis.decliningCount.toString()} tone="text-red-400" />
-      </div>
-    </div>
-  );
-}
-
-function ProgressPill({ label, value, tone }: { label: string; value: string; tone: string }) {
-  return (
-    <div className="rounded-xl border border-white/5 bg-black/25 px-3 py-2">
-      <p className="text-[10px] font-mono uppercase tracking-widest text-white/25">{label}</p>
-      <p className={cn('text-fluid-ui font-black tabular-nums leading-none', tone)}>{value}</p>
-    </div>
+      <p className="mt-3 text-fluid-label font-mono uppercase text-white/30">
+        {diagnosis.improvingCount} up · {diagnosis.flatCount} flat · {diagnosis.decliningCount} down
+      </p>
+    </WatchPanel>
   );
 }

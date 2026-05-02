@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { getWorkoutType } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
 import { WorkoutData, WorkoutType } from '@/lib/types';
-import { Card } from '@/components/ui/card';
+import { WatchPanel } from '@/components/WatchSurface';
 
 interface WeeklySplitProps {
   currentDate: Date;
@@ -47,21 +47,21 @@ export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplit
             const dayNumber = format(day, 'd');
 
             return (
-              <Card
+              <WatchPanel
                 key={dateKey}
                 className={cn(
-                  'flex-row items-center justify-between gap-0 rounded-2xl transition-colors',
-                  embedded ? 'px-5 py-5 shadow-none' : 'px-6 py-6 shadow-lg',
-                  isToday ? 'bg-white/15 ring-2 ring-white/25 border-transparent' : embedded ? 'bg-white/5 border-white/5' : 'bg-white/10 border-white/5',
+                  'flex items-center justify-between gap-4 transition-colors',
+                  embedded ? 'px-4 py-4' : 'px-5 py-5',
                 )}
+                active={isToday}
               >
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-fluid-label text-white/60 uppercase tracking-widest font-black font-mono mb-2">
+                  <span className="text-fluid-label text-white/60 uppercase font-black font-mono mb-2">
                     {dayName}, {dayNumber}
                   </span>
                   <span
                     className={cn(
-                      'text-fluid-exercise font-black uppercase tracking-tight leading-none truncate',
+                      'text-fluid-exercise font-black uppercase leading-none truncate',
                       WORKOUT_TYPE_COLORS[workoutType],
                     )}
                   >
@@ -77,10 +77,10 @@ export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplit
                   ) : isMissed ? (
                     <Circle className="w-6 h-6 text-white/20" />
                   ) : isToday ? (
-                    <span className="text-fluid-label font-black text-white uppercase tracking-widest bg-white/15 px-2 py-0.5 rounded animate-pulse">TODAY</span>
+                    <span className="text-fluid-label font-black text-white uppercase bg-white/15 px-2 py-0.5 rounded animate-pulse">TODAY</span>
                   ) : null}
                 </div>
-              </Card>
+              </WatchPanel>
             );
           })}
         </div>

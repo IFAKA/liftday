@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { TopBar } from '@/components/TopBar';
 import { EXERCISES } from '@/lib/constants';
 import { WorkoutData, WorkoutType, setEntryReps } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { WatchPanel } from './WatchSurface';
 
 const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
   push: 'text-orange-400',
@@ -69,18 +69,18 @@ function SessionRow({
   const displayDate = new Date(dateKey + 'T12:00:00');
 
   return (
-    <Card
-      className="flex-row items-center justify-between gap-0 rounded-2xl bg-white/5 border-white/5 shadow-none cursor-pointer active:bg-white/10 transition-colors px-5 py-5"
+    <WatchPanel
+      className="flex cursor-pointer items-center justify-between gap-4 active:bg-white/10"
       onClick={onOpen}
     >
       <div className="flex flex-col">
-        <span className="text-fluid-label text-white/40 uppercase tracking-widest font-mono font-black mb-1">{format(displayDate, 'MMM d, EEE')}</span>
-        <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', TYPE_COLOR[wt])}>{wt}</span>
+        <span className="text-fluid-label text-white/40 uppercase font-mono font-black mb-1">{format(displayDate, 'MMM d, EEE')}</span>
+        <span className={cn('text-fluid-ui font-black uppercase leading-none', TYPE_COLOR[wt])}>{wt}</span>
       </div>
       <div className="text-right">
         <span className="text-fluid-ui font-black tabular-nums text-white leading-none">{totalReps}</span>
-        <p className="text-fluid-label font-black font-mono text-white/40 uppercase tracking-widest mt-1">Reps</p>
+        <p className="text-fluid-label font-black font-mono text-white/40 uppercase mt-1">Reps</p>
       </div>
-    </Card>
+    </WatchPanel>
   );
 }

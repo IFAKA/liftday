@@ -15,6 +15,7 @@ import { resolveExerciseKey } from '@/lib/tiers';
 import { WorkoutData } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { getSetsForWeek, getWeekNumber, getWorkoutPatterns } from '@/lib/workout-utils';
+import { WatchPanel } from './WatchSurface';
 
 export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
   const router = useRouter();
@@ -77,13 +78,13 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
           <span className="text-[11px] font-black uppercase tracking-widest font-mono">{copied ? 'Copied' : 'Copy Progress'}</span>
         </Button>
 
-        <div className="w-full rounded-xl bg-black/30 border border-white/10 p-4">
+        <WatchPanel subtle className="bg-black/30">
           <ProgressFrontierGraph frontier={progress.frontier} diagnosis={progress.diagnosis} />
-        </div>
+        </WatchPanel>
 
         {patterns.sessionCount >= 3 && (
-          <div className="mt-3 w-full rounded-xl bg-white/[0.03] border border-white/10 p-4 space-y-2">
-            <p className="text-[10px] text-white/35 uppercase tracking-widest font-mono">Patterns</p>
+          <WatchPanel subtle className="mt-3 space-y-2">
+            <p className="text-xs text-white/35 uppercase font-mono">Patterns</p>
             {patterns.usualDays.length > 0 && (
               <p className="text-fluid-label text-white/45 font-mono">
                 Usually trains <span className="text-white">{patterns.usualDays.join(' · ')}</span>
@@ -104,7 +105,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
                 Avg session <span className="text-white">{patterns.avgDurationMin} min</span>
               </p>
             )}
-          </div>
+          </WatchPanel>
         )}
       </div>
     </div>

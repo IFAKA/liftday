@@ -8,6 +8,7 @@ import { TopBar } from '@/components/TopBar';
 import { loadWorkoutData } from '@/lib/storage';
 import { EXERCISES } from '@/lib/constants';
 import { WorkoutData, setEntryReps, setEntryWeight } from '@/lib/types';
+import { WatchListItem } from '@/components/WatchSurface';
 
 export default function PersonalBestsPage() {
   const router = useRouter();
@@ -57,22 +58,16 @@ export default function PersonalBestsPage() {
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
         <div className="flex flex-col gap-3">
           {EXERCISES.filter((ex) => prs[ex.key]).map((ex) => (
-            <div key={ex.key} onClick={() => router.push(`/exercises/${ex.key}`)} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/5 cursor-pointer active:bg-white/10 transition-colors">
-              <span className="text-fluid-ui font-black uppercase tracking-tight text-white truncate">{ex.name}</span>
-              <div className="flex items-baseline gap-2 shrink-0 ml-3">
-                {prs[ex.key].weight !== undefined ? (
-                  <>
-                    <span className="text-fluid-ui font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key].weight}kg</span>
-                    <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">× {prs[ex.key].reps}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-fluid-ui font-black tabular-nums tracking-tighter text-white leading-none">{prs[ex.key].reps}</span>
-                    <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">{ex.unit === 'seconds' ? 'Secs' : 'Reps'}</span>
-                  </>
-                )}
-              </div>
-            </div>
+            <WatchListItem
+              key={ex.key}
+              onClick={() => router.push(`/exercises/${ex.key}`)}
+              title={ex.name}
+              metric={
+                prs[ex.key].weight !== undefined
+                  ? `${prs[ex.key].weight}kg × ${prs[ex.key].reps}`
+                  : `${prs[ex.key].reps} ${ex.unit === 'seconds' ? 'secs' : 'reps'}`
+              }
+            />
           ))}
         </div>
       </div>

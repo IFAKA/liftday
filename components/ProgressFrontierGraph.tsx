@@ -11,6 +11,7 @@ import {
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import { ProgressDiagnosis, ProgressFrontier } from '@/lib/progress-insights';
 import { cn } from '@/lib/utils';
+import { WatchPanel, WatchSection } from './WatchSurface';
 
 export function ProgressFrontierGraph({
   frontier,
@@ -27,27 +28,25 @@ export function ProgressFrontierGraph({
     <div className="space-y-4">
       <div className="mb-3 flex items-end justify-between gap-4">
         <div>
-          <p className="text-fluid-label font-black uppercase tracking-widest text-white/40 font-mono">Progress Check</p>
-          <p className={cn('text-fluid-heading font-black uppercase tracking-tight leading-none', diagnosis.tone)}>
+          <p className="text-fluid-label font-black uppercase text-white/40 font-mono">Progress Check</p>
+          <p className={cn('text-fluid-heading font-black uppercase leading-none', diagnosis.tone)}>
             {diagnosis.label}
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-right">
-          <MiniStat label="up" value={diagnosis.improvingCount.toString()} tone="text-green-400" />
-          <MiniStat label="flat" value={diagnosis.flatCount.toString()} tone="text-yellow-400" />
-          <MiniStat label="down" value={diagnosis.decliningCount.toString()} tone="text-red-400" />
-        </div>
+        <p className="text-right text-fluid-label font-mono uppercase text-white/35">
+          {diagnosis.improvingCount} up · {diagnosis.flatCount} flat · {diagnosis.decliningCount} down
+        </p>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-black/35 p-4">
+      <WatchPanel subtle className="bg-black/35">
         <div className="mb-3 flex items-center justify-between gap-4">
           <div>
-            <p className="text-fluid-label font-mono uppercase tracking-widest text-white/30">Avg change vs last time</p>
+            <p className="text-fluid-label font-mono uppercase text-white/30">Avg change vs last time</p>
             <p className={cn('text-2xl font-black tabular-nums leading-none', diagnosis.averageChangePct === null ? 'text-white/40' : diagnosis.tone)}>
               {changeLabel}{diagnosis.averageChangePct === null ? '' : '%'}
             </p>
           </div>
-          <p className="max-w-40 text-right text-fluid-label font-mono uppercase tracking-wide text-white/35">
+          <p className="max-w-40 text-right text-fluid-label font-mono uppercase text-white/35">
             {diagnosis.summary}
           </p>
         </div>
@@ -86,54 +85,52 @@ export function ProgressFrontierGraph({
             </ResponsiveContainer>
           </div>
         )}
-        <p className="mt-2 text-[10px] font-mono uppercase tracking-wide text-white/25">
+        <p className="mt-2 text-xs font-mono uppercase text-white/25">
           Strength index uses your logged sets. 100 is your first logged baseline.
         </p>
-      </div>
+      </WatchPanel>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-        <p className="mb-3 text-fluid-label font-black uppercase tracking-widest text-white/35 font-mono">Fix first</p>
+      <WatchPanel subtle className="py-3">
+        <p className="mb-3 text-fluid-label font-black uppercase text-white/35 font-mono">Fix first</p>
         <div className="space-y-2">
           {diagnosis.nextActions.map((action) => (
-            <p key={action} className="text-fluid-label font-mono uppercase tracking-wide text-white/70">
+            <p key={action} className="text-fluid-label font-mono uppercase text-white/70">
               {action}
             </p>
           ))}
         </div>
-      </div>
+      </WatchPanel>
 
       {diagnosis.priorityExercises.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-fluid-label font-black uppercase tracking-widest text-white/35 font-mono">Exercise Detail</p>
+        <WatchSection title="Exercise Detail" className="space-y-2">
           {diagnosis.priorityExercises.map((exercise) => (
             <ExerciseRow key={exercise.key} exercise={exercise} />
           ))}
-        </div>
+        </WatchSection>
       )}
 
       {diagnosis.volumeGaps.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-fluid-label font-black uppercase tracking-widest text-white/35 font-mono">Volume Gaps</p>
+        <WatchSection title="Volume Gaps" className="space-y-2">
           {diagnosis.volumeGaps.map((gap) => (
-            <div key={gap.muscle} className="rounded-xl border border-white/10 bg-black/25 px-4 py-3">
+            <WatchPanel key={gap.muscle} subtle className="bg-black/25 py-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-fluid-ui font-black uppercase tracking-tight text-white">{gap.muscle}</p>
+                <p className="text-fluid-ui font-black uppercase text-white">{gap.muscle}</p>
                 <p className="text-fluid-label font-mono tabular-nums text-yellow-400">
                   {gap.sets}/{gap.target} sets
                 </p>
               </div>
-              <p className="mt-1 text-fluid-label font-mono uppercase tracking-wide text-white/45">{gap.action}</p>
-            </div>
+              <p className="mt-1 text-fluid-label font-mono uppercase text-white/45">{gap.action}</p>
+            </WatchPanel>
           ))}
-        </div>
+        </WatchSection>
       )}
 
       {diagnosis.trackedCount === 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-          <p className="text-fluid-label font-mono uppercase tracking-wide text-white/45">
+        <WatchPanel subtle className="py-3">
+          <p className="text-fluid-label font-mono uppercase text-white/45">
             Log the same exercises twice to see what is improving, flat, or dropping.
           </p>
-        </div>
+        </WatchPanel>
       )}
     </div>
   );
@@ -148,11 +145,11 @@ function ExerciseRow({ exercise }: { exercise: ProgressDiagnosis['priorityExerci
   const Icon = exercise.status === 'up' ? ArrowUp : exercise.status === 'down' ? ArrowDown : Minus;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3">
+    <WatchPanel subtle className="bg-black/25 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-fluid-ui font-black uppercase tracking-tight text-white">{exercise.name}</p>
-          <p className="text-fluid-label font-mono uppercase tracking-wide text-white/35">{exercise.muscle}</p>
+          <p className="truncate text-fluid-ui font-black uppercase text-white">{exercise.name}</p>
+          <p className="text-fluid-label font-mono uppercase text-white/35">{exercise.muscle}</p>
         </div>
         <div className={cn('flex items-center gap-1 font-mono text-sm font-black tabular-nums', statusTone)}>
           <Icon className="h-4 w-4" />
@@ -165,18 +162,18 @@ function ExerciseRow({ exercise }: { exercise: ProgressDiagnosis['priorityExerci
         <MiniStat label="best" value={exercise.bestLabel} />
       </div>
       {exercise.status !== 'up' && (
-        <p className="mt-3 text-fluid-label font-mono uppercase tracking-wide text-white/50">
+        <p className="mt-3 text-fluid-label font-mono uppercase text-white/50">
           {exercise.action}
         </p>
       )}
-    </div>
+    </WatchPanel>
   );
 }
 
 function MiniStat({ label, value, tone = 'text-white/70' }: { label: string; value: string; tone?: string }) {
   return (
     <div className="min-w-0">
-      <div className="text-[9px] font-mono uppercase tracking-widest text-white/25">{label}</div>
+      <div className="text-xs font-mono uppercase text-white/25">{label}</div>
       <div className={cn('truncate text-fluid-label font-black tabular-nums', tone)}>{value}</div>
     </div>
   );
