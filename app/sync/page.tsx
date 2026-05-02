@@ -15,6 +15,7 @@ import {
   RotateCcw,
   ScanLine,
   Smartphone,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
@@ -43,7 +44,7 @@ export default function SyncPage() {
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get('pair');
   });
-  const [mode, setMode] = useState<SyncMode>(() => pairToken ? 'phone' : 'laptop');
+  const [mode, setMode] = useState<SyncMode>(() => pairToken ? 'phone' : getInitialSyncMode());
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-black text-white">
@@ -66,7 +67,7 @@ export default function SyncPage() {
         <section className="px-1 pb-5">
           <p className="text-3xl font-black leading-none tracking-tight text-white">Bring phone progress here</p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/50">
-            Open this on the laptop, scan from the phone, and the phone sends a one-way copy.
+            Start on the Mac to receive. Use the phone to send. The phone is never overwritten.
           </p>
         </section>
 
@@ -75,14 +76,14 @@ export default function SyncPage() {
             <ModeButton
               active={mode === 'laptop'}
               icon={<Laptop />}
-              label="Laptop"
+              label="Receive"
               sublabel="Show QR"
               onClick={() => setMode('laptop')}
             />
             <ModeButton
               active={mode === 'phone'}
               icon={<Smartphone />}
-              label="Phone"
+              label="Send"
               sublabel="Scan QR"
               onClick={() => setMode('phone')}
             />
@@ -101,17 +102,42 @@ export default function SyncPage() {
 
 function LaptopSyncPanel() {
   const [token, setToken] = useState(() => crypto.randomUUID());
+  const [pairOrigin, setPairOrigin] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return window.location.origin;
+  });
   const [qrSrc, setQrSrc] = useState('');
   const [state, setState] = useState<TransferState>('idle');
   const [message, setMessage] = useState('Ready to pair with your phone.');
   const [summary, setSummary] = useState(() => getLocalSyncSummary());
 
   const pairUrl = useMemo(() => {
-    if (typeof window === 'undefined') return '';
-    return `${window.location.origin}/sync?pair=${token}`;
-  }, [token]);
+    if (!pairOrigin) return '';
+    return `${pairOrigin}/sync?pair=${token}`;
+  }, [pairOrigin, token]);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !isLocalHost(window.location.hostname)) return;
+
+    let alive = true;
+    async function loadNetworkOrigin() {
+      try {
+        const response = await fetch('/api/sync/network-origin');
+        const payload = await response.json() as { origin: string | null };
+        if (alive && payload.origin) setPairOrigin(payload.origin);
+      } catch {
+        if (alive) setMessage('Use your Mac network address if the phone cannot connect.');
+      }
+    }
+
+    loadNetworkOrigin();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!pairUrl) return;
     let alive = true;
 
     async function setupRoom() {
@@ -188,8 +214,8 @@ function LaptopSyncPanel() {
       <div className="mt-5 rounded-[28px] border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-widest text-white/35">Laptop</p>
-            <p className="mt-1 text-xl font-black tracking-tight text-white">Scan this from your phone</p>
+            <p className="text-sm font-black uppercase tracking-widest text-white/35">Receive</p>
+            <p className="mt-1 text-xl font-black tracking-tight text-white">Scan from your phone</p>
           </div>
           <StatusPill state={state} />
         </div>
@@ -212,6 +238,11 @@ function LaptopSyncPanel() {
         </div>
 
         <p className="mx-auto mt-5 max-w-xs text-center text-sm leading-relaxed text-white/55">{message}</p>
+        {isLocalPairUrl(pairUrl) && (
+          <p className="mx-auto mt-2 max-w-xs text-center text-xs leading-relaxed text-amber-200/80">
+            This QR uses localhost, which phones cannot reach. Open the Mac on its network address.
+          </p>
+        )}
 
         <Button
           type="button"
@@ -279,7 +310,13 @@ function AutoSendPanel({ pairToken }: { pairToken: string }) {
   return (
     <section className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.04] px-5 py-8 text-center">
       <div className="mx-auto grid size-20 place-items-center rounded-full bg-white text-black">
-        {state === 'done' ? <Check className="size-9" /> : <LoaderCircle className="size-9 animate-spin" />}
+        {state === 'done' ? (
+          <Check className="size-9" />
+        ) : state === 'error' ? (
+          <X className="size-9" />
+        ) : (
+          <LoaderCircle className="size-9 animate-spin" />
+        )}
       </div>
       <p className="mt-5 text-2xl font-black tracking-tight text-white">
         {state === 'done' ? 'Progress sent' : state === 'error' ? 'Could not sync' : 'Sending'}
@@ -293,7 +330,12 @@ function ScannerPanel() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [scanning, setScanning] = useState(false);
-  const [message, setMessage] = useState('Point your phone at the QR on the laptop.');
+  const [message, setMessage] = useState(() => {
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      return 'Use your phone Camera app to scan the QR, or open LiftDay over HTTPS.';
+    }
+    return 'Point your phone at the QR on the laptop.';
+  });
 
   useEffect(() => {
     if (!scanning) return;
@@ -302,6 +344,12 @@ function ScannerPanel() {
     let frame = 0;
 
     async function startScanner() {
+      if (!window.isSecureContext) {
+        setMessage('Browser camera needs HTTPS. Use your phone Camera app to scan the QR.');
+        setScanning(false);
+        return;
+      }
+
       const Detector = getBarcodeDetector();
       if (!Detector) {
         setMessage('Camera scanning is not available here. Use your phone camera to open the QR.');
@@ -362,8 +410,8 @@ function ScannerPanel() {
             <ScanLine className="size-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-widest text-white/35">Phone</p>
-            <p className="text-xl font-black tracking-tight text-white">Scan laptop QR</p>
+            <p className="text-sm font-black uppercase tracking-widest text-white/35">Send</p>
+            <p className="text-xl font-black tracking-tight text-white">Scan the QR</p>
           </div>
         </div>
 
@@ -382,6 +430,7 @@ function ScannerPanel() {
         <Button
           type="button"
           onClick={() => setScanning(true)}
+          disabled={typeof window !== 'undefined' && !window.isSecureContext}
           className="mt-5 h-14 w-full rounded-2xl bg-white text-base font-black text-black hover:bg-white/90 active:scale-[0.98]"
         >
           <ScanLine />
@@ -524,4 +573,24 @@ function getBarcodeDetector(): BarcodeDetectorConstructor | null {
   }).BarcodeDetector;
 
   return candidate ?? null;
+}
+
+function getInitialSyncMode(): SyncMode {
+  if (typeof window === 'undefined') return 'laptop';
+  const ua = navigator.userAgent.toLowerCase();
+  const mobileUa = /android|iphone|ipad|ipod|mobile/.test(ua);
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  return mobileUa || coarsePointer ? 'phone' : 'laptop';
+}
+
+function isLocalHost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+}
+
+function isLocalPairUrl(url: string): boolean {
+  try {
+    return isLocalHost(new URL(url).hostname);
+  } catch {
+    return false;
+  }
 }
