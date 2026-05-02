@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
 import { EXERCISES, REST_DURATION } from '@/lib/constants';
-import { formatDateKey, getWeekNumber, getSetsForWeek } from '@/lib/workout-utils';
+import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessionDate } from '@/lib/workout-utils';
 import { getTargets, getWeightTarget, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
 import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
@@ -146,11 +146,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const previousEntry = useMemo(() => {
     if (!currentExercise) return null;
-    const prev = Object.keys(data).filter((d) => d < dateKey && data[d].logged_at).sort().reverse()[0];
+    const prev = getPreviousExerciseSessionDate(date, data, currentExercise.key as ExerciseKey);
     if (!prev) return null;
     const sets = data[prev]?.[currentExercise.key as ExerciseKey];
     return sets && sets.length > currentSet ? sets[currentSet] : null;
-  }, [data, dateKey, currentExercise, currentSet]);
+  }, [data, date, currentExercise, currentSet]);
 
   const previousRep = previousEntry !== null ? setEntryReps(previousEntry) : null;
   const previousWeight = previousEntry !== null ? setEntryWeight(previousEntry) : null;

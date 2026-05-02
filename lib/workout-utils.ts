@@ -34,6 +34,22 @@ export function getPreviousSessionDate(
   return dates[0] || null;
 }
 
+export function getPreviousExerciseSessionDate(
+  currentDate: Date,
+  data: WorkoutData,
+  exerciseKey: ExerciseKey
+): string | null {
+  const currentKey = formatDateKey(currentDate);
+  const dates = Object.keys(data)
+    .filter((d) => {
+      const sets = data[d]?.[exerciseKey];
+      return d < currentKey && Boolean(data[d].logged_at) && Array.isArray(sets) && sets.length > 0;
+    })
+    .sort()
+    .reverse();
+  return dates[0] || null;
+}
+
 export function compareReps(
   current: number,
   previous: number | null

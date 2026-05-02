@@ -45,9 +45,13 @@ export function ExerciseScreen({
   onMachineOccupied,
 }: ExerciseScreenProps) {
   const isSeconds = exercise.unit === 'seconds';
+  const firstSetVal = previousRep ?? currentTarget;
+  const firstSetWeight = previousWeight ?? currentWeightTarget;
+  const defaultVal = currentSet === 0 ? firstSetVal : currentTarget;
+  const defaultWeight = currentSet === 0 ? firstSetWeight : currentWeightTarget;
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-  const [val, setVal] = useState(currentTarget);
-  const [weight, setWeight] = useState(currentWeightTarget);
+  const [val, setVal] = useState(defaultVal);
+  const [weight, setWeight] = useState(defaultWeight);
   const [showTutorial, setShowTutorial] = useState(false);
   const [lastLoggedVal, setLastLoggedVal] = useState<number | null>(null);
   const [lastLoggedWeight, setLastLoggedWeight] = useState<number | null>(null);
@@ -57,12 +61,18 @@ export function ExerciseScreen({
     // Within the same exercise, sets will pre-fill from the last logged set instead.
     setLastLoggedVal(null);
     setLastLoggedWeight(null);
-    setVal(currentTarget);
-    setWeight(currentWeightTarget);
+    setVal(defaultVal);
+    setWeight(defaultWeight);
     setShowQuitConfirm(false);
     setShowTutorial(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exerciseIndex]);
+
+  useEffect(() => {
+    if (currentSet !== 0) return;
+    setVal(defaultVal);
+    setWeight(defaultWeight);
+  }, [currentSet, defaultVal, defaultWeight]);
 
   useEffect(() => {
     // Between sets of the same exercise, prefer last logged values over progression target.
@@ -196,8 +206,8 @@ export function ExerciseScreen({
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
               {isSeconds ? (
                 <NumberInput
-                  key={`${exerciseIndex}-${currentSet}`}
-                  defaultValue={currentTarget}
+                  key={`${exerciseIndex}-${currentSet}-${defaultVal}`}
+                  defaultValue={defaultVal}
                   max={120}
                   label="Seconds"
                   onChange={setVal}
@@ -205,8 +215,8 @@ export function ExerciseScreen({
               ) : (
                 <div className="flex-1 flex flex-col w-full min-h-0">
                   <NumberInput
-                    key={`${exerciseIndex}-${currentSet}-weight`}
-                    defaultValue={currentWeightTarget}
+                    key={`${exerciseIndex}-${currentSet}-weight-${defaultWeight}`}
+                    defaultValue={defaultWeight}
                     min={0}
                     max={500}
                     step={2.5}
@@ -215,8 +225,8 @@ export function ExerciseScreen({
                     onChange={setWeight}
                   />
                   <NumberInput
-                    key={`${exerciseIndex}-${currentSet}-reps`}
-                    defaultValue={currentTarget}
+                    key={`${exerciseIndex}-${currentSet}-reps-${defaultVal}`}
+                    defaultValue={defaultVal}
                     min={1}
                     max={40}
                     label="REPS"
