@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface WatchSectionProps {
@@ -33,9 +35,9 @@ interface WatchPanelProps extends ComponentProps<'div'> {
 
 export function WatchPanel({ children, className, active = false, subtle = false, ...props }: WatchPanelProps) {
   return (
-    <div
+    <Card
       className={cn(
-        'w-full rounded-xl border px-4 py-4',
+        'w-full gap-0 rounded-xl border px-4 py-4 shadow-none',
         active
           ? 'border-white/25 bg-white/15 ring-2 ring-white/15'
           : subtle
@@ -46,7 +48,7 @@ export function WatchPanel({ children, className, active = false, subtle = false
       {...props}
     >
       {children}
-    </div>
+    </Card>
   );
 }
 
@@ -91,7 +93,7 @@ export function WatchListItem({
   );
 
   const classes = cn(
-    'w-full flex items-center gap-4 rounded-xl border px-4 py-4 text-left transition-all',
+    'h-auto w-full justify-start whitespace-normal rounded-xl border px-4 py-4 text-left font-normal transition-all',
     active
       ? 'border-white/25 bg-white/15 ring-2 ring-white/15'
       : subtle
@@ -102,15 +104,17 @@ export function WatchListItem({
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
-        {content}
-      </Link>
+      <Button asChild variant="ghost" className={classes}>
+        <Link href={href} className="flex items-center gap-4">
+          {content}
+        </Link>
+      </Button>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} className={classes}>
+    <Button type="button" variant="ghost" onClick={onClick} className={cn(classes, 'flex items-center gap-4')}>
       {content}
-    </button>
+    </Button>
   );
 }
