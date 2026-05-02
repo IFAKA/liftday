@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { getFirstSessionDate, loadUserProfile, loadWorkoutData } from '@/lib/storage';
@@ -9,11 +10,12 @@ import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
 import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
 import { EXERCISES } from '@/lib/constants';
 import { getRoutine } from '@/lib/routines';
-import { Exercise, ExerciseKey, SetEntry, setEntryReps, setEntryWeight, WorkoutData } from '@/lib/types';
+import { Exercise, ExerciseKey, RoutineConfig, SetEntry, setEntryReps, setEntryWeight, UserProfile, WorkoutData, WorkoutSession } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
 import { scoreRoutine } from '@/lib/routine-score';
 import { RoutineScoreResult } from '@/lib/smv';
+import { Button } from '@/components/ui/button';
 
 const TYPE_COLOR: Record<string, string> = {
   push: 'text-orange-400',
@@ -22,6 +24,7 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 type Tab = 'today' | 'smv';
+type CopyTarget = 'routine' | 'progress';
 
 interface ProgressSignal {
   label: string;
@@ -32,31 +35,50 @@ interface ProgressSignal {
 
 export default function ProgramPage() {
   const [activeTab, setActiveTab] = useState<Tab>('today');
-  const [{ exercises, workoutType, data, smvScore, progressSignal }] = useState<{
+  const [copied, setCopied] = useState<CopyTarget | null>(null);
+  const [{ exercises, workoutType, data, smvScore, progressSignal, routine, profile, setsPerExercise, weeklyExercises }] = useState<{
     exercises: Exercise[];
     workoutType: string;
     data: WorkoutData;
     smvScore: RoutineScoreResult | null;
     progressSignal: ProgressSignal | null;
+    routine: RoutineConfig | null;
+    profile: UserProfile | null;
+    setsPerExercise: number;
+    weeklyExercises: Exercise[];
   }>(() => {
-    if (typeof window === 'undefined') return { exercises: [], workoutType: '', data: {}, smvScore: null, progressSignal: null };
+    if (typeof window === 'undefined') {
+      return { exercises: [], workoutType: '', data: {}, smvScore: null, progressSignal: null, routine: null, profile: null, setsPerExercise: 3, weeklyExercises: [] };
+    }
     const today = new Date();
     const profile = loadUserProfile();
     const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
     const wt = getWorkoutType(today, routine.schedule);
     const data = loadWorkoutData();
-    if (wt === 'rest') return { exercises: [], workoutType: wt, data, smvScore: null, progressSignal: null };
     const weekNumber = getWeekNumber(getFirstSessionDate(), today);
     const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
     const tiers = profile?.tiers ?? {};
-    const chains = getChainsForWorkout(wt, routine.id);
-    const exs = chains
+    const weeklyExercises = routine.tierChains
       .map((chain) => {
         const key = resolveExerciseKey(chain, tiers);
         return EXERCISES.find((e) => e.key === key)!;
       })
       .filter(Boolean);
-    const weeklyExercises = routine.tierChains
+    if (wt === 'rest') {
+      return {
+        exercises: [],
+        workoutType: wt,
+        data,
+        smvScore: scoreRoutine(routine, { tiers, setsPerExercise }),
+        progressSignal: getProgressSignal(data, weeklyExercises),
+        routine,
+        profile,
+        setsPerExercise,
+        weeklyExercises,
+      };
+    }
+    const chains = getChainsForWorkout(wt, routine.id);
+    const exs = chains
       .map((chain) => {
         const key = resolveExerciseKey(chain, tiers);
         return EXERCISES.find((e) => e.key === key)!;
@@ -68,10 +90,23 @@ export default function ProgramPage() {
       data,
       smvScore: scoreRoutine(routine, { tiers, setsPerExercise }),
       progressSignal: getProgressSignal(data, weeklyExercises),
+      routine,
+      profile,
+      setsPerExercise,
+      weeklyExercises,
     };
   });
 
   const label = workoutType === 'push' ? 'Push' : workoutType === 'pull' ? 'Pull' : workoutType === 'legs' ? 'Legs' : 'Rest';
+
+  async function handleCopy(target: CopyTarget) {
+    const text = target === 'routine'
+      ? formatRoutineForPrompt(routine, profile, setsPerExercise)
+      : formatProgressForPrompt(data, weeklyExercises, progressSignal);
+    await copyText(text);
+    setCopied(target);
+    window.setTimeout(() => setCopied((current) => current === target ? null : current), 1600);
+  }
 
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
@@ -94,29 +129,54 @@ export default function ProgramPage() {
         }
       />
 
-      <div className="flex-1 min-h-0">
-        {activeTab === 'today' ? (
-          workoutType === 'rest' || !workoutType ? (
-            <div className="flex items-center justify-center h-full">
-              <span className="text-white/30 font-black uppercase tracking-widest text-fluid-label">Rest Day</span>
-            </div>
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="px-4 pb-2 flex gap-2">
+          <CopyButton label="Routine" active={copied === 'routine'} onClick={() => handleCopy('routine')} />
+          <CopyButton label="Progress" active={copied === 'progress'} onClick={() => handleCopy('progress')} />
+        </div>
+        <div className="flex-1 min-h-0">
+          {activeTab === 'today' ? (
+            workoutType === 'rest' || !workoutType ? (
+              <div className="flex items-center justify-center h-full">
+                <span className="text-white/30 font-black uppercase tracking-widest text-fluid-label">Rest Day</span>
+              </div>
+            ) : (
+              <RoutineScreen
+                exercises={exercises}
+                title={label}
+                titleColor={TYPE_COLOR[workoutType]}
+                subtitle={`${exercises.length} EXERCISES`}
+                hideTopBar
+              />
+            )
           ) : (
-            <RoutineScreen
-              exercises={exercises}
-              title={label}
-              titleColor={TYPE_COLOR[workoutType]}
-              subtitle={`${exercises.length} EXERCISES`}
-              hideTopBar
-            />
-          )
-        ) : (
-          <div className="flex flex-col overflow-y-auto no-scrollbar pb-8">
-            {smvScore && <SmvScoreCard score={smvScore} progressSignal={progressSignal} />}
-            <WeeklySplit currentDate={new Date()} data={data} />
-          </div>
-        )}
+            <div className="flex flex-col h-full overflow-y-auto no-scrollbar pb-8">
+              {smvScore && <SmvScoreCard score={smvScore} progressSignal={progressSignal} />}
+              <WeeklySplit currentDate={new Date()} data={data} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+function CopyButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  const Icon = active ? Check : Copy;
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      className={cn(
+        'flex-1 rounded-xl border bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white active:scale-[0.98]',
+        active && 'text-green-400 border-green-400/30 bg-green-400/10'
+      )}
+    >
+      <Icon className="w-4 h-4" />
+      <span className="text-[11px] font-black uppercase tracking-widest font-mono">{active ? 'Copied' : label}</span>
+    </Button>
   );
 }
 
@@ -318,6 +378,146 @@ function formatOneDecimal(value: number): string {
 function formatSetCount(value: number): string {
   const roundedUp = Math.ceil(value * 10) / 10;
   return roundedUp.toFixed(1);
+}
+
+function formatRoutineForPrompt(routine: RoutineConfig | null, profile: UserProfile | null, setsPerExercise: number): string {
+  if (!routine) return 'No routine is currently selected.';
+  const tiers = profile?.tiers ?? {};
+  const lines = [
+    '# Current training routine',
+    '',
+    `Routine: ${routine.name} (${routine.id})`,
+    `Goal: ${profile?.goal ?? 'Not set'}`,
+    `Profile: ${profile?.age ?? '?'} year old ${profile?.sex ?? 'unknown'}, ${profile?.heightCm ?? '?'} cm, ${profile?.weightKg ?? '?'} kg, ${profile?.bodyComposition ?? 'body composition not set'}`,
+    `Training background: ${profile?.trainingBackground ?? 'Not set'}`,
+    `Injuries/pain: ${profile?.injuryStatus ?? 'Not set'}`,
+    `Gym access: ${profile?.gymAccess === false ? 'No' : 'Yes'}`,
+    `Max workout time: ${profile?.maxWorkoutMinutes ?? '?'} minutes`,
+    `Sets per exercise this week: ${setsPerExercise}`,
+    `Weekly schedule: ${routine.schedule.map((wt, index) => `${dayName(index)} ${wt}`).join(', ')}, Sunday rest`,
+    '',
+    '## Exercise slots',
+  ];
+
+  for (const workoutType of ['push', 'pull', 'legs'] as const) {
+    lines.push('', `### ${workoutType.toUpperCase()}`);
+    const chains = getChainsForWorkout(workoutType, routine.id);
+    for (const chain of chains) {
+      const activeKey = resolveExerciseKey(chain, tiers);
+      const active = getExerciseName(activeKey);
+      const options = chain.exercises.map(getExerciseName).join(' -> ');
+      lines.push(`- ${chain.slotId}: ${active}; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}; options ${options}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function formatProgressForPrompt(data: WorkoutData, exercises: Exercise[], progressSignal: ProgressSignal | null): string {
+  const sessions = Object.entries(data)
+    .filter(([, session]) => session.logged_at)
+    .sort(([a], [b]) => b.localeCompare(a));
+
+  const lines = [
+    '# Current training progress',
+    '',
+    `Logged sessions: ${sessions.length}`,
+  ];
+
+  if (progressSignal) {
+    lines.push(`Progress signal: ${progressSignal.label} - ${progressSignal.summary} ${progressSignal.nextAction}`);
+  }
+
+  lines.push('', '## Best sets');
+  const bestSets = getBestSets(data, exercises);
+  if (bestSets.length === 0) {
+    lines.push('- No logged sets yet.');
+  } else {
+    for (const entry of bestSets) {
+      lines.push(`- ${entry.exercise}: ${entry.value}`);
+    }
+  }
+
+  lines.push('', '## Recent sessions');
+  if (sessions.length === 0) {
+    lines.push('- No logged sessions yet.');
+  } else {
+    for (const [date, session] of sessions.slice(0, 12)) {
+      lines.push(`- ${date} ${session.workout_type}: ${formatSessionSummary(session)}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function getBestSets(data: WorkoutData, exercises: Exercise[]): { exercise: string; value: string }[] {
+  return exercises
+    .map((exercise) => {
+      let bestScore = 0;
+      let bestValue = '';
+      for (const session of Object.values(data)) {
+        const sets = session[exercise.key];
+        if (!sets) continue;
+        for (const set of sets) {
+          const reps = setEntryReps(set);
+          const weight = setEntryWeight(set);
+          const score = weight === null ? reps : weight * reps;
+          if (score > bestScore) {
+            bestScore = score;
+            bestValue = weight === null ? `${reps} ${exercise.unit === 'seconds' ? 'sec' : 'reps'}` : `${weight}kg x ${reps}`;
+          }
+        }
+      }
+      return bestValue ? { exercise: exercise.name, value: bestValue } : null;
+    })
+    .filter((entry): entry is { exercise: string; value: string } => entry !== null);
+}
+
+function formatSessionSummary(session: WorkoutSession): string {
+  const entries = EXERCISES
+    .map((exercise) => {
+      const sets = session[exercise.key];
+      if (!sets || sets.length === 0) return null;
+      const formatted = sets
+        .map((set) => {
+          const reps = setEntryReps(set);
+          const weight = setEntryWeight(set);
+          return weight === null ? String(reps) : `${weight}kgx${reps}`;
+        })
+        .join('/');
+      return `${exercise.name} ${formatted}`;
+    })
+    .filter((entry): entry is string => entry !== null);
+  return entries.length > 0 ? entries.join('; ') : 'no set details';
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall back for browsers that expose the API but reject without a secure context.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  textarea.remove();
+}
+
+function dayName(index: number): string {
+  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index] ?? `Day ${index + 1}`;
+}
+
+function getExerciseName(key: ExerciseKey): string {
+  return EXERCISES.find((exercise) => exercise.key === key)?.name ?? key;
 }
 
 function SmvMetric({ label, value }: { label: string; value: string }) {
