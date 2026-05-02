@@ -23,7 +23,7 @@ No test framework is configured. For changes today, run `npm run lint` and `npm 
 
 ## Commit & Pull Request Guidelines
 
-Recent history uses short imperative commits, often Conventional Commit prefixes such as `feat:` and `fix:` (`feat: add SMV efficient frontier scoring`, `fix: preserve weight/reps on machine-occupied swap`). Keep commits scoped and avoid committing generated `public/sw.js` changes unless the PWA output intentionally changed. Pull requests should include a concise description, verification commands run, linked issue or context, and screenshots for visible UI updates.
+Recent history uses short imperative commits, often Conventional Commit prefixes such as `feat:` and `fix:` (`feat: add SMV efficient frontier scoring`, `fix: preserve weight/reps on machine-occupied swap`). Keep commits scoped. After completing any change, verify it works, commit it, and push to `origin main` as the final step. Only push when the change is complete and `npm run lint` plus `npm run build` pass. Avoid committing generated `public/sw.js` changes unless the production build intentionally regenerated PWA output for the app change. Pull requests should include a concise description, verification commands run, linked issue or context, and screenshots for visible UI updates.
 
 ## Security & Configuration Tips
 

@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card';
 interface WeeklySplitProps {
   currentDate: Date;
   data: WorkoutData;
+  embedded?: boolean;
 }
 
 const WORKOUT_TYPE_COLORS: Record<WorkoutType, string> = {
@@ -27,13 +28,13 @@ const WORKOUT_TYPE_LABELS: Record<WorkoutType, string> = {
   rest: 'REST',
 };
 
-export function WeeklySplit({ currentDate, data }: WeeklySplitProps) {
+export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplitProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden relative">
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
+    <div className={cn('flex flex-col bg-black', embedded ? '' : 'h-full overflow-hidden relative')}>
+      <div className={cn(embedded ? '' : 'flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2')}>
         <div className="flex flex-col gap-3">
           {days.map((day) => {
             const workoutType = getWorkoutType(day);

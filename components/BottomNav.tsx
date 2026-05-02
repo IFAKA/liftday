@@ -8,7 +8,7 @@ import { useNavContext } from '@/lib/nav-context';
 
 const tabs = [
   { href: '/', label: 'Today', icon: Home },
-  { href: '/history', label: 'History', icon: ChartBar },
+  { href: '/history', label: 'Progress', icon: ChartBar },
   { href: '/program', label: 'Program', icon: CalendarDays },
   { href: '/settings', label: 'Settings', icon: User },
 ] as const;
@@ -16,8 +16,8 @@ const tabs = [
 function isTabActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   if (href === '/history') return pathname.startsWith('/history');
-  if (href === '/program') return pathname === '/program' || pathname === '/split' || pathname === '/routine';
-  if (href === '/settings') return pathname.startsWith('/settings');
+  if (href === '/program') return pathname === '/program' || pathname === '/split' || pathname === '/routine' || pathname === '/settings/routine';
+  if (href === '/settings') return pathname.startsWith('/settings') && pathname !== '/settings/routine';
   return false;
 }
 

@@ -1,16 +1,23 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Copy, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkoutData, WorkoutType, setEntryReps } from '@/lib/types';
 import { PUSH_EXERCISES, PULL_EXERCISES, LEGS_EXERCISES, EXERCISES } from '@/lib/constants';
-import { getWorkoutPatterns } from '@/lib/workout-utils';
+import { getSetsForWeek, getWeekNumber, getWorkoutPatterns } from '@/lib/workout-utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TopBar } from './TopBar';
+import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
+import { getRoutine } from '@/lib/routines';
+import { resolveExerciseKey } from '@/lib/tiers';
+import { scoreRoutine } from '@/lib/routine-score';
+import { formatProgressForPrompt, getProgressFrontier, getProgressSignal } from '@/lib/progress-insights';
+import { ProgressFrontierGraph } from './ProgressFrontierGraph';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -31,8 +38,31 @@ function formatHour(h: number): string {
 
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   const router = useRouter();
+  const [copied, setCopied] = useState(false);
 
   const patterns = useMemo(() => getWorkoutPatterns(data), [data]);
+  const progress = useMemo(() => {
+    const today = new Date();
+    const profile = loadUserProfile();
+    const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
+    const weekNumber = getWeekNumber(getFirstSessionDate(), today);
+    const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
+    const tiers = profile?.tiers ?? {};
+    const weeklyExercises = routine.tierChains
+      .map((chain) => {
+        const key = resolveExerciseKey(chain, tiers);
+        return EXERCISES.find((e) => e.key === key)!;
+      })
+      .filter(Boolean);
+    const score = scoreRoutine(routine, { tiers, setsPerExercise });
+    const signal = getProgressSignal(data, weeklyExercises);
+
+    return {
+      signal,
+      frontier: getProgressFrontier(data, weeklyExercises, score, signal),
+      prompt: formatProgressForPrompt(data, weeklyExercises, signal),
+    };
+  }, [data]);
 
   const totalSessions = useMemo(
     () => Object.values(data).filter((s) => s.logged_at).length,
@@ -61,6 +91,12 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     return result;
   }, [data]);
 
+  async function handleCopyProgress() {
+    await copyText(progress.prompt);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
+  }
+
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
@@ -71,7 +107,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
         }
         center={
           <div className="flex flex-col items-center">
-            <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">History</span>
+            <span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Progress</span>
             <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{totalSessions} SESSIONS</span>
           </div>
         }
@@ -83,6 +119,29 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
+          <div className="w-full rounded-2xl bg-white/5 border border-white/5 p-5 mb-4">
+            <ProgressFrontierGraph frontier={progress.frontier} />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyProgress}
+              className={cn(
+                'mt-3 w-full rounded-xl border bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white active:scale-[0.98]',
+                copied && 'text-green-400 border-green-400/30 bg-green-400/10'
+              )}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span className="text-[11px] font-black uppercase tracking-widest font-mono">{copied ? 'Copied' : 'Copy Progress'}</span>
+            </Button>
+          </div>
+
+          <div className="w-full rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-1 mb-4">
+            <p className={cn('text-[10px] uppercase tracking-widest font-mono', progress.signal.tone)}>{progress.signal.label}</p>
+            <p className="text-sm text-zinc-300 font-mono">{progress.signal.summary}</p>
+            <p className="text-xs text-zinc-500 font-mono">{progress.signal.nextAction}</p>
+          </div>
+
           {/* Workout Patterns */}
           {patterns.sessionCount >= 3 && (
             <div className="w-full rounded-xl bg-zinc-900 border border-zinc-800 p-4 space-y-2 mb-4">
@@ -168,4 +227,25 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       )}
     </div>
   );
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall back for browsers that expose the API but reject without a secure context.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  textarea.remove();
 }
