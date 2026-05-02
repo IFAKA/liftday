@@ -2,6 +2,15 @@
 
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import {
+  Line,
+  LineChart,
+  ReferenceDot,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { getFirstSessionDate, loadUserProfile, loadWorkoutData } from '@/lib/storage';
@@ -31,6 +40,23 @@ interface ProgressSignal {
   summary: string;
   nextAction: string;
   tone: string;
+}
+
+interface ProgressFrontierPoint {
+  week: string;
+  actual: number | null;
+  projected: number | null;
+  frontier: number | null;
+}
+
+interface ProgressFrontier {
+  points: ProgressFrontierPoint[];
+  current: number | null;
+  projected: number | null;
+  frontier: number | null;
+  weeklyTrend: number;
+  frontierGap: number | null;
+  action: ProgressSignal;
 }
 
 export default function ProgramPage() {
@@ -151,7 +177,7 @@ export default function ProgramPage() {
             )
           ) : (
             <div className="flex flex-col h-full overflow-y-auto no-scrollbar pb-8">
-              {smvScore && <SmvScoreCard score={smvScore} progressSignal={progressSignal} />}
+              {smvScore && <SmvScoreCard score={smvScore} progressSignal={progressSignal} data={data} weeklyExercises={weeklyExercises} />}
               <WeeklySplit currentDate={new Date()} data={data} />
             </div>
           )}
@@ -180,8 +206,19 @@ function CopyButton({ label, active, onClick }: { label: string; active: boolean
   );
 }
 
-function SmvScoreCard({ score, progressSignal }: { score: RoutineScoreResult; progressSignal: ProgressSignal | null }) {
+function SmvScoreCard({
+  score,
+  progressSignal,
+  data,
+  weeklyExercises,
+}: {
+  score: RoutineScoreResult;
+  progressSignal: ProgressSignal | null;
+  data: WorkoutData;
+  weeklyExercises: Exercise[];
+}) {
   const verdict = getSmvVerdict(score);
+  const frontier = getProgressFrontier(data, weeklyExercises, score, progressSignal);
   const muscles = Object.entries(score.breakdown)
     .filter(([, v]) => v.sets > 0 || v.penalty > 0)
     .sort(([, a], [, b]) => b.net - a.net);
@@ -236,6 +273,8 @@ function SmvScoreCard({ score, progressSignal }: { score: RoutineScoreResult; pr
           </div>
         )}
 
+        <ProgressFrontierGraph frontier={frontier} />
+
         <div className="flex flex-col gap-2">
           {muscles.map(([muscle, v]) => {
             const max = score.gross > 0 ? score.gross : 1;
@@ -261,6 +300,83 @@ function SmvScoreCard({ score, progressSignal }: { score: RoutineScoreResult; pr
               </div>
             );
           })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressFrontierGraph({ frontier }: { frontier: ProgressFrontier }) {
+  const hasHistory = frontier.current !== null;
+  const currentLabel = frontier.current === null ? '--' : Math.round(frontier.current).toString();
+  const projectedLabel = frontier.projected === null ? '--' : Math.round(frontier.projected).toString();
+  const frontierLabel = frontier.frontier === null ? '--' : Math.round(frontier.frontier).toString();
+
+  return (
+    <div className="mb-4">
+      <div className="mb-3 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-fluid-label font-black uppercase tracking-widest text-white/40 font-mono">Progress Frontier</p>
+          <p className="text-fluid-label font-mono uppercase tracking-wide text-white/30">
+            {hasHistory ? `${formatSigned(frontier.weeklyTrend)} pts/week trend` : 'Log more sessions to project trend'}
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-right">
+          <MiniStat label="now" value={currentLabel} />
+          <MiniStat label="proj" value={projectedLabel} />
+          <MiniStat label="edge" value={frontierLabel} />
+        </div>
+      </div>
+
+      <div className="h-44 w-full rounded-xl border border-white/10 bg-black/40 px-1 py-3">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={frontier.points} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
+            <XAxis
+              dataKey="week"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fill: 'rgba(255,255,255,0.28)', fontSize: 10, fontFamily: 'monospace' }}
+            />
+            <YAxis
+              domain={['dataMin - 4', 'dataMax + 4']}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: 10, fontFamily: 'monospace' }}
+              width={34}
+            />
+            <Tooltip
+              cursor={{ stroke: 'rgba(255,255,255,0.12)' }}
+              contentStyle={{
+                background: '#050505',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 12,
+                color: '#fff',
+                fontSize: 12,
+              }}
+              labelStyle={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', textTransform: 'uppercase' }}
+              formatter={(value, name) => [typeof value === 'number' ? Math.round(value) : value, name]}
+            />
+            <Line type="monotone" dataKey="actual" name="Actual" stroke="#f8fafc" strokeWidth={2.5} dot={{ r: 3 }} connectNulls={false} />
+            <Line type="monotone" dataKey="projected" name="Projected" stroke="#38bdf8" strokeWidth={2} strokeDasharray="4 4" dot={false} connectNulls />
+            <Line type="monotone" dataKey="frontier" name="Efficient frontier" stroke="#4ade80" strokeWidth={2} strokeDasharray="1 5" dot={false} connectNulls />
+            {frontier.current !== null && (
+              <ReferenceDot x={frontier.points.find((point) => point.actual === frontier.current)?.week} y={frontier.current} r={4} fill="#f8fafc" stroke="#050505" />
+            )}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+        <div className="flex flex-col gap-1">
+          <span className={cn('text-fluid-label font-mono uppercase tracking-widest', frontier.action.tone)}>
+            {frontier.action.label}
+          </span>
+          <span className="text-fluid-label font-mono uppercase tracking-wide text-white/65">
+            {frontier.action.summary}
+          </span>
+          <span className="text-fluid-label font-mono uppercase tracking-wide text-white/30">
+            {frontier.action.nextAction}
+          </span>
         </div>
       </div>
     </div>
@@ -371,8 +487,182 @@ function scoreSessionSets(sets: SetEntry[]): number {
   return scores.reduce((sum, score) => sum + score, 0) / scores.length;
 }
 
+function getProgressFrontier(
+  data: WorkoutData,
+  exercises: Exercise[],
+  score: RoutineScoreResult,
+  progressSignal: ProgressSignal | null
+): ProgressFrontier {
+  const actual = getWeeklyProgressIndex(data, exercises);
+  const lastActual = actual[actual.length - 1];
+  const previousActual = actual[actual.length - 2];
+  const trend = lastActual && previousActual ? clamp(lastActual.actual - previousActual.actual, -4, 6) : 0;
+  const baselineTrend = Math.max(1.5, trend);
+  const frontierTrend = getFrontierTrend(score, progressSignal);
+  const current = lastActual?.actual ?? null;
+  const projectedEnd = current === null ? null : roundOneDecimal(current + baselineTrend * 4);
+  const frontierEnd = current === null ? null : roundOneDecimal(current + frontierTrend * 4);
+  const futurePoints = current === null
+    ? []
+    : Array.from({ length: 4 }, (_, index) => {
+      const weekNumber = actual.length + index + 1;
+      return {
+        week: `W${weekNumber}`,
+        actual: null,
+        projected: roundOneDecimal(current + baselineTrend * (index + 1)),
+        frontier: roundOneDecimal(current + frontierTrend * (index + 1)),
+      };
+    });
+
+  const points: ProgressFrontierPoint[] = [
+    ...actual.map((point, index) => ({
+      week: `W${index + 1}`,
+      actual: point.actual,
+      projected: index === actual.length - 1 ? point.actual : null,
+      frontier: index === actual.length - 1 ? point.actual : null,
+    })),
+    ...futurePoints,
+  ];
+
+  return {
+    points,
+    current,
+    projected: projectedEnd,
+    frontier: frontierEnd,
+    weeklyTrend: roundOneDecimal(trend),
+    frontierGap: projectedEnd === null || frontierEnd === null ? null : roundOneDecimal(frontierEnd - projectedEnd),
+    action: getFrontierAction(score, progressSignal, projectedEnd, frontierEnd),
+  };
+}
+
+function getWeeklyProgressIndex(data: WorkoutData, exercises: Exercise[]): { actual: number }[] {
+  const exerciseKeys = new Set(exercises.map((exercise) => exercise.key));
+  const baselineByExercise: Partial<Record<ExerciseKey, number>> = {};
+  const weekScores: Record<string, number[]> = {};
+
+  for (const [date, session] of Object.entries(data).sort(([a], [b]) => a.localeCompare(b))) {
+    if (!session.logged_at) continue;
+    const week = getProgressWeekKey(date);
+
+    for (const key of exerciseKeys) {
+      const sets = session[key];
+      if (!sets || sets.length === 0) continue;
+      const sessionScore = scoreSessionSets(sets);
+      if (sessionScore <= 0) continue;
+      baselineByExercise[key] ??= sessionScore;
+      const baseline = baselineByExercise[key];
+      if (!baseline) continue;
+      weekScores[week] ??= [];
+      weekScores[week].push((sessionScore / baseline) * 100);
+    }
+  }
+
+  return Object.keys(weekScores)
+    .sort()
+    .slice(-8)
+    .map((week) => ({
+      actual: roundOneDecimal(average(weekScores[week])),
+    }));
+}
+
+function getProgressWeekKey(dateKey: string): string {
+  const date = new Date(`${dateKey}T12:00:00`);
+  const yearStart = new Date(date.getFullYear(), 0, 1);
+  const days = Math.floor((date.getTime() - yearStart.getTime()) / 86400000);
+  return `${date.getFullYear()}-${String(Math.floor(days / 7) + 1).padStart(2, '0')}`;
+}
+
+function getFrontierTrend(score: RoutineScoreResult, progressSignal: ProgressSignal | null): number {
+  const recoveryLimited = progressSignal?.label === 'Recovery limit';
+  const underTarget = Object.values(score.breakdown).filter((entry) => entry && entry.sets < entry.target).length;
+  const costly = score.cost.longSessionSets > 0 || score.cost.equipmentChanges > 24 || score.cost.totalSets > 126;
+
+  if (recoveryLimited) return 1.2;
+  if (underTarget >= 4) return 3.2;
+  if (costly) return 2.2;
+  return 2.6;
+}
+
+function getFrontierAction(
+  score: RoutineScoreResult,
+  progressSignal: ProgressSignal | null,
+  projected: number | null,
+  frontier: number | null
+): ProgressSignal {
+  const priorityDeficit = getPriorityDeficit(score);
+
+  if (progressSignal?.label === 'Recovery limit') {
+    return {
+      label: 'Reach the line',
+      summary: 'Projection is recovery-limited.',
+      nextAction: 'Hold sets steady. Fix sleep, protein, and load jumps before adding work.',
+      tone: 'text-red-400',
+    };
+  }
+
+  if (priorityDeficit) {
+    return {
+      label: 'Reach the line',
+      summary: `${priorityDeficit.label} is below efficient volume.`,
+      nextAction: `Add quality work for ${priorityDeficit.label}, then reassess after 2 weeks.`,
+      tone: 'text-yellow-400',
+    };
+  }
+
+  if (projected !== null && frontier !== null && frontier - projected > 5) {
+    return {
+      label: 'Reach the line',
+      summary: 'Your trend is below the efficient frontier.',
+      nextAction: 'Keep exercise count fixed and progress load or reps on priority lifts first.',
+      tone: 'text-yellow-400',
+    };
+  }
+
+  return {
+    label: 'On frontier',
+    summary: 'Your routine score and progress trend are aligned.',
+    nextAction: 'Keep the current split. Add weight or reps only when form stays clean.',
+    tone: 'text-green-400',
+  };
+}
+
+function getPriorityDeficit(score: RoutineScoreResult): { label: string; deficit: number } | null {
+  const priority: [keyof RoutineScoreResult['breakdown'], string][] = [
+    ['lats', 'lats'],
+    ['side_delt', 'side delts'],
+    ['chest', 'chest'],
+    ['biceps', 'biceps'],
+    ['glutes', 'glutes'],
+  ];
+
+  return priority
+    .map(([muscle, label]) => {
+      const entry = score.breakdown[muscle];
+      return entry && entry.sets < entry.target ? { label, deficit: entry.target - entry.sets } : null;
+    })
+    .filter((entry): entry is { label: string; deficit: number } => entry !== null)
+    .sort((a, b) => b.deficit - a.deficit)[0] ?? null;
+}
+
+function average(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function roundOneDecimal(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 function formatOneDecimal(value: number): string {
   return value.toFixed(1);
+}
+
+function formatSigned(value: number): string {
+  return value > 0 ? `+${formatOneDecimal(value)}` : formatOneDecimal(value);
 }
 
 function formatSetCount(value: number): string {
@@ -525,6 +815,15 @@ function SmvMetric({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg bg-black/30 border border-white/5 px-3 py-2">
       <div className="text-fluid-label font-mono uppercase tracking-widest text-white/25">{label}</div>
       <div className="text-fluid-ui font-black tabular-nums text-white/70">{value}</div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-10">
+      <div className="text-[9px] font-mono uppercase tracking-widest text-white/25">{label}</div>
+      <div className="text-fluid-label font-black tabular-nums text-white/70">{value}</div>
     </div>
   );
 }
