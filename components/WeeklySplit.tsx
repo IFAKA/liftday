@@ -35,7 +35,7 @@ export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplit
   return (
     <div className={cn('flex flex-col bg-black', embedded ? '' : 'h-full overflow-hidden relative')}>
       <div className={cn(embedded ? '' : 'flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2')}>
-        <div className="flex flex-col gap-3">
+        <div className={cn('flex flex-col', embedded ? 'gap-2' : 'gap-3')}>
           {days.map((day) => {
             const workoutType = getWorkoutType(day);
             const dateKey = formatDateKey(day);
@@ -50,8 +50,9 @@ export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplit
               <Card
                 key={dateKey}
                 className={cn(
-                  'flex-row items-center justify-between px-6 py-6 gap-0 rounded-2xl transition-colors shadow-lg',
-                  isToday ? 'bg-white/20 ring-2 ring-white/30 border-transparent' : 'bg-white/10 border-white/5',
+                  'flex-row items-center justify-between gap-0 rounded-2xl transition-colors',
+                  embedded ? 'px-5 py-5 shadow-none' : 'px-6 py-6 shadow-lg',
+                  isToday ? 'bg-white/15 ring-2 ring-white/25 border-transparent' : embedded ? 'bg-white/5 border-white/5' : 'bg-white/10 border-white/5',
                 )}
               >
                 <div className="flex flex-col min-w-0 flex-1">
@@ -76,7 +77,7 @@ export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplit
                   ) : isMissed ? (
                     <Circle className="w-6 h-6 text-white/20" />
                   ) : isToday ? (
-                    <span className="text-fluid-label font-black text-white uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded animate-pulse">TODAY</span>
+                    <span className="text-fluid-label font-black text-white uppercase tracking-widest bg-white/15 px-2 py-0.5 rounded animate-pulse">TODAY</span>
                   ) : null}
                 </div>
               </Card>

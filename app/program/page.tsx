@@ -59,46 +59,43 @@ export default function ProgramPage() {
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program</span>}
       />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text">
+      <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-2">
         {routine && (
-          <ProgramBlock eyebrow="Plan" title="Routine">
-            <Link
-              href="/settings/routine"
-              className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-5 active:bg-white/10"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-fluid-label font-mono uppercase tracking-widest text-white/35">Routine</p>
-                <p className="mt-1 truncate text-fluid-ui font-black uppercase tracking-tight text-white">{routine.name}</p>
-                <p className="mt-2 text-fluid-label font-mono leading-relaxed text-white/35">{routine.description}</p>
-              </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-white/30" />
-            </Link>
-          </ProgramBlock>
+          <Link
+            href="/settings/routine"
+            className="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-5 py-5 active:bg-white/10 transition-all"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-fluid-label font-mono uppercase tracking-widest text-white/40">Routine</p>
+              <p className="mt-1 truncate text-fluid-ui font-black uppercase tracking-tight text-white">{routine.name}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-white/30" />
+          </Link>
         )}
 
-        <ProgramBlock eyebrow="Calendar" title="Weekly Split">
+        <ProgramBlock title="Week">
           <WeeklySplit currentDate={new Date()} data={data} embedded />
         </ProgramBlock>
 
-        <details className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-          <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
-            Details
+        <details className="rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-4">
+          <summary className="cursor-pointer text-fluid-label font-black uppercase tracking-widest text-white/40">
+            Training detail
           </summary>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-5">
             {smvScore && (
-              <ProgramBlock eyebrow="Efficiency" title="SMV Score">
+              <ProgramBlock title="Efficiency">
                 <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} />
               </ProgramBlock>
             )}
 
             {routine && (
-              <ProgramBlock eyebrow="Exercises" title="Routine Slots">
+              <ProgramBlock title="Exercises">
                 <RoutineSlots routine={routine} profile={profile} />
               </ProgramBlock>
             )}
 
             {smvScore && (
-              <ProgramBlock eyebrow="Diagnostics" title="Muscle Volume">
+              <ProgramBlock title="Muscle Volume">
                 <MuscleVolumeList score={smvScore} />
               </ProgramBlock>
             )}
@@ -237,12 +234,11 @@ function MuscleVolumeList({ score }: { score: RoutineScoreResult }) {
   );
 }
 
-function ProgramBlock({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
+function ProgramBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-5">
-      <div className="mb-2 flex items-baseline justify-between px-1">
-        <span className="text-[10px] font-black uppercase tracking-widest text-white/25 font-mono">{eyebrow}</span>
-        <span className="text-fluid-label font-black uppercase tracking-widest text-white/55">{title}</span>
+    <section>
+      <div className="mb-2 px-1">
+        <span className="text-fluid-label font-black uppercase tracking-widest text-white/40">{title}</span>
       </div>
       {children}
     </section>
