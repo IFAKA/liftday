@@ -175,11 +175,15 @@ export type MuscleGroup =
   | 'quads' | 'hamstrings' | 'glutes' | 'calves' | 'neck';
 
 // A tier chain defines a progression of exercises for one workout slot
+export type WorkoutCadence = 'first' | 'second';
+
 export interface TierChain {
   slotId: string;
   workoutType: Exclude<WorkoutType, 'rest'>;
   fixed: boolean; // fixed = reps-only, no tier to advance
   priority: TrainingPriority;
+  /** Limits a slot to the first or second occurrence of that workout type in the weekly split. */
+  cadence?: WorkoutCadence;
   exercises: ExerciseKey[]; // tier 0 → 1 → 2
 }
 

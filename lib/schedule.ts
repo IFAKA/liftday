@@ -6,10 +6,31 @@ const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['push', 'pull', 'legs'
 
 /** Returns the workout type for a given date using the routine's schedule (or the default 6-day PPL). */
 export function getWorkoutType(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[]): WorkoutType {
+  const scheduleIndex = getWorkoutScheduleIndex(date, schedule);
+  if (scheduleIndex === null) return 'rest';
+  return (schedule ?? DEFAULT_SCHEDULE)[scheduleIndex];
+}
+
+export function getWorkoutScheduleIndex(
+  date: Date,
+  schedule?: Exclude<WorkoutType, 'rest'>[]
+): number | null {
   const day = getDay(date); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-  if (day === 0) return 'rest'; // Sunday is always rest
+  if (day === 0) return null; // Sunday is always rest
   const cycle = schedule ?? DEFAULT_SCHEDULE;
-  return cycle[(day - 1) % cycle.length];
+  return (day - 1) % cycle.length;
+}
+
+export function getWorkoutOccurrenceIndex(
+  date: Date,
+  schedule?: Exclude<WorkoutType, 'rest'>[]
+): number | null {
+  const scheduleIndex = getWorkoutScheduleIndex(date, schedule);
+  if (scheduleIndex === null) return null;
+
+  const cycle = schedule ?? DEFAULT_SCHEDULE;
+  const workoutType = cycle[scheduleIndex];
+  return cycle.slice(0, scheduleIndex).filter((wt) => wt === workoutType).length;
 }
 
 export function isTrainingDay(date: Date): boolean {

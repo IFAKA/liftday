@@ -1,8 +1,8 @@
-import { RoutineConfig, MuscleGroup, TierMap, ExerciseKey } from './types';
+import { RoutineConfig, MuscleGroup, TierMap, ExerciseKey, WorkoutType } from './types';
 import { EXERCISES } from './constants';
 import { getExerciseMuscleContribution, scoreWeeklyVolume, RoutineScoreResult } from './smv';
 import { EquipmentKey, getRequiredEquipment } from './equipment';
-import { resolveExerciseKeyWithEquipment } from './tiers';
+import { getChainsForWorkout, resolveExerciseKeyWithEquipment } from './tiers';
 
 export interface RoutineScoreOptions {
   tiers?: TierMap;
@@ -33,28 +33,28 @@ export function getWeeklyVolume(
   routine: RoutineConfig,
   options: RoutineScoreOptions = {}
 ): Partial<Record<MuscleGroup, number>> {
-  const sessionsPerType: Record<string, number> = {};
-  for (const wt of routine.schedule) {
-    sessionsPerType[wt] = (sessionsPerType[wt] ?? 0) + 1;
-  }
-
   const setsPerExercise = options.setsPerExercise ?? 3;
   const volume: Partial<Record<MuscleGroup, number>> = {};
-  for (const chain of routine.tierChains) {
-    const key = resolveExerciseKeyWithEquipment(
-      chain,
-      options.tiers ?? {},
-      options.unavailableEquipment ?? [],
-      routine.id === 'gym'
-    );
-    const ex = EXERCISES.find((e) => e.key === key);
-    if (!ex) continue;
-    const sessions = sessionsPerType[chain.workoutType] ?? 0;
-    const sets = sessions * setsPerExercise;
-    const contribution = getExerciseMuscleContribution(ex);
 
-    for (const [muscle, multiplier] of Object.entries(contribution) as [MuscleGroup, number][]) {
-      volume[muscle] = (volume[muscle] ?? 0) + sets * multiplier;
+  const occurrences: Partial<Record<Exclude<WorkoutType, 'rest'>, number>> = {};
+  for (const wt of routine.schedule) {
+    const occurrenceIndex = occurrences[wt] ?? 0;
+    occurrences[wt] = occurrenceIndex + 1;
+
+    for (const chain of getChainsForWorkout(wt, routine.id, occurrenceIndex)) {
+      const key = resolveExerciseKeyWithEquipment(
+        chain,
+        options.tiers ?? {},
+        options.unavailableEquipment ?? [],
+        routine.id === 'gym'
+      );
+      const ex = EXERCISES.find((e) => e.key === key);
+      if (!ex) continue;
+      const contribution = getExerciseMuscleContribution(ex);
+
+      for (const [muscle, multiplier] of Object.entries(contribution) as [MuscleGroup, number][]) {
+        volume[muscle] = (volume[muscle] ?? 0) + setsPerExercise * multiplier;
+      }
     }
   }
 
@@ -66,28 +66,23 @@ export function scoreRoutine(
   options: RoutineScoreOptions = {}
 ): RoutineScoreResult {
   const setsPerExercise = options.setsPerExercise ?? 3;
-  const resolvedByWorkout: Record<string, ExerciseKey[]> = {};
+  const occurrences: Partial<Record<Exclude<WorkoutType, 'rest'>, number>> = {};
+  const resolvedBySession = routine.schedule.map((wt) => {
+    const occurrenceIndex = occurrences[wt] ?? 0;
+    occurrences[wt] = occurrenceIndex + 1;
 
-  for (const wt of routine.schedule) {
-    if (!resolvedByWorkout[wt]) {
-      resolvedByWorkout[wt] = routine.tierChains
-        .filter((chain) => chain.workoutType === wt)
-        .map((chain) =>
-          resolveExerciseKeyWithEquipment(
-            chain,
-            options.tiers ?? {},
-            options.unavailableEquipment ?? [],
-            routine.id === 'gym'
-          )
-        );
-    }
-  }
+    return getChainsForWorkout(wt, routine.id, occurrenceIndex).map((chain) =>
+      resolveExerciseKeyWithEquipment(
+        chain,
+        options.tiers ?? {},
+        options.unavailableEquipment ?? [],
+        routine.id === 'gym'
+      )
+    );
+  });
 
-  const sessionSetCounts = routine.schedule.map((wt) => (resolvedByWorkout[wt]?.length ?? 0) * setsPerExercise);
-  const equipmentChanges = routine.schedule.reduce(
-    (sum, wt) => sum + getEquipmentChanges(resolvedByWorkout[wt] ?? []),
-    0
-  );
+  const sessionSetCounts = resolvedBySession.map((keys) => keys.length * setsPerExercise);
+  const equipmentChanges = resolvedBySession.reduce((sum, keys) => sum + getEquipmentChanges(keys), 0);
   const totalSets = sessionSetCounts.reduce((sum, sets) => sum + sets, 0);
 
   return scoreWeeklyVolume(getWeeklyVolume(routine, options), {

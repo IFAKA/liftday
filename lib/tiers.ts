@@ -7,10 +7,18 @@ import { getExerciseSMVScore } from './smv';
 /** Returns the ordered list of chains for a given workout type and routine. */
 export function getChainsForWorkout(
   wt: Exclude<WorkoutType, 'rest'>,
-  routineId = 'calisthenics'
+  routineId = 'calisthenics',
+  occurrenceIndex?: number
 ): TierChain[] {
   const routine = ROUTINES.find((r) => r.id === routineId) ?? ROUTINES[0];
-  return routine.tierChains.filter((c) => c.workoutType === wt);
+  return routine.tierChains.filter((c) => (
+    c.workoutType === wt && isChainActiveForOccurrence(c, occurrenceIndex)
+  ));
+}
+
+function isChainActiveForOccurrence(chain: TierChain, occurrenceIndex?: number): boolean {
+  if (!chain.cadence || occurrenceIndex === undefined) return true;
+  return chain.cadence === 'first' ? occurrenceIndex % 2 === 0 : occurrenceIndex % 2 === 1;
 }
 
 /**

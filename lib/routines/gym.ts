@@ -34,6 +34,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'push',
       fixed: true,
       priority: 'critical',
+      cadence: 'first',
       exercises: ['db_lateral_raise'],
     },
     {
@@ -48,6 +49,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'push',
       fixed: true,
       priority: 'critical',
+      cadence: 'second',
       exercises: ['cable_lateral_raise'],
     },
     {
@@ -111,18 +113,18 @@ export const gymRoutine: RoutineConfig = {
       exercises: ['barbell_squat', 'front_squat'],
     },
     {
-      slotId: 'gym_legs_press',
-      workoutType: 'legs',
-      fixed: true,
-      priority: 'high',
-      exercises: ['leg_press'],
-    },
-    {
       slotId: 'gym_legs_hinge',
       workoutType: 'legs',
       fixed: false,
       priority: 'critical',
       exercises: ['romanian_deadlift', 'barbell_deadlift', 'sumo_deadlift'],
+    },
+    {
+      slotId: 'gym_legs_press',
+      workoutType: 'legs',
+      fixed: true,
+      priority: 'high',
+      exercises: ['leg_press'],
     },
     {
       slotId: 'gym_legs_glute',

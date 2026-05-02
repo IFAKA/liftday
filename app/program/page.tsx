@@ -182,7 +182,9 @@ function RoutineSlots({ routine, profile }: { routine: RoutineConfig; profile: U
                   <div key={chain.slotId} className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-fluid-label font-black uppercase tracking-wide text-white/70">{active}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-white/25">{chain.priority}</p>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-white/25">
+                        {[chain.priority, formatCadence(chain.cadence)].filter(Boolean).join(' - ')}
+                      </p>
                     </div>
                     <span className="shrink-0 text-fluid-label font-mono tabular-nums text-white/30">
                       T{tiers[chain.slotId] ?? 0}
@@ -306,7 +308,8 @@ function formatRoutineForPrompt(routine: RoutineConfig | null, profile: UserProf
       const activeKey = resolveExerciseKey(chain, tiers);
       const active = getExerciseName(activeKey);
       const options = chain.exercises.map(getExerciseName).join(' -> ');
-      lines.push(`- ${chain.slotId}: ${active}; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}; options ${options}`);
+      const cadence = chain.cadence ? `; ${formatCadence(chain.cadence)}` : '';
+      lines.push(`- ${chain.slotId}: ${active}; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}${cadence}; options ${options}`);
     }
   }
 
@@ -336,6 +339,12 @@ async function copyText(text: string): Promise<void> {
 
 function dayName(index: number): string {
   return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index] ?? `Day ${index + 1}`;
+}
+
+function formatCadence(cadence?: RoutineConfig['tierChains'][number]['cadence']): string {
+  if (cadence === 'first') return 'first weekly';
+  if (cadence === 'second') return 'second weekly';
+  return '';
 }
 
 function getExerciseName(key: ExerciseKey): string {
