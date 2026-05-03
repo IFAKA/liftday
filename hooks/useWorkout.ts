@@ -10,6 +10,7 @@ import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
 import { getChainsForWorkout, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
 import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
+import { traceLiftDay } from '@/lib/debug-trace';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -293,7 +294,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setCurrentSet(0);
     setSessionReps({});
     setState('exercising');
-  }, []);
+    traceLiftDay('workout.start', {
+      dateKey,
+      workoutType,
+      exerciseCount: exercises.length,
+      firstExercise: exercises[0]?.name ?? null,
+    });
+  }, [dateKey, exercises, workoutType]);
 
   const logSet = useCallback((reps: number, weight?: number) => {
     if (!currentExercise) return;
@@ -324,8 +331,15 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const skipTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (currentSet + 1 < setsPerExercise) playSkip();
+    traceLiftDay('workout.rest.skip', {
+      exerciseIndex,
+      exerciseName: currentExercise?.name ?? null,
+      currentSet,
+      setsPerExercise,
+      totalExercises: exercises.length,
+    });
     advanceAfterRest();
-  }, [advanceAfterRest, currentSet, setsPerExercise]);
+  }, [advanceAfterRest, currentExercise?.name, currentSet, exerciseIndex, exercises.length, setsPerExercise]);
 
   const quitWorkout = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -394,6 +408,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const requeueCurrent = useCallback(() => {
     const ex = exercises[exerciseIndex];
     if (!ex) return;
+    traceLiftDay('workout.exercise.requeue', {
+      exerciseIndex,
+      exerciseName: ex.name,
+      derivedExerciseCount: derivedExercises.length,
+      totalExercises: exercises.length,
+      chainIndex: chainIndexMap[exerciseIndex] ?? null,
+    });
     if (exerciseIndex < derivedExercises.length) {
       const chainIdx = chainIndexMap[exerciseIndex];
       setSkippedChainIndices((prev) => new Set([...prev, chainIdx]));

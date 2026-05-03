@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { MOBILITY_EXERCISES, MOBILITY_DONE_KEY } from '@/lib/constants';
 import { formatDateKey } from '@/lib/workout-utils';
 import { unlockAudio, playStart, playCountdownTick, playNextExercise, playSkip, playMobilityComplete } from '@/lib/audio';
+import { traceLiftDay } from '@/lib/debug-trace';
 
 function isMobilityDoneToday(): boolean {
   try {
@@ -34,6 +35,58 @@ export function useMobility() {
 
   const exercise = MOBILITY_EXERCISES[exerciseIndex];
 
+  const completeMobility = useCallback((reason: string) => {
+    traceLiftDay('mobility.complete', { reason, exerciseIndex, exerciseName: exercise?.name ?? null });
+    setIsActive(false);
+    setIsComplete(true);
+    saveMobilityDone();
+    playMobilityComplete();
+  }, [exercise?.name, exerciseIndex]);
+
+  const advanceMobility = useCallback((reason: string) => {
+    traceLiftDay('mobility.advance.request', {
+      reason,
+      exerciseIndex,
+      exerciseName: exercise?.name ?? null,
+      side,
+      timer,
+    });
+
+    if (exercise?.sides && side === 'left') {
+      playNextExercise();
+      setSide('right');
+      setTimer(exercise.duration);
+      traceLiftDay('mobility.advance.side', {
+        reason,
+        exerciseIndex,
+        exerciseName: exercise.name,
+        nextSide: 'right',
+        nextTimer: exercise.duration,
+      });
+      return;
+    }
+
+    const next = exerciseIndex + 1;
+    if (next < MOBILITY_EXERCISES.length) {
+      playNextExercise();
+      const nextEx = MOBILITY_EXERCISES[next];
+      setExerciseIndex(next);
+      setTimer(nextEx.duration);
+      setSide(nextEx.sides ? 'left' : null);
+      traceLiftDay('mobility.advance.exercise', {
+        reason,
+        fromIndex: exerciseIndex,
+        toIndex: next,
+        nextExerciseName: nextEx.name,
+        nextSide: nextEx.sides ? 'left' : null,
+        nextTimer: nextEx.duration,
+      });
+      return;
+    }
+
+    completeMobility(reason);
+  }, [completeMobility, exercise, exerciseIndex, side, timer]);
+
   const startMobility = useCallback(() => {
     unlockAudio();
     playStart();
@@ -43,6 +96,12 @@ export function useMobility() {
     setTimer(first.duration);
     setSide(first.sides ? 'left' : null);
     setIsActive(true);
+    traceLiftDay('mobility.start', {
+      exerciseIndex: 0,
+      exerciseName: first.name,
+      timer: first.duration,
+      side: first.sides ? 'left' : null,
+    });
   }, []);
 
   const pause = useCallback(() => setIsPaused(true), []);
@@ -68,28 +127,10 @@ export function useMobility() {
 
     /* eslint-disable react-hooks/set-state-in-effect */
     if (isActive && timer === 0) {
-      if (exercise?.sides && side === 'left') {
-        playNextExercise();
-        setSide('right');
-        setTimer(exercise.duration);
-      } else {
-        const next = exerciseIndex + 1;
-        if (next < MOBILITY_EXERCISES.length) {
-          playNextExercise();
-          setExerciseIndex(next);
-          const nextEx = MOBILITY_EXERCISES[next];
-          setTimer(nextEx.duration);
-          setSide(nextEx.sides ? 'left' : null);
-        } else {
-          setIsActive(false);
-          setIsComplete(true);
-          saveMobilityDone();
-          playMobilityComplete();
-        }
-      }
+      advanceMobility('timer');
     }
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [isActive, isPaused, timer, exercise, exerciseIndex, side]);
+  }, [advanceMobility, isActive, isPaused, timer, exerciseIndex, side]);
 
   const quit = useCallback(() => {
     if (timerRef.current) {
@@ -100,12 +141,17 @@ export function useMobility() {
     setExerciseIndex(0);
     setTimer(0);
     setSide(null);
-  }, []);
+    traceLiftDay('mobility.quit', { exerciseIndex, exerciseName: exercise?.name ?? null, side, timer });
+  }, [exercise?.name, exerciseIndex, side, timer]);
 
   const skip = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     playSkip();
-    setTimer(0);
-  }, []);
+    advanceMobility('skip');
+  }, [advanceMobility]);
 
   return {
     exercise,
