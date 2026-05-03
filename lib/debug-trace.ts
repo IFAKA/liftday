@@ -2,6 +2,9 @@
 
 type TracePayload = Record<string, unknown>;
 
+export const DEBUG_TRACE_KEY = 'liftday_debug_trace';
+export const DEBUG_TRACE_CHANGE_EVENT = 'liftday-debug-trace-change';
+
 export interface LiftDayTraceEntry {
   id: number;
   at: string;
@@ -29,7 +32,7 @@ function shouldLogToConsole(): boolean {
   if (typeof window === 'undefined') return false;
 
   try {
-    return window.localStorage.getItem('liftday_debug_trace') === '1';
+    return window.localStorage.getItem(DEBUG_TRACE_KEY) === '1';
   } catch {
     return false;
   }
@@ -69,4 +72,30 @@ export function traceLiftDay(event: string, payload?: TracePayload): void {
   if (shouldLogToConsole()) {
     console.debug('[LiftDay trace]', entry);
   }
+}
+
+export function isDebugTraceEnabled(): boolean {
+  return shouldLogToConsole();
+}
+
+export function setDebugTraceEnabled(enabled: boolean): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (enabled) {
+      window.localStorage.setItem(DEBUG_TRACE_KEY, '1');
+    } else {
+      window.localStorage.removeItem(DEBUG_TRACE_KEY);
+    }
+    window.dispatchEvent(new CustomEvent(DEBUG_TRACE_CHANGE_EVENT, { detail: { enabled } }));
+  } catch {
+    // ignore
+  }
+}
+
+export function getLiftDayTraceText(): string {
+  if (typeof window === 'undefined') return '[]';
+
+  ensureTraceApi();
+  return window.__liftdayTrace?.text() ?? '[]';
 }

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { WakeLockProvider } from '@/components/WakeLockProvider';
 import { BottomNav } from '@/components/BottomNav';
+import { DebugTraceButton } from '@/components/DebugTraceButton';
 import { NavProvider } from '@/lib/nav-context';
 import { MotionConfig } from 'framer-motion';
 
@@ -53,6 +54,7 @@ export default function RootLayout({
               <div className="flex-1 min-h-0 overflow-hidden">
                 <WakeLockProvider>{children}</WakeLockProvider>
               </div>
+              <DebugTraceButton />
               <BottomNav />
             </div>
           </NavProvider>
