@@ -7,7 +7,7 @@ import { loadUserProfile } from '@/lib/storage';
 import { REST_DURATION } from '@/lib/constants';
 import { getRoutine } from '@/lib/routines';
 import { TopBar } from '@/components/TopBar';
-import { WatchListItem } from '@/components/WatchSurface';
+import { WatchListItem, WatchSwitchItem } from '@/components/WatchSurface';
 import { isDebugTraceEnabled, setDebugTraceEnabled } from '@/lib/debug-trace';
 
 export default function SettingsPage() {
@@ -34,12 +34,9 @@ export default function SettingsPage() {
   const secs = restDuration % 60;
   const restDisplay = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
 
-  function toggleDebugMode() {
-    setDebugEnabled((prev) => {
-      const next = !prev;
-      setDebugTraceEnabled(next);
-      return next;
-    });
+  function setDebugMode(next: boolean) {
+    setDebugTraceEnabled(next);
+    setDebugEnabled(next);
   }
 
   return (
@@ -73,21 +70,14 @@ export default function SettingsPage() {
           title="Phone to laptop"
         />
 
-        <WatchListItem
-          onClick={toggleDebugMode}
+        <WatchSwitchItem
+          id="debug-trace-mode"
           icon={Bug}
+          checked={debugEnabled}
+          onCheckedChange={setDebugMode}
           label="Debug"
           title="Trace mode"
           subtitle="Show a small copy button for user-flow traces."
-          trailing={
-            <span
-              className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase ${
-                debugEnabled ? 'bg-green-500/15 text-green-400' : 'bg-white/5 text-white/35'
-              }`}
-            >
-              {debugEnabled ? 'On' : 'Off'}
-            </span>
-          }
         />
       </div>
     </div>

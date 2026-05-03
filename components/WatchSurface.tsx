@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
 interface WatchSectionProps {
@@ -116,5 +117,61 @@ export function WatchListItem({
     <Button type="button" variant="ghost" onClick={onClick} className={cn(classes, 'flex items-center gap-4')}>
       {content}
     </Button>
+  );
+}
+
+interface WatchSwitchItemProps {
+  id: string;
+  label?: string;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  icon?: LucideIcon;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+export function WatchSwitchItem({
+  id,
+  label,
+  title,
+  subtitle,
+  icon: Icon,
+  checked,
+  onCheckedChange,
+  disabled = false,
+  className,
+}: WatchSwitchItemProps) {
+  return (
+    <div
+      className={cn(
+        'flex h-auto w-full items-center gap-4 rounded-xl border border-white/5 bg-white/5 px-4 py-4 text-left transition-all',
+        disabled ? 'opacity-50' : 'active:bg-white/10',
+        className
+      )}
+    >
+      <label
+        htmlFor={id}
+        className={cn(
+          'flex min-w-0 flex-1 items-center gap-4',
+          disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+        )}
+      >
+        {Icon && <Icon className="h-5 w-5 shrink-0 text-white/45" />}
+        <div className="min-w-0 flex-1">
+          {label && <p className="text-fluid-label font-mono uppercase text-white/40">{label}</p>}
+          <p className="mt-1 truncate text-fluid-ui font-black uppercase text-white">{title}</p>
+          {subtitle && <p className="mt-1 line-clamp-2 text-fluid-label text-white/40">{subtitle}</p>}
+        </div>
+      </label>
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        className="h-7 w-12 data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-white/15 [&_[data-slot=switch-thumb]]:size-6 [&_[data-slot=switch-thumb]]:data-[state=checked]:translate-x-5"
+      />
+    </div>
   );
 }
