@@ -106,7 +106,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const setsPerExercise = getSetsForWeek(weekNumber, userProfile?.setsPerExercise);
 
   const { workoutType, workoutOccurrenceIndex, derivedPlan } = useMemo(() => {
-    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
     const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
     const wt = getWorkoutType(date, routine.schedule);
     if (wt === 'rest') {
@@ -225,7 +225,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     // Evaluate tier progress for non-fixed chains
     if (workoutType !== 'rest' && userProfileRef.current) {
-      const baseRoutine = getRoutine(userProfileRef.current.activeRoutine ?? 'calisthenics');
+      const baseRoutine = getRoutine(userProfileRef.current.activeRoutine ?? 'gym');
       const routine = optimizeRoutineForFrontier(baseRoutine, userProfileRef.current, data, setsPerExercise).routine;
       const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
       const oldProfile = userProfileRef.current;
@@ -405,7 +405,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return false;
     const newUnavailable = [...new Set([...unavailableEquipment, ...required])];
-    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
     const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
     if (workoutType === 'rest') return false;
     const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);

@@ -18,10 +18,10 @@ export default function SettingsPage() {
   });
   const [{ restDuration, heightCm, weightKg, routineName }] = useState(() => {
     if (typeof window === 'undefined') {
-      return { restDuration: REST_DURATION, heightCm: 172, weightKg: 66.6, routineName: 'Calisthenics' };
+      return { restDuration: REST_DURATION, heightCm: 172, weightKg: 66.6, routineName: 'Gym' };
     }
     const profile = loadUserProfile();
-    const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
+    const routine = getRoutine(profile?.activeRoutine ?? 'gym');
     return {
       restDuration: profile?.restDuration ?? REST_DURATION,
       heightCm: profile?.heightCm ?? 172,

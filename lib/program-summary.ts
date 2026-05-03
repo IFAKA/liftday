@@ -35,7 +35,7 @@ export function getProgramSummary(
   data: WorkoutData,
   profile: UserProfile | null,
   today: Date = new Date(),
-  routineId = profile?.activeRoutine ?? 'calisthenics'
+  routineId = profile?.activeRoutine ?? 'gym'
 ): ProgramSummary {
   const baseRoutine = getRoutine(routineId);
   const weekNumber = getWeekNumber(getFirstSessionDate(), today);

@@ -1,5 +1,5 @@
 import { TierMap, WorkoutType, ExerciseKey, TierChain } from './types';
-import { ROUTINES } from './routines';
+import { getRoutine } from './routines';
 import { EquipmentKey, canPerformExercise, getRequiredEquipment } from './equipment';
 import { EXERCISES } from './constants';
 import { getExerciseSMVScore } from './smv';
@@ -7,11 +7,10 @@ import { getExerciseSMVScore } from './smv';
 /** Returns the ordered list of chains for a given workout type and routine. */
 export function getChainsForWorkout(
   wt: Exclude<WorkoutType, 'rest'>,
-  routineId = 'calisthenics',
+  routineId = 'gym',
   occurrenceIndex?: number
 ): TierChain[] {
-  const routine = ROUTINES.find((r) => r.id === routineId) ?? ROUTINES[0];
-  return getChainsForRoutine(routine, wt, occurrenceIndex);
+  return getChainsForRoutine(getRoutine(routineId), wt, occurrenceIndex);
 }
 
 export function getChainsForRoutine(

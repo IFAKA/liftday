@@ -17,8 +17,8 @@ const ICONS = {
 export default function RoutineSettingPage() {
   const router = useRouter();
   const [activeRoutineId, setActiveRoutineId] = useState(() => {
-    if (typeof window === 'undefined') return 'calisthenics';
-    return loadUserProfile()?.activeRoutine ?? 'calisthenics';
+    if (typeof window === 'undefined') return 'gym';
+    return loadUserProfile()?.activeRoutine ?? 'gym';
   });
 
   function handleSelect(id: string) {
