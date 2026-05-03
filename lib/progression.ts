@@ -1,6 +1,7 @@
 import { WorkoutData, ExerciseKey, TrainingPriority, UserProfile, TierChain, SetEntry, setEntryReps, setEntryWeight } from './types';
 import { getPreviousExerciseSessionDate, getSetsForWeek } from './workout-utils';
 import { loadUserProfile } from './storage';
+import { getProgressionPath } from './tiers';
 
 const MIN_REPS = 6;
 const MAX_REPS = 20;
@@ -79,7 +80,7 @@ export function evaluateTierProgress(
 
   const sessionsToAdvance = getSessionsToAdvance(chain.priority);
   const currentTier = profile.tiers[slotId] ?? 0;
-  const maxTier = chain.exercises.length - 1;
+  const maxTier = getProgressionPath(chain).length - 1;
 
   const existing = profile.tierProgress[slotId];
   let consecutiveMaxSessions = existing?.consecutiveMaxSessions ?? 0;

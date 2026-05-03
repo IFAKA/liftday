@@ -1,6 +1,6 @@
 import { EXERCISES } from './constants';
 import { getChainSetCount } from './routine-plan';
-import { getChainsForRoutine, resolveExerciseKey } from './tiers';
+import { getChainsForRoutine, getProgressionPath, resolveExerciseKey } from './tiers';
 import { ExerciseKey, RoutineConfig, UserProfile } from './types';
 
 export function formatRoutineForCopy(
@@ -32,9 +32,12 @@ export function formatRoutineForCopy(
     for (const chain of chains) {
       const activeKey = resolveExerciseKey(chain, tiers);
       const active = getExerciseName(activeKey);
-      const options = chain.exercises.map(getExerciseName).join(' -> ');
+      const progression = getProgressionPath(chain).map(getExerciseName).join(' -> ');
+      const alternatives = chain.alternatives?.length
+        ? `; alternatives ${chain.alternatives.map(getExerciseName).join(', ')}`
+        : '';
       const cadence = chain.cadence ? `; ${formatCadence(chain.cadence)}` : '';
-      lines.push(`- ${chain.slotId}: ${active}; ${getChainSetCount(chain, fallbackSets)} sets; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}${cadence}; options ${options}`);
+      lines.push(`- ${chain.slotId}: ${active}; ${getChainSetCount(chain, fallbackSets)} sets; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}${cadence}; progression ${progression}${alternatives}`);
     }
   }
 

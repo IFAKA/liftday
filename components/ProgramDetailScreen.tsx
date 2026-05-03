@@ -8,7 +8,7 @@ import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
 import { getRoutine } from '@/lib/routines';
 import { RoutineScoreResult } from '@/lib/smv';
-import { getChainsForRoutine, resolveExerciseKey } from '@/lib/tiers';
+import { getChainsForRoutine, getProgressionPath, resolveExerciseKey } from '@/lib/tiers';
 import { RoutineConfig, UserProfile } from '@/lib/types';
 import { getFirstSessionDate, loadUserProfile, loadWorkoutData } from '@/lib/storage';
 import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
@@ -189,6 +189,7 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
               {chains.map((chain) => {
                 const activeKey = resolveExerciseKey(chain, tiers);
                 const active = getExerciseName(activeKey);
+                const progression = getProgressionPath(chain).filter((key) => key !== activeKey);
                 return (
                   <div key={chain.slotId} className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -196,6 +197,11 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                       <p className="text-xs font-mono uppercase text-white/25">
                         {[chain.priority, formatCadence(chain.cadence)].filter(Boolean).join(' - ')}
                       </p>
+                      {progression.length > 0 && (
+                        <p className="truncate text-xs font-mono uppercase text-white/20">
+                          Next {getExerciseName(progression[0])}
+                        </p>
+                      )}
                     </div>
                     <span className="shrink-0 text-fluid-label font-mono tabular-nums text-white/30">
                       {getChainSetCount(chain, fallbackSets)}x

@@ -186,6 +186,12 @@ export interface TierChain {
   sets?: number;
   /** Limits a slot to the first or second occurrence of that workout type in the weekly split. */
   cadence?: WorkoutCadence;
+  /** Active exercise selected by the deterministic optimizer for this slot. */
+  selectedExercise?: ExerciseKey;
+  /** Ordered progression path; tiers advance through this list when the optimizer allows it. */
+  progression?: ExerciseKey[];
+  /** Same-slot substitutes used for equipment/workflow fallbacks, not hidden routine choices. */
+  alternatives?: ExerciseKey[];
   exercises: ExerciseKey[]; // tier 0 → 1 → 2
 }
 

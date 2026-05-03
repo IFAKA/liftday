@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { ProgressFrontierGraph } from '@/components/ProgressFrontierGraph';
 import { TopBar } from '@/components/TopBar';
 import { EXERCISES } from '@/lib/constants';
 import { formatProgressForPrompt, getProgressDiagnosis, getProgressFrontier, getProgressSignal } from '@/lib/progress-insights';
-import { scoreRoutine } from '@/lib/routine-score';
+import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { getRoutine } from '@/lib/routines';
 import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
 import { resolveExerciseKey } from '@/lib/tiers';
@@ -20,22 +20,31 @@ import { WatchPanel } from './WatchSurface';
 export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   const patterns = useMemo(() => getWorkoutPatterns(data), [data]);
   const progress = useMemo(() => {
+    if (!mounted) return getDefaultProgress(data);
     const today = new Date();
     const profile = loadUserProfile();
-    const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
+    const baseRoutine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
     const weekNumber = getWeekNumber(getFirstSessionDate(), today);
     const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
     const tiers = profile?.tiers ?? {};
+    const optimizer = optimizeRoutineForFrontier(baseRoutine, profile, data, setsPerExercise);
+    const routine = optimizer.routine;
     const weeklyExercises = routine.tierChains
       .map((chain) => {
         const key = resolveExerciseKey(chain, tiers);
         return EXERCISES.find((e) => e.key === key)!;
       })
       .filter(Boolean);
-    const score = scoreRoutine(routine, { tiers, setsPerExercise });
+    const score = optimizer.score;
     const signal = getProgressSignal(data, weeklyExercises);
     const diagnosis = getProgressDiagnosis(data, weeklyExercises, score);
 
@@ -44,7 +53,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
       frontier: getProgressFrontier(data, weeklyExercises, score, signal),
       prompt: formatProgressForPrompt(data, weeklyExercises, signal),
     };
-  }, [data]);
+  }, [data, mounted]);
 
   async function handleCopyProgress() {
     await copyText(progress.prompt);
@@ -110,6 +119,21 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
       </div>
     </div>
   );
+}
+
+function getDefaultProgress(data: WorkoutData) {
+  const routine = getRoutine('gym');
+  const weeklyExercises = routine.tierChains
+    .map((chain) => EXERCISES.find((e) => e.key === resolveExerciseKey(chain, {}))!)
+    .filter(Boolean);
+  const score = optimizeRoutineForFrontier(routine, null, data, 3).score;
+  const signal = getProgressSignal(data, weeklyExercises);
+
+  return {
+    diagnosis: getProgressDiagnosis(data, weeklyExercises, score),
+    frontier: getProgressFrontier(data, weeklyExercises, score, signal),
+    prompt: formatProgressForPrompt(data, weeklyExercises, signal),
+  };
 }
 
 async function copyText(text: string): Promise<void> {

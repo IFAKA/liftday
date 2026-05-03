@@ -1,6 +1,6 @@
 import { EXERCISES } from './constants';
 import { getRequiredEquipment } from './equipment';
-import { getChainsForRoutine } from './tiers';
+import { getChainsForRoutine, getSelectedExerciseKey } from './tiers';
 import { getExerciseMuscleContribution, scoreWeeklyVolume, RoutineScoreResult, MUSCLE_MIN_WEEKLY_SETS } from './smv';
 import { scoreSessionSets } from './progress-insights';
 import {
@@ -97,8 +97,8 @@ export function optimizeRoutineForFrontier(
     candidate,
     sets: candidate.minSets,
   }));
-  const optimizedPlan = enforceMuscleFloors(greedyOptimize(basePlan, data, fallbackSets, sessionSetCap), data, fallbackSets, sessionSetCap);
-  const optimizedRoutine = buildRoutineFromPlan(routine, optimizedPlan);
+  const optimizedPlan = enforceMuscleFloors(greedyOptimize(basePlan, data, profile, fallbackSets, sessionSetCap), data, profile, fallbackSets, sessionSetCap);
+  const optimizedRoutine = buildRoutineFromPlan(routine, optimizedPlan, profile);
   const score = scoreRoutineWithProgress(optimizedRoutine, data, fallbackSets);
   const baseScore = scoreRoutineWithProgress(routine, data, fallbackSets);
 
@@ -114,11 +114,12 @@ export function optimizeRoutineForFrontier(
 function greedyOptimize(
   initialPlan: FrontierPlanSlot[],
   data: WorkoutData,
+  profile: UserProfile | null,
   fallbackSets: number,
   sessionSetCap: number
 ): FrontierPlanSlot[] {
   let plan = initialPlan.map((slot) => ({ ...slot }));
-  let currentScore = scorePlan(plan, data, fallbackSets).total;
+  let currentScore = scorePlan(plan, data, profile, fallbackSets).total;
 
   while (true) {
     const best = plan
@@ -127,8 +128,8 @@ function greedyOptimize(
         const next = plan.map((entry, entryIndex) => (
           entryIndex === index ? { ...entry, sets: entry.sets + 1 } : { ...entry }
         ));
-        if (exceedsSessionSetCap(next, sessionSetCap)) return null;
-        const nextScore = scorePlan(next, data, fallbackSets).total;
+        if (exceedsSessionSetCap(next, sessionSetCap, profile)) return null;
+        const nextScore = scorePlan(next, data, profile, fallbackSets).total;
         return { index, gain: nextScore - currentScore };
       })
       .filter((entry): entry is { index: number; gain: number } => Boolean(entry))
@@ -147,6 +148,7 @@ function greedyOptimize(
 function enforceMuscleFloors(
   initialPlan: FrontierPlanSlot[],
   data: WorkoutData,
+  profile: UserProfile | null,
   fallbackSets: number,
   sessionSetCap: number
 ): FrontierPlanSlot[] {
@@ -154,16 +156,16 @@ function enforceMuscleFloors(
   const floors = Object.entries(MUSCLE_MIN_WEEKLY_SETS) as [MuscleGroup, number][];
 
   for (const [muscle, floor] of floors) {
-    while ((scorePlan(plan, data, fallbackSets).breakdown[muscle]?.sets ?? 0) < floor) {
+    while ((scorePlan(plan, data, profile, fallbackSets).breakdown[muscle]?.sets ?? 0) < floor) {
       const best = plan
         .map((slot, index) => {
           if (slot.sets >= slot.candidate.maxSets) return null;
-          const contribution = getPrimaryExerciseContribution(slot.candidate)[muscle] ?? 0;
+          const contribution = getPrimaryExerciseContribution(slot.candidate, profile)[muscle] ?? 0;
           if (contribution <= 0) return null;
           const next = plan.map((entry, entryIndex) => (
             entryIndex === index ? { ...entry, sets: entry.sets + 1 } : { ...entry }
           ));
-          if (exceedsSessionSetCap(next, sessionSetCap)) return null;
+          if (exceedsSessionSetCap(next, sessionSetCap, profile)) return null;
           return { index, contribution };
         })
         .filter((entry): entry is { index: number; contribution: number } => Boolean(entry))
@@ -179,8 +181,13 @@ function enforceMuscleFloors(
   return plan;
 }
 
-function scorePlan(plan: FrontierPlanSlot[], data: WorkoutData, fallbackSets: number): RoutineScoreResult {
-  return scoreRoutineWithProgress(buildRoutineFromPlan(null, plan), data, fallbackSets);
+function scorePlan(
+  plan: FrontierPlanSlot[],
+  data: WorkoutData,
+  profile: UserProfile | null,
+  fallbackSets: number
+): RoutineScoreResult {
+  return scoreRoutineWithProgress(buildRoutineFromPlan(null, plan, profile), data, fallbackSets);
 }
 
 function scoreRoutineWithProgress(
@@ -202,7 +209,7 @@ function scoreRoutineWithProgress(
 
     for (const chain of chains) {
       const sets = chain.sets ?? fallbackSets;
-      const key = chain.exercises[0];
+      const key = getSelectedExerciseKey(chain);
       sessionSets += sets;
       const station = getStationKey(key);
       if (previousStation !== null && previousStation !== station) equipmentChanges++;
@@ -228,7 +235,11 @@ function scoreRoutineWithProgress(
   });
 }
 
-function buildRoutineFromPlan(baseRoutine: RoutineConfig | null, plan: FrontierPlanSlot[]): RoutineConfig {
+function buildRoutineFromPlan(
+  baseRoutine: RoutineConfig | null,
+  plan: FrontierPlanSlot[],
+  profile: UserProfile | null
+): RoutineConfig {
   const base = baseRoutine ?? {
     id: 'gym',
     name: 'Gym',
@@ -242,15 +253,21 @@ function buildRoutineFromPlan(baseRoutine: RoutineConfig | null, plan: FrontierP
     ...base,
     tierChains: plan
       .filter((slot) => slot.sets > 0)
-      .map(({ candidate, sets }) => ({
-        slotId: candidate.slotId,
-        workoutType: candidate.workoutType,
-        fixed: candidate.fixed,
-        priority: candidate.priority,
-        sets,
-        cadence: candidate.cadence,
-        exercises: candidate.exercises,
-      })),
+      .map(({ candidate, sets }) => {
+        const selectedExercise = selectExerciseForCandidate(candidate, profile);
+        return {
+          slotId: candidate.slotId,
+          workoutType: candidate.workoutType,
+          fixed: candidate.fixed,
+          priority: candidate.priority,
+          sets,
+          cadence: candidate.cadence,
+          selectedExercise,
+          progression: candidate.exercises,
+          alternatives: candidate.exercises.filter((key) => key !== selectedExercise),
+          exercises: candidate.exercises,
+        };
+      }),
   };
 }
 
@@ -269,13 +286,20 @@ function getProgressMultiplier(data: WorkoutData, key: ExerciseKey): number {
   return 1;
 }
 
-function getPrimaryExerciseContribution(candidate: FrontierCandidate): Partial<Record<MuscleGroup, number>> {
-  const exercise = EXERCISES.find((entry) => entry.key === candidate.exercises[0]);
+function getPrimaryExerciseContribution(
+  candidate: FrontierCandidate,
+  profile: UserProfile | null
+): Partial<Record<MuscleGroup, number>> {
+  const exercise = EXERCISES.find((entry) => entry.key === selectExerciseForCandidate(candidate, profile));
   return exercise ? getExerciseMuscleContribution(exercise) : {};
 }
 
-function exceedsSessionSetCap(plan: FrontierPlanSlot[], sessionSetCap: number): boolean {
-  const routine = buildRoutineFromPlan(null, plan);
+function exceedsSessionSetCap(
+  plan: FrontierPlanSlot[],
+  sessionSetCap: number,
+  profile: UserProfile | null
+): boolean {
+  const routine = buildRoutineFromPlan(null, plan, profile);
   const occurrences: Partial<Record<Exclude<WorkoutType, 'rest'>, number>> = {};
   return routine.schedule.some((workoutType) => {
     const occurrenceIndex = occurrences[workoutType] ?? 0;
@@ -296,10 +320,16 @@ function getStationKey(exerciseKey: ExerciseKey): string {
   return required.length === 0 ? 'bodyweight' : [...required].sort().join('+');
 }
 
+function selectExerciseForCandidate(candidate: FrontierCandidate, profile: UserProfile | null): ExerciseKey {
+  const tier = profile?.tiers?.[candidate.slotId] ?? 0;
+  const clamped = Math.max(0, Math.min(tier, candidate.exercises.length - 1));
+  return candidate.exercises[clamped];
+}
+
 function describeRoutineSlots(routine: RoutineConfig, fallbackSets: number): FrontierOptimizerResult['selectedSlots'] {
   return routine.tierChains.map((chain) => ({
     slotId: chain.slotId,
-    exercise: EXERCISES.find((entry) => entry.key === chain.exercises[0])?.name ?? chain.exercises[0],
+    exercise: EXERCISES.find((entry) => entry.key === getSelectedExerciseKey(chain))?.name ?? getSelectedExerciseKey(chain),
     sets: chain.sets ?? fallbackSets,
     cadence: chain.cadence ?? 'both',
     priority: chain.priority,

@@ -34,9 +34,29 @@ function isChainActiveForOccurrence(chain: TierChain, occurrenceIndex?: number):
  * Clamps to valid range so the index is always safe.
  */
 export function resolveExerciseKey(chain: TierChain, tiers: TierMap): ExerciseKey {
+  if (chain.selectedExercise) return chain.selectedExercise;
   const tier = tiers[chain.slotId] ?? 0;
-  const clamped = Math.max(0, Math.min(tier, chain.exercises.length - 1));
-  return chain.exercises[clamped];
+  const progression = getProgressionPath(chain);
+  const clamped = Math.max(0, Math.min(tier, progression.length - 1));
+  return progression[clamped];
+}
+
+export function getSelectedExerciseKey(chain: TierChain, tiers: TierMap = {}): ExerciseKey {
+  return resolveExerciseKey(chain, tiers);
+}
+
+export function getProgressionPath(chain: TierChain): ExerciseKey[] {
+  return chain.progression?.length ? chain.progression : chain.exercises;
+}
+
+export function getSubstitutionPath(chain: TierChain): ExerciseKey[] {
+  const selected = chain.selectedExercise;
+  const path = [
+    ...(chain.alternatives ?? []),
+    ...getProgressionPath(chain),
+    ...chain.exercises,
+  ];
+  return path.filter((key, index, all) => key !== selected && all.indexOf(key) === index);
 }
 
 // Equipment that counts as "non-gym" — excluded from alternatives when gymOnly is true
@@ -54,12 +74,12 @@ export function resolveExerciseKeyWithEquipment(
   unavailable: EquipmentKey[],
   gymOnly = false,
 ): ExerciseKey {
-  const baseKey = resolveExerciseKey(chain, tiers);
+  const baseKey = getSelectedExerciseKey(chain, tiers);
   if (unavailable.length === 0) return baseKey;
   if (canPerformExercise(baseKey, unavailable)) return baseKey;
 
   // Pick the available exercise with the highest SMV score
-  let available = chain.exercises.filter((key) => canPerformExercise(key, unavailable));
+  let available = getSubstitutionPath(chain).filter((key) => canPerformExercise(key, unavailable));
   if (gymOnly) {
     const gymOnly = available.filter((key) =>
       getRequiredEquipment(key).some((eq) => !NON_GYM_EQUIPMENT.has(eq))

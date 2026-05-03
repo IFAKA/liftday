@@ -7,7 +7,7 @@ import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessio
 import { getTargets, getWeightTarget, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
 import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
-import { getChainsForRoutine, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
+import { getChainsForRoutine, getProgressionPath, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
 import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
@@ -244,7 +244,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
           const oldTier = oldProfile.tiers[chain.slotId] ?? 0;
           const newTier = updatedProfile.tiers[chain.slotId] ?? 0;
           if (newTier > oldTier) {
-            const newExKey = chain.exercises[newTier];
+            const newExKey = getProgressionPath(chain)[newTier];
             const exName = EXERCISES.find((e) => e.key === newExKey)?.name;
             if (exName) advanced.push(exName);
           }
