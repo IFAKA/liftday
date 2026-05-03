@@ -3,6 +3,7 @@ import { EXERCISES } from './constants';
 import { getExerciseMuscleContribution, scoreWeeklyVolume, RoutineScoreResult } from './smv';
 import { EquipmentKey, getRequiredEquipment } from './equipment';
 import { getChainsForWorkout, resolveExerciseKeyWithEquipment } from './tiers';
+import { getChainSetCount } from './routine-plan';
 
 export interface RoutineScoreOptions {
   tiers?: TierMap;
@@ -52,8 +53,9 @@ export function getWeeklyVolume(
       if (!ex) continue;
       const contribution = getExerciseMuscleContribution(ex);
 
+      const chainSets = getChainSetCount(chain, setsPerExercise);
       for (const [muscle, multiplier] of Object.entries(contribution) as [MuscleGroup, number][]) {
-        volume[muscle] = (volume[muscle] ?? 0) + setsPerExercise * multiplier;
+        volume[muscle] = (volume[muscle] ?? 0) + chainSets * multiplier;
       }
     }
   }
@@ -71,18 +73,19 @@ export function scoreRoutine(
     const occurrenceIndex = occurrences[wt] ?? 0;
     occurrences[wt] = occurrenceIndex + 1;
 
-    return getChainsForWorkout(wt, routine.id, occurrenceIndex).map((chain) =>
-      resolveExerciseKeyWithEquipment(
+    return getChainsForWorkout(wt, routine.id, occurrenceIndex).map((chain) => ({
+      key: resolveExerciseKeyWithEquipment(
         chain,
         options.tiers ?? {},
         options.unavailableEquipment ?? [],
         routine.id === 'gym'
-      )
-    );
+      ),
+      sets: getChainSetCount(chain, setsPerExercise),
+    }));
   });
 
-  const sessionSetCounts = resolvedBySession.map((keys) => keys.length * setsPerExercise);
-  const equipmentChanges = resolvedBySession.reduce((sum, keys) => sum + getEquipmentChanges(keys), 0);
+  const sessionSetCounts = resolvedBySession.map((items) => items.reduce((sum, item) => sum + item.sets, 0));
+  const equipmentChanges = resolvedBySession.reduce((sum, items) => sum + getEquipmentChanges(items.map((item) => item.key)), 0);
   const totalSets = sessionSetCounts.reduce((sum, sets) => sum + sets, 0);
 
   return scoreWeeklyVolume(getWeeklyVolume(routine, options), {

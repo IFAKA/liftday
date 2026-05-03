@@ -39,6 +39,13 @@ export default function RoutineSettingPage() {
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-3">
+        <WatchListItem
+          href="/program/detail"
+          label="Active plan"
+          title="View routine"
+          subtitle="Exercises, set counts, SMV score, copy"
+        />
+
         {ROUTINES.map(({ id, name, description, icon }) => {
           const isActive = activeRoutineId === id;
           const Icon = ICONS[icon];

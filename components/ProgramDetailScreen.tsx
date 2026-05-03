@@ -1,34 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
-import { EXERCISES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { getRoutine } from '@/lib/routines';
 import { scoreRoutine } from '@/lib/routine-score';
 import { RoutineScoreResult } from '@/lib/smv';
 import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
-import { ExerciseKey, RoutineConfig, UserProfile } from '@/lib/types';
+import { RoutineConfig, UserProfile } from '@/lib/types';
 import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
 import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
+import { formatCadence, formatRoutineForCopy, getExerciseName } from '@/lib/routine-format';
+import { getChainSetCount } from '@/lib/routine-plan';
 import { WatchPanel, WatchSection } from './WatchSurface';
 
 export function ProgramDetailScreen() {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const [{ smvScore, routine, profile, setsPerExercise }] = useState<{
+  const [{ smvScore, routine, profile, setsPerExercise }, setProgramDetail] = useState<{
     smvScore: RoutineScoreResult | null;
     routine: RoutineConfig | null;
     profile: UserProfile | null;
     setsPerExercise: number;
-  }>(() => {
-    if (typeof window === 'undefined') {
-      return { smvScore: null, routine: null, profile: null, setsPerExercise: 3 };
-    }
+  }>({ smvScore: null, routine: null, profile: null, setsPerExercise: 3 });
 
+  useEffect(() => {
     const today = new Date();
     const profile = loadUserProfile();
     const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
@@ -36,16 +35,17 @@ export function ProgramDetailScreen() {
     const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
     const tiers = profile?.tiers ?? {};
 
-    return {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProgramDetail({
       smvScore: scoreRoutine(routine, { tiers, setsPerExercise }),
       routine,
       profile,
       setsPerExercise,
-    };
-  });
+    });
+  }, []);
 
   async function handleCopyRoutine() {
-    await copyText(formatRoutineForPrompt(routine, profile, setsPerExercise));
+    await copyText(formatRoutineForCopy(routine, profile, setsPerExercise));
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
   }
@@ -70,7 +70,7 @@ export function ProgramDetailScreen() {
 
         {routine && (
           <WatchSection title="Exercises">
-            <RoutineSlots routine={routine} profile={profile} />
+            <RoutineSlots routine={routine} profile={profile} fallbackSets={setsPerExercise} />
           </WatchSection>
         )}
 
@@ -135,7 +135,7 @@ function SmvOverview({
   );
 }
 
-function RoutineSlots({ routine, profile }: { routine: RoutineConfig; profile: UserProfile | null }) {
+function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConfig; profile: UserProfile | null; fallbackSets: number }) {
   const tiers = profile?.tiers ?? {};
 
   return (
@@ -162,7 +162,7 @@ function RoutineSlots({ routine, profile }: { routine: RoutineConfig; profile: U
                       </p>
                     </div>
                     <span className="shrink-0 text-fluid-label font-mono tabular-nums text-white/30">
-                      T{tiers[chain.slotId] ?? 0}
+                      {getChainSetCount(chain, fallbackSets)}x
                     </span>
                   </div>
                 );
@@ -245,40 +245,6 @@ function getSmvVerdict(score: RoutineScoreResult): { label: string; summary: str
   };
 }
 
-function formatRoutineForPrompt(routine: RoutineConfig | null, profile: UserProfile | null, setsPerExercise: number): string {
-  if (!routine) return 'No routine is currently selected.';
-  const tiers = profile?.tiers ?? {};
-  const lines = [
-    '# Current training routine',
-    '',
-    `Routine: ${routine.name} (${routine.id})`,
-    `Goal: ${profile?.goal ?? 'Not set'}`,
-    `Profile: ${profile?.age ?? '?'} year old ${profile?.sex ?? 'unknown'}, ${profile?.heightCm ?? '?'} cm, ${profile?.weightKg ?? '?'} kg, ${profile?.bodyComposition ?? 'body composition not set'}`,
-    `Training background: ${profile?.trainingBackground ?? 'Not set'}`,
-    `Injuries/pain: ${profile?.injuryStatus ?? 'Not set'}`,
-    `Gym access: ${profile?.gymAccess === false ? 'No' : 'Yes'}`,
-    `Max workout time: ${profile?.maxWorkoutMinutes ?? '?'} minutes`,
-    `Sets per exercise this week: ${setsPerExercise}`,
-    `Weekly schedule: ${routine.schedule.map((wt, index) => `${dayName(index)} ${wt}`).join(', ')}, Sunday rest`,
-    '',
-    '## Exercise slots',
-  ];
-
-  for (const workoutType of ['push', 'pull', 'legs'] as const) {
-    lines.push('', `### ${workoutType.toUpperCase()}`);
-    const chains = getChainsForWorkout(workoutType, routine.id);
-    for (const chain of chains) {
-      const activeKey = resolveExerciseKey(chain, tiers);
-      const active = getExerciseName(activeKey);
-      const options = chain.exercises.map(getExerciseName).join(' -> ');
-      const cadence = chain.cadence ? `; ${formatCadence(chain.cadence)}` : '';
-      lines.push(`- ${chain.slotId}: ${active}; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}${cadence}; options ${options}`);
-    }
-  }
-
-  return lines.join('\n');
-}
-
 async function copyText(text: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -298,20 +264,6 @@ async function copyText(text: string): Promise<void> {
   textarea.select();
   document.execCommand('copy');
   textarea.remove();
-}
-
-function dayName(index: number): string {
-  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index] ?? `Day ${index + 1}`;
-}
-
-function formatCadence(cadence?: RoutineConfig['tierChains'][number]['cadence']): string {
-  if (cadence === 'first') return 'first weekly';
-  if (cadence === 'second') return 'second weekly';
-  return '';
-}
-
-function getExerciseName(key: ExerciseKey): string {
-  return EXERCISES.find((exercise) => exercise.key === key)?.name ?? key;
 }
 
 function getWorkoutTone(workoutType: string): string {

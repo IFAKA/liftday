@@ -84,8 +84,8 @@ function TodayContent({ date }: { date: Date }) {
     return (
       <ExerciseScreen
         exercise={workout.currentExercise!}
-        exerciseIndex={workout.exerciseIndex}
-        totalExercises={workout.totalExercises}
+        totalPlannedSets={workout.totalPlannedSets}
+        completedPlannedSets={workout.completedPlannedSets}
         currentSet={workout.currentSet}
         setsPerExercise={workout.setsPerExercise}
         currentTarget={workout.currentTarget}

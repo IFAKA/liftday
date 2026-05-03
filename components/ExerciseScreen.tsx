@@ -15,8 +15,8 @@ import { TopBar } from './TopBar';
 
 interface ExerciseScreenProps {
   exercise: Exercise;
-  exerciseIndex: number;
-  totalExercises: number;
+  totalPlannedSets: number;
+  completedPlannedSets: number;
   currentSet: number;
   setsPerExercise: number;
   currentTarget: number;
@@ -31,8 +31,8 @@ interface ExerciseScreenProps {
 
 export function ExerciseScreen({
   exercise,
-  exerciseIndex,
-  totalExercises,
+  totalPlannedSets,
+  completedPlannedSets,
   currentSet,
   setsPerExercise,
   currentTarget,
@@ -98,8 +98,8 @@ export function ExerciseScreen({
     return () => window.removeEventListener('popstate', handlePopState);
   }, [showTutorial]);
 
-  const totalSets = totalExercises * setsPerExercise;
-  const completedSets = exerciseIndex * setsPerExercise + currentSet;
+  const totalSets = Math.max(1, totalPlannedSets);
+  const completedSets = completedPlannedSets;
   const progressPercent = (completedSets / totalSets) * 100;
 
   return (

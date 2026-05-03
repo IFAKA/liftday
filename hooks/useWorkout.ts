@@ -11,6 +11,7 @@ import { getChainsForWorkout, resolveExerciseKey, resolveExerciseKeyWithEquipmen
 import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
+import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -33,6 +34,8 @@ export interface UseWorkoutReturn {
   weekNumber: number;
   data: WorkoutData;
   totalExercises: number;
+  totalPlannedSets: number;
+  completedPlannedSets: number;
   exercises: Exercise[];
   nextExerciseName: string;
   nextExerciseAfterRestName: string | null;
@@ -69,7 +72,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [advancedTiers, setAdvancedTiers] = useState<string[]>([]);
   const [unavailableEquipment, setUnavailableEquipment] = useState<EquipmentKey[]>([]);
   const [skippedChainIndices, setSkippedChainIndices] = useState<Set<number>>(new Set());
-  const [requeuedExercises, setRequeuedExercises] = useState<Exercise[]>([]);
+  const [requeuedExercises, setRequeuedExercises] = useState<{ exercise: Exercise; setCount: number }[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownPlayedRef = useRef<Set<number>>(new Set());
@@ -101,32 +104,47 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const weekNumber = getWeekNumber(firstSessionDate, date);
   const setsPerExercise = getSetsForWeek(weekNumber, userProfile?.setsPerExercise);
 
-  const { workoutType, workoutOccurrenceIndex, derivedExercises, chainIndexMap } = useMemo(() => {
+  const { workoutType, workoutOccurrenceIndex, derivedPlan } = useMemo(() => {
     const routine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
     const wt = getWorkoutType(date, routine.schedule);
     if (wt === 'rest') {
       return {
         workoutType: wt,
         workoutOccurrenceIndex: null,
-        derivedExercises: [] as Exercise[],
-        chainIndexMap: [] as number[],
+        derivedPlan: [] as { exercise: Exercise; setCount: number; chainIndex: number }[],
       };
     }
     const occurrenceIndex = getWorkoutOccurrenceIndex(date, routine.schedule);
     const chains = getChainsForWorkout(wt, routine.id, occurrenceIndex ?? undefined);
     const tiers = userProfile?.tiers ?? {};
-    const exs: Exercise[] = [];
-    const idxMap: number[] = [];
-    chains.forEach((chain, chainIdx) => {
-      if (skippedChainIndices.has(chainIdx)) return;
-      const key = resolveExerciseKeyWithEquipment(chain, tiers, unavailableEquipment, routine.id === 'gym');
-      const ex = EXERCISES.find((e) => e.key === key);
-      if (ex) { exs.push(ex); idxMap.push(chainIdx); }
-    });
-    return { workoutType: wt, workoutOccurrenceIndex: occurrenceIndex, derivedExercises: exs, chainIndexMap: idxMap };
-  }, [date, userProfile, unavailableEquipment, skippedChainIndices]);
+    const activeChains = chains.filter((_, chainIdx) => !skippedChainIndices.has(chainIdx));
+    const chainIndexLookup = new Map(activeChains.map((chain) => [chain.slotId, chains.indexOf(chain)]));
+    const plan = getResolvedSessionPlan(
+      routine,
+      wt,
+      activeChains,
+      tiers,
+      setsPerExercise,
+      unavailableEquipment
+    ).map((item) => ({
+      exercise: item.exercise,
+      setCount: item.setCount,
+      chainIndex: chainIndexLookup.get(item.chain.slotId) ?? item.chainIndex,
+    }));
+    return { workoutType: wt, workoutOccurrenceIndex: occurrenceIndex, derivedPlan: plan };
+  }, [date, userProfile, unavailableEquipment, skippedChainIndices, setsPerExercise]);
 
-  const exercises = useMemo(() => [...derivedExercises, ...requeuedExercises], [derivedExercises, requeuedExercises]);
+  const exercisePlan = useMemo(() => [...derivedPlan, ...requeuedExercises.map((item) => ({
+    exercise: item.exercise,
+    setCount: item.setCount,
+    chainIndex: -1,
+  }))], [derivedPlan, requeuedExercises]);
+  const exercises = useMemo(() => exercisePlan.map((item) => item.exercise), [exercisePlan]);
+  const currentSetCount = exercisePlan[exerciseIndex]?.setCount ?? setsPerExercise;
+  const totalPlannedSets = exercisePlan.reduce((sum, item) => sum + item.setCount, 0);
+  const completedPlannedSets = exercisePlan
+    .slice(0, exerciseIndex)
+    .reduce((sum, item) => sum + item.setCount, currentSet);
 
   const currentExercise = exercises[exerciseIndex];
   const targets = currentExercise ? getTargets(currentExercise.key, weekNumber, date, data) : [];
@@ -244,7 +262,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const advanceAfterRest = useCallback(() => {
     const nextSet = currentSet + 1;
-    if (nextSet < setsPerExercise) {
+    if (nextSet < currentSetCount) {
       setCurrentSet(nextSet);
       setState('exercising');
     } else {
@@ -259,7 +277,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         saveAndComplete();
       }
     }
-  }, [currentSet, setsPerExercise, exerciseIndex, exercises, saveAndComplete]);
+  }, [currentSet, currentSetCount, exerciseIndex, exercises, saveAndComplete]);
 
   // Catch up timer when returning from background
   useEffect(() => {
@@ -315,7 +333,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     sessionRepsRef.current = newReps;
     setSessionReps(newReps);
 
-    const isLastSet = currentSet + 1 >= setsPerExercise;
+    const isLastSet = currentSet + 1 >= currentSetCount;
     const isLastExercise = exerciseIndex + 1 >= exercises.length;
 
     setTimeout(() => {
@@ -326,20 +344,20 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         setState('resting');
       }
     }, 700);
-  }, [currentExercise, currentSet, setsPerExercise, exerciseIndex, exercises, currentTarget, saveAndComplete]);
+  }, [currentExercise, currentSet, currentSetCount, exerciseIndex, exercises, currentTarget, saveAndComplete]);
 
   const skipTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    if (currentSet + 1 < setsPerExercise) playSkip();
+    if (currentSet + 1 < currentSetCount) playSkip();
     traceLiftDay('workout.rest.skip', {
       exerciseIndex,
       exerciseName: currentExercise?.name ?? null,
       currentSet,
-      setsPerExercise,
+      setsPerExercise: currentSetCount,
       totalExercises: exercises.length,
     });
     advanceAfterRest();
-  }, [advanceAfterRest, currentExercise?.name, currentSet, exerciseIndex, exercises.length, setsPerExercise]);
+  }, [advanceAfterRest, currentExercise?.name, currentSet, exerciseIndex, exercises.length, currentSetCount]);
 
   const quitWorkout = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -381,8 +399,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [storageAdapter]);
 
   const hasSwapAlternative = useMemo(() => {
-    if (exerciseIndex >= derivedExercises.length) return false;
-    const ex = derivedExercises[exerciseIndex];
+    if (exerciseIndex >= derivedPlan.length) return false;
+    const ex = derivedPlan[exerciseIndex]?.exercise;
     if (!ex) return false;
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return false;
@@ -390,13 +408,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const routine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
     if (workoutType === 'rest') return false;
     const chains = getChainsForWorkout(workoutType, routine.id, workoutOccurrenceIndex ?? undefined);
-    const chainIdx = chainIndexMap[exerciseIndex];
+    const chainIdx = derivedPlan[exerciseIndex]?.chainIndex;
     const chain = chains[chainIdx];
     if (!chain) return false;
     const tiers = userProfile?.tiers ?? {};
     const newKey = resolveExerciseKeyWithEquipment(chain, tiers, newUnavailable, routine.id === 'gym');
     return newKey !== ex.key;
-  }, [derivedExercises, exerciseIndex, unavailableEquipment, userProfile, workoutType, workoutOccurrenceIndex, chainIndexMap]);
+  }, [derivedPlan, exerciseIndex, unavailableEquipment, userProfile, workoutType, workoutOccurrenceIndex]);
 
   const swapCurrentForOccupied = useCallback(() => {
     const ex = exercises[exerciseIndex];
@@ -411,14 +429,15 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     traceLiftDay('workout.exercise.requeue', {
       exerciseIndex,
       exerciseName: ex.name,
-      derivedExerciseCount: derivedExercises.length,
+      derivedExerciseCount: derivedPlan.length,
       totalExercises: exercises.length,
-      chainIndex: chainIndexMap[exerciseIndex] ?? null,
+      chainIndex: derivedPlan[exerciseIndex]?.chainIndex ?? null,
     });
-    if (exerciseIndex < derivedExercises.length) {
-      const chainIdx = chainIndexMap[exerciseIndex];
+    if (exerciseIndex < derivedPlan.length) {
+      const chainIdx = derivedPlan[exerciseIndex]?.chainIndex;
+      if (chainIdx === undefined) return;
       setSkippedChainIndices((prev) => new Set([...prev, chainIdx]));
-      setRequeuedExercises((prev) => [...prev, ex]);
+      setRequeuedExercises((prev) => [...prev, { exercise: ex, setCount: currentSetCount }]);
       setCurrentSet(0);
       // After re-derive, exerciseIndex unchanged but now points to the next exercise
     } else {
@@ -431,7 +450,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         setCurrentSet(0);
       }
     }
-  }, [exercises, exerciseIndex, derivedExercises.length, chainIndexMap, saveAndComplete]);
+  }, [exercises, exerciseIndex, derivedPlan, currentSetCount, saveAndComplete]);
 
   const handleMachineOccupied = useCallback(() => {
     if (hasSwapAlternative) {
@@ -443,15 +462,16 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const nextExerciseAfterRestName = useMemo(() => {
     if (state !== 'resting') return null;
-    const isLastSet = currentSet + 1 >= setsPerExercise;
+    const isLastSet = currentSet + 1 >= currentSetCount;
     if (!isLastSet) return null;
     return exercises[exerciseIndex + 1]?.name ?? null;
-  }, [state, currentSet, setsPerExercise, exercises, exerciseIndex]);
+  }, [state, currentSet, currentSetCount, exercises, exerciseIndex]);
 
   return {
-    state, exerciseIndex, currentSet, setsPerExercise, timer, currentExercise, currentTarget,
+    state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, currentExercise, currentTarget,
     currentWeightTarget, previousRep, previousWeight, flashColor, sessionReps, weekNumber, data,
-    totalExercises: exercises.length, exercises, nextExerciseName, nextExerciseAfterRestName,
+    totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
+    exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, requeueCurrent, hasSwapAlternative, handleMachineOccupied,

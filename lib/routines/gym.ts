@@ -27,6 +27,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'push',
       fixed: false,
       priority: 'high',
+      sets: 2,
       exercises: ['db_shoulder_press', 'barbell_ohp'],
     },
     {
@@ -34,7 +35,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'push',
       fixed: true,
       priority: 'critical',
-      cadence: 'first',
+      sets: 4,
       exercises: ['db_lateral_raise'],
     },
     {
@@ -42,6 +43,8 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'push',
       fixed: true,
       priority: 'high',
+      sets: 2,
+      cadence: 'second',
       exercises: ['cable_fly'],
     },
     {
@@ -49,6 +52,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'push',
       fixed: true,
       priority: 'critical',
+      sets: 4,
       cadence: 'second',
       exercises: ['cable_lateral_raise'],
     },
@@ -66,6 +70,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'pull',
       fixed: false,
       priority: 'critical',
+      sets: 4,
       exercises: ['lat_pulldown', 'pullup'],
     },
     {
@@ -87,6 +92,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'pull',
       fixed: true,
       priority: 'high',
+      sets: 2,
       exercises: ['straight_arm_pulldown_cable'],
     },
     {
@@ -101,6 +107,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'pull',
       fixed: true,
       priority: 'high',
+      sets: 2,
       exercises: ['hammer_curl'],
     },
 
@@ -124,6 +131,7 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'legs',
       fixed: true,
       priority: 'high',
+      cadence: 'second',
       exercises: ['leg_press'],
     },
     {
@@ -131,6 +139,8 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'legs',
       fixed: true,
       priority: 'critical',
+      sets: 2,
+      cadence: 'second',
       exercises: ['hip_thrust'],
     },
     {
@@ -145,6 +155,8 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'legs',
       fixed: true,
       priority: 'high',
+      sets: 2,
+      cadence: 'second',
       exercises: ['leg_extension_machine'],
     },
     {
@@ -153,6 +165,24 @@ export const gymRoutine: RoutineConfig = {
       fixed: true,
       priority: 'aesthetic',
       exercises: ['standing_calf_raise_machine'],
+    },
+    {
+      slotId: 'gym_legs_neck_flex',
+      workoutType: 'legs',
+      fixed: true,
+      priority: 'aesthetic',
+      sets: 2,
+      cadence: 'first',
+      exercises: ['neck_iso_flex'],
+    },
+    {
+      slotId: 'gym_legs_neck_ext',
+      workoutType: 'legs',
+      fixed: true,
+      priority: 'aesthetic',
+      sets: 2,
+      cadence: 'second',
+      exercises: ['neck_iso_ext'],
     },
   ],
 };

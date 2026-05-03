@@ -182,6 +182,8 @@ export interface TierChain {
   workoutType: Exclude<WorkoutType, 'rest'>;
   fixed: boolean; // fixed = reps-only, no tier to advance
   priority: TrainingPriority;
+  /** Overrides the profile default for frontier-biased routine slots. */
+  sets?: number;
   /** Limits a slot to the first or second occurrence of that workout type in the weekly split. */
   cadence?: WorkoutCadence;
   exercises: ExerciseKey[]; // tier 0 → 1 → 2
