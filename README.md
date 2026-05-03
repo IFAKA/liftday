@@ -65,5 +65,6 @@ Next.js 16 · React 19 · Tailwind CSS v4 · TypeScript · `@ducanh2912/next-pwa
 ```bash
 npm install
 npm run dev
+npm run test:e2e
 ```
 # Deployment trigger Thu Mar  5 19:54:50 CET 2026

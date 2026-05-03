@@ -9,9 +9,9 @@ LiftDay is a Next.js 16 PWA using React 19, TypeScript, Tailwind CSS v4, and `@d
 - `npm install`: install dependencies from `package-lock.json`.
 - `npm run dev`: start the local Next dev server, usually at `http://localhost:3000`.
 - `npm run lint`: run ESLint with Next core-web-vitals, TypeScript, and architectural boundary rules.
+- `npm run test:e2e`: run Playwright end-to-end tests from `e2e/`; the Playwright config starts the Next dev server automatically.
+- `npm run test:e2e:ui`: open Playwright's interactive UI runner for local debugging.
 - `npm run build`: create a production build with webpack and run TypeScript checks.
-
-There is no `npm test` script currently; use lint and build as the verification gate.
 
 ## Coding Style & Naming Conventions
 
@@ -27,11 +27,13 @@ Program and Progress content must be organized around the next useful decision f
 
 ## Testing Guidelines
 
-No test framework is configured. For changes today, run `npm run lint` and `npm run build`. For UI changes, manually verify the affected route in the local dev server and include screenshots for meaningful visual updates. If tests are added later, colocate focused tests near the feature or place broader integration coverage in a clearly named test directory.
+Playwright e2e tests live in `e2e/` and use `playwright.config.ts`. Prefer normal project usage: add or update specs under `e2e/`, run them with `npm run test:e2e`, and use `npm run test:e2e:ui` for local debugging. Do not add one-off Playwright scripts or custom server wrappers for routine e2e coverage.
+
+For changes today, run `npm run lint`, `npm run test:e2e`, and `npm run build`. For meaningful visual UI updates, manually verify the affected route in the local dev server and include screenshots when useful.
 
 ## Commit & Pull Request Guidelines
 
-Recent history uses short imperative commits, often Conventional Commit prefixes such as `feat:` and `fix:` (`feat: add SMV efficient frontier scoring`, `fix: preserve weight/reps on machine-occupied swap`). Keep commits scoped. After completing any change, verify it works, commit it, and push to `origin main` as the final step. Only push when the change is complete and `npm run lint` plus `npm run build` pass. Avoid committing generated `public/sw.js` changes unless the production build intentionally regenerated PWA output for the app change. Pull requests should include a concise description, verification commands run, linked issue or context, and screenshots for visible UI updates.
+Recent history uses short imperative commits, often Conventional Commit prefixes such as `feat:` and `fix:` (`feat: add SMV efficient frontier scoring`, `fix: preserve weight/reps on machine-occupied swap`). Keep commits scoped. After completing any change, verify it works, commit it, and push to `origin main` as the final step. Only push when the change is complete and `npm run lint`, `npm run test:e2e`, plus `npm run build` pass. Avoid committing generated `public/sw.js` changes unless the production build intentionally regenerated PWA output for the app change. Pull requests should include a concise description, verification commands run, linked issue or context, and screenshots for visible UI updates.
 
 ## Security & Configuration Tips
 

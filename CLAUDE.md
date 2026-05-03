@@ -8,14 +8,15 @@ Next.js 16 PWA fitness tracker. Stack: Next.js App Router, TypeScript, Tailwind 
 ## Commands
 ```bash
 npm run dev      # dev server
+npm run test:e2e # Playwright e2e tests
 npm run build    # production build (uses --webpack flag)
 npm run lint     # eslint
 ```
-No test suite. Verify changes by running dev and testing in browser.
+Playwright e2e specs live in `e2e/` and use `playwright.config.ts` to start the Next dev server automatically. Use normal project commands (`npm run test:e2e`, or `npm run test:e2e:ui` for debugging) instead of one-off browser scripts.
 
 ## Workflow
 - After completing any change, commit and push (`git push origin main`) as the final step.
-- Only push when 100% confident changes are correct.
+- Only push when 100% confident changes are correct and `npm run lint`, `npm run test:e2e`, and `npm run build` pass.
 
 ## Architecture
 

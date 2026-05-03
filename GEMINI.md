@@ -16,7 +16,7 @@ Liftday is a Next.js PWA fitness tracker built with:
 - **UI:** Use existing shadcn/ui components in `components/ui/` and ensure new components follow the same patterns (CVA, tailwind-merge).
 
 ## Technical Standards
-- **Validation:** Always run `npm run lint` and `npm run build` to verify changes before pushing.
+- **Validation:** Always run `npm run lint`, `npm run test:e2e`, and `npm run build` to verify changes before pushing.
 - **PWA:** Ensure PWA-specific configurations in `next.config.ts` and `app/manifest.ts` are preserved.
 - **Wakelock:** The `WakeLockProvider` is critical for workout continuity; ensure it is properly wrapped around the application.
 
@@ -31,4 +31,6 @@ Liftday is a Next.js PWA fitness tracker built with:
 ## Scripts
 - `npm run dev`: Start development server.
 - `npm run lint`: Run ESLint.
+- `npm run test:e2e`: Run Playwright end-to-end tests from `e2e/`.
+- `npm run test:e2e:ui`: Open Playwright's interactive UI runner for local debugging.
 - `npm run build`: Verify production build (includes webpack flag: `next build --webpack`).
