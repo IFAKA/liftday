@@ -6,15 +6,13 @@ import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
-import { getRoutine } from '@/lib/routines';
 import { RoutineScoreResult } from '@/lib/smv';
 import { getChainsForRoutine, getProgressionPath, resolveExerciseKey } from '@/lib/tiers';
 import { RoutineConfig, UserProfile } from '@/lib/types';
-import { getFirstSessionDate, loadUserProfile, loadWorkoutData } from '@/lib/storage';
-import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
 import { formatCadence, formatRoutineForCopy, getExerciseName } from '@/lib/routine-format';
 import { getChainSetCount } from '@/lib/routine-plan';
-import { FrontierOptimizerResult, optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
+import { FrontierOptimizerResult } from '@/lib/frontier-optimizer';
+import { loadProgramSummary } from '@/lib/program-summary';
 import { WatchPanel, WatchSection } from './WatchSurface';
 
 export function ProgramDetailScreen() {
@@ -29,21 +27,14 @@ export function ProgramDetailScreen() {
   }>({ smvScore: null, routine: null, profile: null, setsPerExercise: 3, optimizer: null });
 
   useEffect(() => {
-    const today = new Date();
-    const profile = loadUserProfile();
-    const baseRoutine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
-    const data = loadWorkoutData();
-    const weekNumber = getWeekNumber(getFirstSessionDate(), today);
-    const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
-    const optimizer = optimizeRoutineForFrontier(baseRoutine, profile, data, setsPerExercise);
-    const routine = optimizer.routine;
+    const summary = loadProgramSummary();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgramDetail({
-      smvScore: optimizer.score,
-      routine,
-      profile,
-      setsPerExercise,
-      optimizer,
+      smvScore: summary.optimizer.score,
+      routine: summary.routine,
+      profile: summary.profile,
+      setsPerExercise: summary.setsPerExercise,
+      optimizer: summary.optimizer,
     });
   }, []);
 

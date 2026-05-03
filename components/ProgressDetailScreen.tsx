@@ -6,15 +6,10 @@ import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProgressFrontierGraph } from '@/components/ProgressFrontierGraph';
 import { TopBar } from '@/components/TopBar';
-import { EXERCISES } from '@/lib/constants';
-import { formatProgressForPrompt, getProgressDiagnosis, getProgressFrontier, getProgressSignal } from '@/lib/progress-insights';
-import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
-import { getRoutine } from '@/lib/routines';
-import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
-import { resolveExerciseKey } from '@/lib/tiers';
+import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { WorkoutData } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { getSetsForWeek, getWeekNumber, getWorkoutPatterns } from '@/lib/workout-utils';
+import { getWorkoutPatterns } from '@/lib/workout-utils';
 import { WatchPanel } from './WatchSurface';
 
 export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
@@ -29,29 +24,12 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
 
   const patterns = useMemo(() => getWorkoutPatterns(data), [data]);
   const progress = useMemo(() => {
-    if (!mounted) return getDefaultProgress(data);
-    const today = new Date();
-    const profile = loadUserProfile();
-    const baseRoutine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
-    const weekNumber = getWeekNumber(getFirstSessionDate(), today);
-    const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
-    const tiers = profile?.tiers ?? {};
-    const optimizer = optimizeRoutineForFrontier(baseRoutine, profile, data, setsPerExercise);
-    const routine = optimizer.routine;
-    const weeklyExercises = routine.tierChains
-      .map((chain) => {
-        const key = resolveExerciseKey(chain, tiers);
-        return EXERCISES.find((e) => e.key === key)!;
-      })
-      .filter(Boolean);
-    const score = optimizer.score;
-    const signal = getProgressSignal(data, weeklyExercises);
-    const diagnosis = getProgressDiagnosis(data, weeklyExercises, score);
+    const summary = mounted ? loadProgramSummaryForData(data) : getDefaultProgramSummary(data);
 
     return {
-      diagnosis,
-      frontier: getProgressFrontier(data, weeklyExercises, score, signal),
-      prompt: formatProgressForPrompt(data, weeklyExercises, signal),
+      diagnosis: summary.diagnosis,
+      frontier: summary.frontier,
+      prompt: summary.progressPrompt,
     };
   }, [data, mounted]);
 
@@ -119,21 +97,6 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
       </div>
     </div>
   );
-}
-
-function getDefaultProgress(data: WorkoutData) {
-  const routine = getRoutine('gym');
-  const weeklyExercises = routine.tierChains
-    .map((chain) => EXERCISES.find((e) => e.key === resolveExerciseKey(chain, {}))!)
-    .filter(Boolean);
-  const score = optimizeRoutineForFrontier(routine, null, data, 3).score;
-  const signal = getProgressSignal(data, weeklyExercises);
-
-  return {
-    diagnosis: getProgressDiagnosis(data, weeklyExercises, score),
-    frontier: getProgressFrontier(data, weeklyExercises, score, signal),
-    prompt: formatProgressForPrompt(data, weeklyExercises, signal),
-  };
 }
 
 async function copyText(text: string): Promise<void> {

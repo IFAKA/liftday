@@ -6,14 +6,10 @@ import { ChevronLeft, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WorkoutData, setEntryReps } from '@/lib/types';
 import { EXERCISES } from '@/lib/constants';
-import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
 import { Button } from '@/components/ui/button';
 import { TopBar } from './TopBar';
-import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
-import { getRoutine } from '@/lib/routines';
-import { resolveExerciseKey } from '@/lib/tiers';
 import { getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
-import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
+import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { WatchListItem, WatchPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
@@ -31,29 +27,12 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   }, []);
 
   const progress = useMemo(() => {
-    if (!mounted) return getDefaultProgress(data);
-    const today = new Date();
-    const profile = loadUserProfile();
-    const baseRoutine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
-    const weekNumber = getWeekNumber(getFirstSessionDate(), today);
-    const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
-    const tiers = profile?.tiers ?? {};
-    const optimizer = optimizeRoutineForFrontier(baseRoutine, profile, data, setsPerExercise);
-    const routine = optimizer.routine;
-    const weeklyExercises = routine.tierChains
-      .map((chain) => {
-        const key = resolveExerciseKey(chain, tiers);
-        return EXERCISES.find((e) => e.key === key)!;
-      })
-      .filter(Boolean);
-    const score = optimizer.score;
-    const signal = getProgressSignal(data, weeklyExercises);
-    const diagnosis = getProgressDiagnosis(data, weeklyExercises, score);
+    const summary = mounted ? loadProgramSummaryForData(data) : getDefaultProgramSummary(data);
 
     return {
-      signal,
-      diagnosis,
-      routineDecision: getRoutineAdjustmentDecision(data, diagnosis, score, signal),
+      signal: summary.signal,
+      diagnosis: summary.diagnosis,
+      routineDecision: summary.routineDecision,
     };
   }, [data, mounted]);
 
@@ -141,25 +120,6 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       )}
     </div>
   );
-}
-
-function getDefaultProgress(data: WorkoutData) {
-  const routine = getRoutine('gym');
-  const weeklyExercises = routine.tierChains
-    .map((chain) => {
-      const key = resolveExerciseKey(chain, {});
-      return EXERCISES.find((e) => e.key === key)!;
-    })
-    .filter(Boolean);
-  const optimizer = optimizeRoutineForFrontier(routine, null, data, 3);
-  const signal = getProgressSignal(data, weeklyExercises);
-  const diagnosis = getProgressDiagnosis(data, weeklyExercises, optimizer.score);
-
-  return {
-    signal,
-    diagnosis,
-    routineDecision: getRoutineAdjustmentDecision(data, diagnosis, optimizer.score, signal),
-  };
 }
 
 function RoutineDecisionSummary({
