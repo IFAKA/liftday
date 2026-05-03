@@ -62,21 +62,17 @@ export default function ProgramPage() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-2">
+      <div className="flex-1 overflow-y-auto px-3 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-4">
         {routine && (
-          <WatchListItem
-            href="/settings/routine"
-            label="Routine"
-            title={routine.name}
-          />
+          <WatchSection title="Program">
+            <WatchListItem
+              href="/program/detail"
+              label="Routine"
+              title={routine.name}
+              subtitle="Exercises, efficiency, muscle volume"
+            />
+          </WatchSection>
         )}
-
-        <WatchListItem
-          href="/program/detail"
-          label="Program"
-          title="Detail"
-          subtle
-        />
 
         {routineDecision && (
           <WatchSection title="Now">
@@ -87,14 +83,6 @@ export default function ProgramPage() {
         <WatchSection title="Week">
           <WeeklySplit currentDate={new Date()} data={data} embedded />
         </WatchSection>
-
-        <WatchListItem
-          href="/settings"
-          icon={Settings}
-          label="App"
-          title="Settings"
-          subtle
-        />
       </div>
     </div>
   );

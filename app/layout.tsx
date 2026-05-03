@@ -49,7 +49,7 @@ export default function RootLayout({
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-black text-foreground overflow-hidden h-[100dvh]`}>
         <MotionConfig reducedMotion="user">
           <NavProvider>
-            <div className="w-full h-full overflow-hidden bg-background relative flex flex-col">
+            <div className="mx-auto h-full w-full max-w-[430px] overflow-hidden bg-background relative flex flex-col">
               <div className="flex-1 min-h-0 overflow-hidden">
                 <WakeLockProvider>{children}</WakeLockProvider>
               </div>
