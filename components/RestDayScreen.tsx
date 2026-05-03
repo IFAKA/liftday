@@ -3,6 +3,7 @@
 import { Moon, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { MobilityFlow } from './MobilityFlow';
+import { MobilityErrorBoundary } from './MobilityErrorBoundary';
 import { SessionComplete } from './SessionComplete';
 import { MobilityExercise } from '@/lib/types';
 
@@ -32,18 +33,20 @@ interface RestDayScreenProps {
 export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility }: RestDayScreenProps) {
   if (mobility.isActive) {
     return (
-      <MobilityFlow
-        exercise={mobility.exercise}
-        exerciseIndex={mobility.exerciseIndex}
-        totalExercises={mobility.totalExercises}
-        timer={mobility.timer}
-        side={mobility.side}
-        isPaused={mobility.isPaused}
-        onSkip={mobility.skip}
-        onPause={mobility.pause}
-        onResume={mobility.resume}
-        onQuit={mobility.quit}
-      />
+      <MobilityErrorBoundary onSkip={mobility.skip} onQuit={mobility.quit}>
+        <MobilityFlow
+          exercise={mobility.exercise}
+          exerciseIndex={mobility.exerciseIndex}
+          totalExercises={mobility.totalExercises}
+          timer={mobility.timer}
+          side={mobility.side}
+          isPaused={mobility.isPaused}
+          onSkip={mobility.skip}
+          onPause={mobility.pause}
+          onResume={mobility.resume}
+          onQuit={mobility.quit}
+        />
+      </MobilityErrorBoundary>
     );
   }
 
