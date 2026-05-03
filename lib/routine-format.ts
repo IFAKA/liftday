@@ -1,6 +1,6 @@
 import { EXERCISES } from './constants';
 import { getChainSetCount } from './routine-plan';
-import { getChainsForWorkout, resolveExerciseKey } from './tiers';
+import { getChainsForRoutine, resolveExerciseKey } from './tiers';
 import { ExerciseKey, RoutineConfig, UserProfile } from './types';
 
 export function formatRoutineForCopy(
@@ -28,7 +28,7 @@ export function formatRoutineForCopy(
 
   for (const workoutType of ['push', 'pull', 'legs'] as const) {
     lines.push('', `### ${workoutType.toUpperCase()}`);
-    const chains = getChainsForWorkout(workoutType, routine.id);
+    const chains = getChainsForRoutine(routine, workoutType);
     for (const chain of chains) {
       const activeKey = resolveExerciseKey(chain, tiers);
       const active = getExerciseName(activeKey);

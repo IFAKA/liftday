@@ -11,6 +11,14 @@ export function getChainsForWorkout(
   occurrenceIndex?: number
 ): TierChain[] {
   const routine = ROUTINES.find((r) => r.id === routineId) ?? ROUTINES[0];
+  return getChainsForRoutine(routine, wt, occurrenceIndex);
+}
+
+export function getChainsForRoutine(
+  routine: { tierChains: TierChain[] },
+  wt: Exclude<WorkoutType, 'rest'>,
+  occurrenceIndex?: number
+): TierChain[] {
   return routine.tierChains.filter((c) => (
     c.workoutType === wt && isChainActiveForOccurrence(c, occurrenceIndex)
   ));

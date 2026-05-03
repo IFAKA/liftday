@@ -2,7 +2,7 @@ import { RoutineConfig, MuscleGroup, TierMap, ExerciseKey, WorkoutType } from '.
 import { EXERCISES } from './constants';
 import { getExerciseMuscleContribution, scoreWeeklyVolume, RoutineScoreResult } from './smv';
 import { EquipmentKey, getRequiredEquipment } from './equipment';
-import { getChainsForWorkout, resolveExerciseKeyWithEquipment } from './tiers';
+import { getChainsForRoutine, resolveExerciseKeyWithEquipment } from './tiers';
 import { getChainSetCount } from './routine-plan';
 
 export interface RoutineScoreOptions {
@@ -42,7 +42,7 @@ export function getWeeklyVolume(
     const occurrenceIndex = occurrences[wt] ?? 0;
     occurrences[wt] = occurrenceIndex + 1;
 
-    for (const chain of getChainsForWorkout(wt, routine.id, occurrenceIndex)) {
+    for (const chain of getChainsForRoutine(routine, wt, occurrenceIndex)) {
       const key = resolveExerciseKeyWithEquipment(
         chain,
         options.tiers ?? {},
@@ -73,7 +73,7 @@ export function scoreRoutine(
     const occurrenceIndex = occurrences[wt] ?? 0;
     occurrences[wt] = occurrenceIndex + 1;
 
-    return getChainsForWorkout(wt, routine.id, occurrenceIndex).map((chain) => ({
+    return getChainsForRoutine(routine, wt, occurrenceIndex).map((chain) => ({
       key: resolveExerciseKeyWithEquipment(
         chain,
         options.tiers ?? {},

@@ -7,40 +7,43 @@ import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
 import { getRoutine } from '@/lib/routines';
-import { scoreRoutine } from '@/lib/routine-score';
 import { RoutineScoreResult } from '@/lib/smv';
-import { getChainsForWorkout, resolveExerciseKey } from '@/lib/tiers';
+import { getChainsForRoutine, resolveExerciseKey } from '@/lib/tiers';
 import { RoutineConfig, UserProfile } from '@/lib/types';
-import { getFirstSessionDate, loadUserProfile } from '@/lib/storage';
+import { getFirstSessionDate, loadUserProfile, loadWorkoutData } from '@/lib/storage';
 import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
 import { formatCadence, formatRoutineForCopy, getExerciseName } from '@/lib/routine-format';
 import { getChainSetCount } from '@/lib/routine-plan';
+import { FrontierOptimizerResult, optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { WatchPanel, WatchSection } from './WatchSurface';
 
 export function ProgramDetailScreen() {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const [{ smvScore, routine, profile, setsPerExercise }, setProgramDetail] = useState<{
+  const [{ smvScore, routine, profile, setsPerExercise, optimizer }, setProgramDetail] = useState<{
     smvScore: RoutineScoreResult | null;
     routine: RoutineConfig | null;
     profile: UserProfile | null;
     setsPerExercise: number;
-  }>({ smvScore: null, routine: null, profile: null, setsPerExercise: 3 });
+    optimizer: FrontierOptimizerResult | null;
+  }>({ smvScore: null, routine: null, profile: null, setsPerExercise: 3, optimizer: null });
 
   useEffect(() => {
     const today = new Date();
     const profile = loadUserProfile();
-    const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
+    const baseRoutine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
+    const data = loadWorkoutData();
     const weekNumber = getWeekNumber(getFirstSessionDate(), today);
     const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
-    const tiers = profile?.tiers ?? {};
-
+    const optimizer = optimizeRoutineForFrontier(baseRoutine, profile, data, setsPerExercise);
+    const routine = optimizer.routine;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgramDetail({
-      smvScore: scoreRoutine(routine, { tiers, setsPerExercise }),
+      smvScore: optimizer.score,
       routine,
       profile,
       setsPerExercise,
+      optimizer,
     });
   }, []);
 
@@ -65,6 +68,12 @@ export function ProgramDetailScreen() {
         {smvScore && (
           <WatchSection title="Efficiency">
             <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} />
+          </WatchSection>
+        )}
+
+        {routine && (
+          <WatchSection title="Optimizer">
+            <OptimizerPanel optimizer={optimizer} />
           </WatchSection>
         )}
 
@@ -95,6 +104,33 @@ export function ProgramDetailScreen() {
         </Button>
       </div>
     </div>
+  );
+}
+
+function OptimizerPanel({ optimizer }: { optimizer: FrontierOptimizerResult | null }) {
+  if (!optimizer) return null;
+
+  const delta = optimizer.score.total - optimizer.baseScore.total;
+
+  return (
+    <WatchPanel subtle>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-fluid-label font-mono uppercase text-green-400">Deterministic</p>
+          <p className="mt-1 text-fluid-ui font-black uppercase text-white">Frontier routine selected</p>
+        </div>
+        <span className="shrink-0 text-fluid-label font-mono tabular-nums text-white/45">
+          {delta >= 0 ? '+' : ''}{delta.toFixed(1)}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {optimizer.reasons.slice(0, 3).map((reason) => (
+          <p key={reason} className="text-fluid-label font-mono uppercase leading-relaxed text-white/40">
+            {reason}
+          </p>
+        ))}
+      </div>
+    </WatchPanel>
   );
 }
 
@@ -141,7 +177,7 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
   return (
     <div className="flex flex-col gap-3">
       {(['push', 'pull', 'legs'] as const).map((workoutType) => {
-        const chains = getChainsForWorkout(workoutType, routine.id);
+        const chains = getChainsForRoutine(routine, workoutType);
         if (chains.length === 0) return null;
 
         return (

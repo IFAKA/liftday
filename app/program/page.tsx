@@ -10,10 +10,10 @@ import { RoutineConfig, WorkoutData } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { EXERCISES } from '@/lib/constants';
 import { getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision, RoutineAdjustmentDecision } from '@/lib/progress-insights';
-import { scoreRoutine } from '@/lib/routine-score';
 import { resolveExerciseKey } from '@/lib/tiers';
 import { cn } from '@/lib/utils';
 import { getSetsForWeek, getWeekNumber } from '@/lib/workout-utils';
+import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { WatchListItem, WatchPanel, WatchSection } from '@/components/WatchSurface';
 
 export default function ProgramPage() {
@@ -28,15 +28,17 @@ export default function ProgramPage() {
 
     const today = new Date();
     const profile = loadUserProfile();
-    const routine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
+    const baseRoutine = getRoutine(profile?.activeRoutine ?? 'calisthenics');
     const data = loadWorkoutData();
     const tiers = profile?.tiers ?? {};
     const weekNumber = getWeekNumber(getFirstSessionDate(), today);
     const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
+    const optimizer = optimizeRoutineForFrontier(baseRoutine, profile, data, setsPerExercise);
+    const routine = optimizer.routine;
     const weeklyExercises = routine.tierChains
       .map((chain) => EXERCISES.find((exercise) => exercise.key === resolveExerciseKey(chain, tiers)))
       .filter((exercise): exercise is (typeof EXERCISES)[number] => Boolean(exercise));
-    const score = scoreRoutine(routine, { tiers, setsPerExercise });
+    const score = optimizer.score;
     const signal = getProgressSignal(data, weeklyExercises);
     const diagnosis = getProgressDiagnosis(data, weeklyExercises, score);
 

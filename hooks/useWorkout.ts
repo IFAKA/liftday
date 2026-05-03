@@ -7,11 +7,12 @@ import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessio
 import { getTargets, getWeightTarget, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
 import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
-import { getChainsForWorkout, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
+import { getChainsForRoutine, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
 import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
+import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -105,7 +106,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const setsPerExercise = getSetsForWeek(weekNumber, userProfile?.setsPerExercise);
 
   const { workoutType, workoutOccurrenceIndex, derivedPlan } = useMemo(() => {
-    const routine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
+    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
     const wt = getWorkoutType(date, routine.schedule);
     if (wt === 'rest') {
       return {
@@ -115,7 +117,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       };
     }
     const occurrenceIndex = getWorkoutOccurrenceIndex(date, routine.schedule);
-    const chains = getChainsForWorkout(wt, routine.id, occurrenceIndex ?? undefined);
+    const chains = getChainsForRoutine(routine, wt, occurrenceIndex ?? undefined);
     const tiers = userProfile?.tiers ?? {};
     const activeChains = chains.filter((_, chainIdx) => !skippedChainIndices.has(chainIdx));
     const chainIndexLookup = new Map(activeChains.map((chain) => [chain.slotId, chains.indexOf(chain)]));
@@ -132,7 +134,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       chainIndex: chainIndexLookup.get(item.chain.slotId) ?? item.chainIndex,
     }));
     return { workoutType: wt, workoutOccurrenceIndex: occurrenceIndex, derivedPlan: plan };
-  }, [date, userProfile, unavailableEquipment, skippedChainIndices, setsPerExercise]);
+  }, [date, userProfile, data, unavailableEquipment, skippedChainIndices, setsPerExercise]);
 
   const exercisePlan = useMemo(() => [...derivedPlan, ...requeuedExercises.map((item) => ({
     exercise: item.exercise,
@@ -223,11 +225,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     // Evaluate tier progress for non-fixed chains
     if (workoutType !== 'rest' && userProfileRef.current) {
-      const chains = getChainsForWorkout(
-        workoutType,
-        userProfileRef.current.activeRoutine ?? 'calisthenics',
-        workoutOccurrenceIndex ?? undefined
-      );
+      const baseRoutine = getRoutine(userProfileRef.current.activeRoutine ?? 'calisthenics');
+      const routine = optimizeRoutineForFrontier(baseRoutine, userProfileRef.current, data, setsPerExercise).routine;
+      const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
       const oldProfile = userProfileRef.current;
       let updatedProfile = oldProfile;
       for (const chain of chains) {
@@ -258,7 +258,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     playSessionComplete();
     setState('complete');
-  }, [dateKey, weekNumber, exercises, workoutType, workoutOccurrenceIndex, storageAdapter]);
+  }, [dateKey, weekNumber, exercises, workoutType, workoutOccurrenceIndex, storageAdapter, data, setsPerExercise]);
 
   const advanceAfterRest = useCallback(() => {
     const nextSet = currentSet + 1;
@@ -405,16 +405,17 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return false;
     const newUnavailable = [...new Set([...unavailableEquipment, ...required])];
-    const routine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'calisthenics');
+    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
     if (workoutType === 'rest') return false;
-    const chains = getChainsForWorkout(workoutType, routine.id, workoutOccurrenceIndex ?? undefined);
+    const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
     const chainIdx = derivedPlan[exerciseIndex]?.chainIndex;
     const chain = chains[chainIdx];
     if (!chain) return false;
     const tiers = userProfile?.tiers ?? {};
     const newKey = resolveExerciseKeyWithEquipment(chain, tiers, newUnavailable, routine.id === 'gym');
     return newKey !== ex.key;
-  }, [derivedPlan, exerciseIndex, unavailableEquipment, userProfile, workoutType, workoutOccurrenceIndex]);
+  }, [derivedPlan, exerciseIndex, unavailableEquipment, userProfile, data, setsPerExercise, workoutType, workoutOccurrenceIndex]);
 
   const swapCurrentForOccupied = useCallback(() => {
     const ex = exercises[exerciseIndex];
