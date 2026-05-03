@@ -78,7 +78,7 @@ export function MobilityFlow({
   );
 
   return (
-    <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col px-safe pb-safe">
+    <div className="relative w-full h-full bg-black overflow-hidden flex flex-col px-safe pb-safe">
       <Progress
         value={progressPercent}
         className="absolute top-0 left-0 right-0 h-1 rounded-none bg-white/10 z-50 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-indicator]]:transition-all [&_[data-slot=progress-indicator]]:duration-500"

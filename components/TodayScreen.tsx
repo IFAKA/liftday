@@ -62,10 +62,10 @@ function TodayContent({ date }: { date: Date }) {
   const { setHideNav } = useNavContext();
 
   useEffect(() => {
-    const active = ['exercising', 'resting', 'transitioning', 'complete'].includes(workout.state);
+    const active = mobility.isActive || mobility.isComplete || ['exercising', 'resting', 'transitioning', 'complete'].includes(workout.state);
     setHideNav(active);
     return () => setHideNav(false);
-  }, [workout.state, setHideNav]);
+  }, [mobility.isActive, mobility.isComplete, workout.state, setHideNav]);
 
   // Rest day
   if (!schedule.isTraining) {
