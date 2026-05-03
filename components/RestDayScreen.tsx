@@ -61,7 +61,7 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-[100dvh] bg-black px-safe pt-safe pb-safe relative overflow-hidden">
+    <div className="flex h-full flex-col items-center justify-center overflow-hidden bg-black px-safe pt-safe pb-safe">
       <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
         <Moon className="w-16 h-16 sm:w-20 sm:h-20 text-white/30 mb-5 sm:mb-6" />
         <h1 className="text-fluid-title font-black uppercase text-white leading-none mb-4 text-center">
@@ -74,7 +74,7 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
         )}
       </div>
 
-      <div className="w-full absolute bottom-4 sm:bottom-8 px-4 pb-safe z-10">
+      <div className="w-full shrink-0 px-4 pb-4 sm:pb-6">
         <Button
           onClick={mobility.startMobility}
           className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-all shadow-xl border border-white/10"

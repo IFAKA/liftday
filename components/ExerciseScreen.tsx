@@ -66,7 +66,7 @@ export function ExerciseScreen({
     setShowQuitConfirm(false);
     setShowTutorial(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exerciseIndex]);
+  }, [exercise.key]);
 
   useEffect(() => {
     if (currentSet !== 0) return;
@@ -192,7 +192,7 @@ export function ExerciseScreen({
               <h2 className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight text-center sm:text-left">
                 {exercise.name}
               </h2>
-              {onMachineOccupied && (
+              {onMachineOccupied && currentSet === 0 && (
                 <button
                   onClick={onMachineOccupied}
                   className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-all"
@@ -206,7 +206,7 @@ export function ExerciseScreen({
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
               {isSeconds ? (
                 <NumberInput
-                  key={`${exerciseIndex}-${currentSet}-${defaultVal}`}
+                  key={`${exercise.key}-${currentSet}-${defaultVal}`}
                   defaultValue={defaultVal}
                   max={120}
                   label="Seconds"
@@ -215,7 +215,7 @@ export function ExerciseScreen({
               ) : (
                 <div className="flex-1 flex flex-col w-full min-h-0">
                   <NumberInput
-                    key={`${exerciseIndex}-${currentSet}-weight-${defaultWeight}`}
+                    key={`${exercise.key}-${currentSet}-weight-${defaultWeight}`}
                     defaultValue={defaultWeight}
                     min={0}
                     max={500}
@@ -225,7 +225,7 @@ export function ExerciseScreen({
                     onChange={setWeight}
                   />
                   <NumberInput
-                    key={`${exerciseIndex}-${currentSet}-reps-${defaultVal}`}
+                    key={`${exercise.key}-${currentSet}-reps-${defaultVal}`}
                     defaultValue={defaultVal}
                     min={1}
                     max={40}
