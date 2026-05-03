@@ -17,4 +17,6 @@ next-env.d.ts
 .DS_Store
 .vercel
 .playwright-mcp/
+playwright-report/
+test-results/
 tsconfig.tsbuildinfo
