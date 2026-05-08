@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
+import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight, ActiveWorkoutDraft } from '@/lib/types';
 import { EXERCISES, REST_DURATION } from '@/lib/constants';
 import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessionDate } from '@/lib/workout-utils';
 import { getTargets, getWeightTarget, evaluateTierProgress } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
-import { pwaStorage, loadUserProfile, saveUserProfile } from '@/lib/storage';
+import { clearActiveWorkoutDraft, loadActiveWorkoutDraft, pwaStorage, saveActiveWorkoutDraft, loadUserProfile, saveUserProfile } from '@/lib/storage';
 import { getChainsForRoutine, getProgressionPath, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
 import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
@@ -74,6 +74,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [unavailableEquipment, setUnavailableEquipment] = useState<EquipmentKey[]>([]);
   const [skippedChainIndices, setSkippedChainIndices] = useState<Set<number>>(new Set());
   const [requeuedExercises, setRequeuedExercises] = useState<{ exercise: Exercise; setCount: number }[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownPlayedRef = useRef<Set<number>>(new Set());
@@ -83,12 +84,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const userProfileRef = useRef<UserProfile | null>(null);
   const startedAtRef = useRef<string | null>(null);
   const restDurationRef = useRef(REST_DURATION);
+  const restoredDraftRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
     Promise.all([storageAdapter.loadWorkoutData(), storageAdapter.getFirstSessionDate()]).then(
       ([loadedData, firstDate]) => {
-        if (mounted) { setData(loadedData); setFirstSessionDate(firstDate); }
+        if (mounted) { setData(loadedData); setFirstSessionDate(firstDate); setHydrated(true); }
       }
     );
     const profile = loadUserProfile();
@@ -179,6 +181,119 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   useEffect(() => { if (state !== 'resting') setTimerPaused(false); }, [state]);
 
   useEffect(() => {
+    if (!hydrated || restoredDraftRef.current || workoutType === 'rest' || exercises.length === 0) return;
+    restoredDraftRef.current = true;
+    const draft = loadActiveWorkoutDraft();
+    if (!draft || draft.dateKey !== dateKey || draft.workoutType !== workoutType) {
+      if (draft && draft.dateKey !== dateKey) clearActiveWorkoutDraft();
+      return;
+    }
+
+    const requeued = draft.requeuedExercises
+      .map((item) => {
+        const exercise = EXERCISES.find((ex) => ex.key === item.exerciseKey);
+        return exercise ? { exercise, setCount: item.setCount } : null;
+      })
+      .filter((item): item is { exercise: Exercise; setCount: number } => item !== null);
+
+    sessionRepsRef.current = draft.sessionReps;
+    startedAtRef.current = draft.startedAt;
+    timerEndRef.current = draft.timerEndAt;
+    setUnavailableEquipment(draft.unavailableEquipment as EquipmentKey[]);
+    setSkippedChainIndices(new Set(draft.skippedChainIndices));
+    setRequeuedExercises(requeued);
+    setExerciseIndex(draft.exerciseIndex);
+    setCurrentSet(draft.currentSet);
+    setSessionReps(draft.sessionReps);
+    setNextExerciseName(draft.nextExerciseName);
+    setTimerPaused(draft.timerPaused);
+
+    if (draft.state === 'resting' && !draft.timerPaused && draft.timerEndAt !== null) {
+      const remaining = Math.max(0, Math.ceil((draft.timerEndAt - Date.now()) / 1000));
+      if (remaining <= 0) {
+        const setCount = exercisePlan[draft.exerciseIndex]?.setCount ?? setsPerExercise;
+        if (draft.currentSet + 1 < setCount) {
+          setCurrentSet(draft.currentSet + 1);
+          setTimer(REST_DURATION);
+          setState('exercising');
+          return;
+        }
+        const nextIdx = draft.exerciseIndex + 1;
+        if (nextIdx < exercises.length) {
+          setExerciseIndex(nextIdx);
+          setCurrentSet(0);
+          setNextExerciseName(exercises[nextIdx].name);
+          setTimer(REST_DURATION);
+          setState('transitioning');
+          return;
+        }
+      } else {
+        setTimer(remaining);
+      }
+    } else {
+      setTimer(draft.timer);
+    }
+
+    setState(draft.state);
+  }, [dateKey, exercisePlan, exercises, hydrated, setsPerExercise, workoutType]);
+
+  const persistActiveDraft = useCallback((stateToPersist: ActiveWorkoutDraft['state']) => {
+    if (workoutType === 'rest' || !startedAtRef.current) return;
+    saveActiveWorkoutDraft({
+      version: 1,
+      dateKey,
+      state: stateToPersist,
+      exerciseIndex,
+      currentSet,
+      sessionReps: sessionRepsRef.current,
+      startedAt: startedAtRef.current,
+      workoutType,
+      savedAt: new Date().toISOString(),
+      timer,
+      timerEndAt: timerEndRef.current,
+      timerPaused,
+      nextExerciseName,
+      unavailableEquipment,
+      skippedChainIndices: [...skippedChainIndices],
+      requeuedExercises: requeuedExercises.map((item) => ({
+        exerciseKey: item.exercise.key,
+        setCount: item.setCount,
+      })),
+    });
+  }, [
+    currentSet,
+    dateKey,
+    exerciseIndex,
+    nextExerciseName,
+    requeuedExercises,
+    skippedChainIndices,
+    timer,
+    timerPaused,
+    unavailableEquipment,
+    workoutType,
+  ]);
+
+  useEffect(() => {
+    if (state === 'idle' || state === 'complete') return;
+    persistActiveDraft(state);
+  }, [state, sessionReps, persistActiveDraft]);
+
+  useEffect(() => {
+    const persistBeforeSuspend = () => {
+      if (state !== 'idle' && state !== 'complete') persistActiveDraft(state);
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) persistBeforeSuspend();
+    };
+    window.addEventListener('pagehide', persistBeforeSuspend);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', persistBeforeSuspend);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [state, persistActiveDraft]);
+
+  useEffect(() => {
     if (state === 'resting' && timer > 0 && !timerPaused) {
       if (timer === restDurationRef.current) {
         countdownPlayedRef.current = new Set();
@@ -257,6 +372,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     }
 
     playSessionComplete();
+    clearActiveWorkoutDraft();
     setState('complete');
   }, [dateKey, weekNumber, exercises, workoutType, workoutOccurrenceIndex, storageAdapter, data, setsPerExercise]);
 
@@ -306,8 +422,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const startWorkout = useCallback(() => {
     unlockAudio();
     playStart();
+    clearActiveWorkoutDraft();
     startedAtRef.current = new Date().toISOString();
     sessionRepsRef.current = {};
+    timerEndRef.current = null;
+    timerPauseStartRef.current = null;
     setExerciseIndex(0);
     setCurrentSet(0);
     setSessionReps({});
@@ -341,6 +460,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         saveAndComplete();
       } else {
         setTimer(restDurationRef.current);
+        timerEndRef.current = Date.now() + restDurationRef.current * 1000;
         setState('resting');
       }
     }, 700);
@@ -361,7 +481,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const quitWorkout = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    clearActiveWorkoutDraft();
     sessionRepsRef.current = {};
+    startedAtRef.current = null;
+    timerEndRef.current = null;
+    timerPauseStartRef.current = null;
     setState('idle');
     setExerciseIndex(0);
     setCurrentSet(0);

@@ -148,6 +148,25 @@ export interface WeeklyStats {
 
 export type WorkoutState = 'idle' | 'exercising' | 'resting' | 'transitioning' | 'complete';
 
+export interface ActiveWorkoutDraft {
+  version: 1;
+  dateKey: string;
+  state: Exclude<WorkoutState, 'idle' | 'complete'>;
+  exerciseIndex: number;
+  currentSet: number;
+  sessionReps: Record<string, SetEntry[]>;
+  startedAt: string;
+  workoutType: Exclude<WorkoutType, 'rest'>;
+  savedAt: string;
+  timer: number;
+  timerEndAt: number | null;
+  timerPaused: boolean;
+  nextExerciseName: string;
+  unavailableEquipment: string[];
+  skippedChainIndices: number[];
+  requeuedExercises: { exerciseKey: ExerciseKey; setCount: number }[];
+}
+
 export interface MobilityExercise {
   name: string;
   duration: number;

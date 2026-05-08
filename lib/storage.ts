@@ -1,5 +1,5 @@
-import { StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId } from './types';
-import { STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY } from './constants';
+import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId } from './types';
+import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY } from './constants';
 import { formatDateKey } from './workout-utils';
 
 export function loadWorkoutData(): WorkoutData {
@@ -18,6 +18,36 @@ export function saveWorkoutData(data: WorkoutData): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch {
     // localStorage full or unavailable
+  }
+}
+
+export function loadActiveWorkoutDraft(): ActiveWorkoutDraft | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem(ACTIVE_WORKOUT_DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw) as ActiveWorkoutDraft;
+    return draft.version === 1 ? draft : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveActiveWorkoutDraft(draft: ActiveWorkoutDraft): void {
+  try {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(ACTIVE_WORKOUT_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // localStorage full or unavailable
+  }
+}
+
+export function clearActiveWorkoutDraft(): void {
+  try {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(ACTIVE_WORKOUT_DRAFT_KEY);
+  } catch {
+    // ignore
   }
 }
 
