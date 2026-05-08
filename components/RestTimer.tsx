@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { TopBar } from './TopBar';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { motion } from 'framer-motion';
+import { showRestCompleteNotification } from '@/lib/rest-notifications';
 
 interface RestTimerProps {
   seconds: number;
@@ -18,21 +19,10 @@ interface RestTimerProps {
 
 let restNotificationTimeout: ReturnType<typeof setTimeout> | null = null;
 
-function scheduleRestNotification(secondsRemaining: number) {
+function scheduleRestNotification(secondsRemaining: number, nextExerciseName?: string | null) {
   cancelRestNotification();
-  if (typeof window === 'undefined' || !('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
   restNotificationTimeout = setTimeout(() => {
-    try {
-      new Notification('LiftDay — Rest Complete', {
-        body: 'Time to get back to work!',
-        icon: '/icons/icon-192.png',
-        tag: 'rest-complete',
-        requireInteraction: false,
-      });
-    } catch {
-      // Notification not available
-    }
+    void showRestCompleteNotification(nextExerciseName);
   }, secondsRemaining * 1000);
 }
 
@@ -67,15 +57,9 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
-    }
-  }, []);
-
-  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && !isPaused && seconds > 0) {
-        scheduleRestNotification(seconds);
+        scheduleRestNotification(seconds, nextExerciseName);
       } else {
         cancelRestNotification();
       }
@@ -85,7 +69,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       cancelRestNotification();
     };
-  }, [seconds, isPaused]);
+  }, [seconds, isPaused, nextExerciseName]);
 
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;

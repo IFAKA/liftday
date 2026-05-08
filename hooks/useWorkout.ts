@@ -11,6 +11,7 @@ import { getChainsForRoutine, getProgressionPath, resolveExerciseKey, resolveExe
 import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
+import { requestRestNotificationPermission, showRestCompleteNotification } from '@/lib/rest-notifications';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import {
@@ -85,6 +86,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const startedAtRef = useRef<string | null>(null);
   const restDurationRef = useRef(REST_DURATION);
   const restoredDraftRef = useRef(false);
+  const restCompletionNotifiedRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -293,6 +295,19 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     };
   }, [state, persistActiveDraft]);
 
+  const notifyRestCompleteIfHidden = useCallback(() => {
+    if (restCompletionNotifiedRef.current) return;
+    if (typeof document === 'undefined' || !document.hidden) return;
+
+    const isLastSet = currentSet + 1 >= currentSetCount;
+    const nextName = isLastSet
+      ? exercises[exerciseIndex + 1]?.name
+      : currentExercise?.name;
+
+    restCompletionNotifiedRef.current = true;
+    void showRestCompleteNotification(nextName);
+  }, [currentExercise?.name, currentSet, currentSetCount, exerciseIndex, exercises]);
+
   useEffect(() => {
     if (state === 'resting' && timer > 0 && !timerPaused) {
       if (timer === restDurationRef.current) {
@@ -307,6 +322,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
           if (remaining <= 0 || t <= 1) {
             clearInterval(timerRef.current!);
             timerRef.current = null;
+            notifyRestCompleteIfHidden();
             playRestComplete();
             advanceAfterRest();
             return 0;
@@ -321,7 +337,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, timer === restDurationRef.current, timerPaused]);
+  }, [state, timer === restDurationRef.current, timerPaused, notifyRestCompleteIfHidden]);
 
   const saveAndComplete = useCallback(async () => {
     const reps = sessionRepsRef.current;
@@ -403,6 +419,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         if (remaining <= 0) {
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
           setTimer(0);
+          notifyRestCompleteIfHidden();
           playRestComplete();
           advanceAfterRest();
         } else {
@@ -412,7 +429,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [state, timerPaused, advanceAfterRest]);
+  }, [state, timerPaused, advanceAfterRest, notifyRestCompleteIfHidden]);
 
   const finishTransition = useCallback(() => {
     playExerciseReady();
@@ -421,12 +438,14 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const startWorkout = useCallback(() => {
     unlockAudio();
+    void requestRestNotificationPermission();
     playStart();
     clearActiveWorkoutDraft();
     startedAtRef.current = new Date().toISOString();
     sessionRepsRef.current = {};
     timerEndRef.current = null;
     timerPauseStartRef.current = null;
+    restCompletionNotifiedRef.current = false;
     setExerciseIndex(0);
     setCurrentSet(0);
     setSessionReps({});
@@ -459,6 +478,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       if (isLastSet && isLastExercise) {
         saveAndComplete();
       } else {
+        restCompletionNotifiedRef.current = false;
         setTimer(restDurationRef.current);
         timerEndRef.current = Date.now() + restDurationRef.current * 1000;
         setState('resting');
