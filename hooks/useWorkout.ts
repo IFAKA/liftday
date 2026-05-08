@@ -11,7 +11,7 @@ import { getChainsForRoutine, getProgressionPath, resolveExerciseKey, resolveExe
 import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
-import { requestRestNotificationPermission, showRestCompleteNotification } from '@/lib/rest-notifications';
+import { requireRestNotificationPermission, showRestCompleteNotification } from '@/lib/rest-notifications';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import {
@@ -44,7 +44,7 @@ export interface UseWorkoutReturn {
   timerPaused: boolean;
   advancedTiers: string[];
   hasSwapAlternative: boolean;
-  startWorkout: () => void;
+  startWorkout: () => Promise<void>;
   logSet: (reps: number, weight?: number) => void;
   skipTimer: () => void;
   quitWorkout: () => void;
@@ -305,7 +305,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       : currentExercise?.name;
 
     restCompletionNotifiedRef.current = true;
-    void showRestCompleteNotification(nextName);
+    showRestCompleteNotification(nextName);
   }, [currentExercise?.name, currentSet, currentSetCount, exerciseIndex, exercises]);
 
   useEffect(() => {
@@ -436,9 +436,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setState('exercising');
   }, []);
 
-  const startWorkout = useCallback(() => {
+  const startWorkout = useCallback(async () => {
     unlockAudio();
-    void requestRestNotificationPermission();
+    await requireRestNotificationPermission();
     playStart();
     clearActiveWorkoutDraft();
     startedAtRef.current = new Date().toISOString();

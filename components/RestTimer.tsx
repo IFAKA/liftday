@@ -22,7 +22,7 @@ let restNotificationTimeout: ReturnType<typeof setTimeout> | null = null;
 function scheduleRestNotification(secondsRemaining: number, nextExerciseName?: string | null) {
   cancelRestNotification();
   restNotificationTimeout = setTimeout(() => {
-    void showRestCompleteNotification(nextExerciseName);
+    showRestCompleteNotification(nextExerciseName);
   }, secondsRemaining * 1000);
 }
 

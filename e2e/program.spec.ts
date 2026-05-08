@@ -1,4 +1,26 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function installRequiredNotificationStack(page: Page) {
+  await page.addInitScript(() => {
+    class TestNotification {
+      static permission: NotificationPermission = 'granted';
+      static requestPermission = async () => 'granted' as NotificationPermission;
+    }
+
+    Object.defineProperty(window, 'Notification', {
+      configurable: true,
+      value: TestNotification,
+    });
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({
+          showNotification: async () => undefined,
+        }),
+      },
+    });
+  });
+}
 
 test('opens the program tab', async ({ page }) => {
   await page.goto('/program');
@@ -9,6 +31,7 @@ test('opens the program tab', async ({ page }) => {
 });
 
 test('restores an active workout after reload', async ({ page }) => {
+  await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');
   });

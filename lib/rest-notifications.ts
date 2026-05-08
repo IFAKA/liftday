@@ -1,42 +1,44 @@
 'use client';
 
 const REST_COMPLETE_TAG = 'liftday-rest-complete';
-const SERVICE_WORKER_READY_TIMEOUT_MS = 750;
 
-type RestNotificationPermission = NotificationPermission | 'unsupported';
-
-function supportsNotifications() {
-  return typeof window !== 'undefined' && 'Notification' in window;
-}
-
-async function getReadyServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) return null;
-
-  try {
-    return await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<null>((resolve) => {
-        window.setTimeout(() => resolve(null), SERVICE_WORKER_READY_TIMEOUT_MS);
-      }),
-    ]);
-  } catch {
-    return null;
+export class RestNotificationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RestNotificationError';
   }
 }
 
-export async function requestRestNotificationPermission(): Promise<RestNotificationPermission> {
-  if (!supportsNotifications()) return 'unsupported';
-  if (Notification.permission !== 'default') return Notification.permission;
-
-  try {
-    return await Notification.requestPermission();
-  } catch {
-    return Notification.permission;
+function requireNotificationApi() {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    throw new RestNotificationError('Notifications are required for rest timers.');
   }
 }
 
-export async function showRestCompleteNotification(nextExerciseName?: string | null): Promise<boolean> {
-  if (!supportsNotifications() || Notification.permission !== 'granted') return false;
+async function requireReadyServiceWorker(): Promise<ServiceWorkerRegistration> {
+  if (!('serviceWorker' in navigator)) {
+    throw new RestNotificationError('Service worker notifications are required for rest timers.');
+  }
+
+  return navigator.serviceWorker.ready;
+}
+
+export async function requireRestNotificationPermission(): Promise<void> {
+  requireNotificationApi();
+
+  const permission = Notification.permission === 'default'
+    ? await Notification.requestPermission()
+    : Notification.permission;
+
+  if (permission !== 'granted') {
+    throw new RestNotificationError('Notification permission is required for rest timers.');
+  }
+
+  await requireReadyServiceWorker();
+}
+
+export async function showRestCompleteNotification(nextExerciseName?: string | null): Promise<void> {
+  await requireRestNotificationPermission();
 
   const options: NotificationOptions = {
     body: nextExerciseName ? `Next: ${nextExerciseName}` : 'Time to get back to work.',
@@ -47,16 +49,6 @@ export async function showRestCompleteNotification(nextExerciseName?: string | n
     silent: false,
   };
 
-  const registration = await getReadyServiceWorker();
-  if (registration) {
-    await registration.showNotification('LiftDay Rest Complete', options);
-    return true;
-  }
-
-  try {
-    new Notification('LiftDay Rest Complete', options);
-    return true;
-  } catch {
-    return false;
-  }
+  const registration = await requireReadyServiceWorker();
+  await registration.showNotification('LiftDay Rest Complete', options);
 }

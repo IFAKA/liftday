@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dumbbell, CheckCircle, Flame } from 'lucide-react';
+import { AlertTriangle, Dumbbell, CheckCircle, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
@@ -54,6 +54,7 @@ export function TodayScreen() {
 
 function TodayContent({ date }: { date: Date }) {
   const router = useRouter();
+  const [startError, setStartError] = useState<string | null>(null);
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
@@ -182,6 +183,18 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
       {!isDone && (
         <>
+          {startError && (
+            <div className="w-full px-4 mb-3">
+              <WatchPanel className="border-red-500/40 bg-red-500/10 py-3">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
+                  <p className="text-fluid-label font-black uppercase leading-tight text-red-100">
+                    {startError}
+                  </p>
+                </div>
+              </WatchPanel>
+            </div>
+          )}
           {supersetPairs.length > 0 && (
             <div className="w-full px-4 mb-3">
               <WatchPanel subtle className="py-3">
@@ -195,7 +208,12 @@ nextExerciseName={workout.nextExerciseAfterRestName}
           )}
           <div className="w-full px-4 pb-safe mb-4 shrink-0">
             <Button
-              onClick={workout.startWorkout}
+              onClick={() => {
+                setStartError(null);
+                workout.startWorkout().catch((error: unknown) => {
+                  setStartError(error instanceof Error ? error.message : 'Workout start failed.');
+                });
+              }}
               className="w-full btn-mobile-accessible rounded-full bg-white text-black active:scale-95 transition-all font-black uppercase tracking-tight shadow-xl"
             >
               Start
