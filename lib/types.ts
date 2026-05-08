@@ -41,11 +41,15 @@ export type LegsExerciseKey =
 
 // Gym push exercises
 export type GymPushExerciseKey =
+  | 'smith_incline_press'
   | 'barbell_bench_press'
   | 'db_incline_press'
+  | 'high_incline_machine_press'
+  | 'machine_shoulder_press'
   | 'db_shoulder_press'
   | 'barbell_ohp'
   | 'db_lateral_raise'
+  | 'machine_lateral_raise'
   | 'cable_lateral_raise'
   | 'cable_tricep_pushdown'
   | 'overhead_tricep_ext'
@@ -54,11 +58,19 @@ export type GymPushExerciseKey =
 // Gym pull exercises
 export type GymPullExerciseKey =
   | 'lat_pulldown'
+  | 'neutral_grip_pulldown'
   | 'pullup'
   | 'cable_row'
+  | 'chest_supported_row'
+  | 'machine_row'
+  | 'braced_cable_row'
   | 'barbell_row'
   | 'cable_face_pull'
+  | 'cable_rear_delt_fly'
+  | 'reverse_pec_deck'
   | 'db_curl'
+  | 'db_incline_curl'
+  | 'preacher_curl'
   | 'barbell_curl'
   | 'straight_arm_pulldown_cable'
   | 'cable_curl'
@@ -68,6 +80,8 @@ export type GymPullExerciseKey =
 export type GymLegsExerciseKey =
   | 'goblet_squat'
   | 'barbell_squat'
+  | 'smith_squat'
+  | 'hack_squat'
   | 'leg_press'
   | 'front_squat'
   | 'romanian_deadlift'
@@ -87,7 +101,7 @@ export interface RoutineConfig {
   description: string;
   /** Lucide icon name shown in the profile picker */
   icon: 'dumbbell' | 'person-standing';
-  /** Mon–Sat workout types (index 0 = Monday). Sunday is always rest. */
+  /** Mon-Sat workout types (index 0 = Monday). Sunday is always rest. */
   schedule: Exclude<WorkoutType, 'rest'>[];
   tierChains: TierChain[];
 }
@@ -100,9 +114,17 @@ export type ExerciseKey =
   | GymPullExerciseKey
   | GymLegsExerciseKey;
 
-export type WorkoutType = 'push' | 'pull' | 'legs' | 'rest';
+export type SMVWorkoutType =
+  | 'push_a'
+  | 'pull_a'
+  | 'legs_maintenance'
+  | 'push_b'
+  | 'pull_b'
+  | 'delts_arms';
 
-export type SetEntry = number | { reps: number; weight: number };
+export type WorkoutType = SMVWorkoutType | 'push' | 'pull' | 'legs' | 'rest';
+
+export type SetEntry = number | { reps: number; weight: number; rir?: number };
 
 export function setEntryReps(e: SetEntry): number {
   return typeof e === 'number' ? e : e.reps;
@@ -110,6 +132,10 @@ export function setEntryReps(e: SetEntry): number {
 
 export function setEntryWeight(e: SetEntry): number | null {
   return typeof e === 'number' ? null : e.weight;
+}
+
+export function setEntryRir(e: SetEntry): number | null {
+  return typeof e === 'number' ? null : e.rir ?? null;
 }
 
 export interface Exercise {
@@ -130,6 +156,47 @@ export type WorkoutSession = {
   week_number: number;
   workout_type: Exclude<WorkoutType, 'rest'>;
 };
+
+export interface SMVExercisePrescription {
+  exerciseKey: ExerciseKey;
+  sets: number;
+  minReps: number;
+  maxReps: number;
+  targetRir: string;
+  targetRirMin: number;
+  targetRirMax: number;
+  finalSetRir?: string;
+  restSeconds: number;
+  restLabel: string;
+  cue: string;
+}
+
+export interface SMVSetLog {
+  exerciseKey: ExerciseKey;
+  setIndex: number;
+  reps: number;
+  weight: number;
+  rir: number;
+  loggedAt: string;
+}
+
+export interface BodyTrendLog {
+  dateKey: string;
+  morningWeightKg?: number;
+  waistCm?: number;
+  calories?: number;
+  proteinGrams?: number;
+}
+
+export interface RecoverySignal {
+  dateKey: string;
+  sleepHours?: number;
+  fatigue?: 1 | 2 | 3 | 4 | 5;
+  jointPain?: boolean;
+  note?: string;
+}
+
+export interface DailyLog extends BodyTrendLog, RecoverySignal {}
 
 export interface WorkoutData {
   [dateKey: string]: WorkoutSession;
@@ -178,6 +245,8 @@ export interface MobilityExercise {
 export interface StorageAdapter {
   loadWorkoutData(): Promise<WorkoutData>;
   saveSession(dateKey: string, session: WorkoutSession): Promise<void>;
+  loadDailyLogs(): Promise<Record<string, DailyLog>>;
+  saveDailyLog(dateKey: string, log: DailyLog): Promise<void>;
   getFirstSessionDate(): Promise<string | null>;
   setFirstSessionDate(dateKey: string): Promise<void>;
   getMobilityDone(dateKey: string): Promise<boolean>;
@@ -211,6 +280,7 @@ export interface TierChain {
   progression?: ExerciseKey[];
   /** Same-slot substitutes used for equipment/workflow fallbacks, not hidden routine choices. */
   alternatives?: ExerciseKey[];
+  prescription?: Omit<SMVExercisePrescription, 'exerciseKey'>;
   exercises: ExerciseKey[]; // tier 0 → 1 → 2
 }
 
@@ -242,4 +312,8 @@ export interface UserProfile {
   injuryStatus?: string;
   maxWorkoutMinutes?: number;
   goal?: string;
+  targetDate?: string;
+  proteinTargetGrams?: [number, number];
+  calorieSurplusTarget?: [number, number];
+  availableEquipment?: string[];
 }

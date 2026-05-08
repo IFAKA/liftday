@@ -2,8 +2,11 @@
 // - Sell et al. 2017 (Royal Society B): perceived upper body strength = 61-73% of attractiveness variance
 // - Durkee et al. 2019 (N=1742 women): ranked 14 muscle groups by preference
 // - 2025 cross-cultural study (China/Lithuania/UK): body fat 13-14% = optimal; dominates shape ratios
-import type { Exercise, MuscleGroup } from './types';
+import type { Exercise, MuscleGroup, RoutineConfig, SMVExercisePrescription, SetEntry, TierChain, UserProfile } from './types';
 import type { ExerciseKey } from './types';
+import { getChainSetCount } from './routine-plan';
+import { getSubstitutionPath, resolveExerciseKey } from './tiers';
+import { getRequiredEquipment, type EquipmentKey, canPerformExercise } from './equipment';
 
 export const MUSCLE_SMV_SCORE: Record<MuscleGroup, number> = {
   side_delt:  10, // V-taper width; primary shoulder width signal
@@ -39,19 +42,19 @@ export const MUSCLE_PROPORTION_PENALTY: Partial<Record<MuscleGroup, number>> = {
 };
 
 export const MUSCLE_TARGET_WEEKLY_SETS: Record<MuscleGroup, number> = {
-  side_delt:  12,
+  side_delt:  22,
   lats:       14,
-  chest:      12,
-  shoulders:   8,
-  biceps:      8,
+  chest:      14,
+  shoulders:   6,
+  biceps:     12,
   glutes:      8,
-  mid_back:    8,
-  rear_delt:   6,
-  triceps:     8,
+  mid_back:    6,
+  rear_delt:  16,
+  triceps:    12,
   upper_back:  6,
-  quads:      10,
+  quads:       8,
   hamstrings:  8,
-  calves:      6,
+  calves:     12,
   neck:        4,
 };
 
@@ -94,28 +97,42 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   neck_iso_ext: { neck: 1 },
 
   barbell_bench_press: { chest: 1, triceps: 0.35, shoulders: 0.25 },
+  smith_incline_press: { chest: 1, triceps: 0.3, shoulders: 0.35 },
   db_incline_press: { chest: 1, shoulders: 0.35, triceps: 0.25 },
+  high_incline_machine_press: { chest: 1, shoulders: 0.35, triceps: 0.25 },
   cable_fly: { chest: 1 },
+  machine_shoulder_press: { shoulders: 1, triceps: 0.35, side_delt: 0.25 },
   db_shoulder_press: { shoulders: 1, triceps: 0.35, side_delt: 0.2 },
   barbell_ohp: { shoulders: 1, triceps: 0.4, side_delt: 0.25 },
   db_lateral_raise: { side_delt: 1 },
+  machine_lateral_raise: { side_delt: 1 },
   cable_lateral_raise: { side_delt: 1 },
   cable_tricep_pushdown: { triceps: 1 },
   overhead_tricep_ext: { triceps: 1 },
 
   lat_pulldown: { lats: 1, biceps: 0.3, upper_back: 0.2 },
+  neutral_grip_pulldown: { lats: 1, biceps: 0.3, upper_back: 0.2 },
   pullup: { lats: 1, biceps: 0.35, upper_back: 0.25 },
   cable_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.2 },
+  chest_supported_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.3 },
+  machine_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.25 },
+  braced_cable_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.25 },
   barbell_row: { mid_back: 1, lats: 0.45, biceps: 0.25, rear_delt: 0.25, hamstrings: 0.15 },
   cable_face_pull: { rear_delt: 1, upper_back: 0.4 },
+  cable_rear_delt_fly: { rear_delt: 1 },
+  reverse_pec_deck: { rear_delt: 1 },
   straight_arm_pulldown_cable: { lats: 1 },
   db_curl: { biceps: 1 },
+  db_incline_curl: { biceps: 1 },
+  preacher_curl: { biceps: 1 },
   barbell_curl: { biceps: 1 },
   cable_curl: { biceps: 1 },
   hammer_curl: { biceps: 0.85 },
 
   goblet_squat: { quads: 1, glutes: 0.4, hamstrings: 0.15 },
   barbell_squat: { quads: 1, glutes: 0.5, hamstrings: 0.2 },
+  hack_squat: { quads: 1, glutes: 0.35 },
+  smith_squat: { quads: 1, glutes: 0.35 },
   front_squat: { quads: 1, glutes: 0.35, upper_back: 0.25 },
   leg_press: { quads: 1, glutes: 0.35 },
   romanian_deadlift: { hamstrings: 1, glutes: 0.6 },
@@ -126,6 +143,30 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   standing_calf_raise_machine: { calves: 1 },
   cable_glute_kickback: { glutes: 1 },
   hip_abduction_machine: { glutes: 0.85 },
+};
+
+export const SMV_DIRECT_TARGETS: Partial<Record<MuscleGroup, { min: number; max: number }>> = {
+  side_delt: { min: 18, max: 24 },
+  rear_delt: { min: 12, max: 18 },
+  chest: { min: 12, max: 16 },
+  lats: { min: 12, max: 16 },
+  biceps: { min: 10, max: 14 },
+  triceps: { min: 10, max: 14 },
+  quads: { min: 6, max: 8 },
+  hamstrings: { min: 6, max: 8 },
+  calves: { min: 8, max: 12 },
+};
+
+export const SMV_PROFILE_DEFAULTS = {
+  age: 26,
+  sex: 'male' as const,
+  heightCm: 172,
+  weightKg: 66.7,
+  bodyComposition: 'skinny_fat' as const,
+  maxWorkoutMinutes: 105,
+  targetDate: '2026-10-31',
+  proteinTargetGrams: [140, 160] as [number, number],
+  calorieSurplusTarget: [200, 300] as [number, number],
 };
 
 export interface MuscleScoreEntry {
@@ -256,4 +297,128 @@ export function getExerciseSMVScore(exercise: Exercise): number {
 
 export function getExerciseMuscleContribution(exercise: Exercise): MuscleContribution {
   return EXERCISE_MUSCLE_CONTRIBUTIONS[exercise.key] ?? { [exercise.primaryMuscle]: 1 };
+}
+
+export function getExerciseContributionByKey(exerciseKey: ExerciseKey): MuscleContribution {
+  return EXERCISE_MUSCLE_CONTRIBUTIONS[exerciseKey] ?? {};
+}
+
+export function getPrescriptionForChain(
+  chain: { exercises: ExerciseKey[]; selectedExercise?: ExerciseKey; prescription?: Omit<SMVExercisePrescription, 'exerciseKey'> },
+  exerciseKey: ExerciseKey,
+  fallbackSets: number
+): SMVExercisePrescription {
+  const base = chain.prescription;
+  return {
+    exerciseKey,
+    sets: base?.sets ?? fallbackSets,
+    minReps: base?.minReps ?? 8,
+    maxReps: base?.maxReps ?? 12,
+    targetRir: base?.targetRir ?? '1-2 RIR',
+    targetRirMin: base?.targetRirMin ?? 1,
+    targetRirMax: base?.targetRirMax ?? 2,
+    finalSetRir: base?.finalSetRir,
+    restSeconds: base?.restSeconds ?? 90,
+    restLabel: base?.restLabel ?? '90 sec',
+    cue: base?.cue ?? 'Clean reps. Stop at target RIR.',
+  };
+}
+
+export function calculateRoutineVolume(
+  routine: RoutineConfig,
+  profile: UserProfile | null,
+  fallbackSets: number
+): Partial<Record<MuscleGroup, number>> {
+  const tiers = profile?.tiers ?? {};
+  const totals: Partial<Record<MuscleGroup, number>> = {};
+
+  for (const chain of routine.tierChains) {
+    const key = resolveExerciseKey(chain, tiers);
+    const sets = getChainSetCount(chain, fallbackSets);
+    const contributions = EXERCISE_MUSCLE_CONTRIBUTIONS[key] ?? {};
+    for (const [muscle, multiplier] of Object.entries(contributions) as [MuscleGroup, number][]) {
+      totals[muscle] = (totals[muscle] ?? 0) + sets * multiplier;
+    }
+  }
+
+  return totals;
+}
+
+export interface DoubleProgressionDecision {
+  increaseLoad: boolean;
+  reason: string;
+}
+
+export function evaluateDoubleProgression(
+  sets: SetEntry[],
+  prescription: Pick<SMVExercisePrescription, 'maxReps' | 'targetRirMin' | 'targetRirMax'>
+): DoubleProgressionDecision {
+  if (sets.length === 0) {
+    return { increaseLoad: false, reason: 'No sets logged.' };
+  }
+
+  const allAtTop = sets.every((set) => {
+    if (typeof set === 'number') return set >= prescription.maxReps;
+    const rir = set.rir ?? prescription.targetRirMax;
+    return set.reps >= prescription.maxReps && rir >= prescription.targetRirMin && rir <= prescription.targetRirMax;
+  });
+
+  return allAtTop
+    ? { increaseLoad: true, reason: 'All sets hit top reps at target RIR.' }
+    : { increaseLoad: false, reason: 'Repeat load until every set reaches the top of the range at target RIR.' };
+}
+
+export function shouldDeload(input: {
+  recentScores: { score: number; rir: number }[];
+  fatigueDays?: number;
+  poorSleepDays?: number;
+  jointPain?: boolean;
+}): boolean {
+  const [latest, previous] = input.recentScores;
+  const performanceDrop = Boolean(
+    latest && previous &&
+    latest.score <= previous.score * 0.95 &&
+    Math.abs(latest.rir - previous.rir) <= 1
+  );
+  return performanceDrop || (input.fatigueDays ?? 0) >= 3 || (input.poorSleepDays ?? 0) >= 3 || input.jointPain === true;
+}
+
+export function getDeloadPrescription(prescription: SMVExercisePrescription): SMVExercisePrescription {
+  return {
+    ...prescription,
+    sets: Math.max(1, Math.ceil(prescription.sets * 0.6)),
+    targetRir: '3-4 RIR',
+    targetRirMin: 3,
+    targetRirMax: 4,
+    finalSetRir: undefined,
+    cue: 'Deload: keep movement, cut sets, no failure.',
+  };
+}
+
+export function getNutritionAdjustment(waistTrendCmPerWeek: number, weeksAboveLimit: number): {
+  calorieDelta: number;
+  reason: string;
+} {
+  if (waistTrendCmPerWeek > 0.5 && weeksAboveLimit >= 2) {
+    return { calorieDelta: -150, reason: 'Waist trend is rising faster than 0.5 cm/week for two weeks.' };
+  }
+  return { calorieDelta: 0, reason: 'Keep +200 to +300 kcal/day and 140-160 g protein.' };
+}
+
+export function getRankedSubstitutions(
+  chain: Pick<TierChain, 'exercises' | 'alternatives' | 'progression' | 'selectedExercise'>,
+  unavailableEquipment: EquipmentKey[] = [],
+  limit = 3
+): ExerciseKey[] {
+  return getSubstitutionPath(chain)
+    .filter((key) => canPerformExercise(key, unavailableEquipment))
+    .sort((a, b) => getSubstitutionRank(a, chain.alternatives) - getSubstitutionRank(b, chain.alternatives))
+    .slice(0, limit);
+}
+
+function getSubstitutionRank(key: ExerciseKey, alternatives: ExerciseKey[] | undefined): number {
+  const index = alternatives?.indexOf(key) ?? -1;
+  if (index >= 0) return index;
+  const equipment = getRequiredEquipment(key);
+  return equipment.includes('cable_machine') ? 10 : 20;
 }

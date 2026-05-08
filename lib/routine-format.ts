@@ -2,6 +2,7 @@ import { EXERCISES } from './constants';
 import { getChainSetCount } from './routine-plan';
 import { getChainsForRoutine, getProgressionPath, resolveExerciseKey } from './tiers';
 import { ExerciseKey, RoutineConfig, UserProfile } from './types';
+import { formatWorkoutType } from './schedule';
 
 export function formatRoutineForCopy(
   routine: RoutineConfig | null,
@@ -26,8 +27,8 @@ export function formatRoutineForCopy(
     '## Exercise slots',
   ];
 
-  for (const workoutType of ['push', 'pull', 'legs'] as const) {
-    lines.push('', `### ${workoutType.toUpperCase()}`);
+  for (const workoutType of routine.schedule) {
+    lines.push('', `### ${formatWorkoutType(workoutType)}`);
     const chains = getChainsForRoutine(routine, workoutType);
     for (const chain of chains) {
       const activeKey = resolveExerciseKey(chain, tiers);

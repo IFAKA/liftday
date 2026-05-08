@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, ChevronLeft, Info, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import type { Exercise } from '@/lib/types';
+import type { Exercise, SMVExercisePrescription } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ExerciseDemo } from './ExerciseDemo';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
@@ -21,10 +21,11 @@ interface ExerciseScreenProps {
   setsPerExercise: number;
   currentTarget: number;
   currentWeightTarget: number;
+  prescription: SMVExercisePrescription | null;
   previousRep: number | null;
   previousWeight: number | null;
   flashColor: 'green' | 'red' | null;
-  onLogSet: (reps: number, weight?: number) => void;
+  onLogSet: (reps: number, weight?: number, rir?: number) => void;
   onQuit: () => void;
   onMachineOccupied?: () => void;
 }
@@ -37,6 +38,7 @@ export function ExerciseScreen({
   setsPerExercise,
   currentTarget,
   currentWeightTarget,
+  prescription,
   previousRep,
   previousWeight,
   flashColor,
@@ -52,6 +54,7 @@ export function ExerciseScreen({
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [val, setVal] = useState(defaultVal);
   const [weight, setWeight] = useState(defaultWeight);
+  const [rir, setRir] = useState(prescription?.targetRirMax ?? 2);
   const [showTutorial, setShowTutorial] = useState(false);
   const [lastLoggedVal, setLastLoggedVal] = useState<number | null>(null);
   const [lastLoggedWeight, setLastLoggedWeight] = useState<number | null>(null);
@@ -63,26 +66,29 @@ export function ExerciseScreen({
     setLastLoggedWeight(null);
     setVal(defaultVal);
     setWeight(defaultWeight);
+    setRir(prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
     setShowTutorial(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exercise.key]);
+  }, [exercise.key, prescription?.targetRirMax]);
 
   useEffect(() => {
     if (currentSet !== 0) return;
     setVal(defaultVal);
     setWeight(defaultWeight);
-  }, [currentSet, defaultVal, defaultWeight]);
+    setRir(currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2);
+  }, [currentSet, defaultVal, defaultWeight, prescription, setsPerExercise]);
 
   useEffect(() => {
     // Between sets of the same exercise, prefer last logged values over progression target.
     if (currentSet === 0) return;
     setVal(lastLoggedVal ?? currentTarget);
     setWeight(lastLoggedWeight ?? currentWeightTarget);
+    setRir(currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
     setShowTutorial(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSet]);
+  }, [currentSet, prescription, setsPerExercise]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -201,6 +207,15 @@ export function ExerciseScreen({
                   Machine occupied
                 </button>
               )}
+              {prescription && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-fluid-label font-mono uppercase text-white/40">
+                  <span>{prescription.minReps}-{prescription.maxReps} reps</span>
+                  <span className="text-white/15">/</span>
+                  <span>{currentSet + 1 === setsPerExercise && prescription.finalSetRir ? prescription.finalSetRir : prescription.targetRir}</span>
+                  <span className="text-white/15">/</span>
+                  <span>{prescription.restLabel}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
@@ -233,6 +248,22 @@ export function ExerciseScreen({
                     compact
                     onChange={setVal}
                   />
+                  <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1">
+                    {[0, 1, 2, 3, 4].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setRir(option)}
+                        className={cn(
+                          'flex h-10 flex-1 items-center justify-center rounded-full text-sm font-black tabular-nums transition',
+                          rir === option ? 'bg-white text-black' : 'text-white/45 active:bg-white/10'
+                        )}
+                        aria-label={`${option} RIR`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -248,7 +279,7 @@ export function ExerciseScreen({
                 onClick={() => {
                   setLastLoggedVal(val);
                   setLastLoggedWeight(weight);
-                  onLogSet(val, isSeconds ? undefined : weight);
+                  onLogSet(val, isSeconds ? undefined : weight, rir);
                 }}
                 className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
               >

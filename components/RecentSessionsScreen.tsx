@@ -10,8 +10,15 @@ import { EXERCISES } from '@/lib/constants';
 import { WorkoutData, WorkoutType, setEntryReps } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { WatchPanel } from './WatchSurface';
+import { formatWorkoutType } from '@/lib/schedule';
 
 const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
+  push_a: 'text-orange-400',
+  pull_a: 'text-blue-400',
+  legs_maintenance: 'text-green-400',
+  push_b: 'text-orange-300',
+  pull_b: 'text-sky-300',
+  delts_arms: 'text-pink-300',
   push: 'text-orange-400',
   pull: 'text-blue-400',
   legs: 'text-green-400',
@@ -61,7 +68,7 @@ function SessionRow({
   onOpen: () => void;
 }) {
   const wt = session.workout_type;
-  const exercises = EXERCISES.filter((exercise) => exercise.workoutType === wt);
+  const exercises = EXERCISES.filter((exercise) => session[exercise.key]?.length);
   const totalReps = exercises.reduce((sum, ex) => {
     const sets = session[ex.key];
     return sum + (sets ? sets.reduce<number>((s, e) => s + setEntryReps(e), 0) : 0);
@@ -75,7 +82,7 @@ function SessionRow({
     >
       <div className="flex flex-col">
         <span className="text-fluid-label text-white/40 uppercase font-mono font-black mb-1">{format(displayDate, 'MMM d, EEE')}</span>
-        <span className={cn('text-fluid-ui font-black uppercase leading-none', TYPE_COLOR[wt])}>{wt}</span>
+        <span className={cn('text-fluid-ui font-black uppercase leading-none', TYPE_COLOR[wt])}>{formatWorkoutType(wt)}</span>
       </div>
       <div className="text-right">
         <span className="text-fluid-ui font-black tabular-nums text-white leading-none">{totalReps}</span>

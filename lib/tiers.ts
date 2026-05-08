@@ -44,11 +44,11 @@ export function getSelectedExerciseKey(chain: TierChain, tiers: TierMap = {}): E
   return resolveExerciseKey(chain, tiers);
 }
 
-export function getProgressionPath(chain: TierChain): ExerciseKey[] {
+export function getProgressionPath(chain: Pick<TierChain, 'progression' | 'exercises'>): ExerciseKey[] {
   return chain.progression?.length ? chain.progression : chain.exercises;
 }
 
-export function getSubstitutionPath(chain: TierChain): ExerciseKey[] {
+export function getSubstitutionPath(chain: Pick<TierChain, 'exercises' | 'alternatives' | 'progression' | 'selectedExercise'>): ExerciseKey[] {
   const selected = chain.selectedExercise;
   const path = [
     ...(chain.alternatives ?? []),

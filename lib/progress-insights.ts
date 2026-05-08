@@ -1,6 +1,7 @@
 import { EXERCISES } from './constants';
 import { RoutineScoreResult } from './smv';
-import { Exercise, ExerciseKey, SetEntry, setEntryReps, setEntryWeight, WorkoutData, WorkoutSession } from './types';
+import { DailyLog, Exercise, ExerciseKey, SetEntry, setEntryReps, setEntryWeight, WorkoutData, WorkoutSession } from './types';
+import { getNutritionAdjustment } from './smv';
 
 export interface ProgressSignal {
   label: string;
@@ -61,6 +62,13 @@ export interface ProgressDiagnosis {
   priorityExercises: ExerciseProgressDiagnosis[];
   volumeGaps: MuscleVolumeDiagnosis[];
   nextActions: string[];
+}
+
+export interface BodyTrendSummary {
+  weightTrendKgPerWeek: number | null;
+  waistTrendCmPerWeek: number | null;
+  nutritionAction: string;
+  recoveryAlert: string | null;
 }
 
 export interface RoutineAdjustmentDecision {
@@ -343,6 +351,44 @@ export function scoreSessionSets(sets: SetEntry[]): number {
     return weight === null ? reps : reps * Math.max(1, weight);
   });
   return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+}
+
+export function getBodyTrendSummary(logs: Record<string, DailyLog>): BodyTrendSummary {
+  const ordered = Object.values(logs).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+  const latest14 = ordered.slice(-14);
+  const first7 = latest14.slice(0, 7);
+  const last7 = latest14.slice(-7);
+  const weightTrendKgPerWeek = getTrend(first7, last7, 'morningWeightKg');
+  const waistTrendCmPerWeek = getTrend(first7, last7, 'waistCm');
+  const highWaistWeeks = waistTrendCmPerWeek !== null && waistTrendCmPerWeek > 0.5 ? 2 : 0;
+  const nutrition = getNutritionAdjustment(waistTrendCmPerWeek ?? 0, highWaistWeeks);
+  const fatigueDays = ordered.slice(-3).filter((log) => (log.fatigue ?? 0) >= 4).length;
+  const poorSleepDays = ordered.slice(-3).filter((log) => (log.sleepHours ?? 8) < 6.5).length;
+  const jointPain = ordered.slice(-3).some((log) => log.jointPain);
+
+  return {
+    weightTrendKgPerWeek,
+    waistTrendCmPerWeek,
+    nutritionAction: nutrition.calorieDelta < 0 ? 'Reduce calories by 100-150/day.' : 'Keep +200-300 kcal and 140-160 g protein.',
+    recoveryAlert: jointPain
+      ? 'Joint pain logged: deload now.'
+      : fatigueDays >= 3 || poorSleepDays >= 3
+        ? 'Recovery warning: cut sets 30-50% and use 3-4 RIR.'
+        : null,
+  };
+}
+
+function getTrend(logsA: DailyLog[], logsB: DailyLog[], key: 'morningWeightKg' | 'waistCm'): number | null {
+  const avgA = averageDefined(logsA.map((log) => log[key]));
+  const avgB = averageDefined(logsB.map((log) => log[key]));
+  if (avgA === null || avgB === null) return null;
+  return roundOneDecimal(avgB - avgA);
+}
+
+function averageDefined(values: (number | undefined)[]): number | null {
+  const present = values.filter((value): value is number => typeof value === 'number');
+  if (present.length === 0) return null;
+  return average(present);
 }
 
 export function formatProgressForPrompt(data: WorkoutData, exercises: Exercise[], progressSignal: ProgressSignal | null): string {

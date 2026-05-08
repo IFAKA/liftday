@@ -8,8 +8,9 @@ import { WorkoutData, setEntryReps } from '@/lib/types';
 import { EXERCISES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { TopBar } from './TopBar';
-import { getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
+import { getBodyTrendSummary, getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
+import { loadDailyLogs } from '@/lib/storage';
 import { WatchListItem, WatchPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
@@ -33,6 +34,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       signal: summary.signal,
       diagnosis: summary.diagnosis,
       routineDecision: summary.routineDecision,
+      bodyTrend: getBodyTrendSummary(loadDailyLogs()),
     };
   }, [data, mounted]);
 
@@ -86,6 +88,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       ) : (
         <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-2">
           <ProgressSummary signal={progress.signal} diagnosis={progress.diagnosis} />
+          <BodyTrendPanel trend={progress.bodyTrend} />
           <RoutineDecisionSummary decision={progress.routineDecision} />
 
           <WatchListItem
@@ -118,6 +121,36 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function BodyTrendPanel({ trend }: { trend: ReturnType<typeof getBodyTrendSummary> }) {
+  const weight = trend.weightTrendKgPerWeek === null
+    ? '--'
+    : `${trend.weightTrendKgPerWeek > 0 ? '+' : ''}${trend.weightTrendKgPerWeek.toFixed(1)}kg`;
+  const waist = trend.waistTrendCmPerWeek === null
+    ? '--'
+    : `${trend.waistTrendCmPerWeek > 0 ? '+' : ''}${trend.waistTrendCmPerWeek.toFixed(1)}cm`;
+
+  return (
+    <WatchPanel subtle>
+      <div className="grid grid-cols-2 gap-2">
+        <MiniTrend label="Weight" value={weight} />
+        <MiniTrend label="Waist" value={waist} />
+      </div>
+      <p className="mt-3 text-fluid-label font-mono uppercase text-white/50">
+        {trend.recoveryAlert ?? trend.nutritionAction}
+      </p>
+    </WatchPanel>
+  );
+}
+
+function MiniTrend({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/5 bg-black/30 px-3 py-2">
+      <p className="text-fluid-label font-mono uppercase text-white/25">{label}</p>
+      <p className="text-fluid-ui font-black tabular-nums text-white/70">{value}</p>
     </div>
   );
 }

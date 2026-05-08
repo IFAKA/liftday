@@ -10,6 +10,14 @@ export type EquipmentKey =
   | 'cable_machine'
   | 'bench'
   | 'squat_rack'
+  | 'smith_machine'
+  | 'hack_squat_machine'
+  | 'shoulder_press_machine'
+  | 'chest_press_machine'
+  | 'row_machine'
+  | 'lateral_raise_machine'
+  | 'reverse_pec_deck'
+  | 'preacher_curl_station'
   | 'lat_pulldown_machine'
   | 'leg_curl_machine'
   | 'leg_extension_machine'
@@ -57,6 +65,7 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   pullup: ['pullup_bar'],
   // Gym — barbell
   barbell_bench_press: ['barbell', 'bench', 'squat_rack'],
+  smith_incline_press: ['smith_machine', 'bench'],
   barbell_ohp: ['barbell', 'squat_rack'],
   barbell_row: ['barbell'],
   barbell_squat: ['barbell', 'squat_rack'],
@@ -67,25 +76,38 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   barbell_curl: ['barbell'],
   // Gym — dumbbells
   db_incline_press: ['dumbbells', 'bench'],
+  high_incline_machine_press: ['chest_press_machine'],
+  machine_shoulder_press: ['shoulder_press_machine'],
   db_shoulder_press: ['dumbbells'],
   db_lateral_raise: ['dumbbells'],
+  machine_lateral_raise: ['lateral_raise_machine'],
   db_curl: ['dumbbells'],
+  db_incline_curl: ['dumbbells', 'bench'],
   goblet_squat: ['dumbbells'],
   // Gym — cable
   cable_tricep_pushdown: ['cable_machine'],
   overhead_tricep_ext: ['cable_machine'],
   cable_row: ['cable_machine'],
+  braced_cable_row: ['cable_machine'],
   cable_face_pull: ['cable_machine'],
+  cable_rear_delt_fly: ['cable_machine'],
   straight_arm_pulldown_cable: ['cable_machine'],
   cable_fly: ['cable_machine'],
   cable_curl: ['cable_machine'],
   lat_pulldown: ['lat_pulldown_machine'],
+  neutral_grip_pulldown: ['lat_pulldown_machine'],
   // Gym — dumbbells/free
   hammer_curl: ['dumbbells'],
   // Gym — machines
+  chest_supported_row: ['row_machine'],
+  machine_row: ['row_machine'],
+  reverse_pec_deck: ['reverse_pec_deck'],
+  preacher_curl: ['preacher_curl_station'],
   leg_curl_machine: ['leg_curl_machine'],
   leg_extension_machine: ['leg_extension_machine'],
   standing_calf_raise_machine: ['calf_raise_machine'],
+  hack_squat: ['hack_squat_machine'],
+  smith_squat: ['smith_machine'],
   leg_press: ['leg_press_machine'],
   cable_lateral_raise: ['cable_machine'],
   cable_glute_kickback: ['cable_machine'],

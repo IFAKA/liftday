@@ -293,6 +293,14 @@ export const LEGS_EXERCISES: Exercise[] = [
 // GYM PUSH EXERCISES
 export const GYM_PUSH_EXERCISES: Exercise[] = [
   {
+    key: 'smith_incline_press',
+    name: 'SMITH INCLINE PRESS',
+    unit: 'weighted',
+    primaryMuscle: 'chest',
+    instruction: 'Set bench to 30-45 degrees. Lower to upper chest, pause briefly, press without locking hard. Stable upper-chest loading with low setup cost.',
+    workoutType: 'push',
+  },
+  {
     key: 'barbell_bench_press',
     name: 'BARBELL BENCH PRESS',
     unit: 'weighted',
@@ -320,6 +328,22 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     workoutType: 'push',
   },
   {
+    key: 'high_incline_machine_press',
+    name: 'HIGH-INCLINE MACHINE PRESS',
+    unit: 'weighted',
+    primaryMuscle: 'chest',
+    instruction: 'Seat so handles start around upper chest. Press up and in, keep shoulders down, control the stretch. Use when free benches or Smith are occupied.',
+    workoutType: 'push',
+  },
+  {
+    key: 'machine_shoulder_press',
+    name: 'MACHINE SHOULDER PRESS',
+    unit: 'weighted',
+    primaryMuscle: 'shoulders',
+    instruction: 'Set seat so handles start near ear height. Press in a smooth arc, stop just short of lockout, lower under control.',
+    workoutType: 'push',
+  },
+  {
     key: 'barbell_ohp',
     name: 'BARBELL OVERHEAD PRESS',
     unit: 'weighted',
@@ -335,6 +359,14 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     primaryMuscle: 'side_delt',
     instruction: 'Slight elbow bend, lift arms to shoulder height at sides. Lead with elbows not hands — pour water from a jug. Pause 1 sec at top. Lower slowly (3 sec). Primary side delt isolation — the exercise that widens shoulders the most.',
     youtubeId: 'kDqklk1ZESo',
+    workoutType: 'push',
+  },
+  {
+    key: 'machine_lateral_raise',
+    name: 'MACHINE LATERAL RAISE',
+    unit: 'weighted',
+    primaryMuscle: 'side_delt',
+    instruction: 'Pads just above elbows. Raise to shoulder height, pause, lower slowly. Keep traps quiet and let the machine keep tension stable.',
     workoutType: 'push',
   },
   {
@@ -387,6 +419,14 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     workoutType: 'pull',
   },
   {
+    key: 'neutral_grip_pulldown',
+    name: 'NEUTRAL-GRIP PULLDOWN',
+    unit: 'weighted',
+    primaryMuscle: 'lats',
+    instruction: 'Use neutral handles. Pull elbows toward ribs, chest tall, full stretch overhead. Smooth lat-biased pull without shoulder irritation.',
+    workoutType: 'pull',
+  },
+  {
     key: 'pullup',
     name: 'PULL-UP',
     unit: 'weighted',
@@ -402,6 +442,30 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     primaryMuscle: 'mid_back',
     instruction: 'Sit tall, slight lean forward at start. Pull handle to lower sternum, drive elbows back past your sides. Fully extend arms between reps — don\'t bounce. Controls the eccentric. Upper back, rhomboids, rear delts, biceps.',
     youtubeId: 'GZbfZ033f74',
+    workoutType: 'pull',
+  },
+  {
+    key: 'chest_supported_row',
+    name: 'CHEST-SUPPORTED ROW',
+    unit: 'weighted',
+    primaryMuscle: 'mid_back',
+    instruction: 'Chest fixed to pad. Pull elbows back, squeeze mid-back, lower to full reach. Removes lower-back fatigue from rowing volume.',
+    workoutType: 'pull',
+  },
+  {
+    key: 'machine_row',
+    name: 'MACHINE ROW',
+    unit: 'weighted',
+    primaryMuscle: 'mid_back',
+    instruction: 'Set chest pad so handles start at lower ribs. Pull without leaning back, pause, return with control.',
+    workoutType: 'pull',
+  },
+  {
+    key: 'braced_cable_row',
+    name: 'BRACED CABLE ROW',
+    unit: 'weighted',
+    primaryMuscle: 'mid_back',
+    instruction: 'Brace one hand or chest against a bench if possible. Row toward hip or lower ribs, keeping torso fixed.',
     workoutType: 'pull',
   },
   {
@@ -423,12 +487,44 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     workoutType: 'pull',
   },
   {
+    key: 'cable_rear_delt_fly',
+    name: 'CABLE REAR-DELT FLY',
+    unit: 'weighted',
+    primaryMuscle: 'rear_delt',
+    instruction: 'Cables set around shoulder height. Cross handles, sweep arms out wide, pause behind shoulders, lower slowly. Keep traps down.',
+    workoutType: 'pull',
+  },
+  {
+    key: 'reverse_pec_deck',
+    name: 'REVERSE PEC DECK',
+    unit: 'weighted',
+    primaryMuscle: 'rear_delt',
+    instruction: 'Chest on pad, handles at shoulder height. Open arms wide with soft elbows, pause, return slowly.',
+    workoutType: 'pull',
+  },
+  {
     key: 'db_curl',
     name: 'DUMBBELL CURL',
     unit: 'weighted',
     primaryMuscle: 'biceps',
     instruction: 'Dumbbells at sides, palms forward. Curl up, fully supinate (twist palm up) as you go. Squeeze biceps at top. Lower fully — full extension is the key rep most people skip. Don\'t swing.',
     youtubeId: 'ykJmrZ5v0Oo',
+    workoutType: 'pull',
+  },
+  {
+    key: 'db_incline_curl',
+    name: 'INCLINE DUMBBELL CURL',
+    unit: 'weighted',
+    primaryMuscle: 'biceps',
+    instruction: 'Bench low incline. Let arms hang behind torso, curl without swinging, squeeze, lower fully into the stretch.',
+    workoutType: 'pull',
+  },
+  {
+    key: 'preacher_curl',
+    name: 'PREACHER CURL',
+    unit: 'weighted',
+    primaryMuscle: 'biceps',
+    instruction: 'Upper arms fixed on pad. Curl smoothly, stop short of shoulder drift, lower to a deep controlled stretch.',
     workoutType: 'pull',
   },
   {
@@ -487,6 +583,22 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
     primaryMuscle: 'quads',
     instruction: 'Bar on upper traps (high bar). Brace core hard, take a big breath before descent. Squat to parallel or below — hips below knees. Drive knees out. Stand up through the heels. King of compound leg exercises.',
     youtubeId: 'ultWZbUMPL8',
+    workoutType: 'legs',
+  },
+  {
+    key: 'hack_squat',
+    name: 'HACK SQUAT',
+    unit: 'weighted',
+    primaryMuscle: 'quads',
+    instruction: 'Feet mid-platform, torso pinned. Squat deep without hip tuck, drive through mid-foot, avoid hard lockout.',
+    workoutType: 'legs',
+  },
+  {
+    key: 'smith_squat',
+    name: 'SMITH SQUAT',
+    unit: 'weighted',
+    primaryMuscle: 'quads',
+    instruction: 'Feet slightly forward under Smith path. Squat to controlled depth, keep knees tracking toes, stand without bouncing.',
     workoutType: 'legs',
   },
   {
@@ -594,6 +706,7 @@ export const FIRST_SESSION_KEY = 'traindaily_first_session';
 export const MOBILITY_DONE_KEY = 'traindaily_mobility_done';
 export const USER_PROFILE_KEY = 'liftday_user_profile';
 export const ACTIVE_WORKOUT_DRAFT_KEY = 'liftday_active_workout_draft';
+export const DAILY_LOGS_KEY = 'liftday_daily_logs';
 
 export const REST_DURATION = 90;
 

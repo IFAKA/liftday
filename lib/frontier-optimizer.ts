@@ -81,13 +81,15 @@ export function optimizeRoutineForFrontier(
   data: WorkoutData,
   fallbackSets: number
 ): FrontierOptimizerResult {
-  if (routine.id !== 'gym') {
+  if (routine.id !== 'gym' || routine.schedule.includes('push_a')) {
     const score = scoreRoutineWithProgress(routine, data, fallbackSets);
     return {
       routine,
       score,
       baseScore: score,
-      reasons: ['Optimizer is currently enabled for the gym routine only.'],
+      reasons: routine.schedule.includes('push_a')
+        ? ['Tailored SMV routine is fixed; optimizer scores it but does not randomize slots.']
+        : ['Optimizer is currently enabled for the gym routine only.'],
       selectedSlots: describeRoutineSlots(routine, fallbackSets),
     };
   }

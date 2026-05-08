@@ -2,7 +2,7 @@ import { getDay, addDays, startOfWeek, subDays } from 'date-fns';
 import { WorkoutType } from './types';
 import { formatDateKey, formatDisplayDate } from './workout-utils';
 
-const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['push', 'pull', 'legs', 'push', 'pull', 'legs'];
+const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'];
 
 /** Returns the workout type for a given date using the routine's schedule (or the default 6-day PPL). */
 export function getWorkoutType(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[]): WorkoutType {
@@ -67,7 +67,19 @@ export function getTrainingDaysCompletedThisWeek(
 export function getNextTrainingMessage(date: Date): string {
   const next = nextTrainingDay(date);
   const workoutType = getWorkoutType(next);
-  return `${formatDisplayDate(next)} - ${workoutType.toUpperCase()}`;
+  return `${formatDisplayDate(next)} - ${formatWorkoutType(workoutType)}`;
+}
+
+export function formatWorkoutType(workoutType: WorkoutType): string {
+  switch (workoutType) {
+    case 'push_a': return 'PUSH A';
+    case 'pull_a': return 'PULL A';
+    case 'legs_maintenance': return 'LEGS';
+    case 'push_b': return 'PUSH B';
+    case 'pull_b': return 'PULL B';
+    case 'delts_arms': return 'DELTS + ARMS';
+    default: return workoutType.toUpperCase();
+  }
 }
 
 export function getTrainingStreak(

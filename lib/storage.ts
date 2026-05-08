@@ -1,15 +1,56 @@
-import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId } from './types';
-import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY } from './constants';
+import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId, DailyLog, setEntryReps, setEntryWeight } from './types';
+import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY, DAILY_LOGS_KEY } from './constants';
 import { formatDateKey } from './workout-utils';
+import { SMV_PROFILE_DEFAULTS } from './smv';
 
 export function loadWorkoutData(): WorkoutData {
   try {
     if (typeof window === 'undefined') return {};
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
-    return JSON.parse(raw) as WorkoutData;
+    return migrateWorkoutData(JSON.parse(raw) as WorkoutData);
   } catch {
     return {};
+  }
+}
+
+export function migrateWorkoutData(data: WorkoutData): WorkoutData {
+  const migrated: WorkoutData = {};
+
+  for (const [dateKey, session] of Object.entries(data)) {
+    const nextSession: WorkoutSession = { ...session };
+    for (const [key, value] of Object.entries(session)) {
+      if (!Array.isArray(value)) continue;
+      (nextSession as Record<string, unknown>)[key] = value.map((entry) => {
+        if (typeof entry === 'number') return { reps: entry, weight: 0, rir: 2 };
+        return { reps: setEntryReps(entry), weight: setEntryWeight(entry) ?? 0, rir: entry.rir ?? 2 };
+      });
+    }
+    migrated[dateKey] = nextSession;
+  }
+
+  return migrated;
+}
+
+export function loadDailyLogs(): Record<string, DailyLog> {
+  try {
+    if (typeof window === 'undefined') return {};
+    const raw = localStorage.getItem(DAILY_LOGS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<string, DailyLog>;
+  } catch {
+    return {};
+  }
+}
+
+export function saveDailyLog(dateKey: string, log: DailyLog): void {
+  try {
+    if (typeof window === 'undefined') return;
+    const logs = loadDailyLogs();
+    logs[dateKey] = { ...logs[dateKey], ...log, dateKey };
+    localStorage.setItem(DAILY_LOGS_KEY, JSON.stringify(logs));
+  } catch {
+    // localStorage full or unavailable
   }
 }
 
@@ -87,7 +128,7 @@ export function loadUserProfile(): UserProfile | null {
     if (!profile.activeRoutine) profile.activeRoutine = 'gym';
     if (!profile.setsPerExercise || profile.setsPerExercise < 3) profile.setsPerExercise = 3;
     if (!profile.heightCm) profile.heightCm = 172;
-    if (!profile.weightKg) profile.weightKg = 66.6;
+    if (!profile.weightKg) profile.weightKg = SMV_PROFILE_DEFAULTS.weightKg;
     if (!profile.age) profile.age = 26;
     if (!profile.sex) profile.sex = 'male';
     if (!profile.bodyComposition) profile.bodyComposition = 'skinny_fat';
@@ -96,6 +137,9 @@ export function loadUserProfile(): UserProfile | null {
     if (!profile.injuryStatus) profile.injuryStatus = 'No injuries or pain';
     if (!profile.maxWorkoutMinutes) profile.maxWorkoutMinutes = 105;
     if (!profile.goal) profile.goal = 'Maximize SMV efficient frontier as fast as recoverable';
+    if (!profile.targetDate) profile.targetDate = SMV_PROFILE_DEFAULTS.targetDate;
+    if (!profile.proteinTargetGrams) profile.proteinTargetGrams = SMV_PROFILE_DEFAULTS.proteinTargetGrams;
+    if (!profile.calorieSurplusTarget) profile.calorieSurplusTarget = SMV_PROFILE_DEFAULTS.calorieSurplusTarget;
     return profile;
   } catch {
     return null;
@@ -154,7 +198,7 @@ export function getDefaultProfile(): UserProfile {
     createdAt: new Date().toISOString(),
     setsPerExercise: 3,
     heightCm: 172,
-    weightKg: 66.6,
+    weightKg: SMV_PROFILE_DEFAULTS.weightKg,
     age: 26,
     sex: 'male',
     bodyComposition: 'skinny_fat',
@@ -163,6 +207,9 @@ export function getDefaultProfile(): UserProfile {
     injuryStatus: 'No injuries or pain',
     maxWorkoutMinutes: 105,
     goal: 'Maximize SMV efficient frontier as fast as recoverable',
+    targetDate: SMV_PROFILE_DEFAULTS.targetDate,
+    proteinTargetGrams: SMV_PROFILE_DEFAULTS.proteinTargetGrams,
+    calorieSurplusTarget: SMV_PROFILE_DEFAULTS.calorieSurplusTarget,
   };
 }
 
@@ -170,6 +217,8 @@ export function getDefaultProfile(): UserProfile {
 export const pwaStorage: StorageAdapter = {
   loadWorkoutData: async () => loadWorkoutData(),
   saveSession: async (dateKey, session) => saveSession(dateKey, session),
+  loadDailyLogs: async () => loadDailyLogs(),
+  saveDailyLog: async (dateKey, log) => saveDailyLog(dateKey, log),
   getFirstSessionDate: async () => getFirstSessionDate(),
   setFirstSessionDate: async (dateKey) => setFirstSessionDate(dateKey),
   getMobilityDone: async (dateKey) => {

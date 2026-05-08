@@ -208,7 +208,7 @@ function isWorkoutSession(value: unknown): value is WorkoutSession {
   return (
     typeof value.logged_at === 'string' &&
     typeof value.week_number === 'number' &&
-    (value.workout_type === 'push' || value.workout_type === 'pull' || value.workout_type === 'legs')
+    ['push', 'pull', 'legs', 'push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'].includes(value.workout_type as string)
   );
 }
 

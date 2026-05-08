@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { EXERCISES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { formatWorkoutType } from '@/lib/schedule';
 
 const TYPE_COLOR: Record<string, string> = {
   push: 'text-orange-400',
@@ -45,7 +46,7 @@ export default function ExerciseDetailPage() {
             <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', TYPE_COLOR[ex.workoutType] ?? 'text-white')}>
               {ex.name}
             </span>
-            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5 uppercase">{ex.workoutType}</span>
+            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5 uppercase">{formatWorkoutType(ex.workoutType)}</span>
           </div>
         }
       />
@@ -75,7 +76,7 @@ export default function ExerciseDetailPage() {
           </div>
           <div className="flex flex-col gap-1 px-4 py-3 rounded-xl bg-white/5 flex-1">
             <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">Type</span>
-            <span className={cn('text-fluid-ui font-black uppercase', TYPE_COLOR[ex.workoutType] ?? 'text-white')}>{ex.workoutType}</span>
+            <span className={cn('text-fluid-ui font-black uppercase', TYPE_COLOR[ex.workoutType] ?? 'text-white')}>{formatWorkoutType(ex.workoutType)}</span>
           </div>
         </div>
       </div>

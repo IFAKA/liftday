@@ -13,12 +13,11 @@ import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
 import { formatDisplayDate } from '@/lib/workout-utils';
-import { getWorkoutType, getTrainingStreak } from '@/lib/schedule';
+import { formatWorkoutType, getWorkoutType, getTrainingStreak } from '@/lib/schedule';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
 import { useNavContext } from '@/lib/nav-context';
-import { buildSupersetPairs } from '@/lib/superset';
 import { WatchPanel } from './WatchSurface';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
@@ -91,6 +90,7 @@ function TodayContent({ date }: { date: Date }) {
         setsPerExercise={workout.setsPerExercise}
         currentTarget={workout.currentTarget}
         currentWeightTarget={workout.currentWeightTarget}
+        prescription={workout.currentPrescription}
         previousRep={workout.previousRep}
         previousWeight={workout.previousWeight}
         flashColor={workout.flashColor}
@@ -138,8 +138,6 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
   // Idle — ready to start (or already done today)
   const isDone = schedule.isDone;
-  const supersetPairs = buildSupersetPairs(workout.exercises);
-
   return (
     <motion.div
       className="flex flex-col h-full overflow-hidden bg-black relative"
@@ -169,7 +167,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
         ) : (
           <>
             <h1 className="text-fluid-title font-black uppercase text-white leading-none text-center">
-              {workoutType === 'push' ? 'PUSH' : workoutType === 'pull' ? 'PULL' : 'LEGS'}
+              {formatWorkoutType(workoutType)}
             </h1>
             {streak > 0 && (
               <Badge variant="ghost" className="mt-3 rounded-full bg-orange-500/10 border-orange-500/20 text-fluid-label font-black text-orange-500 uppercase">
@@ -195,13 +193,15 @@ nextExerciseName={workout.nextExerciseAfterRestName}
               </WatchPanel>
             </div>
           )}
-          {supersetPairs.length > 0 && (
+          {workout.exercises[0] && workout.currentPrescription && (
             <div className="w-full px-4 mb-3">
               <WatchPanel subtle className="py-3">
-                <p className="text-fluid-label text-zinc-500 uppercase font-mono">First pair</p>
+                <p className="text-fluid-label text-zinc-500 uppercase font-mono">Next</p>
                 <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
-                  {supersetPairs[0].a.name}
-                  {supersetPairs[0].b ? ` + ${supersetPairs[0].b.name}` : ''}
+                  {workout.exercises[0].name}
+                </p>
+                <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
+                  {workout.currentPrescription.sets}x{workout.currentPrescription.minReps}-{workout.currentPrescription.maxReps} · {workout.currentPrescription.targetRir}
                 </p>
               </WatchPanel>
             </div>

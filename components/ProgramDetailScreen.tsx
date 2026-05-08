@@ -8,12 +8,13 @@ import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
 import { RoutineScoreResult } from '@/lib/smv';
 import { getChainsForRoutine, getProgressionPath, resolveExerciseKey } from '@/lib/tiers';
-import { RoutineConfig, UserProfile } from '@/lib/types';
+import { RoutineConfig, UserProfile, WorkoutType } from '@/lib/types';
 import { formatCadence, formatRoutineForCopy, getExerciseName } from '@/lib/routine-format';
 import { getChainSetCount } from '@/lib/routine-plan';
 import { FrontierOptimizerResult } from '@/lib/frontier-optimizer';
 import { loadProgramSummary } from '@/lib/program-summary';
 import { WatchPanel, WatchSection } from './WatchSurface';
+import { formatWorkoutType } from '@/lib/schedule';
 
 export function ProgramDetailScreen() {
   const router = useRouter();
@@ -167,14 +168,14 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
 
   return (
     <div className="flex flex-col gap-3">
-      {(['push', 'pull', 'legs'] as const).map((workoutType) => {
+      {(routine.schedule as Exclude<WorkoutType, 'rest'>[]).map((workoutType, dayIndex) => {
         const chains = getChainsForRoutine(routine, workoutType);
         if (chains.length === 0) return null;
 
         return (
-          <WatchPanel key={workoutType} subtle>
+          <WatchPanel key={`${workoutType}-${dayIndex}`} subtle>
             <p className={cn('mb-3 text-fluid-label font-black uppercase', getWorkoutTone(workoutType))}>
-              {workoutType}
+              {formatWorkoutType(workoutType)}
             </p>
             <div className="flex flex-col gap-2">
               {chains.map((chain) => {
@@ -186,7 +187,7 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                     <div className="min-w-0">
                       <p className="truncate text-fluid-label font-black uppercase text-white/70">{active}</p>
                       <p className="text-xs font-mono uppercase text-white/25">
-                        {[chain.priority, formatCadence(chain.cadence)].filter(Boolean).join(' - ')}
+                        {[`${getChainSetCount(chain, fallbackSets)}x${chain.prescription?.minReps ?? 8}-${chain.prescription?.maxReps ?? 12}`, chain.prescription?.targetRir, chain.prescription?.restLabel, formatCadence(chain.cadence)].filter(Boolean).join(' - ')}
                       </p>
                       {progression.length > 0 && (
                         <p className="truncate text-xs font-mono uppercase text-white/20">
@@ -300,8 +301,9 @@ async function copyText(text: string): Promise<void> {
 }
 
 function getWorkoutTone(workoutType: string): string {
-  if (workoutType === 'push') return 'text-orange-400';
-  if (workoutType === 'pull') return 'text-blue-400';
+  if (workoutType.startsWith('push')) return 'text-orange-400';
+  if (workoutType.startsWith('pull')) return 'text-blue-400';
+  if (workoutType === 'delts_arms') return 'text-pink-300';
   return 'text-green-400';
 }
 
