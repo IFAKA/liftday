@@ -5,7 +5,7 @@ import { EquipmentKey } from './equipment';
 import { getPrescriptionForChain } from './smv';
 
 export function getChainSetCount(chain: TierChain, fallbackSets: number): number {
-  return chain.sets ?? fallbackSets;
+  return chain.sets ?? chain.prescription?.sets ?? fallbackSets;
 }
 
 export function getResolvedSessionPlan(
