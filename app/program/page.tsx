@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import { WeeklySplit } from '@/components/WeeklySplit';
-import { RoutineConfig, WorkoutData } from '@/lib/types';
+import { OptimizationContext, RoutineConfig, WorkoutData } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { cn } from '@/lib/utils';
@@ -12,13 +12,14 @@ import { loadProgramSummary } from '@/lib/program-summary';
 import { WatchListItem, WatchPanel, WatchSection } from '@/components/WatchSurface';
 
 export default function ProgramPage() {
-  const [{ data, routine, routineDecision }] = useState<{
+  const [{ data, routine, routineDecision, adaptation }] = useState<{
     data: WorkoutData;
     routine: RoutineConfig | null;
     routineDecision: RoutineAdjustmentDecision | null;
+    adaptation: OptimizationContext | null;
   }>(() => {
     if (typeof window === 'undefined') {
-      return { data: {}, routine: null, routineDecision: null };
+      return { data: {}, routine: null, routineDecision: null, adaptation: null };
     }
 
     const summary = loadProgramSummary();
@@ -27,6 +28,7 @@ export default function ProgramPage() {
       data: summary.data,
       routine: summary.routine,
       routineDecision: summary.routineDecision,
+      adaptation: summary.adaptation,
     };
   });
 
@@ -46,6 +48,12 @@ export default function ProgramPage() {
       />
 
       <div className="flex-1 overflow-y-auto px-3 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-4">
+        {adaptation && (
+          <WatchSection title="Today">
+            <AdaptiveRecommendationPanel adaptation={adaptation} />
+          </WatchSection>
+        )}
+
         {routine && (
           <WatchSection title="Program">
             <WatchListItem
@@ -71,6 +79,42 @@ export default function ProgramPage() {
   );
 }
 
+function AdaptiveRecommendationPanel({ adaptation }: { adaptation: OptimizationContext }) {
+  const recommendation = adaptation.recommendations[0];
+  const bottleneck = adaptation.recovery.bottleneck;
+  const guardrail = adaptation.targetDateGuardrail.warning;
+
+  return (
+    <WatchPanel>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-fluid-label font-mono uppercase text-green-400">
+            Recommend-first
+          </p>
+          <p className="mt-1 text-fluid-ui font-black uppercase leading-tight text-white">
+            {recommendation.title}
+          </p>
+        </div>
+        <span className="shrink-0 text-right text-fluid-label font-mono tabular-nums text-white/45">
+          {adaptation.objectiveScore.toFixed(1)}
+        </span>
+      </div>
+      <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/55">
+        {recommendation.summary} {recommendation.reason}
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <MiniMetric label="recovery" value={`${Math.round(recommendation.recoveryState * 100)}%`} />
+        <MiniMetric label="fatigue" value={recommendation.fatigueCost > 0 ? `+${recommendation.fatigueCost}` : recommendation.fatigueCost.toString()} />
+      </div>
+      {(bottleneck || guardrail) && (
+        <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
+          {guardrail ?? `Bottleneck: ${bottleneck!.muscle.replace('_', ' ')}`}
+        </p>
+      )}
+    </WatchPanel>
+  );
+}
+
 function RoutineDecisionPanel({ decision }: { decision: RoutineAdjustmentDecision }) {
   return (
     <WatchPanel>
@@ -91,5 +135,14 @@ function RoutineDecisionPanel({ decision }: { decision: RoutineAdjustmentDecisio
         {decision.nextAction}
       </p>
     </WatchPanel>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/5 bg-black/25 px-3 py-2">
+      <div className="text-fluid-label font-mono uppercase text-white/25">{label}</div>
+      <div className="text-fluid-ui font-black tabular-nums text-white/75">{value}</div>
+    </div>
   );
 }

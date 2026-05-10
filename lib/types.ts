@@ -193,6 +193,8 @@ export interface RecoverySignal {
   sleepHours?: number;
   fatigue?: 1 | 2 | 3 | 4 | 5;
   jointPain?: boolean;
+  muscleSoreness?: Partial<Record<MuscleGroup, number>>;
+  jointPainScores?: Partial<Record<JointArea, number>>;
   note?: string;
 }
 
@@ -261,6 +263,136 @@ export type MuscleGroup =
   | 'chest' | 'shoulders' | 'side_delt' | 'triceps'
   | 'lats' | 'mid_back' | 'rear_delt' | 'biceps' | 'upper_back'
   | 'quads' | 'hamstrings' | 'glutes' | 'calves' | 'neck';
+
+export type JointArea = 'shoulder' | 'elbow' | 'wrist' | 'hip' | 'knee' | 'ankle' | 'spine';
+
+export type AdaptationPriority =
+  | 'lateral_delts'
+  | 'upper_chest_chest'
+  | 'lats'
+  | 'rear_delts_posture'
+  | 'biceps'
+  | 'triceps'
+  | 'neck_traps_forearms'
+  | 'waist_reduction'
+  | 'legs_maintenance';
+
+export interface MusclePriorityProfile {
+  muscle: MuscleGroup;
+  priority: AdaptationPriority;
+  rank: number;
+  label: string;
+  targetWeeklySets: number;
+  minimumWeeklySets: number;
+  smvContribution: number;
+  recoveryHalfLifeHours: number;
+  maintenanceOnly?: boolean;
+}
+
+export interface ExerciseAdaptationMetadata {
+  exerciseKey: ExerciseKey;
+  primaryMuscles: MuscleGroup[];
+  secondaryMuscles: Partial<Record<MuscleGroup, number>>;
+  indirectVolume: Partial<Record<MuscleGroup, number>>;
+  axialFatigue: number;
+  systemicFatigue: number;
+  localDamage: number;
+  stabilityDemand: number;
+  progressionReliability: number;
+  stretchBias: number;
+  shortenedBias: number;
+  clothedSmvContribution: number;
+  jointStress: Partial<Record<JointArea, number>>;
+}
+
+export interface MuscleRecoveryProfile {
+  muscle: MuscleGroup;
+  recoveryState: number;
+  fatigueLoad: number;
+  soreness: number;
+  halfLifeHours: number;
+}
+
+export interface RecoveryState {
+  systemic: number;
+  muscles: Partial<Record<MuscleGroup, MuscleRecoveryProfile>>;
+  bottleneck: MuscleRecoveryProfile | null;
+  generatedAt: string;
+}
+
+export interface FatigueState {
+  localMuscleFatigue: Partial<Record<MuscleGroup, number>>;
+  connectiveTissueFatigue: Partial<Record<JointArea, number>>;
+  axialFatigue: number;
+  systemicFatigue: number;
+  jointRisk: number;
+  bottlenecks: string[];
+}
+
+export type ProgressionTrend =
+  | 'improving'
+  | 'flat'
+  | 'fatigue_masked'
+  | 'junk_volume'
+  | 'undertraining'
+  | 'recovery_bottleneck'
+  | 'insufficient_data';
+
+export interface ProgressionQuality {
+  trend: ProgressionTrend;
+  velocity: number;
+  confidence: number;
+  exerciseKey?: ExerciseKey;
+  muscle?: MuscleGroup;
+  reasons: string[];
+}
+
+export type AdaptiveRecommendationAction =
+  | 'add_volume'
+  | 'reduce_volume'
+  | 'swap_exercise'
+  | 'hold_progression'
+  | 'change_frequency'
+  | 'deload';
+
+export interface AdaptiveRecommendation {
+  action: AdaptiveRecommendationAction;
+  muscle?: MuscleGroup;
+  exerciseKey?: ExerciseKey;
+  title: string;
+  summary: string;
+  reason: string;
+  stimulusGain: number;
+  fatigueCost: number;
+  recoveryState: number;
+  blockedConstraints: string[];
+  confidence: number;
+}
+
+export interface EffectiveVolumeEntry {
+  muscle: MuscleGroup;
+  sets: number;
+  target: number;
+  minimum: number;
+  priorityRank: number;
+  status: 'low' | 'productive' | 'high' | 'maintenance';
+}
+
+export interface OptimizationContext {
+  mode: 'recommend-first';
+  objective: 'smv_velocity_per_recoverable_fatigue';
+  recovery: RecoveryState;
+  fatigue: FatigueState;
+  progression: ProgressionQuality[];
+  effectiveVolume: EffectiveVolumeEntry[];
+  recommendations: AdaptiveRecommendation[];
+  objectiveScore: number;
+  targetDateGuardrail: {
+    targetDate: string | null;
+    daysRemaining: number | null;
+    warning: string | null;
+  };
+}
 
 // A tier chain defines a progression of exercises for one workout slot
 export type WorkoutCadence = 'first' | 'second';

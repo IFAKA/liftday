@@ -27,11 +27,21 @@ test('opens the program tab', async ({ page }) => {
 
   await expect(page.locator('body')).toContainText('Program');
   await expect(page.getByRole('link', { name: /routine/i })).toBeVisible();
+  await expect(page.locator('body')).toContainText(/Recommend-first|Hold course|Add|Deload/);
   await expect(page.locator('body')).toContainText(/SMV Hypertrophy|Routine/);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
 });
 
+test('shows adaptive progress detail metrics', async ({ page }) => {
+  await page.goto('/history/detail');
+
+  await expect(page.locator('body')).toContainText('Progress Detail');
+  await expect(page.locator('body')).toContainText('Effective Volume');
+  await expect(page.locator('body')).toContainText(/velocity|system|fatigue/i);
+});
+
 test('restores an active workout after reload', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');
@@ -59,6 +69,7 @@ test('restores an active workout after reload', async ({ page }) => {
 
 test('logs an SMV workout with RIR and an occupied-machine substitution', async ({ page }) => {
   test.setTimeout(90000);
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');

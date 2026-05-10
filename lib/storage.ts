@@ -37,10 +37,26 @@ export function loadDailyLogs(): Record<string, DailyLog> {
     if (typeof window === 'undefined') return {};
     const raw = localStorage.getItem(DAILY_LOGS_KEY);
     if (!raw) return {};
-    return JSON.parse(raw) as Record<string, DailyLog>;
+    return migrateDailyLogs(JSON.parse(raw) as Record<string, DailyLog>);
   } catch {
     return {};
   }
+}
+
+export function migrateDailyLogs(logs: Record<string, DailyLog>): Record<string, DailyLog> {
+  const migrated: Record<string, DailyLog> = {};
+
+  for (const [dateKey, log] of Object.entries(logs)) {
+    migrated[dateKey] = {
+      ...log,
+      dateKey: log.dateKey ?? dateKey,
+      jointPainScores: log.jointPain && !log.jointPainScores
+        ? { shoulder: 3, elbow: 3 }
+        : log.jointPainScores,
+    };
+  }
+
+  return migrated;
 }
 
 export function saveDailyLog(dateKey: string, log: DailyLog): void {

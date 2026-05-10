@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { getDefaultProfile, migrateWorkoutData } from '@/lib/storage';
+import { getDefaultProfile, migrateDailyLogs, migrateWorkoutData } from '@/lib/storage';
+import { getRecoveryState } from '@/lib/adaptation/recovery-engine';
+import { getFatigueState } from '@/lib/adaptation/fatigue-engine';
+import { getProgressionQuality } from '@/lib/adaptation/progression-engine';
+import { getAdaptiveRecommendations } from '@/lib/adaptation/recommendation-engine';
+import { smvVelocityPerRecoverableFatigue } from '@/lib/adaptation/objective';
+import { getEffectiveWeeklyVolume } from '@/lib/adaptation/volume-engine';
 import {
   calculateRoutineVolume,
   evaluateDoubleProgression,
@@ -74,4 +80,97 @@ test('ranks crowded-gym substitutions and migrates legacy set entries', () => {
     { reps: 8, weight: 0, rir: 2 },
     { reps: 9, weight: 40, rir: 2 },
   ]);
+});
+
+test('calculates adaptive effective volume, recovery, fatigue, and recommendations', () => {
+  const profile = getDefaultProfile();
+  const today = new Date('2026-05-10T12:00:00');
+  const data = migrateWorkoutData({
+    '2026-05-08': {
+      logged_at: '2026-05-08T10:00:00.000Z',
+      week_number: 1,
+      workout_type: 'push',
+      barbell_bench_press: [
+        { reps: 8, weight: 70, rir: 1 },
+        { reps: 8, weight: 70, rir: 1 },
+        { reps: 8, weight: 70, rir: 2 },
+      ],
+      db_lateral_raise: [
+        { reps: 14, weight: 10, rir: 2 },
+        { reps: 13, weight: 10, rir: 2 },
+      ],
+    },
+    '2026-05-05': {
+      logged_at: '2026-05-05T10:00:00.000Z',
+      week_number: 1,
+      workout_type: 'legs',
+      romanian_deadlift: [
+        { reps: 10, weight: 90, rir: 1 },
+        { reps: 9, weight: 90, rir: 1 },
+        { reps: 9, weight: 90, rir: 1 },
+      ],
+    },
+  });
+  const logs = migrateDailyLogs({
+    '2026-05-10': {
+      dateKey: '2026-05-10',
+      sleepHours: 6,
+      fatigue: 4,
+      jointPain: true,
+      muscleSoreness: { hamstrings: 4 },
+    },
+  });
+  const effectiveVolume = getEffectiveWeeklyVolume({ data, routine: gymRoutine, profile, fallbackSets: 3, today });
+  const recovery = getRecoveryState({ data, dailyLogs: logs, today });
+  const fatigue = getFatigueState({ data, dailyLogs: logs, recovery, today });
+  const progression = getProgressionQuality({ data, recovery, fatigue, effectiveVolume });
+  const context = getAdaptiveRecommendations({ recovery, fatigue, progression, effectiveVolume, profile, today });
+
+  expect(effectiveVolume.find((entry) => entry.muscle === 'chest')?.sets).toBeGreaterThan(2);
+  expect(recovery.muscles.side_delt!.recoveryState).toBeGreaterThan(recovery.muscles.hamstrings!.recoveryState);
+  expect(fatigue.axialFatigue).toBeGreaterThan(0);
+  expect(fatigue.jointRisk).toBeGreaterThan(0);
+  expect(context.mode).toBe('recommend-first');
+  expect(context.recommendations[0].reason.length).toBeGreaterThan(10);
+});
+
+test('primary objective favors recoverable velocity over excessive raw volume and ignores target date in score', () => {
+  const base = {
+    recovery: {
+      systemic: 0.85,
+      muscles: {},
+      bottleneck: null,
+      generatedAt: '2026-05-10T00:00:00.000Z',
+    },
+    fatigue: {
+      localMuscleFatigue: {},
+      connectiveTissueFatigue: {},
+      axialFatigue: 0.1,
+      systemicFatigue: 0.1,
+      jointRisk: 0.1,
+      bottlenecks: [],
+    },
+  };
+  const efficient = smvVelocityPerRecoverableFatigue({
+    ...base,
+    effectiveVolume: [{ muscle: 'side_delt', sets: 12, target: 22, minimum: 18, priorityRank: 1, status: 'low' }],
+    targetDate: '2026-10-31',
+    today: new Date('2026-05-10T00:00:00'),
+  });
+  const excessive = smvVelocityPerRecoverableFatigue({
+    recovery: { ...base.recovery, systemic: 0.35 },
+    fatigue: { ...base.fatigue, axialFatigue: 0.9, systemicFatigue: 0.95, jointRisk: 0.8 },
+    effectiveVolume: [{ muscle: 'side_delt', sets: 30, target: 22, minimum: 18, priorityRank: 1, status: 'high' }],
+    targetDate: '2026-10-31',
+    today: new Date('2026-05-10T00:00:00'),
+  });
+  const differentDate = smvVelocityPerRecoverableFatigue({
+    ...base,
+    effectiveVolume: [{ muscle: 'side_delt', sets: 12, target: 22, minimum: 18, priorityRank: 1, status: 'low' }],
+    targetDate: '2026-11-30',
+    today: new Date('2026-05-10T00:00:00'),
+  });
+
+  expect(efficient).toBeGreaterThan(excessive);
+  expect(differentDate).toBe(efficient);
 });

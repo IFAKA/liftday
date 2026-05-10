@@ -1,4 +1,9 @@
 import { EXERCISES } from './constants';
+import { getFatigueState } from './adaptation/fatigue-engine';
+import { getProgressionQuality } from './adaptation/progression-engine';
+import { getRecoveryState } from './adaptation/recovery-engine';
+import { getAdaptiveRecommendations } from './adaptation/recommendation-engine';
+import { getEffectiveWeeklyVolume } from './adaptation/volume-engine';
 import { FrontierOptimizerResult, optimizeRoutineForFrontier } from './frontier-optimizer';
 import {
   formatProgressForPrompt,
@@ -12,9 +17,9 @@ import {
   RoutineAdjustmentDecision,
 } from './progress-insights';
 import { getRoutine } from './routines';
-import { getFirstSessionDate, loadUserProfile, loadWorkoutData } from './storage';
+import { getFirstSessionDate, loadDailyLogs, loadUserProfile, loadWorkoutData } from './storage';
 import { resolveExerciseKey } from './tiers';
-import { Exercise, RoutineConfig, UserProfile, WorkoutData } from './types';
+import { Exercise, OptimizationContext, RoutineConfig, UserProfile, WorkoutData } from './types';
 import { getSetsForWeek, getWeekNumber } from './workout-utils';
 
 export interface ProgramSummary {
@@ -29,6 +34,7 @@ export interface ProgramSummary {
   routineDecision: RoutineAdjustmentDecision;
   frontier: ProgressFrontier;
   progressPrompt: string;
+  adaptation: OptimizationContext;
 }
 
 export function getProgramSummary(
@@ -45,6 +51,7 @@ export function getProgramSummary(
   const weeklyExercises = getWeeklyExercises(routine, profile);
   const signal = getProgressSignal(data, weeklyExercises);
   const diagnosis = getProgressDiagnosis(data, weeklyExercises, optimizer.score);
+  const adaptation = getAdaptationContext(data, profile, routine, setsPerExercise, today);
 
   return {
     data,
@@ -58,6 +65,7 @@ export function getProgramSummary(
     routineDecision: getRoutineAdjustmentDecision(data, diagnosis, optimizer.score, signal),
     frontier: getProgressFrontier(data, weeklyExercises, optimizer.score, signal),
     progressPrompt: formatProgressForPrompt(data, weeklyExercises, signal),
+    adaptation,
   };
 }
 
@@ -80,4 +88,27 @@ function getWeeklyExercises(routine: RoutineConfig, profile: UserProfile | null)
   return routine.tierChains
     .map((chain) => EXERCISES.find((exercise) => exercise.key === resolveExerciseKey(chain, tiers)))
     .filter((exercise): exercise is Exercise => Boolean(exercise));
+}
+
+function getAdaptationContext(
+  data: WorkoutData,
+  profile: UserProfile | null,
+  routine: RoutineConfig,
+  fallbackSets: number,
+  today: Date
+): OptimizationContext {
+  const dailyLogs = loadDailyLogs();
+  const effectiveVolume = getEffectiveWeeklyVolume({ data, routine, profile, fallbackSets, today });
+  const recovery = getRecoveryState({ data, dailyLogs, today });
+  const fatigue = getFatigueState({ data, dailyLogs, recovery, today });
+  const progression = getProgressionQuality({ data, recovery, fatigue, effectiveVolume });
+
+  return getAdaptiveRecommendations({
+    recovery,
+    fatigue,
+    progression,
+    effectiveVolume,
+    profile,
+    today,
+  });
 }
