@@ -27,7 +27,7 @@ test('opens the program tab', async ({ page }) => {
 
   await expect(page.locator('body')).toContainText('Program');
   await expect(page.getByRole('link', { name: /routine/i })).toBeVisible();
-  await expect(page.locator('body')).toContainText(/Recommend-first|Hold course|Add|Deload/);
+  await expect(page.locator('body')).toContainText(/Next|Hold course|Add|Deload/);
   await expect(page.locator('body')).toContainText(/SMV Hypertrophy|Routine/);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
 });
@@ -36,8 +36,8 @@ test('shows adaptive progress detail metrics', async ({ page }) => {
   await page.goto('/history/detail');
 
   await expect(page.locator('body')).toContainText('Progress Detail');
-  await expect(page.locator('body')).toContainText('Effective Volume');
-  await expect(page.locator('body')).toContainText(/velocity|system|fatigue/i);
+  await expect(page.locator('body')).toContainText('Volume');
+  await expect(page.locator('body')).toContainText(/score|recovery|load/i);
 });
 
 test('restores an active workout after reload', async ({ page }) => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronLeft, Copy } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,15 @@ import { formatCadence, formatRoutineForCopy, getExerciseName } from '@/lib/rout
 import { getChainSetCount } from '@/lib/routine-plan';
 import { FrontierOptimizerResult } from '@/lib/frontier-optimizer';
 import { loadProgramSummary } from '@/lib/program-summary';
-import { WatchPanel, WatchSection } from './WatchSurface';
+import {
+  WatchBarRow,
+  WatchCopyButton,
+  WatchMetricCell,
+  WatchMetricGrid,
+  WatchPanel,
+  WatchSection,
+  WatchSignalPanel,
+} from './WatchSurface';
 import { formatWorkoutType } from '@/lib/schedule';
 
 export function ProgramDetailScreen() {
@@ -49,7 +57,7 @@ export function ProgramDetailScreen() {
     <div className="flex flex-col h-full bg-black overflow-hidden">
       <TopBar
         leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/program')} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/program')} className="-ml-2 size-11 text-white/50 hover:text-white hover:bg-transparent active:text-white">
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }
@@ -59,13 +67,7 @@ export function ProgramDetailScreen() {
       <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-5">
         {smvScore && (
           <WatchSection title="Efficiency">
-            <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} />
-          </WatchSection>
-        )}
-
-        {routine && (
-          <WatchSection title="Optimizer">
-            <OptimizerPanel optimizer={optimizer} />
+            <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} optimizer={optimizer} />
           </WatchSection>
         )}
 
@@ -76,90 +78,60 @@ export function ProgramDetailScreen() {
         )}
 
         {smvScore && (
-          <WatchSection title="Muscle Volume">
+          <WatchSection title="Volume">
             <MuscleVolumeList score={smvScore} />
           </WatchSection>
         )}
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleCopyRoutine}
-          className={cn(
-            'w-full rounded-xl border bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white active:scale-[0.98]',
-            copied && 'text-green-400 border-green-400/30 bg-green-400/10'
-          )}
-        >
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          <span className="text-[11px] font-black uppercase tracking-widest font-mono">{copied ? 'Copied' : 'Copy Routine'}</span>
-        </Button>
+        <WatchCopyButton copied={copied} onClick={handleCopyRoutine} label="Copy Routine" />
       </div>
     </div>
-  );
-}
-
-function OptimizerPanel({ optimizer }: { optimizer: FrontierOptimizerResult | null }) {
-  if (!optimizer) return null;
-
-  const delta = optimizer.score.total - optimizer.baseScore.total;
-
-  return (
-    <WatchPanel subtle>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-fluid-label font-mono uppercase text-green-400">Deterministic</p>
-          <p className="mt-1 text-fluid-ui font-black uppercase text-white">Frontier routine selected</p>
-        </div>
-        <span className="shrink-0 text-fluid-label font-mono tabular-nums text-white/45">
-          {delta >= 0 ? '+' : ''}{delta.toFixed(1)}
-        </span>
-      </div>
-      <div className="flex flex-col gap-2">
-        {optimizer.reasons.slice(0, 3).map((reason) => (
-          <p key={reason} className="text-fluid-label font-mono uppercase leading-relaxed text-white/40">
-            {reason}
-          </p>
-        ))}
-      </div>
-    </WatchPanel>
   );
 }
 
 function SmvOverview({
   score,
   verdict,
+  optimizer,
 }: {
   score: RoutineScoreResult;
   verdict: { label: string; summary: string; nextAction: string; tone: string };
+  optimizer: FrontierOptimizerResult | null;
 }) {
+  const delta = optimizer ? optimizer.score.total - optimizer.baseScore.total : null;
+
   return (
-    <WatchPanel>
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <span className={cn('text-fluid-label font-mono uppercase', verdict.tone)}>
-            {verdict.label}
-          </span>
-          <p className="mt-1 text-fluid-ui font-black uppercase text-white">
-            {verdict.summary}
-          </p>
+    <WatchSignalPanel
+      label={verdict.label}
+      title={verdict.summary}
+      action={verdict.nextAction}
+      metric={formatOneDecimal(score.total)}
+      metricLabel={`${formatOneDecimal(score.efficiency)}/set`}
+      tone={verdict.tone}
+    >
+      <WatchMetricGrid>
+        <WatchMetricCell label="Sets" value={formatOneDecimal(score.cost.totalSets)} />
+        <WatchMetricCell label="Moves" value={formatOneDecimal(score.cost.equipmentChanges)} />
+        <WatchMetricCell label={score.penalty > 0 ? 'Penalty' : 'Cost'} value={score.penalty > 0 ? `-${formatOneDecimal(score.penalty)}` : formatOneDecimal(score.cost.total)} />
+      </WatchMetricGrid>
+      {optimizer && (
+        <div className="mt-4 border-t border-white/5 pt-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-fluid-label font-mono uppercase text-green-400">Picked</p>
+            <span className="text-fluid-label font-mono tabular-nums text-white/40">
+              {delta !== null && `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {optimizer.reasons.slice(0, 2).map((reason) => (
+              <p key={reason} className="text-fluid-label font-mono uppercase leading-relaxed text-white/35">
+                Why: {reason}
+              </p>
+            ))}
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-3xl font-black tabular-nums text-white">{formatOneDecimal(score.total)}</div>
-          <div className="text-fluid-label font-mono text-white/30">{formatOneDecimal(score.efficiency)}/set</div>
-        </div>
-      </div>
-
-      <p className="mb-4 text-fluid-label font-mono uppercase text-white/35">
-        {verdict.nextAction}
-      </p>
-
-      <div className="grid grid-cols-3 gap-2">
-        <SmvMetric label="sets" value={formatOneDecimal(score.cost.totalSets)} />
-        <SmvMetric label="moves" value={formatOneDecimal(score.cost.equipmentChanges)} />
-        <SmvMetric label={score.penalty > 0 ? 'penalty' : 'cost'} value={score.penalty > 0 ? `-${formatOneDecimal(score.penalty)}` : formatOneDecimal(score.cost.total)} />
-      </div>
-    </WatchPanel>
+      )}
+    </WatchSignalPanel>
   );
 }
 
@@ -222,23 +194,14 @@ function MuscleVolumeList({ score }: { score: RoutineScoreResult }) {
           const barWidth = Math.max(4, Math.round((v.gross / max) * 100));
           const hasPenalty = v.penalty > 0;
           return (
-            <div key={muscle} className="flex items-center gap-3">
-              <span className="text-fluid-label font-mono text-white/30 w-20 shrink-0 uppercase truncate">
-                {muscle.replace('_', ' ')}
-              </span>
-              <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div
-                  className={cn('h-full rounded-full', hasPenalty ? 'bg-red-400' : 'bg-white/40')}
-                  style={{ width: `${barWidth}%` }}
-                />
-              </div>
-              <span className={cn('text-fluid-label font-mono tabular-nums w-8 text-right shrink-0', hasPenalty ? 'text-red-400' : 'text-white/40')}>
-                {formatOneDecimal(v.net)}
-              </span>
-              <span className="text-fluid-label font-mono tabular-nums w-12 text-right shrink-0 text-white/25">
-                {formatSetCount(v.sets)}/{v.target}
-              </span>
-            </div>
+            <WatchBarRow
+              key={muscle}
+              label={muscle.replace('_', ' ')}
+              percent={barWidth}
+              tone={hasPenalty ? 'bg-red-400' : 'bg-white/40'}
+              value={<span className={hasPenalty ? 'text-red-400' : undefined}>{formatOneDecimal(v.net)}</span>}
+              meta={`${formatSetCount(v.sets)}/${v.target}`}
+            />
           );
         })}
       </div>
@@ -314,13 +277,4 @@ function formatOneDecimal(value: number): string {
 function formatSetCount(value: number): string {
   const roundedUp = Math.ceil(value * 10) / 10;
   return roundedUp.toFixed(1);
-}
-
-function SmvMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-black/30 border border-white/5 px-3 py-2">
-      <div className="text-fluid-label font-mono uppercase text-white/25">{label}</div>
-      <div className="text-fluid-ui font-black tabular-nums text-white/70">{value}</div>
-    </div>
-  );
 }

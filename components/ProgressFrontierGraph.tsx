@@ -11,7 +11,7 @@ import {
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import { ProgressDiagnosis, ProgressFrontier } from '@/lib/progress-insights';
 import { cn } from '@/lib/utils';
-import { WatchPanel, WatchSection } from './WatchSurface';
+import { WatchMetricCell, WatchPanel, WatchSection } from './WatchSurface';
 
 export function ProgressFrontierGraph({
   frontier,
@@ -21,33 +21,20 @@ export function ProgressFrontierGraph({
   diagnosis: ProgressDiagnosis;
 }) {
   const hasHistory = frontier.current !== null;
-  const changeLabel = diagnosis.averageChangePct === null ? '--' : formatSigned(diagnosis.averageChangePct);
   const chartPoints = frontier.points.filter((point) => point.actual !== null);
 
   return (
-    <div className="space-y-4">
-      <div className="mb-3 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-fluid-label font-black uppercase text-white/40 font-mono">Progress Check</p>
-          <p className={cn('text-fluid-heading font-black uppercase leading-none', diagnosis.tone)}>
-            {diagnosis.label}
-          </p>
-        </div>
-        <p className="text-right text-fluid-label font-mono uppercase text-white/35">
-          {diagnosis.improvingCount} up · {diagnosis.flatCount} flat · {diagnosis.decliningCount} down
-        </p>
-      </div>
-
-      <WatchPanel subtle className="bg-black/35">
+    <div className="space-y-3">
+      <WatchPanel subtle className="bg-black/30">
         <div className="mb-3 flex items-center justify-between gap-4">
           <div>
-            <p className="text-fluid-label font-mono uppercase text-white/30">Avg change vs last time</p>
-            <p className={cn('text-2xl font-black tabular-nums leading-none', diagnosis.averageChangePct === null ? 'text-white/40' : diagnosis.tone)}>
-              {changeLabel}{diagnosis.averageChangePct === null ? '' : '%'}
+            <p className="text-fluid-label font-mono uppercase text-white/30">Strength</p>
+            <p className={cn('text-fluid-ui font-black uppercase leading-none', diagnosis.tone)}>
+              {diagnosis.improvingCount} up · {diagnosis.flatCount} flat · {diagnosis.decliningCount} down
             </p>
           </div>
           <p className="max-w-40 text-right text-fluid-label font-mono uppercase text-white/35">
-            {diagnosis.summary}
+            Baseline 100
           </p>
         </div>
 
@@ -90,37 +77,10 @@ export function ProgressFrontierGraph({
         </p>
       </WatchPanel>
 
-      <WatchPanel subtle className="py-3">
-        <p className="mb-3 text-fluid-label font-black uppercase text-white/35 font-mono">Fix first</p>
-        <div className="space-y-2">
-          {diagnosis.nextActions.map((action) => (
-            <p key={action} className="text-fluid-label font-mono uppercase text-white/70">
-              {action}
-            </p>
-          ))}
-        </div>
-      </WatchPanel>
-
       {diagnosis.priorityExercises.length > 0 && (
-        <WatchSection title="Exercise Detail" className="space-y-2">
+        <WatchSection title="Exercises" className="space-y-2">
           {diagnosis.priorityExercises.map((exercise) => (
             <ExerciseRow key={exercise.key} exercise={exercise} />
-          ))}
-        </WatchSection>
-      )}
-
-      {diagnosis.volumeGaps.length > 0 && (
-        <WatchSection title="Volume Gaps" className="space-y-2">
-          {diagnosis.volumeGaps.map((gap) => (
-            <WatchPanel key={gap.muscle} subtle className="bg-black/25 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-fluid-ui font-black uppercase text-white">{gap.muscle}</p>
-                <p className="text-fluid-label font-mono tabular-nums text-yellow-400">
-                  {gap.sets}/{gap.target} sets
-                </p>
-              </div>
-              <p className="mt-1 text-fluid-label font-mono uppercase text-white/45">{gap.action}</p>
-            </WatchPanel>
           ))}
         </WatchSection>
       )}
@@ -157,9 +117,9 @@ function ExerciseRow({ exercise }: { exercise: ProgressDiagnosis['priorityExerci
         </div>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2">
-        <MiniStat label="last" value={exercise.previousLabel} />
-        <MiniStat label="now" value={exercise.latestLabel} tone={statusTone} />
-        <MiniStat label="best" value={exercise.bestLabel} />
+        <WatchMetricCell label="Last" value={exercise.previousLabel} className="px-2" />
+        <WatchMetricCell label="Now" value={exercise.latestLabel} tone={statusTone} className="px-2" />
+        <WatchMetricCell label="Best" value={exercise.bestLabel} className="px-2" />
       </div>
       {exercise.status !== 'up' && (
         <p className="mt-3 text-fluid-label font-mono uppercase text-white/50">
@@ -167,15 +127,6 @@ function ExerciseRow({ exercise }: { exercise: ProgressDiagnosis['priorityExerci
         </p>
       )}
     </WatchPanel>
-  );
-}
-
-function MiniStat({ label, value, tone = 'text-white/70' }: { label: string; value: string; tone?: string }) {
-  return (
-    <div className="min-w-0">
-      <div className="text-xs font-mono uppercase text-white/25">{label}</div>
-      <div className={cn('truncate text-fluid-label font-black tabular-nums', tone)}>{value}</div>
-    </div>
   );
 }
 

@@ -2,15 +2,23 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronLeft, Copy } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProgressFrontierGraph } from '@/components/ProgressFrontierGraph';
 import { TopBar } from '@/components/TopBar';
+import { ProgressDiagnosis } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
-import { EffectiveVolumeEntry, OptimizationContext, WorkoutData } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { OptimizationContext, WorkoutData } from '@/lib/types';
 import { getWorkoutPatterns } from '@/lib/workout-utils';
-import { WatchPanel } from './WatchSurface';
+import {
+  WatchBarRow,
+  WatchCopyButton,
+  WatchMetricCell,
+  WatchMetricGrid,
+  WatchPanel,
+  WatchSection,
+  WatchSignalPanel,
+} from './WatchSurface';
 
 export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
   const router = useRouter();
@@ -44,37 +52,23 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
         leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/history')} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/history')} className="-ml-2 size-11 text-white/50 hover:text-white hover:bg-transparent active:text-white">
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Progress Detail</span>}
       />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleCopyProgress}
-          className={cn(
-            'mb-3 w-full rounded-xl border bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white active:scale-[0.98]',
-            copied && 'text-green-400 border-green-400/30 bg-green-400/10'
-          )}
-        >
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          <span className="text-[11px] font-black uppercase tracking-widest font-mono">{copied ? 'Copied' : 'Copy Progress'}</span>
-        </Button>
+      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-3">
+        <AdaptiveProgressPanel adaptation={progress.adaptation} diagnosis={progress.diagnosis} />
 
-        <AdaptiveProgressPanel adaptation={progress.adaptation} />
-
-        <WatchPanel subtle className="mt-3 bg-black/30">
+        <WatchSection title="Trend">
           <ProgressFrontierGraph frontier={progress.frontier} diagnosis={progress.diagnosis} />
-        </WatchPanel>
+        </WatchSection>
 
         {patterns.sessionCount >= 3 && (
-          <WatchPanel subtle className="mt-3 space-y-2">
-            <p className="text-xs text-white/35 uppercase font-mono">Patterns</p>
+          <WatchPanel subtle className="space-y-2">
+            <p className="text-fluid-label text-white/35 uppercase font-mono">Patterns</p>
             {patterns.usualDays.length > 0 && (
               <p className="text-fluid-label text-white/45 font-mono">
                 Usually trains <span className="text-white">{patterns.usualDays.join(' · ')}</span>
@@ -97,72 +91,73 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
             )}
           </WatchPanel>
         )}
+
+        <WatchCopyButton copied={copied} onClick={handleCopyProgress} label="Copy Progress" />
       </div>
     </div>
   );
 }
 
-function AdaptiveProgressPanel({ adaptation }: { adaptation: OptimizationContext }) {
+function AdaptiveProgressPanel({
+  adaptation,
+  diagnosis,
+}: {
+  adaptation: OptimizationContext;
+  diagnosis: ProgressDiagnosis;
+}) {
   const topVolumes = adaptation.effectiveVolume
     .filter((entry) => entry.priorityRank <= 7)
     .slice(0, 5);
   const bottleneck = adaptation.recovery.bottleneck;
   const trend = adaptation.progression.find((entry) => entry.trend !== 'insufficient_data') ?? adaptation.progression[0];
+  const changeLabel = diagnosis.averageChangePct === null
+    ? '--'
+    : `${diagnosis.averageChangePct > 0 ? '+' : ''}${diagnosis.averageChangePct.toFixed(1)}%`;
 
   return (
-    <WatchPanel subtle className="mt-3 space-y-4">
-      <div className="grid grid-cols-3 gap-2">
-        <MetricCell label="velocity" value={adaptation.objectiveScore.toFixed(1)} />
-        <MetricCell label="system" value={`${Math.round(adaptation.recovery.systemic * 100)}%`} />
-        <MetricCell label="fatigue" value={`${Math.round(adaptation.fatigue.systemicFatigue * 100)}%`} />
-      </div>
-
-      <div>
-        <p className="text-xs text-white/35 uppercase font-mono">Progression</p>
-        <p className="mt-1 text-fluid-label font-mono uppercase text-white/55">
+    <div className="flex flex-col gap-3">
+      <WatchSignalPanel
+        label="Status"
+        title={diagnosis.label}
+        summary={diagnosis.summary}
+        metric={<span className={diagnosis.averageChangePct === null ? 'text-white/35' : diagnosis.tone}>{changeLabel}</span>}
+        metricLabel="Avg"
+        tone={diagnosis.tone}
+      >
+        <WatchMetricGrid>
+          <WatchMetricCell label="Score" value={adaptation.objectiveScore.toFixed(1)} />
+          <WatchMetricCell label="Recovery" value={`${Math.round(adaptation.recovery.systemic * 100)}%`} />
+          <WatchMetricCell label="Load" value={`${Math.round(adaptation.fatigue.systemicFatigue * 100)}%`} />
+        </WatchMetricGrid>
+        <p className="mt-3 text-fluid-label font-mono uppercase text-white/35">
           {formatTrend(trend?.trend)} {trend?.velocity ? `${trend.velocity > 0 ? '+' : ''}${trend.velocity.toFixed(1)}%` : ''}
+          {bottleneck ? ` · ${bottleneck.muscle.replace('_', ' ')} ${Math.round(bottleneck.recoveryState * 100)}%` : ''}
         </p>
-        {bottleneck && (
-          <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
-            Bottleneck {bottleneck.muscle.replace('_', ' ')} at {Math.round(bottleneck.recoveryState * 100)}%
-          </p>
-        )}
-      </div>
+      </WatchSignalPanel>
 
-      <div className="space-y-2">
-        <p className="text-xs text-white/35 uppercase font-mono">Effective Volume</p>
+      <WatchPanel subtle className="py-3">
+        <p className="mb-3 text-fluid-label font-black uppercase text-white/35 font-mono">Fix First</p>
+        <div className="space-y-2">
+          {diagnosis.nextActions.map((action) => (
+            <p key={action} className="text-fluid-label font-mono uppercase text-white/70">
+              {action}
+            </p>
+          ))}
+        </div>
+      </WatchPanel>
+
+      <WatchPanel subtle className="space-y-2">
+        <p className="text-fluid-label text-white/35 uppercase font-mono">Volume</p>
         {topVolumes.map((entry) => (
-          <VolumeRow key={entry.muscle} entry={entry} />
+          <WatchBarRow
+            key={entry.muscle}
+            label={entry.muscle.replace('_', ' ')}
+            value={entry.sets.toFixed(1)}
+            percent={(entry.sets / entry.target) * 100}
+            tone={entry.status === 'low' ? 'bg-amber-400' : entry.status === 'high' ? 'bg-red-400' : 'bg-green-400'}
+          />
         ))}
-      </div>
-    </WatchPanel>
-  );
-}
-
-function MetricCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-white/5 bg-black/25 px-2 py-2">
-      <div className="text-[10px] font-mono uppercase text-white/25">{label}</div>
-      <div className="text-fluid-ui font-black tabular-nums text-white/75">{value}</div>
-    </div>
-  );
-}
-
-function VolumeRow({ entry }: { entry: EffectiveVolumeEntry }) {
-  const width = Math.max(5, Math.min(100, Math.round((entry.sets / entry.target) * 100)));
-  const tone = entry.status === 'low' ? 'bg-amber-400' : entry.status === 'high' ? 'bg-red-400' : 'bg-green-400';
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-20 shrink-0 truncate text-fluid-label font-mono uppercase text-white/35">
-        {entry.muscle.replace('_', ' ')}
-      </span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
-        <div className={cn('h-full rounded-full', tone)} style={{ width: `${width}%` }} />
-      </div>
-      <span className="w-12 shrink-0 text-right text-fluid-label font-mono tabular-nums text-white/45">
-        {entry.sets.toFixed(1)}
-      </span>
+      </WatchPanel>
     </div>
   );
 }

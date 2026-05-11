@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { Check, ChevronRight, Copy } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,160 @@ export function WatchPanel({ children, className, active = false, subtle = false
     >
       {children}
     </Card>
+  );
+}
+
+interface WatchMetricCellProps {
+  label: ReactNode;
+  value: ReactNode;
+  tone?: string;
+  className?: string;
+}
+
+export function WatchMetricCell({ label, value, tone = 'text-white/75', className }: WatchMetricCellProps) {
+  return (
+    <div className={cn('min-w-0 rounded-lg border border-white/5 bg-black/25 px-3 py-2', className)}>
+      <div className="truncate text-fluid-label font-mono uppercase text-white/25">{label}</div>
+      <div className={cn('truncate text-fluid-ui font-black tabular-nums', tone)}>{value}</div>
+    </div>
+  );
+}
+
+interface WatchMetricGridProps {
+  children: ReactNode;
+  columns?: 2 | 3;
+  className?: string;
+}
+
+export function WatchMetricGrid({ children, columns = 3, className }: WatchMetricGridProps) {
+  return (
+    <div className={cn(columns === 2 ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-3 gap-2', className)}>
+      {children}
+    </div>
+  );
+}
+
+interface WatchSignalPanelProps {
+  label: ReactNode;
+  title: ReactNode;
+  summary?: ReactNode;
+  action?: ReactNode;
+  metric?: ReactNode;
+  metricLabel?: ReactNode;
+  tone?: string;
+  active?: boolean;
+  subtle?: boolean;
+  children?: ReactNode;
+  className?: string;
+}
+
+export function WatchSignalPanel({
+  label,
+  title,
+  summary,
+  action,
+  metric,
+  metricLabel,
+  tone = 'text-white/45',
+  active = false,
+  subtle = false,
+  children,
+  className,
+}: WatchSignalPanelProps) {
+  return (
+    <WatchPanel active={active} subtle={subtle} className={className}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className={cn('text-fluid-label font-mono uppercase', tone)}>{label}</p>
+          <p className="mt-1 text-fluid-ui font-black uppercase leading-tight text-white">{title}</p>
+          {summary && (
+            <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/55">
+              {summary}
+            </p>
+          )}
+        </div>
+        {metric && (
+          <div className="shrink-0 text-right">
+            <p className="text-fluid-ui font-black tabular-nums leading-none text-white">{metric}</p>
+            {metricLabel && <p className="mt-1 text-fluid-label font-mono uppercase text-white/30">{metricLabel}</p>}
+          </div>
+        )}
+      </div>
+      {action && (
+        <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/45">
+          {action}
+        </p>
+      )}
+      {children && <div className="mt-4">{children}</div>}
+    </WatchPanel>
+  );
+}
+
+interface WatchBarRowProps {
+  label: ReactNode;
+  value: ReactNode;
+  meta?: ReactNode;
+  percent: number;
+  tone?: string;
+  className?: string;
+}
+
+export function WatchBarRow({
+  label,
+  value,
+  meta,
+  percent,
+  tone = 'bg-white/45',
+  className,
+}: WatchBarRowProps) {
+  const width = Math.max(4, Math.min(100, Math.round(percent)));
+
+  return (
+    <div className={cn('flex min-h-8 items-center gap-3', className)}>
+      <span className="w-20 shrink-0 truncate text-fluid-label font-mono uppercase text-white/35">
+        {label}
+      </span>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
+        <div className={cn('h-full rounded-full', tone)} style={{ width: `${width}%` }} />
+      </div>
+      <span className="w-10 shrink-0 text-right text-fluid-label font-mono tabular-nums text-white/45">
+        {value}
+      </span>
+      {meta && (
+        <span className="w-12 shrink-0 text-right text-fluid-label font-mono tabular-nums text-white/25">
+          {meta}
+        </span>
+      )}
+    </div>
+  );
+}
+
+interface WatchCopyButtonProps {
+  copied: boolean;
+  onClick: () => void;
+  label: string;
+  copiedLabel?: string;
+  className?: string;
+}
+
+export function WatchCopyButton({ copied, onClick, label, copiedLabel = 'Copied', className }: WatchCopyButtonProps) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      className={cn(
+        'min-h-11 w-full rounded-xl border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white active:scale-[0.98]',
+        copied && 'border-green-400/30 bg-green-400/10 text-green-400',
+        className
+      )}
+    >
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      <span className="text-[11px] font-black uppercase tracking-widest font-mono">
+        {copied ? copiedLabel : label}
+      </span>
+    </Button>
   );
 }
 

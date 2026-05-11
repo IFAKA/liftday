@@ -7,9 +7,14 @@ import { WeeklySplit } from '@/components/WeeklySplit';
 import { OptimizationContext, RoutineConfig, WorkoutData } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
-import { cn } from '@/lib/utils';
 import { loadProgramSummary } from '@/lib/program-summary';
-import { WatchListItem, WatchPanel, WatchSection } from '@/components/WatchSurface';
+import {
+  WatchListItem,
+  WatchMetricCell,
+  WatchMetricGrid,
+  WatchSection,
+  WatchSignalPanel,
+} from '@/components/WatchSurface';
 
 export default function ProgramPage() {
   const [{ data, routine, routineDecision, adaptation }] = useState<{
@@ -54,20 +59,20 @@ export default function ProgramPage() {
           </WatchSection>
         )}
 
+        {routineDecision && (
+          <WatchSection title="Now">
+            <RoutineDecisionPanel decision={routineDecision} />
+          </WatchSection>
+        )}
+
         {routine && (
           <WatchSection title="Program">
             <WatchListItem
               href="/program/detail"
               label="Routine"
               title={routine.name}
-              subtitle="Exercises, efficiency, muscle volume"
+              subtitle="Efficiency, exercises, volume"
             />
-          </WatchSection>
-        )}
-
-        {routineDecision && (
-          <WatchSection title="Now">
-            <RoutineDecisionPanel decision={routineDecision} />
           </WatchSection>
         )}
 
@@ -85,64 +90,36 @@ function AdaptiveRecommendationPanel({ adaptation }: { adaptation: OptimizationC
   const guardrail = adaptation.targetDateGuardrail.warning;
 
   return (
-    <WatchPanel>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-fluid-label font-mono uppercase text-green-400">
-            Recommend-first
-          </p>
-          <p className="mt-1 text-fluid-ui font-black uppercase leading-tight text-white">
-            {recommendation.title}
-          </p>
-        </div>
-        <span className="shrink-0 text-right text-fluid-label font-mono tabular-nums text-white/45">
-          {adaptation.objectiveScore.toFixed(1)}
-        </span>
-      </div>
-      <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/55">
-        {recommendation.summary} {recommendation.reason}
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <MiniMetric label="recovery" value={`${Math.round(recommendation.recoveryState * 100)}%`} />
-        <MiniMetric label="fatigue" value={recommendation.fatigueCost > 0 ? `+${recommendation.fatigueCost}` : recommendation.fatigueCost.toString()} />
-      </div>
+    <WatchSignalPanel
+      label="Next"
+      title={recommendation.title}
+      summary={`${recommendation.summary} ${recommendation.reason}`}
+      metric={adaptation.objectiveScore.toFixed(1)}
+      metricLabel="Score"
+      tone="text-green-400"
+    >
+      <WatchMetricGrid columns={2}>
+        <WatchMetricCell label="Recovery" value={`${Math.round(recommendation.recoveryState * 100)}%`} />
+        <WatchMetricCell label="Load" value={recommendation.fatigueCost > 0 ? `+${recommendation.fatigueCost}` : recommendation.fatigueCost.toString()} />
+      </WatchMetricGrid>
       {(bottleneck || guardrail) && (
         <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
           {guardrail ?? `Bottleneck: ${bottleneck!.muscle.replace('_', ' ')}`}
         </p>
       )}
-    </WatchPanel>
+    </WatchSignalPanel>
   );
 }
 
 function RoutineDecisionPanel({ decision }: { decision: RoutineAdjustmentDecision }) {
   return (
-    <WatchPanel>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className={cn('text-fluid-label font-mono uppercase', decision.tone)}>
-            {decision.label}
-          </p>
-          <p className="mt-1 text-fluid-ui font-black uppercase leading-tight text-white">
-            {decision.summary}
-          </p>
-        </div>
-        <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-xs font-black uppercase text-white/45">
-          Auto
-        </span>
-      </div>
-      <p className="mt-3 text-fluid-label font-mono uppercase text-white/50">
-        {decision.nextAction}
-      </p>
-    </WatchPanel>
-  );
-}
-
-function MiniMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-white/5 bg-black/25 px-3 py-2">
-      <div className="text-fluid-label font-mono uppercase text-white/25">{label}</div>
-      <div className="text-fluid-ui font-black tabular-nums text-white/75">{value}</div>
-    </div>
+    <WatchSignalPanel
+      label={decision.label}
+      title={decision.summary}
+      action={decision.nextAction}
+      metric="Auto"
+      tone={decision.tone}
+      subtle
+    />
   );
 }
