@@ -6,6 +6,7 @@ import { getProgressionQuality } from '@/lib/adaptation/progression-engine';
 import { getAdaptiveRecommendations } from '@/lib/adaptation/recommendation-engine';
 import { smvVelocityPerRecoverableFatigue } from '@/lib/adaptation/objective';
 import { getEffectiveWeeklyVolume } from '@/lib/adaptation/volume-engine';
+import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import {
   calculateRoutineVolume,
   evaluateDoubleProgression,
@@ -17,14 +18,34 @@ import {
 import { gymRoutine } from '@/lib/routines/gym';
 
 test('calculates weekly SMV volume with indirect sets', () => {
-  const volume = calculateRoutineVolume(gymRoutine, getDefaultProfile(), 3);
+  const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
+  const volume = calculateRoutineVolume(optimized.routine, getDefaultProfile(), 3);
 
-  expect(volume.side_delt).toBeGreaterThanOrEqual(18);
-  expect(volume.rear_delt).toBeGreaterThanOrEqual(12);
-  expect(volume.chest).toBeGreaterThanOrEqual(12);
-  expect(volume.triceps).toBeGreaterThan(10);
-  expect(volume.biceps).toBeGreaterThan(10);
-  expect(volume.quads).toBe(3);
+  expect(volume.side_delt).toBeGreaterThanOrEqual(9);
+  expect(volume.side_delt).toBeLessThanOrEqual(14);
+  expect(volume.rear_delt).toBeGreaterThanOrEqual(5);
+  expect(volume.rear_delt).toBeLessThanOrEqual(11);
+  expect(volume.chest).toBeGreaterThanOrEqual(10);
+  expect(volume.triceps).toBeGreaterThanOrEqual(5);
+  expect(volume.biceps).toBeGreaterThanOrEqual(5);
+  expect(volume.quads).toBeGreaterThanOrEqual(3);
+  expect(volume.quads).toBeLessThanOrEqual(4);
+  expect(optimized.sessionDurations.every((session) => session.minutes <= 105)).toBe(true);
+  expect(optimized.sessionDurations.some((session) => session.minutes >= 60)).toBe(false);
+});
+
+test('SMV optimizer rejects unavailable idealized machines and reports allocation constraints', () => {
+  const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
+  const selected = optimized.selectedSlots.map((slot) => slot.exercise);
+
+  expect(selected).not.toContain('Smith Incline Press');
+  expect(selected).not.toContain('Machine Shoulder Press');
+  expect(selected).not.toContain('Machine Lateral Raise');
+  expect(optimized.reasons.join(' ')).toMatch(/indirect-set-aware/i);
+  expect(optimized.allocationRationale.join(' ')).toMatch(/Legs are maintenance-support/i);
+  expect(optimized.progressionAssumptions.join(' ')).toMatch(/target RIR/i);
+  expect(optimized.recoveryBottlenecks.join(' ')).toMatch(/Shoulder local tissue/i);
+  expect(optimized.longTermExpectations.join(' ')).toMatch(/4-8 weeks/i);
 });
 
 test('requires top reps at target RIR before increasing load', () => {

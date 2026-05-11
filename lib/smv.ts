@@ -27,9 +27,9 @@ export const MUSCLE_SMV_SCORE: Record<MuscleGroup, number> = {
 
 // Sets/week floor — below this, proportion penalty applies (chicken legs problem)
 export const MUSCLE_MIN_WEEKLY_SETS: Partial<Record<MuscleGroup, number>> = {
-  quads:      6,
-  hamstrings: 4,
-  glutes:     4,
+  quads:      3,
+  hamstrings: 2,
+  glutes:     2,
   calves:     2,
 };
 
@@ -42,19 +42,19 @@ export const MUSCLE_PROPORTION_PENALTY: Partial<Record<MuscleGroup, number>> = {
 };
 
 export const MUSCLE_TARGET_WEEKLY_SETS: Record<MuscleGroup, number> = {
-  side_delt:  22,
+  side_delt:  14,
   lats:       14,
-  chest:      14,
+  chest:      12,
   shoulders:   6,
   biceps:     12,
-  glutes:      8,
+  glutes:      4,
   mid_back:    6,
-  rear_delt:  16,
-  triceps:    12,
+  rear_delt:  10,
+  triceps:    10,
   upper_back:  6,
-  quads:       8,
-  hamstrings:  8,
-  calves:     12,
+  quads:       4,
+  hamstrings:  4,
+  calves:      4,
   neck:        4,
 };
 
@@ -146,15 +146,15 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
 };
 
 export const SMV_DIRECT_TARGETS: Partial<Record<MuscleGroup, { min: number; max: number }>> = {
-  side_delt: { min: 18, max: 24 },
-  rear_delt: { min: 12, max: 18 },
-  chest: { min: 12, max: 16 },
+  side_delt: { min: 10, max: 14 },
+  rear_delt: { min: 5, max: 10 },
+  chest: { min: 10, max: 12 },
   lats: { min: 12, max: 16 },
-  biceps: { min: 10, max: 14 },
-  triceps: { min: 10, max: 14 },
-  quads: { min: 6, max: 8 },
-  hamstrings: { min: 6, max: 8 },
-  calves: { min: 8, max: 12 },
+  biceps: { min: 5, max: 10 },
+  triceps: { min: 5, max: 10 },
+  quads: { min: 3, max: 4 },
+  hamstrings: { min: 2, max: 4 },
+  calves: { min: 2, max: 4 },
 };
 
 export const SMV_PROFILE_DEFAULTS = {
