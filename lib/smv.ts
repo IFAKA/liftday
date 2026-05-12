@@ -377,13 +377,15 @@ export function shouldDeload(input: {
   poorSleepDays?: number;
   jointPain?: boolean;
 }): boolean {
-  const [latest, previous] = input.recentScores;
-  const performanceDrop = Boolean(
-    latest && previous &&
+  const [latest, previous, beforePrevious] = input.recentScores;
+  const consecutivePerformanceDrop = Boolean(
+    latest && previous && beforePrevious &&
     latest.score <= previous.score * 0.95 &&
-    Math.abs(latest.rir - previous.rir) <= 1
+    previous.score <= beforePrevious.score * 0.95 &&
+    Math.abs(latest.rir - previous.rir) <= 1 &&
+    Math.abs(previous.rir - beforePrevious.rir) <= 1
   );
-  return performanceDrop || (input.fatigueDays ?? 0) >= 3 || (input.poorSleepDays ?? 0) >= 3 || input.jointPain === true;
+  return consecutivePerformanceDrop || (input.fatigueDays ?? 0) >= 3 || (input.poorSleepDays ?? 0) >= 3 || input.jointPain === true;
 }
 
 export function getDeloadPrescription(prescription: SMVExercisePrescription): SMVExercisePrescription {

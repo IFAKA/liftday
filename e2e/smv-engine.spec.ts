@@ -163,9 +163,18 @@ test('detects deload and waist calorie adjustment triggers', () => {
       { score: 95, rir: 2 },
       { score: 100, rir: 2 },
     ],
+  })).toBe(false);
+
+  expect(shouldDeload({
+    recentScores: [
+      { score: 90, rir: 2 },
+      { score: 95, rir: 2 },
+      { score: 100, rir: 2 },
+    ],
   })).toBe(true);
 
   expect(shouldDeload({ recentScores: [], poorSleepDays: 3 })).toBe(true);
+  expect(shouldDeload({ recentScores: [], jointPain: true })).toBe(true);
   expect(getNutritionAdjustment(0.6, 2).calorieDelta).toBe(-150);
   expect(getNutritionAdjustment(0.3, 2).calorieDelta).toBe(0);
 });
