@@ -51,6 +51,7 @@ export type GymPushExerciseKey =
   | 'db_lateral_raise'
   | 'machine_lateral_raise'
   | 'cable_lateral_raise'
+  | 'db_shrug'
   | 'cable_tricep_pushdown'
   | 'overhead_tricep_ext'
   | 'cable_fly';
@@ -61,6 +62,7 @@ export type GymPullExerciseKey =
   | 'neutral_grip_pulldown'
   | 'pullup'
   | 'cable_row'
+  | 'one_arm_cable_lat_row'
   | 'chest_supported_row'
   | 'machine_row'
   | 'braced_cable_row'

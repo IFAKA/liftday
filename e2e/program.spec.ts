@@ -78,10 +78,10 @@ test('shows inline previous set coaching without overlapping log action on watch
         logged_at: '2026-05-04T10:00:00.000Z',
         week_number: 1,
         workout_type: 'push_a',
-        cable_lateral_raise: [
-          { reps: 20, weight: 10, rir: 2 },
-          { reps: 20, weight: 10, rir: 2 },
-          { reps: 20, weight: 10, rir: 2 },
+        db_incline_press: [
+          { reps: 10, weight: 10, rir: 2 },
+          { reps: 10, weight: 10, rir: 2 },
+          { reps: 10, weight: 10, rir: 2 },
         ],
       },
     }));
@@ -95,7 +95,7 @@ test('shows inline previous set coaching without overlapping log action on watch
 
   await page.getByRole('button', { name: /^start$/i }).click();
 
-  const previousRow = page.getByText(/^Prev 10kg x 20$/);
+  const previousRow = page.getByText(/^Prev 10kg x 10$/);
   const logSet = page.getByRole('button', { name: /log set/i });
   await expect(previousRow).toBeVisible();
   await expect(logSet).toBeVisible();
@@ -135,7 +135,7 @@ test('logs an SMV workout with RIR and an occupied-machine substitution', async 
     await occupied.click();
   }
 
-  for (let i = 0; i < 40; i += 1) {
+  for (let i = 0; i < 80; i += 1) {
     if (await page.getByText(/workout complete|done/i).first().isVisible().catch(() => false)) break;
     if (await page.getByRole('button', { name: /log set/i }).isVisible().catch(() => false)) {
       await page.getByRole('button', { name: '2 RIR' }).click({ force: true });

@@ -11,18 +11,18 @@ import { getRequiredEquipment, type EquipmentKey, canPerformExercise } from './e
 export const MUSCLE_SMV_SCORE: Record<MuscleGroup, number> = {
   side_delt:  10, // V-taper width; primary shoulder width signal
   lats:        9, // V-taper depth; massive strength signal (Sell 2017)
-  chest:       9, // #1 strength signal; largest upper-body muscle
+  chest:       9, // Upper torso thickness, with upper chest weighted by exercise choice
   shoulders:   9, // composite delt; dominance framing
   biceps:      8, // #4 Durkee (30% of women ranked #1)
-  glutes:      8, // #2 Durkee
+  glutes:      3, // maintained, not maximized, for the clothed-SMV objective
   mid_back:    7, // horizontal pulling strength signal
   rear_delt:   7, // posture + shoulder width
-  triceps:     6, // #6 Durkee; visible arm mass
+  triceps:     7, // sleeve fill, including indirect pressing volume
   upper_back:  6, // posture
-  quads:       4, // #9 Durkee
+  quads:       3, // maintenance only; high systemic fatigue cost
   hamstrings:  3,
   calves:      3, // #7 Durkee; less visible
-  neck:        2, // traps = #14 (last) in Durkee
+  neck:        4, // traps/neck presentation with conservative loading
 };
 
 // Sets/week floor — below this, proportion penalty applies (chicken legs problem)
@@ -42,20 +42,20 @@ export const MUSCLE_PROPORTION_PENALTY: Partial<Record<MuscleGroup, number>> = {
 };
 
 export const MUSCLE_TARGET_WEEKLY_SETS: Record<MuscleGroup, number> = {
-  side_delt:  14,
-  lats:       14,
-  chest:      12,
+  side_delt:  16,
+  lats:       16,
+  chest:      15,
   shoulders:   6,
-  biceps:     12,
+  biceps:     11,
   glutes:      4,
   mid_back:    6,
-  rear_delt:  10,
-  triceps:    10,
+  rear_delt:  14,
+  triceps:    13,
   upper_back:  6,
-  quads:       4,
-  hamstrings:  4,
+  quads:       7,
+  hamstrings:  5,
   calves:      4,
-  neck:        4,
+  neck:        6,
 };
 
 export type MuscleContribution = Partial<Record<MuscleGroup, number>>;
@@ -107,6 +107,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   db_lateral_raise: { side_delt: 1 },
   machine_lateral_raise: { side_delt: 1 },
   cable_lateral_raise: { side_delt: 1 },
+  db_shrug: { neck: 1, upper_back: 0.25 },
   cable_tricep_pushdown: { triceps: 1 },
   overhead_tricep_ext: { triceps: 1 },
 
@@ -114,6 +115,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   neutral_grip_pulldown: { lats: 1, biceps: 0.3, upper_back: 0.2 },
   pullup: { lats: 1, biceps: 0.35, upper_back: 0.25 },
   cable_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.2 },
+  one_arm_cable_lat_row: { lats: 1, mid_back: 0.35, biceps: 0.2 },
   chest_supported_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.3 },
   machine_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.25 },
   braced_cable_row: { mid_back: 1, lats: 0.4, biceps: 0.25, rear_delt: 0.25 },
@@ -146,15 +148,16 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
 };
 
 export const SMV_DIRECT_TARGETS: Partial<Record<MuscleGroup, { min: number; max: number }>> = {
-  side_delt: { min: 10, max: 14 },
-  rear_delt: { min: 5, max: 10 },
-  chest: { min: 10, max: 12 },
+  side_delt: { min: 16, max: 20 },
+  rear_delt: { min: 12, max: 15 },
+  chest: { min: 12, max: 15 },
   lats: { min: 12, max: 16 },
-  biceps: { min: 5, max: 10 },
-  triceps: { min: 5, max: 10 },
-  quads: { min: 3, max: 4 },
-  hamstrings: { min: 2, max: 4 },
-  calves: { min: 2, max: 4 },
+  biceps: { min: 8, max: 12 },
+  triceps: { min: 8, max: 13 },
+  quads: { min: 6, max: 8 },
+  hamstrings: { min: 4, max: 6 },
+  calves: { min: 4, max: 5 },
+  neck: { min: 2, max: 7 },
 };
 
 export const SMV_PROFILE_DEFAULTS = {

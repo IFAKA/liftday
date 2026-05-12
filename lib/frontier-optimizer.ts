@@ -124,25 +124,36 @@ export function optimizeRoutineForFrontier(
   data: WorkoutData,
   fallbackSets: number
 ): FrontierOptimizerResult {
-  if (routine.id !== 'gym') {
-    const score = scoreRoutineWithProgress(routine, data, fallbackSets);
-    return {
-      routine,
-      score,
-      baseScore: score,
-      reasons: ['Optimizer is currently enabled for the gym routine only.'],
-      weeklyStructure: routine.schedule.map((workoutType) => `${workoutType}: existing routine`),
-      sessionDurations: [],
-      weeklyEffectiveSets: getWeeklyEffectiveSets(score),
-      allocationRationale: [],
-      progressionAssumptions: [],
-      recoveryBottlenecks: [],
-      weakPointRisks: [],
-      longTermExpectations: [],
-      selectedSlots: describeRoutineSlots(routine, fallbackSets),
-    };
+  if (routine.id !== 'gym') return describeStaticRoutine(routine, data, fallbackSets, ['Optimizer is currently enabled for the gym routine only.']);
+  if (profile?.goal === '__generated_frontier__') {
+    return optimizeGeneratedRoutineForFrontier(routine, profile, data, fallbackSets);
   }
 
+  const score = scoreRoutineWithProgress(routine, data, fallbackSets);
+  const sessionDurations = estimateSessionDurations(routine, fallbackSets);
+  return {
+    routine,
+    score,
+    baseScore: score,
+    reasons: getCanonicalRoutineReasons(score, routine, data, fallbackSets, sessionDurations),
+    weeklyStructure: getWeeklyStructure(routine, fallbackSets),
+    sessionDurations,
+    weeklyEffectiveSets: getWeeklyEffectiveSets(score),
+    allocationRationale: getCanonicalAllocationRationale(score),
+    progressionAssumptions: getProgressionAssumptions(),
+    recoveryBottlenecks: getCanonicalRecoveryBottlenecks(score, routine, fallbackSets),
+    weakPointRisks: getWeakPointRisks(score),
+    longTermExpectations: getLongTermExpectations(),
+    selectedSlots: describeRoutineSlots(routine, fallbackSets),
+  };
+}
+
+function optimizeGeneratedRoutineForFrontier(
+  routine: RoutineConfig,
+  profile: UserProfile | null,
+  data: WorkoutData,
+  fallbackSets: number
+): FrontierOptimizerResult {
   const sessionSetCap = getSessionSetCap(profile);
   const candidates = getAvailableCandidates(profile);
   const basePlan = candidates.map((candidate) => ({
@@ -169,6 +180,30 @@ export function optimizeRoutineForFrontier(
     weakPointRisks: getWeakPointRisks(score),
     longTermExpectations: getLongTermExpectations(),
     selectedSlots: describeRoutineSlots(optimizedRoutine, fallbackSets),
+  };
+}
+
+function describeStaticRoutine(
+  routine: RoutineConfig,
+  data: WorkoutData,
+  fallbackSets: number,
+  reasons: string[]
+): FrontierOptimizerResult {
+  const score = scoreRoutineWithProgress(routine, data, fallbackSets);
+  return {
+    routine,
+    score,
+    baseScore: score,
+    reasons,
+    weeklyStructure: routine.schedule.map((workoutType) => `${workoutType}: existing routine`),
+    sessionDurations: estimateSessionDurations(routine, fallbackSets),
+    weeklyEffectiveSets: getWeeklyEffectiveSets(score),
+    allocationRationale: [],
+    progressionAssumptions: [],
+    recoveryBottlenecks: [],
+    weakPointRisks: [],
+    longTermExpectations: [],
+    selectedSlots: describeRoutineSlots(routine, fallbackSets),
   };
 }
 
@@ -450,6 +485,57 @@ function getOptimizerReasons(
     `Default unavailable equipment excludes Smith incline, machine shoulder press, and machine lateral raise unless the profile explicitly lists those as available.`,
     `${sessions} logged sessions are used for exercise response multipliers; missing exercise history stays neutral.`,
     `Default set fallback remains ${fallbackSets}, but optimized slots store their own recoverability-constrained set counts.`,
+  ];
+}
+
+function getCanonicalRoutineReasons(
+  score: RoutineScoreResult,
+  routine: RoutineConfig,
+  data: WorkoutData,
+  fallbackSets: number,
+  sessionDurations: FrontierOptimizerResult['sessionDurations']
+): string[] {
+  const sideDelt = score.breakdown.side_delt;
+  const lats = score.breakdown.lats;
+  const rearDelt = score.breakdown.rear_delt;
+  const longestSession = sessionDurations.reduce((max, session) => Math.max(max, session.minutes), 0);
+  const sessions = Object.values(data).filter((session) => session.logged_at).length;
+
+  return [
+    `Using the canonical clothed-SMV routine from the supplied context: ${routine.tierChains.length} slots, ${score.cost.totalSets} weekly sets, and ${longestSession}-minute longest estimated session.`,
+    `Side delts ${sideDelt?.sets ?? 0}/${sideDelt?.target ?? 0}, lats ${lats?.sets ?? 0}/${lats?.target ?? 0}, and rear delts ${rearDelt?.sets ?? 0}/${rearDelt?.target ?? 0} lead because shoulder width, V-taper, and posture carry the highest clothed silhouette ROI.`,
+    'Legs are maintenance-support, not a growth focus; heavy lower-body work is capped so recoverability stays available for upper-body visual change.',
+    'Default exercise choices avoid unavailable Smith incline, machine shoulder press, and machine lateral raise while preserving cable, dumbbell, pulldown, row, hack squat, and leg press work.',
+    `Indirect-set-aware scoring is active with ${fallbackSets} fallback sets; ${sessions} logged sessions can still influence progression, fatigue, and recommendation logic.`,
+  ];
+}
+
+function getCanonicalAllocationRationale(score: RoutineScoreResult): string[] {
+  return [
+    `Side delts are first priority at ${score.breakdown.side_delt?.sets ?? 0} effective sets because shoulder width changes the clothed frame fastest.`,
+    `Upper chest and lats are trained twice because torso thickness and V-taper compound the visual effect through clothing.`,
+    `Rear delts and face pulls are kept high enough for posture without turning the shoulder joint into the bottleneck.`,
+    `Direct arm work is distributed after pressing and pulling because triceps and biceps already receive meaningful indirect volume.`,
+    `Legs are maintenance-support: quads ${score.breakdown.quads?.sets ?? 0}, hamstrings ${score.breakdown.hamstrings?.sets ?? 0}, glutes ${score.breakdown.glutes?.sets ?? 0}, calves ${score.breakdown.calves?.sets ?? 0}.`,
+  ];
+}
+
+function getCanonicalRecoveryBottlenecks(
+  score: RoutineScoreResult,
+  routine: RoutineConfig,
+  fallbackSets: number
+): string[] {
+  const shoulderIsolationSets = routine.tierChains
+    .filter((chain) => chain.slotId.includes('lateral') || chain.slotId.includes('rear') || chain.slotId.includes('face_pull'))
+    .reduce((sum, chain) => sum + getChainSetCountLocal(chain, fallbackSets), 0);
+  const directArmSets = routine.tierChains
+    .filter((chain) => chain.slotId.includes('triceps') || chain.slotId.includes('pressdown') || chain.slotId.includes('curl'))
+    .reduce((sum, chain) => sum + getChainSetCountLocal(chain, fallbackSets), 0);
+
+  return [
+    `Shoulder local tissue is the first likely bottleneck at ${shoulderIsolationSets} direct side/rear-delt sets.`,
+    `Elbow/connective tissue is monitored through ${directArmSets} direct arm sets plus pressing and pulling overlap.`,
+    `Lower-body systemic fatigue is intentionally bounded while quads ${score.breakdown.quads?.sets ?? 0}/${score.breakdown.quads?.target ?? 0} and hamstrings ${score.breakdown.hamstrings?.sets ?? 0}/${score.breakdown.hamstrings?.target ?? 0} stay near maintenance.`,
   ];
 }
 

@@ -405,6 +405,14 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     youtubeId: 'PPjDFHf2sCc',
     workoutType: 'push',
   },
+  {
+    key: 'db_shrug',
+    name: 'DUMBBELL SHRUG',
+    unit: 'weighted',
+    primaryMuscle: 'neck',
+    instruction: 'Hold dumbbells at your sides. Elevate shoulders straight up, pause briefly, then lower under control. Keep the neck neutral and avoid rolling the shoulders.',
+    workoutType: 'push',
+  },
 ];
 
 // GYM PULL EXERCISES
@@ -442,6 +450,14 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     primaryMuscle: 'mid_back',
     instruction: 'Sit tall, slight lean forward at start. Pull handle to lower sternum, drive elbows back past your sides. Fully extend arms between reps — don\'t bounce. Controls the eccentric. Upper back, rhomboids, rear delts, biceps.',
     youtubeId: 'GZbfZ033f74',
+    workoutType: 'pull',
+  },
+  {
+    key: 'one_arm_cable_lat_row',
+    name: 'ONE-ARM CABLE LAT ROW',
+    unit: 'weighted',
+    primaryMuscle: 'lats',
+    instruction: 'Set a cable around lower chest height. Brace with the free hand, let the working side reach forward, then drive the elbow toward the hip. Keep the torso quiet and bias the lat instead of twisting.',
     workoutType: 'pull',
   },
   {

@@ -35,17 +35,17 @@ test('calculates weekly SMV volume with indirect sets', () => {
   const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
   const volume = calculateRoutineVolume(optimized.routine, getDefaultProfile(), 3);
 
-  expect(volume.side_delt).toBeGreaterThanOrEqual(9);
-  expect(volume.side_delt).toBeLessThanOrEqual(14);
-  expect(volume.rear_delt).toBeGreaterThanOrEqual(5);
-  expect(volume.rear_delt).toBeLessThanOrEqual(11);
-  expect(volume.chest).toBeGreaterThanOrEqual(10);
-  expect(volume.triceps).toBeGreaterThanOrEqual(5);
-  expect(volume.biceps).toBeGreaterThanOrEqual(5);
-  expect(volume.quads).toBeGreaterThanOrEqual(3);
-  expect(volume.quads).toBeLessThanOrEqual(4);
+  expect(volume.side_delt).toBeGreaterThanOrEqual(16);
+  expect(volume.side_delt).toBeLessThanOrEqual(20);
+  expect(volume.rear_delt).toBeGreaterThanOrEqual(9);
+  expect(volume.rear_delt).toBeLessThanOrEqual(12);
+  expect(volume.chest).toBeGreaterThanOrEqual(12);
+  expect(volume.triceps).toBeGreaterThanOrEqual(13);
+  expect(volume.biceps).toBeGreaterThanOrEqual(11);
+  expect(volume.quads).toBeGreaterThanOrEqual(7);
+  expect(volume.quads).toBeLessThanOrEqual(8);
   expect(optimized.sessionDurations.every((session) => session.minutes <= 105)).toBe(true);
-  expect(optimized.sessionDurations.some((session) => session.minutes >= 60)).toBe(false);
+  expect(optimized.sessionDurations.some((session) => session.minutes >= 60)).toBe(true);
 });
 
 test('SMV optimizer rejects unavailable idealized machines and reports allocation constraints', () => {
@@ -63,9 +63,9 @@ test('SMV optimizer rejects unavailable idealized machines and reports allocatio
 });
 
 test('requires top reps at target RIR before increasing load', () => {
-  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_a_smith_incline');
+  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_a_incline_db');
   expect(chain).toBeTruthy();
-  const prescription = getPrescriptionForChain(chain!, 'smith_incline_press', 3);
+  const prescription = getPrescriptionForChain(chain!, 'db_incline_press', 3);
 
   expect(evaluateDoubleProgression([
     { reps: 10, weight: 50, rir: 2 },
@@ -137,12 +137,12 @@ test('detects deload and waist calorie adjustment triggers', () => {
 });
 
 test('ranks crowded-gym substitutions and migrates legacy set entries', () => {
-  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_a_smith_incline');
+  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_a_incline_db');
   expect(chain).toBeTruthy();
 
-  expect(getRankedSubstitutions(chain!, ['smith_machine'])).toEqual([
-    'db_incline_press',
+  expect(getRankedSubstitutions(chain!, ['dumbbells'])).toEqual([
     'high_incline_machine_press',
+    'barbell_bench_press',
   ]);
 
   const migrated = migrateWorkoutData({
