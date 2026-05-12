@@ -20,6 +20,7 @@ export function getProgressionQuality(input: {
   const qualities = Object.entries(byExercise).map(([exerciseKey, scores]) => {
     const latest = scores[0];
     const previous = scores[1];
+    const beforePrevious = scores[2];
     const metadata = getExerciseAdaptationMetadata(exerciseKey as ExerciseKey);
     const muscle = metadata?.primaryMuscles[0];
 
@@ -42,15 +43,21 @@ export function getProgressionQuality(input: {
     const reasons: string[] = [];
     let trend: ProgressionQuality['trend'] = 'flat';
 
+    const consecutiveRegression = Boolean(
+      beforePrevious &&
+      latest.score < previous.score * 0.96 &&
+      previous.score < beforePrevious.score * 0.96
+    );
+
     if (ratio >= 1.04) {
       trend = 'improving';
       reasons.push('Estimated performance is up versus the previous exposure.');
-    } else if (ratio <= 0.96 && (recovery < 0.55 || localFatigue > 0.65 || input.fatigue.systemicFatigue > 0.65)) {
+    } else if (consecutiveRegression && (recovery < 0.55 || localFatigue > 0.65 || input.fatigue.systemicFatigue > 0.65)) {
       trend = 'fatigue_masked';
-      reasons.push('Performance is down while recovery or fatigue is limiting output.');
-    } else if (ratio <= 0.96) {
+      reasons.push('Performance is down for two consecutive exposures while recovery or fatigue is limiting output.');
+    } else if (consecutiveRegression) {
       trend = 'recovery_bottleneck';
-      reasons.push('Performance is down without enough recovery margin.');
+      reasons.push('Performance is down for two consecutive exposures without enough recovery margin.');
     } else if (muscleVolume?.status === 'high') {
       trend = 'junk_volume';
       reasons.push('Volume is above target without a matching performance gain.');

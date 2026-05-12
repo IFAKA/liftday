@@ -84,6 +84,12 @@ function buildRecommendations(input: {
     const localFatigue = input.fatigue.localMuscleFatigue[profile.muscle] ?? 0;
     const muscleTrend = input.progression.find((entry) => entry.muscle === profile.muscle);
     const blocked = getBlockedConstraints(recovery, localFatigue, input.fatigue.systemicFatigue, input.fatigue.jointRisk);
+    const volumeReductionAllowed = allowsAutoVolumeReduction({
+      trend: muscleTrend,
+      recovery,
+      systemicRecovery: input.recovery.systemic,
+      jointRisk: input.fatigue.jointRisk,
+    });
 
     if (volume.status === 'low' && recovery >= 0.68 && localFatigue < 0.62 && input.fatigue.systemicFatigue < 0.68) {
       primary.push({
@@ -99,7 +105,7 @@ function buildRecommendations(input: {
         blockedConstraints: [],
         confidence: muscleTrend?.trend === 'improving' ? 0.82 : 0.68,
       });
-    } else if ((volume.status === 'high' || muscleTrend?.trend === 'junk_volume') && localFatigue > 0.55) {
+    } else if ((volume.status === 'high' || muscleTrend?.trend === 'junk_volume') && localFatigue > 0.55 && volumeReductionAllowed) {
       primary.push({
         action: 'reduce_volume',
         muscle: profile.muscle,
@@ -161,6 +167,21 @@ function buildRecommendations(input: {
   return primary
     .sort((a, b) => getRecommendationRank(a) - getRecommendationRank(b) || b.confidence - a.confidence)
     .slice(0, 5);
+}
+
+function allowsAutoVolumeReduction(input: {
+  trend?: ProgressionQuality;
+  recovery: number;
+  systemicRecovery: number;
+  jointRisk: number;
+}): boolean {
+  const consecutivePerformanceRegression = (
+    input.trend?.trend === 'fatigue_masked' ||
+    input.trend?.trend === 'recovery_bottleneck'
+  ) && input.trend.velocity < 0;
+  const recoveryCollapsed = input.recovery < 0.45 || input.systemicRecovery < 0.45;
+  const significantJointPain = input.jointRisk > 0.72;
+  return consecutivePerformanceRegression || recoveryCollapsed || significantJointPain;
 }
 
 function getBlockedConstraints(recovery: number, localFatigue: number, systemicFatigue: number, jointRisk: number): string[] {

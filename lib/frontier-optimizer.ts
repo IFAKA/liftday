@@ -3,6 +3,7 @@ import { EquipmentKey, getRequiredEquipment } from './equipment';
 import { getChainsForRoutine, getSelectedExerciseKey } from './tiers';
 import { getExerciseMuscleContribution, scoreWeeklyVolume, RoutineScoreResult, MUSCLE_MIN_WEEKLY_SETS } from './smv';
 import { scoreSessionSets } from './progress-insights';
+import { getSessionHardSetFloor, INCLUDED_EXERCISE_MIN_SETS } from './session-volume-constraints';
 import {
   ExerciseKey,
   MuscleGroup,
@@ -158,9 +159,12 @@ function optimizeGeneratedRoutineForFrontier(
   const candidates = getAvailableCandidates(profile);
   const basePlan = candidates.map((candidate) => ({
     candidate,
-    sets: candidate.minSets,
+    sets: Math.max(candidate.minSets, INCLUDED_EXERCISE_MIN_SETS),
   }));
-  const optimizedPlan = enforceMuscleFloors(greedyOptimize(basePlan, data, profile, fallbackSets, sessionSetCap), data, profile, fallbackSets, sessionSetCap);
+  const optimizedPlan = enforceSessionHardSetFloors(
+    enforceMuscleFloors(greedyOptimize(basePlan, data, profile, fallbackSets, sessionSetCap), data, profile, fallbackSets, sessionSetCap),
+    sessionSetCap
+  );
   const optimizedRoutine = buildRoutineFromPlan(routine, optimizedPlan, profile);
   const score = scoreRoutineWithProgress(optimizedRoutine, data, fallbackSets);
   const baseScore = scoreRoutineWithProgress(routine, data, fallbackSets);
@@ -341,7 +345,7 @@ function buildRoutineFromPlan(
     name: 'Gym',
     description: 'Deterministic SMV frontier gym routine.',
     icon: 'dumbbell' as const,
-    schedule: ['push', 'pull', 'legs', 'push', 'pull', 'legs'] as Exclude<WorkoutType, 'rest'>[],
+    schedule: ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'] as Exclude<WorkoutType, 'rest'>[],
     tierChains: [],
   };
 
@@ -405,8 +409,17 @@ function getProgressMultiplier(data: WorkoutData, key: ExerciseKey): number {
   if (previous <= 0) return 1;
   const ratio = latest / previous;
   if (ratio >= 1.05) return 1.06;
-  if (ratio <= 0.95) return 0.92;
+  if (ratio <= 0.95 && hasTwoConsecutivePerformanceDrops(sessions, key)) return 0.92;
   return 1;
+}
+
+function hasTwoConsecutivePerformanceDrops(
+  sessions: [string, WorkoutData[string]][],
+  key: ExerciseKey
+): boolean {
+  if (sessions.length < 3) return false;
+  const scores = sessions.slice(0, 3).map(([, session]) => scoreSessionSets(session[key] as SetEntry[]));
+  return scores[0] < scores[1] * 0.95 && scores[1] < scores[2] * 0.95;
 }
 
 function getPrimaryExerciseContribution(
@@ -431,6 +444,46 @@ function exceedsSessionSetCap(
       .reduce((sum, chain) => sum + (chain.sets ?? 0), 0);
     return sets > sessionSetCap;
   });
+}
+
+function enforceSessionHardSetFloors(
+  initialPlan: FrontierPlanSlot[],
+  sessionSetCap: number
+): FrontierPlanSlot[] {
+  let plan = initialPlan.map((slot) => ({ ...slot, sets: Math.max(slot.sets, INCLUDED_EXERCISE_MIN_SETS) }));
+  const workoutTypes = [...new Set(plan.map((slot) => slot.candidate.workoutType))];
+
+  for (const workoutType of workoutTypes) {
+    const floor = getSessionHardSetFloor(workoutType);
+    if (floor <= 0) continue;
+    const order = plan
+      .map((slot, index) => slot.candidate.workoutType === workoutType ? { index, slot } : null)
+      .filter((entry): entry is { index: number; slot: FrontierPlanSlot } => Boolean(entry))
+      .sort((a, b) => (
+        b.slot.candidate.smvRoi - a.slot.candidate.smvRoi ||
+        a.slot.candidate.order - b.slot.candidate.order
+      ));
+    let cursor = 0;
+    while (getPlanSessionSets(plan, workoutType) < floor && getPlanSessionSets(plan, workoutType) < sessionSetCap) {
+      const best = order[cursor % order.length];
+      if (!best) break;
+      plan = plan.map((entry, index) => (
+        index === best.index ? { ...entry, sets: entry.sets + 1 } : entry
+      ));
+      cursor++;
+    }
+  }
+
+  return plan;
+}
+
+function getPlanSessionSets(
+  plan: FrontierPlanSlot[],
+  workoutType: Exclude<WorkoutType, 'rest'>
+): number {
+  return plan
+    .filter((slot) => slot.candidate.workoutType === workoutType)
+    .reduce((sum, slot) => sum + slot.sets, 0);
 }
 
 function getSessionSetCap(profile: UserProfile | null): number {

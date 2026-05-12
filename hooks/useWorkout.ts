@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight, setEntryRir, ActiveWorkoutDraft, SMVExercisePrescription } from '@/lib/types';
 import { EXERCISES, REST_DURATION } from '@/lib/constants';
 import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessionDate } from '@/lib/workout-utils';
-import { getTargets, getWeightTarget, evaluateTierProgress } from '@/lib/progression';
+import { getTargets, getWeightTarget, evaluateTierProgress, isDeloadWeek } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
 import { clearActiveWorkoutDraft, loadActiveWorkoutDraft, pwaStorage, saveActiveWorkoutDraft, loadUserProfile, saveUserProfile } from '@/lib/storage';
 import { getChainsForRoutine, getProgressionPath, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
@@ -15,6 +15,7 @@ import { requireRestNotificationPermission, showRestCompleteNotification } from 
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { evaluateDoubleProgression } from '@/lib/smv';
+import { hasExplicitInjuryMode } from '@/lib/session-volume-constraints';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -134,7 +135,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       activeChains,
       tiers,
       setsPerExercise,
-      unavailableEquipment
+      unavailableEquipment,
+      { allowVolumeReduction: isDeloadWeek(weekNumber) || hasExplicitInjuryMode(userProfile) }
     ).map((item) => ({
       exercise: item.exercise,
       setCount: item.setCount,
@@ -142,7 +144,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       prescription: item.prescription,
     }));
     return { workoutType: wt, workoutOccurrenceIndex: occurrenceIndex, derivedPlan: plan };
-  }, [date, userProfile, data, unavailableEquipment, skippedChainIndices, setsPerExercise]);
+  }, [date, userProfile, data, unavailableEquipment, skippedChainIndices, setsPerExercise, weekNumber]);
 
   const exercisePlan = useMemo(() => [...derivedPlan, ...requeuedExercises.map((item) => ({
     exercise: item.exercise,

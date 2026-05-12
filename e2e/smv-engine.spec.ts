@@ -7,6 +7,7 @@ import { getAdaptiveRecommendations } from '@/lib/adaptation/recommendation-engi
 import { smvVelocityPerRecoverableFatigue } from '@/lib/adaptation/objective';
 import { getEffectiveWeeklyVolume } from '@/lib/adaptation/volume-engine';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
+import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { assessSetCoaching } from '@/lib/set-coaching';
 import {
   calculateRoutineVolume,
@@ -17,6 +18,7 @@ import {
   shouldDeload,
 } from '@/lib/smv';
 import { gymRoutine } from '@/lib/routines/gym';
+import { getChainsForRoutine } from '@/lib/tiers';
 
 const testPrescription = {
   exerciseKey: 'smith_incline_press' as const,
@@ -60,6 +62,38 @@ test('SMV optimizer rejects unavailable idealized machines and reports allocatio
   expect(optimized.progressionAssumptions.join(' ')).toMatch(/target RIR/i);
   expect(optimized.recoveryBottlenecks.join(' ')).toMatch(/Shoulder local tissue/i);
   expect(optimized.longTermExpectations.join(' ')).toMatch(/4-8 weeks/i);
+});
+
+test('normal session execution enforces productive hard-set floors without changing the split', () => {
+  const profile = getDefaultProfile();
+  const optimized = optimizeRoutineForFrontier(gymRoutine, profile, {}, 3);
+
+  for (const workoutType of gymRoutine.schedule) {
+    const chains = getChainsForRoutine(optimized.routine, workoutType);
+    const plan = getResolvedSessionPlan(optimized.routine, workoutType, chains, profile.tiers, 3);
+    const totalSets = plan.reduce((sum, item) => sum + item.setCount, 0);
+    const directArmSets = plan
+      .filter((item) => item.exercise.primaryMuscle === 'biceps' || item.exercise.primaryMuscle === 'triceps')
+      .map((item) => item.setCount);
+
+    expect(plan.every((item) => item.setCount >= 2)).toBe(true);
+    expect(directArmSets.every((sets) => sets >= 2)).toBe(true);
+    expect(totalSets).toBeGreaterThanOrEqual(workoutType === 'legs_maintenance' ? 12 : 15);
+  }
+});
+
+test('generated frontier routine does not optimize normal sessions down to minimum-effective doses', () => {
+  const profile = { ...getDefaultProfile(), goal: '__generated_frontier__' };
+  const optimized = optimizeRoutineForFrontier(gymRoutine, profile, {}, 3);
+
+  for (const workoutType of gymRoutine.schedule) {
+    const chains = getChainsForRoutine(optimized.routine, workoutType);
+    const plan = getResolvedSessionPlan(optimized.routine, workoutType, chains, profile.tiers, 3);
+    const totalSets = plan.reduce((sum, item) => sum + item.setCount, 0);
+
+    expect(plan.every((item) => item.setCount >= 2)).toBe(true);
+    expect(totalSets).toBeGreaterThanOrEqual(workoutType === 'legs_maintenance' ? 12 : 15);
+  }
 });
 
 test('requires top reps at target RIR before increasing load', () => {
@@ -243,6 +277,38 @@ test('low effective volume with usable recovery recommends add-volume guidance',
 
   expect(context.recommendations[0].action).toBe('add_volume');
   expect(context.recommendations[0].reason).toMatch(/below target while recovery is usable/i);
+});
+
+test('single performance dip does not trigger auto volume reduction during normal training', () => {
+  const context = getAdaptiveRecommendations({
+    recovery: {
+      systemic: 0.8,
+      muscles: { side_delt: { muscle: 'side_delt', recoveryState: 0.76, fatigueLoad: 0.2, soreness: 0, halfLifeHours: 24 } },
+      bottleneck: null,
+      generatedAt: '2026-05-10T00:00:00.000Z',
+    },
+    fatigue: {
+      localMuscleFatigue: { side_delt: 0.6 },
+      connectiveTissueFatigue: {},
+      axialFatigue: 0.1,
+      systemicFatigue: 0.2,
+      jointRisk: 0.2,
+      bottlenecks: [],
+    },
+    progression: [{
+      trend: 'junk_volume',
+      velocity: -3,
+      confidence: 0.72,
+      exerciseKey: 'db_lateral_raise',
+      muscle: 'side_delt',
+      reasons: ['Volume is above target without a matching performance gain.'],
+    }],
+    effectiveVolume: [{ muscle: 'side_delt', sets: 30, target: 22, minimum: 18, priorityRank: 1, status: 'high' }],
+    profile: getDefaultProfile(),
+    today: new Date('2026-05-10T00:00:00'),
+  });
+
+  expect(context.recommendations.some((entry) => entry.action === 'reduce_volume')).toBe(false);
 });
 
 test('primary objective favors recoverable velocity over excessive raw volume and ignores target date in score', () => {
