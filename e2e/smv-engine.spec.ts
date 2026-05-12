@@ -7,6 +7,7 @@ import { getAdaptiveRecommendations } from '@/lib/adaptation/recommendation-engi
 import { smvVelocityPerRecoverableFatigue } from '@/lib/adaptation/objective';
 import { getEffectiveWeeklyVolume } from '@/lib/adaptation/volume-engine';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
+import { assessSetCoaching } from '@/lib/set-coaching';
 import {
   calculateRoutineVolume,
   evaluateDoubleProgression,
@@ -16,6 +17,19 @@ import {
   shouldDeload,
 } from '@/lib/smv';
 import { gymRoutine } from '@/lib/routines/gym';
+
+const testPrescription = {
+  exerciseKey: 'smith_incline_press' as const,
+  sets: 3,
+  minReps: 8,
+  maxReps: 10,
+  targetRir: '1-2 RIR',
+  targetRirMin: 1,
+  targetRirMax: 2,
+  restSeconds: 90,
+  restLabel: '90 sec',
+  cue: 'Clean reps.',
+};
 
 test('calculates weekly SMV volume with indirect sets', () => {
   const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
@@ -64,6 +78,49 @@ test('requires top reps at target RIR before increasing load', () => {
     { reps: 9, weight: 50, rir: 1 },
     { reps: 10, weight: 50, rir: 2 },
   ], prescription).increaseLoad).toBe(false);
+});
+
+test('coaches sets with RIR-normalized performance, not raw load only', () => {
+  expect(assessSetCoaching({
+    unit: 'weighted',
+    reps: 9,
+    weight: 42.5,
+    rir: 0,
+    prescription: testPrescription,
+    previous: { reps: 10, weight: 40, rir: 2 },
+  }).label).toBe('Reduce load');
+
+  expect(assessSetCoaching({
+    unit: 'weighted',
+    reps: 10,
+    weight: 40,
+    rir: 2,
+    prescription: testPrescription,
+    priorSets: [
+      { reps: 10, weight: 40, rir: 2 },
+      { reps: 10, weight: 40, rir: 1 },
+    ],
+    plannedSets: 3,
+  }).label).toBe('Progress next time');
+
+  const tooEasy = assessSetCoaching({
+    unit: 'weighted',
+    reps: 8,
+    weight: 40,
+    rir: 4,
+    prescription: testPrescription,
+  });
+  expect(tooEasy.label).toBe('Too easy');
+  expect(tooEasy.detail).toMatch(/top reps/i);
+
+  expect(assessSetCoaching({
+    unit: 'weighted',
+    reps: 7,
+    weight: 40,
+    rir: 0,
+    prescription: testPrescription,
+    previous: { reps: 8, weight: 40, rir: 1 },
+  }).label).toBe('Reduce load');
 });
 
 test('detects deload and waist calorie adjustment triggers', () => {
@@ -153,6 +210,39 @@ test('calculates adaptive effective volume, recovery, fatigue, and recommendatio
   expect(fatigue.jointRisk).toBeGreaterThan(0);
   expect(context.mode).toBe('recommend-first');
   expect(context.recommendations[0].reason.length).toBeGreaterThan(10);
+});
+
+test('low effective volume with usable recovery recommends add-volume guidance', () => {
+  const context = getAdaptiveRecommendations({
+    recovery: {
+      systemic: 0.85,
+      muscles: { side_delt: { muscle: 'side_delt', recoveryState: 0.82, fatigueLoad: 0.1, soreness: 0, halfLifeHours: 24 } },
+      bottleneck: null,
+      generatedAt: '2026-05-10T00:00:00.000Z',
+    },
+    fatigue: {
+      localMuscleFatigue: { side_delt: 0.2 },
+      connectiveTissueFatigue: {},
+      axialFatigue: 0.1,
+      systemicFatigue: 0.15,
+      jointRisk: 0.1,
+      bottlenecks: [],
+    },
+    progression: [{
+      trend: 'undertraining',
+      velocity: 0,
+      confidence: 0.7,
+      exerciseKey: 'db_lateral_raise',
+      muscle: 'side_delt',
+      reasons: ['Effective weekly volume is below the productive floor.'],
+    }],
+    effectiveVolume: [{ muscle: 'side_delt', sets: 6, target: 22, minimum: 18, priorityRank: 1, status: 'low' }],
+    profile: getDefaultProfile(),
+    today: new Date('2026-05-10T00:00:00'),
+  });
+
+  expect(context.recommendations[0].action).toBe('add_volume');
+  expect(context.recommendations[0].reason).toMatch(/below target while recovery is usable/i);
 });
 
 test('primary objective favors recoverable velocity over excessive raw volume and ignores target date in score', () => {

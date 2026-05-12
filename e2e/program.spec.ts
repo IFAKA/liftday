@@ -67,6 +67,49 @@ test('restores an active workout after reload', async ({ page }) => {
   await expect(page.getByRole('button', { name: /undo last set/i })).toBeVisible();
 });
 
+test('shows inline previous set coaching without overlapping log action on watch viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await installRequiredNotificationStack(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.setItem('traindaily_sessions', JSON.stringify({
+      '2026-05-04': {
+        logged_at: '2026-05-04T10:00:00.000Z',
+        week_number: 1,
+        workout_type: 'push_a',
+        cable_lateral_raise: [
+          { reps: 20, weight: 10, rir: 2 },
+          { reps: 20, weight: 10, rir: 2 },
+          { reps: 20, weight: 10, rir: 2 },
+        ],
+      },
+    }));
+  });
+
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.removeItem('liftday_active_workout_draft');
+  });
+  await page.reload();
+
+  await page.getByRole('button', { name: /^start$/i }).click();
+
+  const previousRow = page.getByText(/^Prev 10kg x 20$/);
+  const logSet = page.getByRole('button', { name: /log set/i });
+  await expect(previousRow).toBeVisible();
+  await expect(logSet).toBeVisible();
+
+  const previousBox = await previousRow.boundingBox();
+  const logBox = await logSet.boundingBox();
+  expect(previousBox).not.toBeNull();
+  expect(logBox).not.toBeNull();
+  expect(previousBox!.y + previousBox!.height).toBeLessThan(logBox!.y);
+
+  await page.getByRole('button', { name: '4 RIR' }).click();
+  await expect(page.getByText('Too easy')).toBeVisible();
+});
+
 test('logs an SMV workout with RIR and an occupied-machine substitution', async ({ page }) => {
   test.setTimeout(90000);
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));

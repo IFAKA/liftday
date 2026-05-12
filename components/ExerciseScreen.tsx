@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { X, ChevronLeft, Info, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import type { Exercise, SMVExercisePrescription } from '@/lib/types';
+import type { Exercise, SMVExercisePrescription, SetEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ExerciseDemo } from './ExerciseDemo';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Badge } from './ui/badge';
 import { TopBar } from './TopBar';
+import { assessSetCoaching, type SetCoachingTone } from '@/lib/set-coaching';
 
 interface ExerciseScreenProps {
   exercise: Exercise;
@@ -24,6 +24,8 @@ interface ExerciseScreenProps {
   prescription: SMVExercisePrescription | null;
   previousRep: number | null;
   previousWeight: number | null;
+  previousRir: number | null;
+  currentExerciseSets: SetEntry[];
   flashColor: 'green' | 'red' | null;
   onLogSet: (reps: number, weight?: number, rir?: number) => void;
   onQuit: () => void;
@@ -41,6 +43,8 @@ export function ExerciseScreen({
   prescription,
   previousRep,
   previousWeight,
+  previousRir,
+  currentExerciseSets,
   flashColor,
   onLogSet,
   onQuit,
@@ -107,6 +111,24 @@ export function ExerciseScreen({
   const totalSets = Math.max(1, totalPlannedSets);
   const completedSets = completedPlannedSets;
   const progressPercent = (completedSets / totalSets) * 100;
+  const coaching = assessSetCoaching({
+    unit: exercise.unit,
+    reps: val,
+    weight: isSeconds ? null : weight,
+    rir,
+    prescription,
+    previous: previousRep === null ? null : {
+      reps: previousRep,
+      weight: previousWeight,
+      rir: previousRir,
+    },
+    priorSets: currentExerciseSets,
+    plannedSets: setsPerExercise,
+  });
+  const previousLabel = previousRep === null
+    ? null
+    : previousWeight !== null ? `Prev ${previousWeight}kg x ${previousRep}` : `Prev ${previousRep}`;
+  const coachingToneClass = getCoachingToneClass(coaching.tone);
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden flex flex-col">
@@ -248,6 +270,17 @@ export function ExerciseScreen({
                     compact
                     onChange={setVal}
                   />
+                  <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                    <span className="min-w-0 truncate text-xs font-black uppercase text-white/65">
+                      {previousLabel ?? 'No previous set'}
+                    </span>
+                    <span className={cn('shrink-0 rounded-full px-2 py-1 text-[11px] font-black uppercase', coachingToneClass)}>
+                      {coaching.label}
+                    </span>
+                  </div>
+                  <p className="mx-auto -mt-1 mb-2 w-full max-w-xs truncate text-center text-xs font-medium text-white/45">
+                    {coaching.detail}
+                  </p>
                   <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1">
                     {[0, 1, 2, 3, 4].map((option) => (
                       <button
@@ -265,12 +298,6 @@ export function ExerciseScreen({
                     ))}
                   </div>
                 </div>
-              )}
-
-              {previousRep !== null && !flashColor && (
-                <Badge variant="ghost" className="absolute bottom-8 border-white/20 text-fluid-label font-mono font-bold tracking-widest">
-                  {previousWeight !== null ? `${previousWeight}kg × ${previousRep}` : previousRep} PREV
-                </Badge>
               )}
             </div>
 
@@ -297,4 +324,17 @@ export function ExerciseScreen({
       />
     </div>
   );
+}
+
+function getCoachingToneClass(tone: SetCoachingTone): string {
+  switch (tone) {
+    case 'good':
+      return 'bg-emerald-400/15 text-emerald-200';
+    case 'warning':
+      return 'bg-amber-400/15 text-amber-200';
+    case 'danger':
+      return 'bg-red-400/15 text-red-200';
+    case 'neutral':
+      return 'bg-white/10 text-white/70';
+  }
 }
