@@ -90,7 +90,10 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Progress');
   await expect(page.locator('body')).toContainText('Changed');
   await expect(page.locator('body')).toContainText('Pace');
-  await expect(page.locator('body')).toContainText('Ideal');
+  await expect(page.locator('body')).toContainText(/Behind this week|On track|Ahead of plan|Need logs/);
+  await expect(page.locator('body')).toContainText('Progress score');
+  await expect(page.locator('body')).toContainText('This week');
+  await expect(page.locator('body')).toContainText('Plan');
   await expect(page.locator('body')).toContainText('Attention');
   await expect(page.getByRole('button', { name: /detail/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /best sets/i })).toHaveCount(0);
@@ -119,7 +122,10 @@ test('shows adaptive progress detail metrics', async ({ page }) => {
   await expect(page.locator('body')).toContainText('Progress Detail');
   await expect(page.getByRole('button', { name: /copy progress/i })).toBeVisible();
   await expect(page.locator('body')).toContainText('Pace');
-  await expect(page.locator('body')).toContainText('Ideal');
+  await expect(page.locator('body')).toContainText(/Behind this week|On track|Ahead of plan|Need logs/);
+  await expect(page.locator('body')).toContainText('Progress score');
+  await expect(page.locator('body')).toContainText('This week');
+  await expect(page.locator('body')).toContainText('Plan');
   await expect(page.locator('body')).toContainText(/score|recovery|load/i);
 });
 
