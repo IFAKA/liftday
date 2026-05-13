@@ -48,7 +48,7 @@ export default function SettingsPage() {
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Settings</span>}
+        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Options</span>}
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-2">

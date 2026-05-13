@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
@@ -155,7 +156,11 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                 const active = getExerciseName(activeKey);
                 const progression = getProgressionPath(chain).filter((key) => key !== activeKey);
                 return (
-                  <div key={chain.slotId} className="flex items-center justify-between gap-3">
+                  <Link
+                    key={chain.slotId}
+                    href={`/exercises/${activeKey}`}
+                    className="flex min-h-12 items-center justify-between gap-3 rounded-lg px-2 py-2 active:bg-white/10"
+                  >
                     <div className="min-w-0">
                       <p className="truncate text-fluid-label font-black uppercase text-white/70">{active}</p>
                       <p className="text-xs font-mono uppercase text-white/25">
@@ -170,7 +175,8 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                     <span className="shrink-0 text-fluid-label font-mono tabular-nums text-white/30">
                       {getChainSetCount(chain, fallbackSets)}x
                     </span>
-                  </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-white/25" />
+                  </Link>
                 );
               })}
             </div>

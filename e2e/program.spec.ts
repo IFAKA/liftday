@@ -27,8 +27,9 @@ test('opens the program screen', async ({ page }) => {
 
   await expect(page.locator('body')).toContainText('Program');
   await expect(page.getByRole('link', { name: /^routine/i })).toBeVisible();
-  await expect(page.locator('body')).toContainText(/Next|Hold course|Add|Deload/);
-  await expect(page.locator('body')).toContainText(/SMV Hypertrophy|Routine/);
+  await expect(page.locator('body')).toContainText('Next days');
+  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
+  await expect(page.locator('body')).toContainText(/Hold course|Add|Deload|Routine/);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
@@ -42,7 +43,65 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
 
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+});
+
+test('rest-day today still exposes supporting drill-down rows', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-10T10:00:00'));
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+  });
+
+  await page.goto('/');
+
+  await expect(page.locator('body')).toContainText('REST');
+  await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+});
+
+test('progress opens as summary and drill-down rows, not a tab section', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('traindaily_sessions', JSON.stringify({
+      '2026-05-04': {
+        logged_at: '2026-05-04T10:00:00.000Z',
+        week_number: 1,
+        workout_type: 'push_a',
+        db_incline_press: [
+          { reps: 10, weight: 10, rir: 2 },
+          { reps: 9, weight: 10, rir: 2 },
+        ],
+      },
+      '2026-05-11': {
+        logged_at: '2026-05-11T10:00:00.000Z',
+        week_number: 2,
+        workout_type: 'push_a',
+        db_incline_press: [
+          { reps: 11, weight: 10, rir: 2 },
+          { reps: 10, weight: 10, rir: 2 },
+        ],
+      },
+    }));
+  });
+
+  await page.goto('/history');
+
+  await expect(page.locator('body')).toContainText('Progress');
+  await expect(page.locator('body')).toContainText('Changed');
+  await expect(page.locator('body')).toContainText('Attention');
+  await expect(page.getByRole('button', { name: /best sets/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /sessions/i })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+});
+
+test('exercise detail is contextual from routine and no exercise index is primary', async ({ page }) => {
+  await page.goto('/program/detail');
+  await page.getByRole('link', { name: /incline|pull|squat|curl|raise/i }).first().click();
+
+  await expect(page).toHaveURL(/\/exercises\//);
+  await page.goto('/exercises');
+  await expect(page.locator('body')).not.toContainText(/exercise library|exercises/i);
 });
 
 test('shows adaptive progress detail metrics', async ({ page }) => {

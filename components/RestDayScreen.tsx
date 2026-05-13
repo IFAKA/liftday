@@ -1,11 +1,12 @@
 'use client';
 
-import { Moon, Play } from 'lucide-react';
+import { CalendarDays, ChartBar, Moon, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { MobilityFlow } from './MobilityFlow';
 import { MobilityErrorBoundary } from './MobilityErrorBoundary';
 import { SessionComplete } from './SessionComplete';
 import { MobilityExercise } from '@/lib/types';
+import { WatchListItem } from './WatchSurface';
 
 export interface MobilityHookState {
   exercise: MobilityExercise;
@@ -77,10 +78,26 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
         )}
       </div>
 
-      <div className="w-full shrink-0 px-4 pb-4 sm:pb-6">
+      <div className="w-full shrink-0 px-4 pb-4 sm:pb-6 flex flex-col gap-2">
+        <WatchListItem
+          href="/program"
+          icon={CalendarDays}
+          title="Program"
+          subtitle="Routine and next days"
+          subtle
+          className="py-3"
+        />
+        <WatchListItem
+          href="/history"
+          icon={ChartBar}
+          title="Progress"
+          subtitle="Changes and attention"
+          subtle
+          className="py-3"
+        />
         <Button
           onClick={mobility.startMobility}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-all shadow-xl border border-white/10"
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-xl"
         >
           <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
           5 MIN MOBILITY

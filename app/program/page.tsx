@@ -59,7 +59,7 @@ export default function ProgramPage() {
           <RoutineDecisionPanel decision={routineDecision} />
         )}
 
-        <WatchSection title="Open">
+        <WatchSection title="Plan">
           <div className="flex flex-col gap-2">
             {routine && (
               <WatchListItem
@@ -73,11 +73,11 @@ export default function ProgramPage() {
           </div>
         </WatchSection>
 
-        <WatchSection title="Next Days">
+        <WatchSection title="Next days">
           <WeeklySplit currentDate={new Date()} data={data} embedded />
         </WatchSection>
 
-        <WatchSection title="More">
+        <WatchSection title="Options">
           <WatchListItem
             href="/settings"
             icon={Settings}
