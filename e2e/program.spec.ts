@@ -110,7 +110,7 @@ test('shows inline previous set coaching without overlapping log action on watch
   await expect(page.getByText('Too easy')).toBeVisible();
 });
 
-test('logs an SMV workout with RIR and an occupied-machine substitution', async ({ page }) => {
+test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page }) => {
   test.setTimeout(90000);
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
@@ -132,7 +132,11 @@ test('logs an SMV workout with RIR and an occupied-machine substitution', async 
 
   const occupied = page.getByRole('button', { name: /machine occupied/i });
   if (await occupied.isVisible()) {
+    const currentExerciseName = await page.locator('h2').first().innerText();
     await occupied.click();
+    const picker = page.getByRole('dialog', { name: /choose swap/i });
+    await expect(picker).toBeHidden();
+    await expect.poll(async () => page.locator('h2').first().innerText()).not.toBe(currentExerciseName);
   }
 
   for (let i = 0; i < 80; i += 1) {

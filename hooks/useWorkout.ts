@@ -7,14 +7,14 @@ import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessio
 import { getTargets, getWeightTarget, evaluateTierProgress, isDeloadWeek } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
 import { clearActiveWorkoutDraft, loadActiveWorkoutDraft, pwaStorage, saveActiveWorkoutDraft, loadUserProfile, saveUserProfile } from '@/lib/storage';
-import { getChainsForRoutine, getProgressionPath, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
-import { EquipmentKey, getRequiredEquipment } from '@/lib/equipment';
+import { getChainsForRoutine, getProgressionPath, getSubstitutionPath, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
+import { EquipmentKey, canPerformExercise, getRequiredEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
 import { requireRestNotificationPermission, showRestCompleteNotification } from '@/lib/rest-notifications';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
-import { evaluateDoubleProgression } from '@/lib/smv';
+import { evaluateDoubleProgression, getPrescriptionForChain } from '@/lib/smv';
 import { hasExplicitInjuryMode } from '@/lib/session-volume-constraints';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
@@ -48,6 +48,8 @@ export interface UseWorkoutReturn {
   timerPaused: boolean;
   advancedTiers: string[];
   hasSwapAlternative: boolean;
+  swapAlternatives: Exercise[];
+  canDeferMachineOccupied: boolean;
   startWorkout: () => Promise<void>;
   logSet: (reps: number, weight?: number, rir?: number) => void;
   skipTimer: () => void;
@@ -57,9 +59,13 @@ export interface UseWorkoutReturn {
   togglePauseTimer: () => void;
   undoLastSet: () => void;
   swapCurrentForOccupied: () => void;
+  selectAlternativeForOccupied: (exerciseKey: ExerciseKey) => void;
+  deferCurrentForOccupied: () => void;
   requeueCurrent: () => void;
   handleMachineOccupied: () => void;
 }
+
+type RequeuedExercise = { exercise: Exercise; setCount: number; chainIndex?: number };
 
 export function useWorkout(date: Date): UseWorkoutReturn {
   const storageAdapter: StorageAdapter = pwaStorage;
@@ -77,8 +83,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [advancedTiers, setAdvancedTiers] = useState<string[]>([]);
   const [unavailableEquipment, setUnavailableEquipment] = useState<EquipmentKey[]>([]);
+  const [selectedSubstitutions, setSelectedSubstitutions] = useState<Record<number, ExerciseKey>>({});
   const [skippedChainIndices, setSkippedChainIndices] = useState<Set<number>>(new Set());
-  const [requeuedExercises, setRequeuedExercises] = useState<{ exercise: Exercise; setCount: number }[]>([]);
+  const [requeuedExercises, setRequeuedExercises] = useState<RequeuedExercise[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -137,19 +144,28 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       setsPerExercise,
       unavailableEquipment,
       { allowVolumeReduction: isDeloadWeek(weekNumber) || hasExplicitInjuryMode(userProfile) }
-    ).map((item) => ({
-      exercise: item.exercise,
-      setCount: item.setCount,
-      chainIndex: chainIndexLookup.get(item.chain.slotId) ?? item.chainIndex,
-      prescription: item.prescription,
-    }));
+    ).map((item) => {
+      const chainIndex = chainIndexLookup.get(item.chain.slotId) ?? item.chainIndex;
+      const selectedKey = selectedSubstitutions[chainIndex];
+      const selectedExercise = selectedKey && canPerformExercise(selectedKey, unavailableEquipment)
+        ? EXERCISES.find((entry) => entry.key === selectedKey)
+        : null;
+      return {
+        exercise: selectedExercise ?? item.exercise,
+        setCount: item.setCount,
+        chainIndex,
+        prescription: selectedExercise && chains[chainIndex]
+          ? { ...getPrescriptionForChain(chains[chainIndex], selectedExercise.key, setsPerExercise), sets: item.setCount }
+          : item.prescription,
+      };
+    });
     return { workoutType: wt, workoutOccurrenceIndex: occurrenceIndex, derivedPlan: plan };
-  }, [date, userProfile, data, unavailableEquipment, skippedChainIndices, setsPerExercise, weekNumber]);
+  }, [date, userProfile, data, unavailableEquipment, selectedSubstitutions, skippedChainIndices, setsPerExercise, weekNumber]);
 
   const exercisePlan = useMemo(() => [...derivedPlan, ...requeuedExercises.map((item) => ({
     exercise: item.exercise,
     setCount: item.setCount,
-    chainIndex: -1,
+    chainIndex: item.chainIndex ?? -1,
     prescription: derivedPlan.find((planItem) => planItem.exercise.key === item.exercise.key)?.prescription ?? {
       exerciseKey: item.exercise.key,
       sets: item.setCount,
@@ -220,14 +236,18 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const requeued = draft.requeuedExercises
       .map((item) => {
         const exercise = EXERCISES.find((ex) => ex.key === item.exerciseKey);
-        return exercise ? { exercise, setCount: item.setCount } : null;
+        if (!exercise) return null;
+        const requeued: RequeuedExercise = { exercise, setCount: item.setCount };
+        if (item.chainIndex !== undefined) requeued.chainIndex = item.chainIndex;
+        return requeued;
       })
-      .filter((item): item is { exercise: Exercise; setCount: number } => item !== null);
+      .filter((item): item is RequeuedExercise => item !== null);
 
     sessionRepsRef.current = draft.sessionReps;
     startedAtRef.current = draft.startedAt;
     timerEndRef.current = draft.timerEndAt;
     setUnavailableEquipment(draft.unavailableEquipment as EquipmentKey[]);
+    setSelectedSubstitutions(draft.selectedSubstitutions ?? {});
     setSkippedChainIndices(new Set(draft.skippedChainIndices));
     setRequeuedExercises(requeued);
     setExerciseIndex(draft.exerciseIndex);
@@ -282,10 +302,12 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       timerPaused,
       nextExerciseName,
       unavailableEquipment,
+      selectedSubstitutions,
       skippedChainIndices: [...skippedChainIndices],
       requeuedExercises: requeuedExercises.map((item) => ({
         exerciseKey: item.exercise.key,
         setCount: item.setCount,
+        chainIndex: item.chainIndex,
       })),
     });
   }, [
@@ -294,6 +316,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     exerciseIndex,
     nextExerciseName,
     requeuedExercises,
+    selectedSubstitutions,
     skippedChainIndices,
     timer,
     timerPaused,
@@ -589,12 +612,93 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     return newKey !== ex.key;
   }, [derivedPlan, exerciseIndex, unavailableEquipment, userProfile, data, setsPerExercise, workoutType, workoutOccurrenceIndex]);
 
+  const swapAlternatives = useMemo(() => {
+    const currentPlanItem = exercisePlan[exerciseIndex];
+    const ex = currentPlanItem?.exercise;
+    if (!ex) return [];
+    const required = getRequiredEquipment(ex.key);
+    if (required.length === 0) return [];
+    const newUnavailable = [...new Set([...unavailableEquipment, ...required])];
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    if (workoutType === 'rest') return [];
+    const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
+    const chainIdx = currentPlanItem.chainIndex;
+    if (chainIdx < 0) return [];
+    const chain = chains[chainIdx];
+    if (!chain) return [];
+    const candidates = getSubstitutionPath(chain)
+      .filter((key) => key !== ex.key && canPerformExercise(key, newUnavailable));
+    const gymCandidates = routine.id === 'gym'
+      ? candidates.filter((key) => getRequiredEquipment(key).some((eq) => eq !== 'none'))
+      : candidates;
+    const available = gymCandidates.length > 0 ? gymCandidates : candidates;
+    return available
+      .map((key) => EXERCISES.find((entry) => entry.key === key))
+      .filter((entry): entry is Exercise => entry !== undefined)
+      .slice(0, 4);
+  }, [exercisePlan, exerciseIndex, unavailableEquipment, userProfile, data, setsPerExercise, workoutType, workoutOccurrenceIndex]);
+
   const swapCurrentForOccupied = useCallback(() => {
     const ex = exercises[exerciseIndex];
     if (!ex) return;
     const required = getRequiredEquipment(ex.key);
     setUnavailableEquipment((prev) => [...new Set([...prev, ...required])]);
   }, [exercises, exerciseIndex]);
+
+  const selectAlternativeForOccupied = useCallback((exerciseKey: ExerciseKey) => {
+    const ex = exercises[exerciseIndex];
+    if (!ex) return;
+    const chainIdx = exercisePlan[exerciseIndex]?.chainIndex;
+    if (chainIdx === undefined || chainIdx < 0) return;
+    const required = getRequiredEquipment(ex.key);
+    const newUnavailable = [...new Set([...unavailableEquipment, ...required])];
+    if (!canPerformExercise(exerciseKey, newUnavailable)) return;
+    const selectedExercise = EXERCISES.find((entry) => entry.key === exerciseKey);
+    if (!selectedExercise) return;
+    setUnavailableEquipment(newUnavailable);
+    if (exerciseIndex < derivedPlan.length) {
+      setSelectedSubstitutions((prev) => ({ ...prev, [chainIdx]: exerciseKey }));
+    } else {
+      const requeuedIndex = exerciseIndex - derivedPlan.length;
+      setRequeuedExercises((prev) => prev.map((item, index) => (
+        index === requeuedIndex ? { ...item, exercise: selectedExercise } : item
+      )));
+    }
+    setCurrentSet(0);
+  }, [derivedPlan.length, exerciseIndex, exercisePlan, exercises, unavailableEquipment]);
+
+  const canDeferMachineOccupied = exerciseIndex + 1 < exercises.length;
+
+  const deferCurrentForOccupied = useCallback(() => {
+    const ex = exercises[exerciseIndex];
+    if (!ex || exerciseIndex + 1 >= exercises.length) return;
+    traceLiftDay('workout.exercise.occupied_defer', {
+      exerciseIndex,
+      exerciseName: ex.name,
+      derivedExerciseCount: derivedPlan.length,
+      totalExercises: exercises.length,
+      chainIndex: derivedPlan[exerciseIndex]?.chainIndex ?? null,
+    });
+    if (exerciseIndex < derivedPlan.length) {
+      const chainIdx = derivedPlan[exerciseIndex]?.chainIndex;
+      if (chainIdx === undefined) return;
+      setSkippedChainIndices((prev) => new Set([...prev, chainIdx]));
+      setRequeuedExercises((prev) => [...prev, { exercise: ex, setCount: currentSetCount, chainIndex: chainIdx }]);
+      setCurrentSet(0);
+      return;
+    }
+
+    const requeuedIndex = exerciseIndex - derivedPlan.length;
+    setRequeuedExercises((prev) => {
+      const next = [...prev];
+      const [current] = next.splice(requeuedIndex, 1);
+      if (!current) return prev;
+      next.push(current);
+      return next;
+    });
+    setCurrentSet(0);
+  }, [currentSetCount, derivedPlan, exerciseIndex, exercises]);
 
   const requeueCurrent = useCallback(() => {
     const ex = exercises[exerciseIndex];
@@ -610,7 +714,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       const chainIdx = derivedPlan[exerciseIndex]?.chainIndex;
       if (chainIdx === undefined) return;
       setSkippedChainIndices((prev) => new Set([...prev, chainIdx]));
-      setRequeuedExercises((prev) => [...prev, { exercise: ex, setCount: currentSetCount }]);
+      setRequeuedExercises((prev) => [...prev, { exercise: ex, setCount: currentSetCount, chainIndex: chainIdx }]);
       setCurrentSet(0);
       // After re-derive, exerciseIndex unchanged but now points to the next exercise
     } else {
@@ -626,12 +730,14 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [exercises, exerciseIndex, derivedPlan, currentSetCount, saveAndComplete]);
 
   const handleMachineOccupied = useCallback(() => {
-    if (hasSwapAlternative) {
+    if (canDeferMachineOccupied) {
+      deferCurrentForOccupied();
+    } else if (hasSwapAlternative) {
       swapCurrentForOccupied();
     } else {
       requeueCurrent();
     }
-  }, [hasSwapAlternative, swapCurrentForOccupied, requeueCurrent]);
+  }, [canDeferMachineOccupied, deferCurrentForOccupied, hasSwapAlternative, swapCurrentForOccupied, requeueCurrent]);
 
   const nextExerciseAfterRestName = useMemo(() => {
     if (state !== 'resting') return null;
@@ -647,7 +753,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
     startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
-    swapCurrentForOccupied, requeueCurrent, hasSwapAlternative, handleMachineOccupied,
+    swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
+    hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
   };
 }
 

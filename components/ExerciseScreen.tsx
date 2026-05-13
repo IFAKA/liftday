@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, ChevronLeft, Info, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import type { Exercise, SMVExercisePrescription, SetEntry } from '@/lib/types';
+import type { Exercise, ExerciseKey, SMVExercisePrescription, SetEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ExerciseDemo } from './ExerciseDemo';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
@@ -30,6 +30,9 @@ interface ExerciseScreenProps {
   onLogSet: (reps: number, weight?: number, rir?: number) => void;
   onQuit: () => void;
   onMachineOccupied?: () => void;
+  swapAlternatives?: Exercise[];
+  onSelectAlternative?: (exerciseKey: ExerciseKey) => void;
+  canDeferMachineOccupied?: boolean;
 }
 
 export function ExerciseScreen({
@@ -49,6 +52,9 @@ export function ExerciseScreen({
   onLogSet,
   onQuit,
   onMachineOccupied,
+  swapAlternatives = [],
+  onSelectAlternative,
+  canDeferMachineOccupied = false,
 }: ExerciseScreenProps) {
   const isSeconds = exercise.unit === 'seconds';
   const firstSetVal = previousRep ?? currentTarget;
@@ -60,6 +66,7 @@ export function ExerciseScreen({
   const [weight, setWeight] = useState(defaultWeight);
   const [rir, setRir] = useState(prescription?.targetRirMax ?? 2);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showSwapPicker, setShowSwapPicker] = useState(false);
   const [lastLoggedVal, setLastLoggedVal] = useState<number | null>(null);
   const [lastLoggedWeight, setLastLoggedWeight] = useState<number | null>(null);
 
@@ -73,6 +80,7 @@ export function ExerciseScreen({
     setRir(prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
     setShowTutorial(false);
+    setShowSwapPicker(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercise.key, prescription?.targetRirMax]);
 
@@ -91,6 +99,7 @@ export function ExerciseScreen({
     setRir(currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
     setShowTutorial(false);
+    setShowSwapPicker(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSet, prescription, setsPerExercise]);
 
@@ -222,7 +231,15 @@ export function ExerciseScreen({
               </h2>
               {onMachineOccupied && currentSet === 0 && (
                 <button
-                  onClick={onMachineOccupied}
+                  onClick={() => {
+                    if (canDeferMachineOccupied) {
+                      onMachineOccupied();
+                    } else if (swapAlternatives.length > 0 && onSelectAlternative) {
+                      setShowSwapPicker(true);
+                    } else {
+                      onMachineOccupied();
+                    }
+                  }}
                   className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-all"
                 >
                   <AlertCircle className="size-3.5 shrink-0" />
@@ -322,6 +339,62 @@ export function ExerciseScreen({
         onOpenChange={setShowQuitConfirm}
         onConfirm={onQuit}
       />
+
+      <AnimatePresence>
+        {showSwapPicker && (
+          <motion.div
+            key="swap-picker"
+            className="absolute inset-0 z-[60] flex flex-col bg-black/95 px-4 pb-safe pt-3 backdrop-blur-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="swap-picker-title"
+          >
+            <TopBar
+              leftAction={
+                <Button variant="ghost" size="icon-xl" aria-label="Close alternative picker" onClick={() => setShowSwapPicker(false)} className="-ml-2 text-white/55 hover:bg-white/10 hover:text-white">
+                  <ChevronLeft className="icon-lg" />
+                </Button>
+              }
+              center={<span id="swap-picker-title" className="text-fluid-label font-black uppercase tracking-tight text-white">Choose swap</span>}
+            />
+
+            <div className="flex-1 overflow-y-auto py-3">
+              <p className="mb-3 text-fluid-label font-mono uppercase leading-relaxed text-white/45">
+                {exercise.name} is busy. Pick what is open now.
+              </p>
+              <div className="flex flex-col gap-2">
+                {swapAlternatives.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => {
+                      onSelectAlternative?.(option.key);
+                      setShowSwapPicker(false);
+                    }}
+                    className="min-h-16 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-left active:scale-[0.98] active:bg-white/12"
+                  >
+                    <span className="block truncate text-fluid-label font-black uppercase text-white">
+                      {option.name}
+                    </span>
+                    <span className="mt-1 block text-xs font-mono uppercase text-white/40">
+                      {option.primaryMuscle.replace('_', ' ')}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pb-2">
+              <Button
+                onClick={() => setShowSwapPicker(false)}
+                className="col-span-2 min-h-12 rounded-full bg-white text-xs font-black uppercase text-black active:scale-95"
+              >
+                Cancel
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

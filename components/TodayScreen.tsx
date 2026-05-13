@@ -99,6 +99,9 @@ function TodayContent({ date }: { date: Date }) {
         onLogSet={workout.logSet}
         onQuit={workout.quitWorkout}
         onMachineOccupied={workout.handleMachineOccupied}
+        swapAlternatives={workout.swapAlternatives}
+        onSelectAlternative={workout.selectAlternativeForOccupied}
+        canDeferMachineOccupied={workout.canDeferMachineOccupied}
       />
     );
   }

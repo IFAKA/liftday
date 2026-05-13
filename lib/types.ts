@@ -234,8 +234,9 @@ export interface ActiveWorkoutDraft {
   timerPaused: boolean;
   nextExerciseName: string;
   unavailableEquipment: string[];
+  selectedSubstitutions?: Record<number, ExerciseKey>;
   skippedChainIndices: number[];
-  requeuedExercises: { exerciseKey: ExerciseKey; setCount: number }[];
+  requeuedExercises: { exerciseKey: ExerciseKey; setCount: number; chainIndex?: number }[];
 }
 
 export interface MobilityExercise {
