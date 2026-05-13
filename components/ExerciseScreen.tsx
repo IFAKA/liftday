@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, Info, AlertCircle } from 'lucide-react';
+import { X, ChevronLeft, AlertCircle, Check, Copy } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import type { Exercise, ExerciseKey, SMVExercisePrescription, SetEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { ExerciseDemo } from './ExerciseDemo';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -65,7 +64,7 @@ export function ExerciseScreen({
   const [val, setVal] = useState(defaultVal);
   const [weight, setWeight] = useState(defaultWeight);
   const [rir, setRir] = useState(prescription?.targetRirMax ?? 2);
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [copiedName, setCopiedName] = useState(false);
   const [showSwapPicker, setShowSwapPicker] = useState(false);
   const [lastLoggedVal, setLastLoggedVal] = useState<number | null>(null);
   const [lastLoggedWeight, setLastLoggedWeight] = useState<number | null>(null);
@@ -79,7 +78,7 @@ export function ExerciseScreen({
     setWeight(defaultWeight);
     setRir(prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
-    setShowTutorial(false);
+    setCopiedName(false);
     setShowSwapPicker(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercise.key, prescription?.targetRirMax]);
@@ -98,24 +97,20 @@ export function ExerciseScreen({
     setWeight(lastLoggedWeight ?? currentWeightTarget);
     setRir(currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
-    setShowTutorial(false);
+    setCopiedName(false);
     setShowSwapPicker(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSet, prescription, setsPerExercise]);
 
   useEffect(() => {
     const handlePopState = () => {
-      if (showTutorial) {
-        setShowTutorial(false);
-      } else {
-        setShowQuitConfirm(true);
-      }
+      setShowQuitConfirm(true);
       window.history.pushState({ exercise: true }, '');
     };
     window.history.pushState({ exercise: true }, '');
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [showTutorial]);
+  }, []);
 
   const totalSets = Math.max(1, totalPlannedSets);
   const completedSets = completedPlannedSets;
@@ -139,6 +134,12 @@ export function ExerciseScreen({
     : previousWeight !== null ? `Prev ${previousWeight}kg x ${previousRep}` : `Prev ${previousRep}`;
   const coachingToneClass = getCoachingToneClass(coaching.tone);
 
+  async function handleCopyExerciseName() {
+    await copyText(exercise.name);
+    setCopiedName(true);
+    window.setTimeout(() => setCopiedName(false), 1400);
+  }
+
   return (
     <div className="relative w-full h-full bg-black overflow-hidden flex flex-col">
       {/* Subtle Progress Bar */}
@@ -148,172 +149,150 @@ export function ExerciseScreen({
       />
 
       <AnimatePresence initial={false} mode="popLayout">
-        {showTutorial ? (
-          <motion.div
-            key="tutorial"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-            className="absolute inset-0 z-40 bg-black flex flex-col"
-          >
-            <TopBar
-              leftAction={
-                <Button variant="ghost" size="icon-xl" aria-label="Back" onClick={() => setShowTutorial(false)} className="-ml-2 text-white hover:bg-white/10 hover:text-white">
-                  <ChevronLeft className="icon-lg" />
-                </Button>
-              }
-              center={<span className="text-fluid-label font-black uppercase tracking-tight truncate w-full text-center px-2">{exercise.name}</span>}
-            />
+        <motion.div
+          key="logging"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className={cn(
+            'absolute inset-0 flex flex-col items-center transition-colors duration-500',
+            flashColor === 'green' && 'bg-green-950/40',
+            flashColor === 'red' && 'bg-red-950/40'
+          )}
+        >
+          <TopBar
+            leftAction={
+              <Button variant="ghost" size="icon-xl" aria-label="Quit workout" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+                <X className="icon-lg" />
+              </Button>
+            }
+            center={
+              <span className="text-fluid-label font-black uppercase text-white tracking-[0.15em]">
+                SET {currentSet + 1} OF {setsPerExercise}
+              </span>
+            }
+          />
 
-            <div className="flex-1 overflow-y-auto px-4 pb-safe pb-4 flex flex-col gap-4">
-              {exercise.youtubeId && (
-                <div className="w-full aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0">
-                  <ExerciseDemo youtubeId={exercise.youtubeId} title={exercise.name} />
-                </div>
-              )}
-              <p className="text-fluid-label text-white/70 leading-relaxed">
-                {exercise.instruction}
-              </p>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="logging"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={cn(
-              'absolute inset-0 flex flex-col items-center transition-colors duration-500',
-              flashColor === 'green' && 'bg-green-950/40',
-              flashColor === 'red' && 'bg-red-950/40'
-            )}
-          >
-            <TopBar
-              leftAction={
-                <Button variant="ghost" size="icon-xl" aria-label="Quit workout" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
-                  <X className="icon-lg" />
-                </Button>
-              }
-              center={
-                <span className="text-fluid-label font-black uppercase text-white tracking-[0.15em]">
-                  SET {currentSet + 1} OF {setsPerExercise}
-                </span>
-              }
-              rightAction={
-                <Button variant="ghost" size="icon-xl" aria-label="Exercise tutorial" onClick={() => setShowTutorial(true)} className="-mr-2 text-white hover:bg-white/20 hover:text-white">
-                  <Info className="icon-lg" />
-                </Button>
-              }
-            />
-
-            <div className="w-full px-6 pt-4 shrink-0">
-              <h2 className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight text-center sm:text-left">
+          <div className="w-full px-6 pt-4 shrink-0">
+            <button
+              type="button"
+              onClick={handleCopyExerciseName}
+              className="group mx-auto flex max-w-full flex-col items-center rounded-xl px-2 py-1 text-center active:bg-white/10 sm:mx-0 sm:items-start sm:text-left"
+              aria-label={`Copy ${exercise.name}`}
+            >
+              <span className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight">
                 {exercise.name}
-              </h2>
-              {onMachineOccupied && currentSet === 0 && (
-                <button
-                  onClick={() => {
-                    if (canDeferMachineOccupied) {
-                      onMachineOccupied();
-                    } else if (swapAlternatives.length > 0 && onSelectAlternative) {
-                      setShowSwapPicker(true);
-                    } else {
-                      onMachineOccupied();
-                    }
-                  }}
-                  className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-all"
-                >
-                  <AlertCircle className="size-3.5 shrink-0" />
-                  Machine occupied
-                </button>
-              )}
-              {prescription && (
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-fluid-label font-mono uppercase text-white/40">
-                  <span>{prescription.minReps}-{prescription.maxReps} reps</span>
-                  <span className="text-white/15">/</span>
-                  <span>{currentSet + 1 === setsPerExercise && prescription.finalSetRir ? prescription.finalSetRir : prescription.targetRir}</span>
-                  <span className="text-white/15">/</span>
-                  <span>{prescription.restLabel}</span>
-                </div>
-              )}
-            </div>
+              </span>
+              <span className={cn(
+                'mt-1 inline-flex items-center gap-1.5 text-xs font-mono font-black uppercase tracking-widest',
+                copiedName ? 'text-green-300' : 'text-white/35'
+              )}>
+                {copiedName ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                {copiedName ? 'Copied' : 'Tap name to copy'}
+              </span>
+            </button>
+            {onMachineOccupied && currentSet === 0 && (
+              <button
+                onClick={() => {
+                  if (canDeferMachineOccupied) {
+                    onMachineOccupied();
+                  } else if (swapAlternatives.length > 0 && onSelectAlternative) {
+                    setShowSwapPicker(true);
+                  } else {
+                    onMachineOccupied();
+                  }
+                }}
+                className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-all"
+              >
+                <AlertCircle className="size-3.5 shrink-0" />
+                Machine occupied
+              </button>
+            )}
+            {prescription && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-fluid-label font-mono uppercase text-white/40">
+                <span>{prescription.minReps}-{prescription.maxReps} reps</span>
+                <span className="text-white/15">/</span>
+                <span>{currentSet + 1 === setsPerExercise && prescription.finalSetRir ? prescription.finalSetRir : prescription.targetRir}</span>
+                <span className="text-white/15">/</span>
+                <span>{prescription.restLabel}</span>
+              </div>
+            )}
+          </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
-              {isSeconds ? (
+          <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
+            {isSeconds ? (
+              <NumberInput
+                key={`${exercise.key}-${currentSet}-${defaultVal}`}
+                defaultValue={defaultVal}
+                max={120}
+                label="Seconds"
+                onChange={setVal}
+              />
+            ) : (
+              <div className="flex-1 flex flex-col w-full min-h-0">
                 <NumberInput
-                  key={`${exercise.key}-${currentSet}-${defaultVal}`}
+                  key={`${exercise.key}-${currentSet}-weight-${defaultWeight}`}
+                  defaultValue={defaultWeight}
+                  min={0}
+                  max={500}
+                  step={2.5}
+                  label="KG"
+                  compact
+                  onChange={setWeight}
+                />
+                <NumberInput
+                  key={`${exercise.key}-${currentSet}-reps-${defaultVal}`}
                   defaultValue={defaultVal}
-                  max={120}
-                  label="Seconds"
+                  min={1}
+                  max={40}
+                  label="REPS"
+                  compact
                   onChange={setVal}
                 />
-              ) : (
-                <div className="flex-1 flex flex-col w-full min-h-0">
-                  <NumberInput
-                    key={`${exercise.key}-${currentSet}-weight-${defaultWeight}`}
-                    defaultValue={defaultWeight}
-                    min={0}
-                    max={500}
-                    step={2.5}
-                    label="KG"
-                    compact
-                    onChange={setWeight}
-                  />
-                  <NumberInput
-                    key={`${exercise.key}-${currentSet}-reps-${defaultVal}`}
-                    defaultValue={defaultVal}
-                    min={1}
-                    max={40}
-                    label="REPS"
-                    compact
-                    onChange={setVal}
-                  />
-                  <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                    <span className="min-w-0 truncate text-xs font-black uppercase text-white/65">
-                      {previousLabel ?? 'No previous set'}
-                    </span>
-                    <span className={cn('shrink-0 rounded-full px-2 py-1 text-[11px] font-black uppercase', coachingToneClass)}>
-                      {coaching.label}
-                    </span>
-                  </div>
-                  <p className="mx-auto -mt-1 mb-2 w-full max-w-xs truncate text-center text-xs font-medium text-white/45">
-                    {coaching.detail}
-                  </p>
-                  <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1">
-                    {[0, 1, 2, 3, 4].map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => setRir(option)}
-                        className={cn(
-                          'flex h-10 flex-1 items-center justify-center rounded-full text-sm font-black tabular-nums transition',
-                          rir === option ? 'bg-white text-black' : 'text-white/45 active:bg-white/10'
-                        )}
-                        aria-label={`${option} RIR`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
+                <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <span className="min-w-0 truncate text-xs font-black uppercase text-white/65">
+                    {previousLabel ?? 'No previous set'}
+                  </span>
+                  <span className={cn('shrink-0 rounded-full px-2 py-1 text-[11px] font-black uppercase', coachingToneClass)}>
+                    {coaching.label}
+                  </span>
                 </div>
-              )}
-            </div>
+                <p className="mx-auto -mt-1 mb-2 w-full max-w-xs truncate text-center text-xs font-medium text-white/45">
+                  {coaching.detail}
+                </p>
+                <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1">
+                  {[0, 1, 2, 3, 4].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setRir(option)}
+                      className={cn(
+                        'flex h-10 flex-1 items-center justify-center rounded-full text-sm font-black tabular-nums transition',
+                        rir === option ? 'bg-white text-black' : 'text-white/45 active:bg-white/10'
+                      )}
+                      aria-label={`${option} RIR`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-            <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
-              <Button
-                onClick={() => {
-                  setLastLoggedVal(val);
-                  setLastLoggedWeight(weight);
-                  onLogSet(val, isSeconds ? undefined : weight, rir);
-                }}
-                className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
-              >
-                LOG SET
-              </Button>
-            </div>
-          </motion.div>
-        )}
+          <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
+            <Button
+              onClick={() => {
+                setLastLoggedVal(val);
+                setLastLoggedWeight(weight);
+                onLogSet(val, isSeconds ? undefined : weight, rir);
+              }}
+              className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+            >
+              LOG SET
+            </Button>
+          </div>
+        </motion.div>
       </AnimatePresence>
 
       <QuitConfirmDialog
@@ -379,6 +358,27 @@ export function ExerciseScreen({
       </AnimatePresence>
     </div>
   );
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall back for browsers that expose the API but reject without a secure context.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  textarea.remove();
 }
 
 function getCoachingToneClass(tone: SetCoachingTone): string {

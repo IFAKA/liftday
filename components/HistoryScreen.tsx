@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, CalendarDays, ChevronLeft, Scale, Trophy } from 'lucide-react';
-import { WorkoutData, setEntryReps } from '@/lib/types';
-import { EXERCISES } from '@/lib/constants';
+import { Activity, ChevronLeft, Scale } from 'lucide-react';
+import { WorkoutData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { TopBar } from './TopBar';
 import { getBodyTrendSummary, getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
@@ -42,28 +41,6 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     [data]
   );
 
-  const recentSessions = useMemo(() => {
-    return Object.entries(data)
-      .filter(([, s]) => s.logged_at)
-      .sort(([a], [b]) => b.localeCompare(a))
-      .slice(0, 15);
-  }, [data]);
-
-  const prs = useMemo(() => {
-    const result: Record<string, number> = {};
-    for (const session of Object.values(data)) {
-      if (!session.logged_at) continue;
-      for (const ex of EXERCISES) {
-        const sets = session[ex.key];
-        if (sets && sets.length > 0) {
-          const best = Math.max(...sets.map(setEntryReps));
-          if (!result[ex.key] || best > result[ex.key]) result[ex.key] = best;
-        }
-      }
-    }
-    return result;
-  }, [data]);
-
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
@@ -95,27 +72,6 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
             />
 
             <BodyTrendRow trend={progress.bodyTrend} />
-
-            {Object.keys(prs).length > 0 && (
-              <WatchListItem
-                onClick={() => router.push('/history/personal-bests')}
-                icon={Trophy}
-                title="Best Sets"
-                metric={Object.keys(prs).length}
-                className="py-3"
-              />
-            )}
-
-            {recentSessions.length > 0 && (
-              <WatchListItem
-                onClick={() => router.push('/history/sessions')}
-                icon={CalendarDays}
-                title="Sessions"
-                metric={recentSessions.length}
-                subtle
-                className="py-3"
-              />
-            )}
           </div>
         </div>
       )}

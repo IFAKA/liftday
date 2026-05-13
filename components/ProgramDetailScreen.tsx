@@ -7,41 +7,34 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { cn } from '@/lib/utils';
-import { RoutineScoreResult } from '@/lib/smv';
 import { getChainsForRoutine, getProgressionPath, resolveExerciseKey } from '@/lib/tiers';
 import { RoutineConfig, UserProfile, WorkoutType } from '@/lib/types';
 import { formatCadence, formatRoutineForCopy, getExerciseName } from '@/lib/routine-format';
 import { getChainSetCount } from '@/lib/routine-plan';
-import { FrontierOptimizerResult } from '@/lib/frontier-optimizer';
 import { loadProgramSummary } from '@/lib/program-summary';
 import {
   WatchCopyButton,
   WatchPanel,
   WatchSection,
-  WatchSignalPanel,
 } from './WatchSurface';
 import { formatWorkoutType } from '@/lib/schedule';
 
 export function ProgramDetailScreen() {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const [{ smvScore, routine, profile, setsPerExercise, optimizer }, setProgramDetail] = useState<{
-    smvScore: RoutineScoreResult | null;
+  const [{ routine, profile, setsPerExercise }, setProgramDetail] = useState<{
     routine: RoutineConfig | null;
     profile: UserProfile | null;
     setsPerExercise: number;
-    optimizer: FrontierOptimizerResult | null;
-  }>({ smvScore: null, routine: null, profile: null, setsPerExercise: 3, optimizer: null });
+  }>({ routine: null, profile: null, setsPerExercise: 3 });
 
   useEffect(() => {
     const summary = loadProgramSummary();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgramDetail({
-      smvScore: summary.optimizer.score,
       routine: summary.routine,
       profile: summary.profile,
       setsPerExercise: summary.setsPerExercise,
-      optimizer: summary.optimizer,
     });
   }, []);
 
@@ -63,12 +56,6 @@ export function ProgramDetailScreen() {
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-5">
-        {smvScore && (
-          <WatchSection title="Efficiency">
-            <SmvOverview score={smvScore} verdict={getSmvVerdict(smvScore)} optimizer={optimizer} />
-          </WatchSection>
-        )}
-
         {routine && (
           <WatchSection title="Exercises">
             <RoutineSlots routine={routine} profile={profile} fallbackSets={setsPerExercise} />
@@ -78,33 +65,6 @@ export function ProgramDetailScreen() {
         <WatchCopyButton copied={copied} onClick={handleCopyRoutine} label="Copy Routine" />
       </div>
     </div>
-  );
-}
-
-function SmvOverview({
-  score,
-  verdict,
-  optimizer,
-}: {
-  score: RoutineScoreResult;
-  verdict: { label: string; summary: string; nextAction: string; tone: string };
-  optimizer: FrontierOptimizerResult | null;
-}) {
-  return (
-    <WatchSignalPanel
-      label={verdict.label}
-      title={verdict.summary}
-      action={verdict.nextAction}
-      metric={formatOneDecimal(score.total)}
-      metricLabel={`${formatOneDecimal(score.efficiency)}/set`}
-      tone={verdict.tone}
-    >
-      {optimizer && (
-        <p className="text-fluid-label font-mono uppercase text-white/35">
-          {formatOneDecimal(optimizer.score.cost.totalSets)} weekly sets · {formatOneDecimal(optimizer.score.cost.equipmentChanges)} station changes
-        </p>
-      )}
-    </WatchSignalPanel>
   );
 }
 
@@ -159,39 +119,6 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
   );
 }
 
-function getSmvVerdict(score: RoutineScoreResult): { label: string; summary: string; nextAction: string; tone: string } {
-  const lats = score.breakdown.lats;
-  const sideDelt = score.breakdown.side_delt;
-  const vTaperDeficit = (lats && lats.sets < lats.target) || (sideDelt && sideDelt.sets < sideDelt.target);
-  const highVolume = score.cost.longSessionSets > 0 || score.cost.totalSets > 126;
-  const highFriction = score.cost.equipmentChanges > 24;
-
-  if (vTaperDeficit) {
-    return {
-      label: 'Needs tuning',
-      summary: 'V-taper muscles are under target.',
-      nextAction: 'Prioritize lats and side delts before adding chest or legs.',
-      tone: 'text-yellow-400',
-    };
-  }
-
-  if (highVolume || highFriction) {
-    return {
-      label: 'Good but costly',
-      summary: highVolume ? 'The routine has high weekly volume.' : 'The routine has too many station changes.',
-      nextAction: 'Keep the score, but trim low-priority sets if workouts feel long.',
-      tone: 'text-yellow-400',
-    };
-  }
-
-  return {
-    label: 'Efficient',
-    summary: 'Priority muscles are covered without excess cost.',
-    nextAction: 'Keep progressing the current routine.',
-    tone: 'text-green-400',
-  };
-}
-
 async function copyText(text: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -218,8 +145,4 @@ function getWorkoutTone(workoutType: string): string {
   if (workoutType.startsWith('pull')) return 'text-blue-400';
   if (workoutType === 'delts_arms') return 'text-pink-300';
   return 'text-green-400';
-}
-
-function formatOneDecimal(value: number): string {
-  return value.toFixed(1);
 }

@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { EXERCISES } from '@/lib/constants';
@@ -17,6 +18,7 @@ const TYPE_COLOR: Record<string, string> = {
 export default function ExerciseDetailPage() {
   const router = useRouter();
   const { key } = useParams<{ key: string }>();
+  const [copied, setCopied] = useState(false);
   const ex = EXERCISES.find((e) => e.key === key);
 
   if (!ex) {
@@ -25,6 +27,14 @@ export default function ExerciseDetailPage() {
         <span className="text-white/30 font-black uppercase tracking-widest text-fluid-label">Exercise not found</span>
       </div>
     );
+  }
+
+  const exerciseName = ex.name;
+
+  async function handleCopyName() {
+    await copyText(exerciseName);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1400);
   }
 
   return (
@@ -43,9 +53,14 @@ export default function ExerciseDetailPage() {
         }
         center={
           <div className="flex flex-col items-center">
-            <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', TYPE_COLOR[ex.workoutType] ?? 'text-white')}>
-              {ex.name}
-            </span>
+            <button
+              type="button"
+              onClick={handleCopyName}
+              className={cn('max-w-52 truncate rounded-lg px-2 py-1 text-fluid-ui font-black uppercase tracking-tight leading-none active:bg-white/10', TYPE_COLOR[ex.workoutType] ?? 'text-white')}
+              aria-label={`Copy ${exerciseName}`}
+            >
+              {exerciseName}
+            </button>
             <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5 uppercase">{formatWorkoutType(ex.workoutType)}</span>
           </div>
         }
@@ -53,6 +68,17 @@ export default function ExerciseDetailPage() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={handleCopyName}
+            className={cn(
+              'flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-fluid-label font-black uppercase tracking-widest active:bg-white/10',
+              copied ? 'text-green-300' : 'text-white/65'
+            )}
+          >
+            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+            {copied ? 'Copied' : 'Copy exercise name'}
+          </button>
           <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">How to</span>
           <p className="text-fluid-ui text-white/80 leading-relaxed">{ex.instruction}</p>
         </div>
@@ -68,17 +94,28 @@ export default function ExerciseDetailPage() {
           </div>
         </div>
 
-        {ex.youtubeId && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => window.open(`https://www.youtube.com/watch?v=${ex.youtubeId}`, '_blank', 'noopener,noreferrer')}
-            className="min-h-12 w-full rounded-xl border border-white/10 bg-white/5 text-fluid-label font-black uppercase text-white/65 active:bg-white/10"
-          >
-            Open Tutorial
-          </Button>
-        )}
       </div>
     </div>
   );
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall back for browsers that expose the API but reject without a secure context.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  textarea.remove();
 }

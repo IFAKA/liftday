@@ -90,25 +90,32 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Progress');
   await expect(page.locator('body')).toContainText('Changed');
   await expect(page.locator('body')).toContainText('Attention');
-  await expect(page.getByRole('button', { name: /best sets/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /sessions/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /detail/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /best sets/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /sessions/i })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
-test('exercise detail is contextual from routine and no exercise index is primary', async ({ page }) => {
+test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/program/detail');
   await page.getByRole('link', { name: /incline|pull|squat|curl|raise/i }).first().click();
 
   await expect(page).toHaveURL(/\/exercises\//);
-  await page.goto('/exercises');
-  await expect(page.locator('body')).not.toContainText(/exercise library|exercises/i);
+  await expect(page.getByRole('button', { name: /^copy exercise name$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /open tutorial/i })).toHaveCount(0);
+
+  const exerciseName = await page.locator('[aria-label^="Copy "]').first().innerText();
+  await page.getByRole('button', { name: /^copy exercise name$/i }).click();
+  await expect(page.getByRole('button', { name: /^copied$/i })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(exerciseName.trim());
 });
 
 test('shows adaptive progress detail metrics', async ({ page }) => {
   await page.goto('/history/detail');
 
   await expect(page.locator('body')).toContainText('Progress Detail');
-  await expect(page.locator('body')).toContainText('Trend');
+  await expect(page.getByRole('button', { name: /copy progress/i })).toBeVisible();
   await expect(page.locator('body')).toContainText(/score|recovery|load/i);
 });
 
@@ -204,11 +211,11 @@ test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page
 
   const occupied = page.getByRole('button', { name: /machine occupied/i });
   if (await occupied.isVisible()) {
-    const currentExerciseName = await page.locator('h2').first().innerText();
+    const currentExerciseName = await page.locator('[aria-label^="Copy "]').first().innerText();
     await occupied.click();
     const picker = page.getByRole('dialog', { name: /choose swap/i });
     await expect(picker).toBeHidden();
-    await expect.poll(async () => page.locator('h2').first().innerText()).not.toBe(currentExerciseName);
+    await expect.poll(async () => page.locator('[aria-label^="Copy "]').first().innerText()).not.toBe(currentExerciseName);
   }
 
   for (let i = 0; i < 80; i += 1) {

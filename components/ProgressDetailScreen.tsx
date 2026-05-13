@@ -4,16 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ProgressFrontierGraph } from '@/components/ProgressFrontierGraph';
 import { TopBar } from '@/components/TopBar';
 import { ProgressDiagnosis } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { OptimizationContext, WorkoutData } from '@/lib/types';
-import { getWorkoutPatterns } from '@/lib/workout-utils';
 import {
   WatchCopyButton,
   WatchPanel,
-  WatchSection,
   WatchSignalPanel,
 } from './WatchSurface';
 
@@ -27,14 +24,12 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
     setMounted(true);
   }, []);
 
-  const patterns = useMemo(() => getWorkoutPatterns(data), [data]);
   const progress = useMemo(() => {
     const summary = mounted ? loadProgramSummaryForData(data) : getDefaultProgramSummary(data);
 
     return {
       adaptation: summary.adaptation,
       diagnosis: summary.diagnosis,
-      frontier: summary.frontier,
       prompt: summary.progressPrompt,
     };
   }, [data, mounted]);
@@ -58,37 +53,6 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-3">
         <AdaptiveProgressPanel adaptation={progress.adaptation} diagnosis={progress.diagnosis} />
-
-        <WatchSection title="Trend">
-          <ProgressFrontierGraph frontier={progress.frontier} diagnosis={progress.diagnosis} />
-        </WatchSection>
-
-        {patterns.sessionCount >= 3 && (
-          <WatchPanel subtle className="space-y-2">
-            <p className="text-fluid-label text-white/35 uppercase font-mono">Patterns</p>
-            {patterns.usualDays.length > 0 && (
-              <p className="text-fluid-label text-white/45 font-mono">
-                Usually trains <span className="text-white">{patterns.usualDays.join(' · ')}</span>
-              </p>
-            )}
-            {patterns.avgStartHour !== null && (
-              <p className="text-fluid-label text-white/45 font-mono flex items-center gap-2">
-                <span>Usually at <span className="text-white">{formatHour(patterns.avgStartHour)}</span></span>
-                {patterns.isPeakHour && (
-                  <span className="text-[10px] text-amber-400 border border-amber-400/30 rounded px-1.5 py-0.5">
-                    peak hours
-                  </span>
-                )}
-              </p>
-            )}
-            {patterns.avgDurationMin !== null && (
-              <p className="text-fluid-label text-white/45 font-mono">
-                Avg session <span className="text-white">{patterns.avgDurationMin} min</span>
-              </p>
-            )}
-          </WatchPanel>
-        )}
-
         <WatchCopyButton copied={copied} onClick={handleCopyProgress} label="Copy Progress" />
       </div>
     </div>
@@ -175,10 +139,4 @@ async function copyText(text: string): Promise<void> {
   textarea.select();
   document.execCommand('copy');
   textarea.remove();
-}
-
-function formatHour(h: number): string {
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:00 ${period}`;
 }
