@@ -101,7 +101,7 @@ function getAdaptationContext(
   const effectiveVolume = getEffectiveWeeklyVolume({ data, routine, profile, fallbackSets, today });
   const recovery = getRecoveryState({ data, dailyLogs, today });
   const fatigue = getFatigueState({ data, dailyLogs, recovery, today });
-  const progression = getProgressionQuality({ data, recovery, fatigue, effectiveVolume });
+  const progression = getProgressionQuality({ data, recovery, fatigue, effectiveVolume, routine, profile, fallbackSets });
 
   return getAdaptiveRecommendations({
     recovery,

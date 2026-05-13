@@ -19,6 +19,7 @@ import {
 } from '@/lib/smv';
 import { gymRoutine } from '@/lib/routines/gym';
 import { getChainsForRoutine } from '@/lib/tiers';
+import type { FatigueState, MuscleGroup, RecoveryState, SetEntry, WorkoutSession, WorkoutType } from '@/lib/types';
 
 const testPrescription = {
   exerciseKey: 'smith_incline_press' as const,
@@ -32,6 +33,46 @@ const testPrescription = {
   restLabel: '90 sec',
   cue: 'Clean reps.',
 };
+
+function session(
+  workoutType: Exclude<WorkoutType, 'rest'>,
+  exercises: Partial<Record<string, SetEntry[]>>
+): WorkoutSession {
+  return {
+    logged_at: '2026-05-08T10:00:00.000Z',
+    week_number: 1,
+    workout_type: workoutType,
+    ...exercises,
+  } as WorkoutSession;
+}
+
+function baseRecovery(muscles: Partial<Record<MuscleGroup, number>>, systemic = 0.84): RecoveryState {
+  return {
+    systemic,
+    muscles: Object.fromEntries(
+      Object.entries(muscles).map(([muscle, recoveryState]) => [
+        muscle,
+        { muscle, recoveryState, fatigueLoad: 0.1, soreness: 0, halfLifeHours: 24 },
+      ])
+    ) as RecoveryState['muscles'],
+    bottleneck: null,
+    generatedAt: '2026-05-10T00:00:00.000Z',
+  };
+}
+
+function baseFatigue(
+  localMuscleFatigue: Partial<Record<MuscleGroup, number>>,
+  overrides: Partial<Pick<FatigueState, 'axialFatigue' | 'systemicFatigue' | 'jointRisk' | 'bottlenecks'>> = {}
+): FatigueState {
+  return {
+    localMuscleFatigue,
+    connectiveTissueFatigue: {},
+    axialFatigue: overrides.axialFatigue ?? 0.1,
+    systemicFatigue: overrides.systemicFatigue ?? 0.16,
+    jointRisk: overrides.jointRisk ?? 0.1,
+    bottlenecks: overrides.bottlenecks ?? [],
+  };
+}
 
 test('calculates weekly SMV volume with indirect sets', () => {
   const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
@@ -286,6 +327,130 @@ test('low effective volume with usable recovery recommends add-volume guidance',
 
   expect(context.recommendations[0].action).toBe('add_volume');
   expect(context.recommendations[0].reason).toMatch(/below target while recovery is usable/i);
+});
+
+test('heavier load below target reps becomes build-reps guidance', () => {
+  const profile = getDefaultProfile();
+  const effectiveVolume = [{ muscle: 'chest' as const, sets: 12, target: 16, minimum: 12, priorityRank: 2, status: 'productive' as const }];
+  const recovery = baseRecovery({ chest: 0.82 });
+  const fatigue = baseFatigue({ chest: 0.2 });
+  const progression = getProgressionQuality({
+    data: migrateWorkoutData({
+      '2026-05-08': session('push_b', { db_incline_press: [{ reps: 6, weight: 60, rir: 1 }] }),
+      '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
+    }),
+    recovery,
+    fatigue,
+    effectiveVolume,
+    routine: gymRoutine,
+    profile,
+    fallbackSets: 3,
+  });
+
+  expect(progression[0].trend).toBe('build_reps');
+  expect(progression[0].reasons[0]).toMatch(/repeat or reduce load/i);
+});
+
+test('low volume plus build-reps guidance does not recommend adding sets', () => {
+  const profile = getDefaultProfile();
+  const effectiveVolume = [{ muscle: 'chest' as const, sets: 8, target: 16, minimum: 12, priorityRank: 2, status: 'low' as const }];
+  const recovery = baseRecovery({ chest: 0.84 });
+  const fatigue = baseFatigue({ chest: 0.18 });
+  const progression = getProgressionQuality({
+    data: migrateWorkoutData({
+      '2026-05-08': session('push_b', { db_incline_press: [{ reps: 6, weight: 60, rir: 1 }] }),
+      '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
+    }),
+    recovery,
+    fatigue,
+    effectiveVolume,
+    routine: gymRoutine,
+    profile,
+    fallbackSets: 3,
+  });
+  const context = getAdaptiveRecommendations({ recovery, fatigue, progression, effectiveVolume, profile, today: new Date('2026-05-10T00:00:00') });
+
+  expect(context.recommendations[0].action).toBe('hold_progression');
+  expect(context.recommendations[0].title).toBe('Build Chest Reps');
+  expect(context.recommendations[0].summary).toBe('Repeat or reduce load.');
+});
+
+test('top reps at target RIR stays productive progression', () => {
+  const profile = getDefaultProfile();
+  const effectiveVolume = [{ muscle: 'chest' as const, sets: 12, target: 16, minimum: 12, priorityRank: 2, status: 'productive' as const }];
+  const progression = getProgressionQuality({
+    data: migrateWorkoutData({
+      '2026-05-08': session('push_b', { db_incline_press: [{ reps: 12, weight: 50, rir: 2 }] }),
+      '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
+    }),
+    recovery: baseRecovery({ chest: 0.84 }),
+    fatigue: baseFatigue({ chest: 0.18 }),
+    effectiveVolume,
+    routine: gymRoutine,
+    profile,
+    fallbackSets: 3,
+  });
+
+  expect(progression[0].trend).toBe('productive_progress');
+});
+
+test('severe fatigue and recovery produce deload ahead of build-reps guidance', () => {
+  const profile = getDefaultProfile();
+  const effectiveVolume = [{ muscle: 'chest' as const, sets: 8, target: 16, minimum: 12, priorityRank: 2, status: 'low' as const }];
+  const recovery = baseRecovery({ chest: 0.4 }, 0.42);
+  const fatigue = baseFatigue({ chest: 0.78 }, { systemicFatigue: 0.82, jointRisk: 0.76, bottlenecks: ['systemic fatigue is high'] });
+  const progression = getProgressionQuality({
+    data: migrateWorkoutData({
+      '2026-05-08': session('push_b', { db_incline_press: [{ reps: 6, weight: 60, rir: 1 }] }),
+      '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
+    }),
+    recovery,
+    fatigue,
+    effectiveVolume,
+    routine: gymRoutine,
+    profile,
+    fallbackSets: 3,
+  });
+  const context = getAdaptiveRecommendations({ recovery, fatigue, progression, effectiveVolume, profile, today: new Date('2026-05-10T00:00:00') });
+
+  expect(context.recommendations[0].action).toBe('deload');
+  expect(context.recommendations[0].title).toBe('Deload First');
+});
+
+test('missing prescription falls back without crashing', () => {
+  const progression = getProgressionQuality({
+    data: migrateWorkoutData({
+      '2026-05-08': session('push', { pushup: [{ reps: 16, weight: 0, rir: 2 }] }),
+      '2026-05-01': session('push', { pushup: [{ reps: 12, weight: 0, rir: 2 }] }),
+    }),
+    recovery: baseRecovery({ chest: 0.84 }),
+    fatigue: baseFatigue({ chest: 0.18 }),
+    effectiveVolume: [{ muscle: 'chest', sets: 12, target: 16, minimum: 12, priorityRank: 2, status: 'productive' }],
+    routine: gymRoutine,
+    profile: getDefaultProfile(),
+    fallbackSets: 3,
+  });
+
+  expect(progression[0].trend).toBe('improving');
+  expect(progression[0].exerciseKey).toBe('pushup');
+});
+
+test('bodyweight reps-only entries classify without weight math', () => {
+  const progression = getProgressionQuality({
+    data: {
+      '2026-05-08': session('delts_arms', { neck_iso_ext: [26, 26] }),
+      '2026-05-01': session('delts_arms', { neck_iso_ext: [22, 22] }),
+    },
+    recovery: baseRecovery({ neck: 0.84 }),
+    fatigue: baseFatigue({ neck: 0.18 }),
+    effectiveVolume: [{ muscle: 'neck', sets: 4, target: 5, minimum: 2, priorityRank: 10, status: 'productive' }],
+    routine: gymRoutine,
+    profile: getDefaultProfile(),
+    fallbackSets: 3,
+  });
+
+  expect(progression[0].trend).toBe('productive_progress');
+  expect(progression[0].velocity).toBeGreaterThan(0);
 });
 
 test('single performance dip does not trigger auto volume reduction during normal training', () => {

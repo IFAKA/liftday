@@ -333,6 +333,8 @@ export interface FatigueState {
 }
 
 export type ProgressionTrend =
+  | 'productive_progress'
+  | 'build_reps'
   | 'improving'
   | 'flat'
   | 'fatigue_masked'
