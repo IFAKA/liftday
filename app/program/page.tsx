@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Dumbbell, Settings } from 'lucide-react';
+import { ChevronLeft, Dumbbell, Settings } from 'lucide-react';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { OptimizationContext, RoutineConfig, WorkoutData } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
@@ -39,13 +39,13 @@ export default function ProgramPage() {
     <div className="flex flex-col h-full bg-black overflow-hidden">
       <TopBar
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program</span>}
-        rightAction={
+        leftAction={
           <Link
-            href="/settings"
-            aria-label="Settings"
-            className="-mr-2 flex size-11 items-center justify-center rounded-full text-white/55 active:bg-white/10 active:text-white"
+            href="/"
+            aria-label="Back"
+            className="-ml-2 flex size-11 items-center justify-center rounded-full text-white/55 active:bg-white/10 active:text-white"
           >
-            <Settings className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5" />
           </Link>
         }
       />
@@ -75,6 +75,17 @@ export default function ProgramPage() {
 
         <WatchSection title="Next Days">
           <WeeklySplit currentDate={new Date()} data={data} embedded />
+        </WatchSection>
+
+        <WatchSection title="More">
+          <WatchListItem
+            href="/settings"
+            icon={Settings}
+            title="Options"
+            subtitle="Routine, rest, body"
+            subtle
+            className="py-3"
+          />
         </WatchSection>
       </div>
     </div>

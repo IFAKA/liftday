@@ -21,7 +21,7 @@ Playwright e2e specs live in `e2e/` and use `playwright.config.ts` to start the 
 ## Architecture
 
 ### Routing (App Router)
-- `/` — `TodayScreen`: today's workout state machine (idle → exercising → resting → transitioning → complete). Workout stays here because it's tightly coupled to `useWorkout`.
+- `/` — `TodayScreen`: today's workout state machine (idle → exercising → resting → transitioning → complete) and Apple Watch-style hub for Program and Progress. Workout stays here because it's tightly coupled to `useWorkout`.
 - `/history`, `/history/[date]`, `/history/personal-bests` — past sessions
 - `/routine`, `/split`, `/profile`, `/program` — config screens
 - `/onboarding` — first-visit redirect from TodayScreen
@@ -38,7 +38,6 @@ Playwright e2e specs live in `e2e/` and use `playwright.config.ts` to start the 
 - `lib/schedule.ts` — maps today's date to `WorkoutType` (push/pull/legs/rest)
 - `lib/smv.ts` — SMV muscle ROI scores for equipment-aware exercise swapping
 - `lib/equipment.ts` — `EquipmentKey` type + `getRequiredEquipment()`
-- `lib/nav-context.tsx` — `NavContext` hides `BottomNav` during active workout states
 
 ### Key Types
 - `SetEntry = number | { reps: number; weight: number }` — backwards-compatible union; gym exercises use weighted form

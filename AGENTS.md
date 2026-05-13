@@ -19,9 +19,9 @@ Use TypeScript and React function components. Follow the existing two-space inde
 
 ## Apple Watch UX/UI Requirements
 
-LiftDay must feel like a focused Apple Watch companion app, especially on the Program and Progress tabs. Before changing these screens, review the current Apple Human Interface Guidelines for watchOS and apply the relevant patterns for glanceable, wrist-sized interactions. Treat clutter as a bug: reduce dense copy, nested panels, oversized charts, repeated labels, and competing controls before adding more UI.
+LiftDay must be Apple Watch first across the entire app, with Today as the primary hub and secondary areas reached through short list rows and shallow drill-downs. Before changing navigation, Program, Progress, workout, or settings screens, review the current Apple Human Interface Guidelines for watchOS and apply the relevant patterns for glanceable, wrist-sized interactions. Treat clutter as a bug: reduce dense copy, nested panels, oversized charts, repeated labels, and competing controls before adding more UI.
 
-When Apple platform guidance conflicts, watchOS guidance is authoritative for this app. Do not reintroduce visible tab bar labels because iOS recommends them; keep navigation accessible with semantic names while optimizing the visible interface for watchOS-style glanceability.
+When Apple platform guidance conflicts, watchOS guidance is authoritative for this app. Do not add an iOS-style bottom tab bar or reintroduce visible tab bar labels because iOS recommends them; keep navigation accessible with semantic names while optimizing the visible interface for watchOS-style glanceability.
 
 Design for quick workouts in motion. Keep primary actions large, thumb-friendly, and visually dominant. Prefer compact lists, clear hierarchy, progressive disclosure, and single-purpose sections over dashboard-style layouts. Use short labels, direct workout language, generous spacing, and high contrast. Avoid marketing-style hero areas, decorative cards, heavy gradients, tiny controls, and multi-column desktop layouts on mobile.
 

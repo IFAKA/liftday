@@ -10,7 +10,6 @@ import {
   getLiftDayTraceText,
   isDebugTraceEnabled,
 } from '@/lib/debug-trace';
-import { useNavContext } from '@/lib/nav-context';
 
 async function copyText(text: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
@@ -30,7 +29,6 @@ async function copyText(text: string): Promise<void> {
 }
 
 export function DebugTraceButton() {
-  const { hideNav } = useNavContext();
   const enabled = useSyncExternalStore(subscribeToDebugTrace, isDebugTraceEnabled, () => false);
   const [copied, setCopied] = useState(false);
 
@@ -55,7 +53,7 @@ export function DebugTraceButton() {
       onClick={handleCopy}
       className={cn(
         'absolute right-3 z-[90] h-8 rounded-full border border-white/10 bg-black/70 px-3 text-[10px] font-black uppercase tracking-normal text-white/60 shadow-xl backdrop-blur-md active:scale-95 active:bg-white/10',
-        hideNav ? 'bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]' : 'bottom-[calc(env(safe-area-inset-bottom)+4.75rem)]'
+        'bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]'
       )}
       aria-label="Copy debug trace"
     >

@@ -2,9 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { WakeLockProvider } from '@/components/WakeLockProvider';
-import { BottomNav } from '@/components/BottomNav';
 import { DebugTraceButton } from '@/components/DebugTraceButton';
-import { NavProvider } from '@/lib/nav-context';
 import { MotionConfig } from 'framer-motion';
 
 const geist = Geist({
@@ -49,15 +47,12 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-black text-foreground overflow-hidden h-[100dvh]`}>
         <MotionConfig reducedMotion="user">
-          <NavProvider>
-            <div className="mx-auto h-full w-full max-w-[430px] overflow-hidden bg-background relative flex flex-col">
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <WakeLockProvider>{children}</WakeLockProvider>
-              </div>
-              <DebugTraceButton />
-              <BottomNav />
+          <div className="mx-auto h-full w-full max-w-[430px] overflow-hidden bg-background relative flex flex-col">
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <WakeLockProvider>{children}</WakeLockProvider>
             </div>
-          </NavProvider>
+            <DebugTraceButton />
+          </div>
         </MotionConfig>
       </body>
     </html>

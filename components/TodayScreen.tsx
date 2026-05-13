@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Dumbbell, CheckCircle, Flame } from 'lucide-react';
+import { AlertTriangle, CalendarDays, ChartBar, CheckCircle, Dumbbell, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
@@ -17,8 +17,7 @@ import { formatWorkoutType, getWorkoutType, getTrainingStreak } from '@/lib/sche
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
-import { useNavContext } from '@/lib/nav-context';
-import { WatchPanel } from './WatchSurface';
+import { WatchListItem, WatchPanel } from './WatchSurface';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -58,13 +57,6 @@ function TodayContent({ date }: { date: Date }) {
   const mobility = useMobility();
   const workoutType = getWorkoutType(date);
   const streak = getTrainingStreak(date, workout.data);
-  const { setHideNav } = useNavContext();
-
-  useEffect(() => {
-    const active = mobility.isActive || mobility.isComplete || ['exercising', 'resting', 'transitioning', 'complete'].includes(workout.state);
-    setHideNav(active);
-    return () => setHideNav(false);
-  }, [mobility.isActive, mobility.isComplete, workout.state, setHideNav]);
 
   // Rest day
   if (!schedule.isTraining) {
@@ -175,6 +167,25 @@ nextExerciseName={workout.nextExerciseAfterRestName}
             )}
           </>
         )}
+      </div>
+
+      <div className="w-full px-4 mb-3 flex flex-col gap-2">
+        <WatchListItem
+          href="/program"
+          icon={CalendarDays}
+          title="Program"
+          subtitle="Routine and next days"
+          subtle
+          className="py-3"
+        />
+        <WatchListItem
+          href="/history"
+          icon={ChartBar}
+          title="Progress"
+          subtitle="Changes and attention"
+          subtle
+          className="py-3"
+        />
       </div>
 
       {!isDone && (
