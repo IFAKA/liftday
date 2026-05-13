@@ -108,7 +108,7 @@ test('shows adaptive progress detail metrics', async ({ page }) => {
   await page.goto('/history/detail');
 
   await expect(page.locator('body')).toContainText('Progress Detail');
-  await expect(page.locator('body')).toContainText('Volume');
+  await expect(page.locator('body')).toContainText('Trend');
   await expect(page.locator('body')).toContainText(/score|recovery|load/i);
 });
 

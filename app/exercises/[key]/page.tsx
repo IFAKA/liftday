@@ -51,19 +51,7 @@ export default function ExerciseDetailPage() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-6">
-        {ex.youtubeId && (
-          <div className="w-full aspect-video rounded-2xl overflow-hidden bg-white/5">
-            <iframe
-              src={`https://www.youtube.com/embed/${ex.youtubeId}?rel=0&modestbranding=1`}
-              title={ex.name}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            />
-          </div>
-        )}
-
+      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">How to</span>
           <p className="text-fluid-ui text-white/80 leading-relaxed">{ex.instruction}</p>
@@ -79,6 +67,17 @@ export default function ExerciseDetailPage() {
             <span className={cn('text-fluid-ui font-black uppercase', TYPE_COLOR[ex.workoutType] ?? 'text-white')}>{formatWorkoutType(ex.workoutType)}</span>
           </div>
         </div>
+
+        {ex.youtubeId && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => window.open(`https://www.youtube.com/watch?v=${ex.youtubeId}`, '_blank', 'noopener,noreferrer')}
+            className="min-h-12 w-full rounded-xl border border-white/10 bg-white/5 text-fluid-label font-black uppercase text-white/65 active:bg-white/10"
+          >
+            Open Tutorial
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -11,10 +11,7 @@ import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/progr
 import { OptimizationContext, WorkoutData } from '@/lib/types';
 import { getWorkoutPatterns } from '@/lib/workout-utils';
 import {
-  WatchBarRow,
   WatchCopyButton,
-  WatchMetricCell,
-  WatchMetricGrid,
   WatchPanel,
   WatchSection,
   WatchSignalPanel,
@@ -124,14 +121,12 @@ function AdaptiveProgressPanel({
         metricLabel="Avg"
         tone={diagnosis.tone}
       >
-        <WatchMetricGrid>
-          <WatchMetricCell label="Score" value={adaptation.objectiveScore.toFixed(1)} />
-          <WatchMetricCell label="Recovery" value={`${Math.round(adaptation.recovery.systemic * 100)}%`} />
-          <WatchMetricCell label="Load" value={`${Math.round(adaptation.fatigue.systemicFatigue * 100)}%`} />
-        </WatchMetricGrid>
-        <p className="mt-3 text-fluid-label font-mono uppercase text-white/35">
+        <p className="text-fluid-label font-mono uppercase text-white/35">
+          Score {adaptation.objectiveScore.toFixed(1)} · recovery {Math.round(adaptation.recovery.systemic * 100)}% · load {Math.round(adaptation.fatigue.systemicFatigue * 100)}%
+        </p>
+        <p className="mt-2 text-fluid-label font-mono uppercase text-white/35">
           {formatTrend(trend?.trend)} {trend?.velocity ? `${trend.velocity > 0 ? '+' : ''}${trend.velocity.toFixed(1)}%` : ''}
-          {bottleneck ? ` · ${bottleneck.muscle.replace('_', ' ')} ${Math.round(bottleneck.recoveryState * 100)}%` : ''}
+          {bottleneck ? ` · fix ${bottleneck.muscle.replace('_', ' ')}` : ''}
         </p>
       </WatchSignalPanel>
 
@@ -146,18 +141,13 @@ function AdaptiveProgressPanel({
         </div>
       </WatchPanel>
 
-      <WatchPanel subtle className="space-y-2">
-        <p className="text-fluid-label text-white/35 uppercase font-mono">Volume</p>
-        {topVolumes.map((entry) => (
-          <WatchBarRow
-            key={entry.muscle}
-            label={entry.muscle.replace('_', ' ')}
-            value={entry.sets.toFixed(1)}
-            percent={(entry.sets / entry.target) * 100}
-            tone={entry.status === 'low' ? 'bg-amber-400' : entry.status === 'high' ? 'bg-red-400' : 'bg-green-400'}
-          />
-        ))}
-      </WatchPanel>
+      {topVolumes.some((entry) => entry.status === 'low') && (
+        <WatchPanel subtle className="py-3">
+          <p className="text-fluid-label font-mono uppercase text-white/45">
+            Low volume: {topVolumes.filter((entry) => entry.status === 'low').map((entry) => entry.muscle.replace('_', ' ')).slice(0, 3).join(' · ')}
+          </p>
+        </WatchPanel>
+      )}
     </div>
   );
 }

@@ -15,10 +15,7 @@ import { getChainSetCount } from '@/lib/routine-plan';
 import { FrontierOptimizerResult } from '@/lib/frontier-optimizer';
 import { loadProgramSummary } from '@/lib/program-summary';
 import {
-  WatchBarRow,
   WatchCopyButton,
-  WatchMetricCell,
-  WatchMetricGrid,
   WatchPanel,
   WatchSection,
   WatchSignalPanel,
@@ -62,7 +59,7 @@ export function ProgramDetailScreen() {
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program Detail</span>}
+        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Routine</span>}
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-5">
@@ -75,12 +72,6 @@ export function ProgramDetailScreen() {
         {routine && (
           <WatchSection title="Exercises">
             <RoutineSlots routine={routine} profile={profile} fallbackSets={setsPerExercise} />
-          </WatchSection>
-        )}
-
-        {smvScore && (
-          <WatchSection title="Volume">
-            <MuscleVolumeList score={smvScore} />
           </WatchSection>
         )}
 
@@ -99,8 +90,6 @@ function SmvOverview({
   verdict: { label: string; summary: string; nextAction: string; tone: string };
   optimizer: FrontierOptimizerResult | null;
 }) {
-  const delta = optimizer ? optimizer.score.total - optimizer.baseScore.total : null;
-
   return (
     <WatchSignalPanel
       label={verdict.label}
@@ -110,27 +99,10 @@ function SmvOverview({
       metricLabel={`${formatOneDecimal(score.efficiency)}/set`}
       tone={verdict.tone}
     >
-      <WatchMetricGrid>
-        <WatchMetricCell label="Sets" value={formatOneDecimal(score.cost.totalSets)} />
-        <WatchMetricCell label="Moves" value={formatOneDecimal(score.cost.equipmentChanges)} />
-        <WatchMetricCell label={score.penalty > 0 ? 'Penalty' : 'Cost'} value={score.penalty > 0 ? `-${formatOneDecimal(score.penalty)}` : formatOneDecimal(score.cost.total)} />
-      </WatchMetricGrid>
       {optimizer && (
-        <div className="mt-4 border-t border-white/5 pt-3">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="text-fluid-label font-mono uppercase text-green-400">Picked</p>
-            <span className="text-fluid-label font-mono tabular-nums text-white/40">
-              {delta !== null && `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`}
-            </span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {optimizer.reasons.slice(0, 2).map((reason) => (
-              <p key={reason} className="text-fluid-label font-mono uppercase leading-relaxed text-white/35">
-                Why: {reason}
-              </p>
-            ))}
-          </div>
-        </div>
+        <p className="text-fluid-label font-mono uppercase text-white/35">
+          {formatOneDecimal(optimizer.score.cost.totalSets)} weekly sets · {formatOneDecimal(optimizer.score.cost.equipmentChanges)} station changes
+        </p>
       )}
     </WatchSignalPanel>
   );
@@ -184,34 +156,6 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
         );
       })}
     </div>
-  );
-}
-
-function MuscleVolumeList({ score }: { score: RoutineScoreResult }) {
-  const muscles = Object.entries(score.breakdown)
-    .filter(([, v]) => v.sets > 0 || v.penalty > 0)
-    .sort(([, a], [, b]) => b.net - a.net);
-
-  return (
-    <WatchPanel subtle>
-      <div className="flex flex-col gap-2">
-        {muscles.map(([muscle, v]) => {
-          const max = score.gross > 0 ? score.gross : 1;
-          const barWidth = Math.max(4, Math.round((v.gross / max) * 100));
-          const hasPenalty = v.penalty > 0;
-          return (
-            <WatchBarRow
-              key={muscle}
-              label={muscle.replace('_', ' ')}
-              percent={barWidth}
-              tone={hasPenalty ? 'bg-red-400' : 'bg-white/40'}
-              value={<span className={hasPenalty ? 'text-red-400' : undefined}>{formatOneDecimal(v.net)}</span>}
-              meta={`${formatSetCount(v.sets)}/${v.target}`}
-            />
-          );
-        })}
-      </div>
-    </WatchPanel>
   );
 }
 
@@ -278,9 +222,4 @@ function getWorkoutTone(workoutType: string): string {
 
 function formatOneDecimal(value: number): string {
   return value.toFixed(1);
-}
-
-function formatSetCount(value: number): string {
-  const roundedUp = Math.ceil(value * 10) / 10;
-  return roundedUp.toFixed(1);
 }
