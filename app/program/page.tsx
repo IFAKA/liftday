@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Settings } from 'lucide-react';
+import { Dumbbell, Settings } from 'lucide-react';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { OptimizationContext, RoutineConfig, WorkoutData } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
@@ -17,25 +17,23 @@ import {
 } from '@/components/WatchSurface';
 
 export default function ProgramPage() {
-  const [{ data, routine, routineDecision, adaptation }] = useState<{
+  const [{ data, routine, routineDecision, adaptation }, setProgramState] = useState<{
     data: WorkoutData;
     routine: RoutineConfig | null;
     routineDecision: RoutineAdjustmentDecision | null;
     adaptation: OptimizationContext | null;
-  }>(() => {
-    if (typeof window === 'undefined') {
-      return { data: {}, routine: null, routineDecision: null, adaptation: null };
-    }
+  }>({ data: {}, routine: null, routineDecision: null, adaptation: null });
 
+  useEffect(() => {
     const summary = loadProgramSummary();
-
-    return {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProgramState({
       data: summary.data,
       routine: summary.routine,
       routineDecision: summary.routineDecision,
       adaptation: summary.adaptation,
-    };
-  });
+    });
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
@@ -52,31 +50,30 @@ export default function ProgramPage() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-3 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto px-3 pb-8 pt-1 no-scrollbar select-text flex flex-col gap-3">
         {adaptation && (
-          <WatchSection title="Today">
-            <AdaptiveRecommendationPanel adaptation={adaptation} />
-          </WatchSection>
+          <AdaptiveRecommendationPanel adaptation={adaptation} />
         )}
 
         {routineDecision && (
-          <WatchSection title="Now">
-            <RoutineDecisionPanel decision={routineDecision} />
-          </WatchSection>
+          <RoutineDecisionPanel decision={routineDecision} />
         )}
 
-        {routine && (
-          <WatchSection title="Program">
-            <WatchListItem
-              href="/program/detail"
-              label="Routine"
-              title={routine.name}
-              subtitle="Efficiency, exercises, volume"
-            />
-          </WatchSection>
-        )}
+        <WatchSection title="Open">
+          <div className="flex flex-col gap-2">
+            {routine && (
+              <WatchListItem
+                href="/program/detail"
+                icon={Dumbbell}
+                title="Routine"
+                subtitle={routine.name}
+                className="py-3"
+              />
+            )}
+          </div>
+        </WatchSection>
 
-        <WatchSection title="Week">
+        <WatchSection title="Next Days">
           <WeeklySplit currentDate={new Date()} data={data} embedded />
         </WatchSection>
       </div>
@@ -91,12 +88,13 @@ function AdaptiveRecommendationPanel({ adaptation }: { adaptation: OptimizationC
 
   return (
     <WatchSignalPanel
-      label="Next"
+      label="Do now"
       title={recommendation.title}
-      summary={`${recommendation.summary} ${recommendation.reason}`}
+      summary={recommendation.summary}
       metric={adaptation.objectiveScore.toFixed(1)}
       metricLabel="Score"
       tone="text-green-400"
+      active
     >
       <WatchMetricGrid columns={2}>
         <WatchMetricCell label="Recovery" value={`${Math.round(recommendation.recoveryState * 100)}%`} />
@@ -114,12 +112,13 @@ function AdaptiveRecommendationPanel({ adaptation }: { adaptation: OptimizationC
 function RoutineDecisionPanel({ decision }: { decision: RoutineAdjustmentDecision }) {
   return (
     <WatchSignalPanel
-      label={decision.label}
-      title={decision.summary}
+      label="Watch"
+      title={decision.label}
+      summary={decision.summary}
       action={decision.nextAction}
-      metric="Auto"
       tone={decision.tone}
       subtle
+      className="py-3"
     />
   );
 }

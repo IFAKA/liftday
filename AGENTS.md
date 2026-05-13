@@ -21,6 +21,8 @@ Use TypeScript and React function components. Follow the existing two-space inde
 
 LiftDay must feel like a focused Apple Watch companion app, especially on the Program and Progress tabs. Before changing these screens, review the current Apple Human Interface Guidelines for watchOS and apply the relevant patterns for glanceable, wrist-sized interactions. Treat clutter as a bug: reduce dense copy, nested panels, oversized charts, repeated labels, and competing controls before adding more UI.
 
+When Apple platform guidance conflicts, watchOS guidance is authoritative for this app. Do not reintroduce visible tab bar labels because iOS recommends them; keep navigation accessible with semantic names while optimizing the visible interface for watchOS-style glanceability.
+
 Design for quick workouts in motion. Keep primary actions large, thumb-friendly, and visually dominant. Prefer compact lists, clear hierarchy, progressive disclosure, and single-purpose sections over dashboard-style layouts. Use short labels, direct workout language, generous spacing, and high contrast. Avoid marketing-style hero areas, decorative cards, heavy gradients, tiny controls, and multi-column desktop layouts on mobile.
 
 Program and Progress content must be organized around the next useful decision for the athlete: what to do now, what changed, and what needs attention. If a screen starts to feel messy, split content into smaller states, summaries, or drill-down views rather than compressing everything into one tab.
