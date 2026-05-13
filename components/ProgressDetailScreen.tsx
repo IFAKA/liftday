@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ProgressPacePanel } from '@/components/ProgressPacePanel';
 import { TopBar } from '@/components/TopBar';
 import { ProgressDiagnosis } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
@@ -30,6 +31,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
     return {
       adaptation: summary.adaptation,
       diagnosis: summary.diagnosis,
+      frontier: summary.frontier,
       prompt: summary.progressPrompt,
     };
   }, [data, mounted]);
@@ -52,6 +54,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-3">
+        <ProgressPacePanel frontier={progress.frontier} />
         <AdaptiveProgressPanel adaptation={progress.adaptation} diagnosis={progress.diagnosis} />
         <WatchCopyButton copied={copied} onClick={handleCopyProgress} label="Copy Progress" />
       </div>

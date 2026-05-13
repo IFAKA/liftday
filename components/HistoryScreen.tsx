@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Activity, ChevronLeft, Scale } from 'lucide-react';
 import { WorkoutData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { ProgressPacePanel } from '@/components/ProgressPacePanel';
 import { TopBar } from './TopBar';
 import { getBodyTrendSummary, getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
@@ -32,6 +33,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       signal: summary.signal,
       diagnosis: summary.diagnosis,
       routineDecision: summary.routineDecision,
+      frontier: summary.frontier,
       bodyTrend: getBodyTrendSummary(loadDailyLogs()),
     };
   }, [data, mounted]);
@@ -59,6 +61,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
       ) : (
         <div className="flex-1 overflow-y-auto px-3 pb-8 no-scrollbar mt-1 flex flex-col gap-3">
           <ProgressSummary signal={progress.signal} diagnosis={progress.diagnosis} totalSessions={totalSessions} />
+          <ProgressPacePanel frontier={progress.frontier} active />
           <RoutineDecisionSummary decision={progress.routineDecision} />
 
           <div className="flex flex-col gap-2">
