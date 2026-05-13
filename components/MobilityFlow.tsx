@@ -170,12 +170,6 @@ export function MobilityFlow({
             exit={{ x: '100%' }}
             transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
             className="absolute inset-0 z-40 bg-black flex flex-col"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={(_, { offset, velocity }) => {
-              if (offset.x > 50 || velocity.x > 500) setShowTutorial(false);
-            }}
           >
             <TopBar
               leftAction={

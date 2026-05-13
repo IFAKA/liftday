@@ -52,7 +52,6 @@ export function TodayScreen() {
 }
 
 function TodayContent({ date }: { date: Date }) {
-  const router = useRouter();
   const [startError, setStartError] = useState<string | null>(null);
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
@@ -146,12 +145,6 @@ nextExerciseName={workout.nextExerciseAfterRestName}
   return (
     <motion.div
       className="flex flex-col h-full overflow-hidden bg-black relative"
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.1}
-      onDragEnd={(_, { offset, velocity }) => {
-        if (offset.x < -40 || velocity.x < -400) router.push('/history');
-      }}
     >
       <TopBar
         center={
