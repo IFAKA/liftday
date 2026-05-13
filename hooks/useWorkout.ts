@@ -110,7 +110,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (mounted) {
       setUserProfile(profile);
       userProfileRef.current = profile;
-      restDurationRef.current = profile?.restDuration ?? REST_DURATION;
     }
     return () => { mounted = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps

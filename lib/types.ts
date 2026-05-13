@@ -437,7 +437,6 @@ export interface UserProfile {
   tiers: TierMap;
   tierProgress: { [slotId: string]: TierProgress };
   createdAt: string;
-  restDuration?: number;
   setsPerExercise?: number;
   heightCm?: number;
   weightKg?: number;

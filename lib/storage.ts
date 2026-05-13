@@ -168,12 +168,6 @@ export function setActiveRoutine(id: RoutineId): void {
   saveUserProfile(profile);
 }
 
-export function setRestDuration(seconds: number): void {
-  const profile = loadUserProfile() ?? getDefaultProfile();
-  profile.restDuration = seconds;
-  saveUserProfile(profile);
-}
-
 export function setBodyMetrics(heightCm: number, weightKg: number): void {
   const profile = loadUserProfile() ?? getDefaultProfile();
   profile.heightCm = heightCm;

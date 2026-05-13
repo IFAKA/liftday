@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bug, ChevronLeft } from 'lucide-react';
 import { loadUserProfile } from '@/lib/storage';
-import { REST_DURATION } from '@/lib/constants';
 import { getRoutine } from '@/lib/routines';
 import { TopBar } from '@/components/TopBar';
 import { WatchListItem, WatchSwitchItem } from '@/components/WatchSurface';
@@ -17,23 +16,18 @@ export default function SettingsPage() {
     if (typeof window === 'undefined') return false;
     return isDebugTraceEnabled();
   });
-  const [{ restDuration, heightCm, weightKg, routineName }] = useState(() => {
+  const [{ heightCm, weightKg, routineName }] = useState(() => {
     if (typeof window === 'undefined') {
-      return { restDuration: REST_DURATION, heightCm: 172, weightKg: 66.6, routineName: 'Gym' };
+      return { heightCm: 172, weightKg: 66.6, routineName: 'Gym' };
     }
     const profile = loadUserProfile();
     const routine = getRoutine(profile?.activeRoutine ?? 'gym');
     return {
-      restDuration: profile?.restDuration ?? REST_DURATION,
       heightCm: profile?.heightCm ?? 172,
       weightKg: profile?.weightKg ?? 66.6,
       routineName: routine.name,
     };
   });
-
-  const mins = Math.floor(restDuration / 60);
-  const secs = restDuration % 60;
-  const restDisplay = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
 
   function setDebugMode(next: boolean) {
     setDebugTraceEnabled(next);
@@ -56,12 +50,6 @@ export default function SettingsPage() {
           onClick={() => router.push('/settings/routine')}
           label="Routine"
           title={routineName}
-        />
-
-        <WatchListItem
-          onClick={() => router.push('/settings/rest')}
-          label="Rest"
-          title={restDisplay}
         />
 
         <WatchListItem
