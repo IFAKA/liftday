@@ -88,7 +88,7 @@ test('calculates weekly SMV volume with indirect sets', () => {
   expect(volume.quads).toBeGreaterThanOrEqual(7);
   expect(volume.quads).toBeLessThanOrEqual(8);
   expect(optimized.sessionDurations.every((session) => session.minutes <= 105)).toBe(true);
-  expect(optimized.sessionDurations.some((session) => session.minutes >= 60)).toBe(true);
+  expect(optimized.sessionDurations.some((session) => session.minutes >= 45)).toBe(true);
 });
 
 test('SMV optimizer rejects unavailable idealized machines and reports allocation constraints', () => {

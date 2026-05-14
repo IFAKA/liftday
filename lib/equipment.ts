@@ -16,6 +16,7 @@ export type EquipmentKey =
   | 'chest_press_machine'
   | 'row_machine'
   | 'lateral_raise_machine'
+  | 'pec_deck'
   | 'reverse_pec_deck'
   | 'preacher_curl_station'
   | 'lat_pulldown_machine'
@@ -95,6 +96,7 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   cable_rear_delt_fly: ['cable_machine'],
   straight_arm_pulldown_cable: ['cable_machine'],
   cable_fly: ['cable_machine'],
+  pec_deck: ['pec_deck'],
   cable_curl: ['cable_machine'],
   lat_pulldown: ['lat_pulldown_machine'],
   neutral_grip_pulldown: ['lat_pulldown_machine'],

@@ -167,10 +167,10 @@ test('shows inline previous set coaching without overlapping log action on watch
         logged_at: '2026-05-04T10:00:00.000Z',
         week_number: 1,
         workout_type: 'push_a',
-        db_incline_press: [
-          { reps: 10, weight: 10, rir: 2 },
-          { reps: 10, weight: 10, rir: 2 },
-          { reps: 10, weight: 10, rir: 2 },
+        cable_lateral_raise: [
+          { reps: 20, weight: 10, rir: 2 },
+          { reps: 20, weight: 10, rir: 2 },
+          { reps: 20, weight: 10, rir: 2 },
         ],
       },
     }));
@@ -184,7 +184,7 @@ test('shows inline previous set coaching without overlapping log action on watch
 
   await page.getByRole('button', { name: /^start$/i }).click();
 
-  const previousRow = page.getByText(/^Prev 10kg x 10$/);
+  const previousRow = page.getByText(/^Prev 10kg x 20$/);
   const logSet = page.getByRole('button', { name: /log set/i });
   await expect(previousRow).toBeVisible();
   await expect(logSet).toBeVisible();

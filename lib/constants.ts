@@ -397,6 +397,14 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     workoutType: 'push',
   },
   {
+    key: 'pec_deck',
+    name: 'PEC DECK',
+    unit: 'weighted',
+    primaryMuscle: 'chest',
+    instruction: 'Set the seat so handles line up around mid to upper chest. Keep shoulder blades set, sweep the arms together, pause briefly, and return to a controlled stretch without shoulder roll.',
+    workoutType: 'push',
+  },
+  {
     key: 'cable_lateral_raise',
     name: 'CABLE LATERAL RAISE',
     unit: 'weighted',

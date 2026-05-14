@@ -54,7 +54,8 @@ export type GymPushExerciseKey =
   | 'db_shrug'
   | 'cable_tricep_pushdown'
   | 'overhead_tricep_ext'
-  | 'cable_fly';
+  | 'cable_fly'
+  | 'pec_deck';
 
 // Gym pull exercises
 export type GymPullExerciseKey =

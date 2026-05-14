@@ -110,6 +110,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   db_shrug: { neck: 1, upper_back: 0.25 },
   cable_tricep_pushdown: { triceps: 1 },
   overhead_tricep_ext: { triceps: 1 },
+  pec_deck: { chest: 1 },
 
   lat_pulldown: { lats: 1, biceps: 0.3, upper_back: 0.2 },
   neutral_grip_pulldown: { lats: 1, biceps: 0.3, upper_back: 0.2 },
