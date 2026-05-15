@@ -193,7 +193,7 @@ function LaptopSyncPanel() {
         await fetch(`/api/sync/rooms/${token}`, { method: 'DELETE' });
         setSummary(getLocalSyncSummary());
         setState('done');
-        setMessage(`Imported ${result.importedSessions} sessions. Phone unchanged.`);
+        setMessage(`Restored ${result.importedSessions} sessions. Phone unchanged.`);
       } catch {
         setState('error');
         setMessage('Transfer failed. Create a new QR and try again.');
@@ -285,7 +285,7 @@ function PhoneSyncPanel({ pairToken }: { pairToken: string | null }) {
 
 function AutoSendPanel({ pairToken }: { pairToken: string }) {
   const [state, setState] = useState<TransferState>('sending');
-  const [message, setMessage] = useState('Sending progress to laptop.');
+  const [message, setMessage] = useState('Sending backup to laptop.');
 
   useEffect(() => {
     let alive = true;
@@ -330,7 +330,7 @@ function AutoSendPanel({ pairToken }: { pairToken: string }) {
         )}
       </div>
       <p className="mt-5 text-2xl font-black tracking-tight text-white">
-        {state === 'done' ? 'Progress sent' : state === 'error' ? 'Could not sync' : 'Sending'}
+        {state === 'done' ? 'Backup sent' : state === 'error' ? 'Could not sync' : 'Sending'}
       </p>
       <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/55">{message}</p>
     </section>
@@ -504,7 +504,7 @@ function PhoneExportFallback({ compact = false }: { compact?: boolean }) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `liftday-phone-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `liftday-phone-backup-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -523,7 +523,7 @@ function PhoneExportFallback({ compact = false }: { compact?: boolean }) {
         className="mt-3 h-11 w-full rounded-xl border border-white/10 bg-white/10 text-white hover:bg-white/15 active:scale-[0.98]"
       >
         <Download />
-        Save progress file
+        Save backup file
       </Button>
     </div>
   );

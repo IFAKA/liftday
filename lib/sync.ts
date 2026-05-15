@@ -1,45 +1,73 @@
 import {
+  ACTIVE_WORKOUT_DRAFT_KEY,
+  DAILY_LOGS_KEY,
   FIRST_SESSION_KEY,
   MOBILITY_DONE_KEY,
   STORAGE_KEY,
   USER_PROFILE_KEY,
 } from './constants';
-import { UserProfile, WorkoutData, WorkoutSession } from './types';
+import { migrateDailyLogs, migrateUserProfile, migrateWorkoutData } from './storage';
+import { ActiveWorkoutDraft, DailyLog, UserProfile, WorkoutData, WorkoutSession } from './types';
 
-const SYNC_SCHEMA_VERSION = 1;
+const SYNC_SCHEMA_VERSION = 2;
 const BACKUP_PREFIX = 'liftday_sync_backup_';
 const LAST_IMPORT_KEY = 'liftday_sync_last_import';
 
-export interface SyncSnapshot {
+type SyncSource = 'phone' | 'laptop' | 'unknown';
+type UnknownRecord = Record<string, unknown>;
+
+export interface SyncSnapshotV1 {
   app: 'liftday';
   schemaVersion: 1;
   exportedAt: string;
-  source: 'phone' | 'laptop' | 'unknown';
+  source: SyncSource;
   data: WorkoutData;
   profile: UserProfile | null;
   firstSessionDate: string | null;
   mobilityDoneDate: string | null;
 }
 
+export interface SyncSnapshotV2 {
+  app: 'liftday';
+  schemaVersion: 2;
+  exportedAt: string;
+  source: SyncSource;
+  sessions: WorkoutData;
+  dailyLogs: Record<string, DailyLog>;
+  profile: UserProfile | null;
+  activeWorkoutDraft: ActiveWorkoutDraft | null;
+  firstSessionDate: string | null;
+  mobilityDoneDate: string | null;
+}
+
+export type SyncSnapshot = SyncSnapshotV1 | SyncSnapshotV2;
+
 export interface ImportResult {
   importedSessions: number;
   addedSessions: number;
   updatedSessions: number;
   keptSessions: number;
+  importedDailyLogs: number;
+  addedDailyLogs: number;
+  updatedDailyLogs: number;
+  profileImported: boolean;
+  activeWorkoutDraftImported: boolean;
+  firstSessionDateImported: boolean;
+  mobilityDoneDateImported: boolean;
   backupKey: string;
   exportedAt: string;
 }
 
-type UnknownRecord = Record<string, unknown>;
-
-export function createSyncSnapshot(source: SyncSnapshot['source'] = 'unknown'): SyncSnapshot {
+export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshotV2 {
   return {
     app: 'liftday',
     schemaVersion: SYNC_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     source,
-    data: readWorkoutData(),
+    sessions: readWorkoutData(),
+    dailyLogs: readDailyLogs(),
     profile: readProfile(),
+    activeWorkoutDraft: readActiveWorkoutDraft(),
     firstSessionDate: readString(FIRST_SESSION_KEY),
     mobilityDoneDate: readString(MOBILITY_DONE_KEY),
   };
@@ -70,14 +98,14 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
   const backupKey = `${BACKUP_PREFIX}${new Date().toISOString()}`;
   localStorage.setItem(backupKey, serializeSyncSnapshot(current));
 
-  const currentData = current.data;
-  const mergedData: WorkoutData = { ...currentData };
+  const incomingSessions = getSnapshotSessions(snapshot);
+  const mergedData: WorkoutData = { ...current.sessions };
   let addedSessions = 0;
   let updatedSessions = 0;
   let keptSessions = 0;
 
-  for (const [dateKey, incomingSession] of Object.entries(snapshot.data)) {
-    const existingSession = currentData[dateKey];
+  for (const [dateKey, incomingSession] of Object.entries(incomingSessions)) {
+    const existingSession = current.sessions[dateKey];
     if (!existingSession) {
       addedSessions += 1;
       mergedData[dateKey] = incomingSession;
@@ -95,32 +123,78 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedData));
 
+  const incomingDailyLogs = getSnapshotDailyLogs(snapshot);
+  const mergedDailyLogs: Record<string, DailyLog> = { ...current.dailyLogs };
+  let addedDailyLogs = 0;
+  let updatedDailyLogs = 0;
+
+  for (const [dateKey, incomingLog] of Object.entries(incomingDailyLogs)) {
+    const existingLog = current.dailyLogs[dateKey];
+    if (!existingLog) {
+      addedDailyLogs += 1;
+      mergedDailyLogs[dateKey] = { ...incomingLog, dateKey: incomingLog.dateKey ?? dateKey };
+      continue;
+    }
+
+    const mergedLog = { ...existingLog, ...incomingLog, dateKey };
+    if (JSON.stringify(existingLog) !== JSON.stringify(mergedLog)) {
+      updatedDailyLogs += 1;
+    }
+    mergedDailyLogs[dateKey] = mergedLog;
+  }
+
+  if (Object.keys(incomingDailyLogs).length > 0) {
+    localStorage.setItem(DAILY_LOGS_KEY, JSON.stringify(mergedDailyLogs));
+  }
+
+  let profileImported = false;
   if (snapshot.profile) {
-    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(snapshot.profile));
+    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(migrateUserProfile(snapshot.profile)));
+    profileImported = true;
   }
 
   const firstSessionDate = earliestDate(current.firstSessionDate, snapshot.firstSessionDate);
+  const firstSessionDateImported = firstSessionDate !== current.firstSessionDate;
   if (firstSessionDate) {
     localStorage.setItem(FIRST_SESSION_KEY, firstSessionDate);
   }
 
+  let mobilityDoneDateImported = false;
   if (snapshot.mobilityDoneDate) {
     localStorage.setItem(MOBILITY_DONE_KEY, snapshot.mobilityDoneDate);
+    mobilityDoneDateImported = snapshot.mobilityDoneDate !== current.mobilityDoneDate;
+  }
+
+  const importedDraft = getSnapshotActiveWorkoutDraft(snapshot);
+  const activeWorkoutDraftImported = shouldImportDraft(current.activeWorkoutDraft, importedDraft);
+  if (activeWorkoutDraftImported && importedDraft) {
+    localStorage.setItem(ACTIVE_WORKOUT_DRAFT_KEY, JSON.stringify(importedDraft));
   }
 
   localStorage.setItem(LAST_IMPORT_KEY, JSON.stringify({
     importedAt: new Date().toISOString(),
     exportedAt: snapshot.exportedAt,
     source: snapshot.source,
-    sessions: Object.keys(snapshot.data).length,
+    sessions: Object.keys(incomingSessions).length,
+    dailyLogs: Object.keys(incomingDailyLogs).length,
+    profileImported,
+    activeWorkoutDraftImported,
+    mobilityDoneDateImported,
     backupKey,
   }));
 
   return {
-    importedSessions: Object.keys(snapshot.data).length,
+    importedSessions: Object.keys(incomingSessions).length,
     addedSessions,
     updatedSessions,
     keptSessions,
+    importedDailyLogs: Object.keys(incomingDailyLogs).length,
+    addedDailyLogs,
+    updatedDailyLogs,
+    profileImported,
+    activeWorkoutDraftImported,
+    firstSessionDateImported,
+    mobilityDoneDateImported,
     backupKey,
     exportedAt: snapshot.exportedAt,
   };
@@ -143,7 +217,19 @@ function readWorkoutData(): WorkoutData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as unknown;
-    return isWorkoutData(parsed) ? parsed : {};
+    return isWorkoutData(parsed) ? migrateWorkoutData(parsed) : {};
+  } catch {
+    return {};
+  }
+}
+
+function readDailyLogs(): Record<string, DailyLog> {
+  try {
+    if (typeof window === 'undefined') return {};
+    const raw = localStorage.getItem(DAILY_LOGS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    return isDailyLogs(parsed) ? migrateDailyLogs(parsed) : {};
   } catch {
     return {};
   }
@@ -155,7 +241,19 @@ function readProfile(): UserProfile | null {
     const raw = localStorage.getItem(USER_PROFILE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
-    return isUserProfile(parsed) ? parsed : null;
+    return isUserProfile(parsed) ? migrateUserProfile(parsed) : null;
+  } catch {
+    return null;
+  }
+}
+
+function readActiveWorkoutDraft(): ActiveWorkoutDraft | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem(ACTIVE_WORKOUT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    return isActiveWorkoutDraft(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -185,17 +283,41 @@ function earliestDate(a: string | null, b: string | null): string | null {
 }
 
 function isSyncSnapshot(value: unknown): value is SyncSnapshot {
+  return isSyncSnapshotV1(value) || isSyncSnapshotV2(value);
+}
+
+function isSyncSnapshotV1(value: unknown): value is SyncSnapshotV1 {
   if (!isRecord(value)) return false;
   return (
     value.app === 'liftday' &&
-    value.schemaVersion === SYNC_SCHEMA_VERSION &&
+    value.schemaVersion === 1 &&
     typeof value.exportedAt === 'string' &&
-    (value.source === 'phone' || value.source === 'laptop' || value.source === 'unknown') &&
+    isSyncSource(value.source) &&
     isWorkoutData(value.data) &&
     (value.profile === null || isUserProfile(value.profile)) &&
     (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
     (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string')
   );
+}
+
+function isSyncSnapshotV2(value: unknown): value is SyncSnapshotV2 {
+  if (!isRecord(value)) return false;
+  return (
+    value.app === 'liftday' &&
+    value.schemaVersion === 2 &&
+    typeof value.exportedAt === 'string' &&
+    isSyncSource(value.source) &&
+    isWorkoutData(value.sessions) &&
+    isDailyLogs(value.dailyLogs) &&
+    (value.profile === null || isUserProfile(value.profile)) &&
+    (value.activeWorkoutDraft === null || isActiveWorkoutDraft(value.activeWorkoutDraft)) &&
+    (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
+    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string')
+  );
+}
+
+function isSyncSource(value: unknown): value is SyncSource {
+  return value === 'phone' || value === 'laptop' || value === 'unknown';
 }
 
 function isWorkoutData(value: unknown): value is WorkoutData {
@@ -212,6 +334,20 @@ function isWorkoutSession(value: unknown): value is WorkoutSession {
   );
 }
 
+function isDailyLogs(value: unknown): value is Record<string, DailyLog> {
+  if (!isRecord(value)) return false;
+  return Object.entries(value).every(([dateKey, log]) => typeof dateKey === 'string' && isDailyLog(log));
+}
+
+function isDailyLog(value: unknown): value is DailyLog {
+  if (!isRecord(value)) return false;
+  return Object.values(value).every((fieldValue) => {
+    if (fieldValue === undefined || fieldValue === null) return true;
+    if (Array.isArray(fieldValue)) return false;
+    return ['string', 'number', 'boolean', 'object'].includes(typeof fieldValue);
+  });
+}
+
 function isUserProfile(value: unknown): value is UserProfile {
   if (!isRecord(value)) return false;
   return (
@@ -219,6 +355,50 @@ function isUserProfile(value: unknown): value is UserProfile {
     isRecord(value.tierProgress) &&
     typeof value.createdAt === 'string'
   );
+}
+
+function isActiveWorkoutDraft(value: unknown): value is ActiveWorkoutDraft {
+  if (!isRecord(value)) return false;
+  return (
+    value.version === 1 &&
+    typeof value.dateKey === 'string' &&
+    (value.state === 'exercising' || value.state === 'resting' || value.state === 'transitioning') &&
+    typeof value.exerciseIndex === 'number' &&
+    typeof value.currentSet === 'number' &&
+    isRecord(value.sessionReps) &&
+    typeof value.startedAt === 'string' &&
+    ['push', 'pull', 'legs', 'push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'].includes(value.workoutType as string) &&
+    typeof value.savedAt === 'string' &&
+    typeof value.timer === 'number' &&
+    (value.timerEndAt === null || typeof value.timerEndAt === 'number') &&
+    typeof value.timerPaused === 'boolean' &&
+    typeof value.nextExerciseName === 'string' &&
+    Array.isArray(value.unavailableEquipment) &&
+    Array.isArray(value.skippedChainIndices) &&
+    Array.isArray(value.requeuedExercises)
+  );
+}
+
+function getSnapshotSessions(snapshot: SyncSnapshot): WorkoutData {
+  return migrateWorkoutData(snapshot.schemaVersion === 1 ? snapshot.data : snapshot.sessions);
+}
+
+function getSnapshotDailyLogs(snapshot: SyncSnapshot): Record<string, DailyLog> {
+  return snapshot.schemaVersion === 1 ? {} : migrateDailyLogs(snapshot.dailyLogs);
+}
+
+function getSnapshotActiveWorkoutDraft(snapshot: SyncSnapshot): ActiveWorkoutDraft | null {
+  return snapshot.schemaVersion === 1 ? null : snapshot.activeWorkoutDraft;
+}
+
+function shouldImportDraft(current: ActiveWorkoutDraft | null, incoming: ActiveWorkoutDraft | null): boolean {
+  if (!incoming) return false;
+  if (!current) return true;
+  const currentTime = Date.parse(current.savedAt);
+  const incomingTime = Date.parse(incoming.savedAt);
+  if (Number.isNaN(currentTime)) return true;
+  if (Number.isNaN(incomingTime)) return false;
+  return incomingTime > currentTime;
 }
 
 function isRecord(value: unknown): value is UnknownRecord {

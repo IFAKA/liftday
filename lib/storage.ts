@@ -140,26 +140,30 @@ export function loadUserProfile(): UserProfile | null {
     if (typeof window === 'undefined') return null;
     const raw = localStorage.getItem(USER_PROFILE_KEY);
     if (!raw) return null;
-    const profile = JSON.parse(raw) as UserProfile;
-    if (!profile.activeRoutine) profile.activeRoutine = 'gym';
-    if (!profile.setsPerExercise || profile.setsPerExercise < 3) profile.setsPerExercise = 3;
-    if (!profile.heightCm) profile.heightCm = 172;
-    if (!profile.weightKg) profile.weightKg = SMV_PROFILE_DEFAULTS.weightKg;
-    if (!profile.age) profile.age = 26;
-    if (!profile.sex) profile.sex = 'male';
-    if (!profile.bodyComposition) profile.bodyComposition = 'skinny_fat';
-    if (!profile.trainingBackground) profile.trainingBackground = 'Rugby 15 years; intermittent gym blocks';
-    if (profile.gymAccess === undefined) profile.gymAccess = true;
-    if (!profile.injuryStatus) profile.injuryStatus = 'No injuries or pain';
-    if (!profile.maxWorkoutMinutes) profile.maxWorkoutMinutes = 105;
-    if (!profile.goal) profile.goal = 'Maximize SMV efficient frontier as fast as recoverable';
-    if (!profile.targetDate) profile.targetDate = SMV_PROFILE_DEFAULTS.targetDate;
-    if (!profile.proteinTargetGrams) profile.proteinTargetGrams = SMV_PROFILE_DEFAULTS.proteinTargetGrams;
-    if (!profile.calorieSurplusTarget) profile.calorieSurplusTarget = SMV_PROFILE_DEFAULTS.calorieSurplusTarget;
-    return profile;
+    return migrateUserProfile(JSON.parse(raw) as UserProfile);
   } catch {
     return null;
   }
+}
+
+export function migrateUserProfile(profile: UserProfile): UserProfile {
+  const migrated = { ...profile };
+  if (!migrated.activeRoutine) migrated.activeRoutine = 'gym';
+  if (!migrated.setsPerExercise || migrated.setsPerExercise < 3) migrated.setsPerExercise = 3;
+  if (!migrated.heightCm) migrated.heightCm = 172;
+  if (!migrated.weightKg) migrated.weightKg = SMV_PROFILE_DEFAULTS.weightKg;
+  if (!migrated.age) migrated.age = 26;
+  if (!migrated.sex) migrated.sex = 'male';
+  if (!migrated.bodyComposition) migrated.bodyComposition = 'skinny_fat';
+  if (!migrated.trainingBackground) migrated.trainingBackground = 'Rugby 15 years; intermittent gym blocks';
+  if (migrated.gymAccess === undefined) migrated.gymAccess = true;
+  if (!migrated.injuryStatus) migrated.injuryStatus = 'No injuries or pain';
+  if (!migrated.maxWorkoutMinutes) migrated.maxWorkoutMinutes = 105;
+  if (!migrated.goal) migrated.goal = 'Maximize SMV efficient frontier as fast as recoverable';
+  if (!migrated.targetDate) migrated.targetDate = SMV_PROFILE_DEFAULTS.targetDate;
+  if (!migrated.proteinTargetGrams) migrated.proteinTargetGrams = SMV_PROFILE_DEFAULTS.proteinTargetGrams;
+  if (!migrated.calorieSurplusTarget) migrated.calorieSurplusTarget = SMV_PROFILE_DEFAULTS.calorieSurplusTarget;
+  return migrated;
 }
 
 export function setActiveRoutine(id: RoutineId): void {
