@@ -84,7 +84,7 @@ function TodayContent({ date }: { date: Date }) {
         prescription={workout.currentPrescription}
         previousRep={workout.previousRep}
         previousWeight={workout.previousWeight}
-        previousRir={workout.previousRir}
+        coachingReference={workout.coachingReference}
         currentExerciseSets={workout.sessionReps[workout.currentExercise!.key] ?? []}
         flashColor={workout.flashColor}
         onLogSet={workout.logSet}

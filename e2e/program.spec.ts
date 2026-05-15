@@ -22,6 +22,34 @@ async function installRequiredNotificationStack(page: Page) {
   });
 }
 
+async function prepareTodayWorkout(page: Page, sessions: Record<string, unknown> | null) {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await installRequiredNotificationStack(page);
+  await page.addInitScript((initialSessions) => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.removeItem('liftday_active_workout_draft');
+    if (initialSessions) {
+      localStorage.setItem('traindaily_sessions', JSON.stringify(initialSessions));
+    } else {
+      localStorage.removeItem('traindaily_sessions');
+    }
+    localStorage.removeItem('traindaily_first_session');
+  }, sessions);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /^start$/i }).click();
+  await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
+}
+
+async function logFirstSetAndSkipRest(page: Page, rir: number) {
+  await page.getByRole('button', { name: `${rir} RIR` }).click();
+  await page.getByRole('button', { name: /log set/i }).click();
+  await expect(page.getByText(/resting/i)).toBeVisible();
+  await page.getByRole('button', { name: /skip rest/i }).click();
+  await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
+}
+
 test('opens the program screen', async ({ page }) => {
   await page.goto('/program');
 
@@ -209,36 +237,21 @@ test('restores an active workout after reload', async ({ page }) => {
   await expect(page.getByRole('button', { name: /undo last set/i })).toBeVisible();
 });
 
-test('shows inline previous set coaching without overlapping log action on watch viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 568 });
-  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
-  await installRequiredNotificationStack(page);
-  await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
-    localStorage.setItem('traindaily_sessions', JSON.stringify({
-      '2026-05-04': {
-        logged_at: '2026-05-04T10:00:00.000Z',
-        week_number: 1,
-        workout_type: 'push_a',
-        cable_lateral_raise: [
-          { reps: 20, weight: 10, rir: 2 },
-          { reps: 20, weight: 10, rir: 2 },
-          { reps: 20, weight: 10, rir: 2 },
-        ],
-      },
-    }));
+test('shows set 1 coaching reference from the previous workout', async ({ page }) => {
+  await prepareTodayWorkout(page, {
+    '2026-05-04': {
+      logged_at: '2026-05-04T10:00:00.000Z',
+      week_number: 1,
+      workout_type: 'push_a',
+      cable_lateral_raise: [
+        { reps: 20, weight: 10, rir: 2 },
+        { reps: 20, weight: 10, rir: 2 },
+        { reps: 20, weight: 10, rir: 2 },
+      ],
+    },
   });
 
-  await page.goto('/');
-  await page.evaluate(() => {
-    localStorage.removeItem('liftday_active_workout_draft');
-  });
-  await page.reload();
-
-  await page.getByRole('button', { name: /^start$/i }).click();
-  await page.reload();
-
-  const previousRow = page.getByText(/^Prev 10kg x 20$/);
+  const previousRow = page.getByText(/^Ref 10kg x 20 @2$/);
   const logSet = page.getByRole('button', { name: /log set/i });
   await expect(previousRow).toBeVisible();
   await expect(logSet).toBeVisible();
@@ -252,6 +265,48 @@ test('shows inline previous set coaching without overlapping log action on watch
 
   await page.getByRole('button', { name: '4 RIR' }).click();
   await expect(page.getByText('Too easy')).toBeVisible();
+});
+
+test('shows no coaching reference on set 1 without prior workout data', async ({ page }) => {
+  await prepareTodayWorkout(page, null);
+
+  await expect(page.getByText(/^No reference$/)).toBeVisible();
+});
+
+test('set 2 coaching reference uses today set 1 when prior workout only has set 1', async ({ page }) => {
+  await prepareTodayWorkout(page, {
+    '2026-05-04': {
+      logged_at: '2026-05-04T10:00:00.000Z',
+      week_number: 1,
+      workout_type: 'push_a',
+      cable_lateral_raise: [
+        { reps: 20, weight: 10, rir: 2 },
+      ],
+    },
+  });
+
+  await logFirstSetAndSkipRest(page, 4);
+
+  await expect(page.getByText(/^Ref 10kg x 20 @4$/)).toBeVisible();
+});
+
+test('set 2 coaching reference prefers today set 1 over prior workout set 2', async ({ page }) => {
+  await prepareTodayWorkout(page, {
+    '2026-05-04': {
+      logged_at: '2026-05-04T10:00:00.000Z',
+      week_number: 1,
+      workout_type: 'push_a',
+      cable_lateral_raise: [
+        { reps: 20, weight: 10, rir: 2 },
+        { reps: 12, weight: 12.5, rir: 2 },
+      ],
+    },
+  });
+
+  await logFirstSetAndSkipRest(page, 4);
+
+  await expect(page.getByText(/^Ref 10kg x 20 @4$/)).toBeVisible();
+  await expect(page.getByText(/^Ref 12.5kg x 12 @2$/)).toHaveCount(0);
 });
 
 test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page }) => {

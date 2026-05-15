@@ -22,6 +22,12 @@ import {
   playExerciseReady, playUndo,
 } from '@/lib/audio';
 
+export interface CoachingReference {
+  reps: number;
+  weight: number | null;
+  rir: number | null;
+}
+
 export interface UseWorkoutReturn {
   state: WorkoutState;
   exerciseIndex: number;
@@ -35,6 +41,7 @@ export interface UseWorkoutReturn {
   previousRep: number | null;
   previousWeight: number | null;
   previousRir: number | null;
+  coachingReference: CoachingReference | null;
   flashColor: 'green' | 'red' | null;
   sessionReps: Record<string, SetEntry[]>;
   weekNumber: number;
@@ -220,6 +227,18 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const previousRep = previousEntry !== null ? setEntryReps(previousEntry) : null;
   const previousWeight = previousEntry !== null ? setEntryWeight(previousEntry) : null;
   const previousRir = previousEntry !== null ? setEntryRir(previousEntry) : null;
+  const coachingReference = useMemo<CoachingReference | null>(() => {
+    if (!currentExercise) return null;
+    const entry = currentSet === 0
+      ? previousEntry
+      : (sessionReps[currentExercise.key] ?? [])[currentSet - 1] ?? null;
+    if (entry === null) return null;
+    return {
+      reps: setEntryReps(entry),
+      weight: setEntryWeight(entry),
+      rir: setEntryRir(entry),
+    };
+  }, [currentExercise, currentSet, previousEntry, sessionReps]);
 
   useEffect(() => { if (state !== 'resting') setTimerPaused(false); }, [state]);
 
@@ -747,7 +766,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   return {
     state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, currentExercise, currentTarget,
-    currentWeightTarget, currentPrescription, previousRep, previousWeight, previousRir, flashColor, sessionReps, weekNumber, data,
+    currentWeightTarget, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,

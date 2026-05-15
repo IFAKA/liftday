@@ -11,6 +11,7 @@ import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TopBar } from './TopBar';
 import { assessSetCoaching, type SetCoachingTone } from '@/lib/set-coaching';
+import type { CoachingReference } from '@/hooks/useWorkout';
 
 interface ExerciseScreenProps {
   exercise: Exercise;
@@ -23,7 +24,7 @@ interface ExerciseScreenProps {
   prescription: SMVExercisePrescription | null;
   previousRep: number | null;
   previousWeight: number | null;
-  previousRir: number | null;
+  coachingReference: CoachingReference | null;
   currentExerciseSets: SetEntry[];
   flashColor: 'green' | 'red' | null;
   onLogSet: (reps: number, weight?: number, rir?: number) => void;
@@ -45,7 +46,7 @@ export function ExerciseScreen({
   prescription,
   previousRep,
   previousWeight,
-  previousRir,
+  coachingReference,
   currentExerciseSets,
   flashColor,
   onLogSet,
@@ -121,17 +122,11 @@ export function ExerciseScreen({
     weight: isSeconds ? null : weight,
     rir,
     prescription,
-    previous: previousRep === null ? null : {
-      reps: previousRep,
-      weight: previousWeight,
-      rir: previousRir,
-    },
+    previous: coachingReference,
     priorSets: currentExerciseSets,
     plannedSets: setsPerExercise,
   });
-  const previousLabel = previousRep === null
-    ? null
-    : previousWeight !== null ? `Prev ${previousWeight}kg x ${previousRep}` : `Prev ${previousRep}`;
+  const referenceLabel = formatReferenceLabel(coachingReference);
   const coachingToneClass = getCoachingToneClass(coaching.tone);
 
   async function handleCopyExerciseName() {
@@ -251,7 +246,7 @@ export function ExerciseScreen({
                 />
                 <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
                   <span className="min-w-0 truncate text-xs font-black uppercase text-white/65">
-                    {previousLabel ?? 'No previous set'}
+                    {referenceLabel}
                   </span>
                   <span className={cn('shrink-0 rounded-full px-2 py-1 text-[11px] font-black uppercase', coachingToneClass)}>
                     {coaching.label}
@@ -392,4 +387,11 @@ function getCoachingToneClass(tone: SetCoachingTone): string {
     case 'neutral':
       return 'bg-white/10 text-white/70';
   }
+}
+
+function formatReferenceLabel(reference: CoachingReference | null): string {
+  if (reference === null) return 'No reference';
+  const effort = reference.rir === null ? '' : ` @${reference.rir}`;
+  if (reference.weight !== null) return `Ref ${reference.weight}kg x ${reference.reps}${effort}`;
+  return `Ref ${reference.reps}${effort}`;
 }
