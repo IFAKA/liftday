@@ -65,6 +65,7 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
     localStorage.setItem('traindaily_sessions', JSON.stringify({
@@ -98,6 +99,10 @@ test('muscle map switches filters and body views', async ({ page }) => {
   await page.getByRole('button', { name: '7 days' }).click();
   await expect(page.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toContainText('Logged work');
+  await page.getByRole('button', { name: /^copy muscle report$/i }).click();
+  await expect(page.getByRole('button', { name: /^copied report$/i })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('LiftDay muscle report');
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Lens: 7 days');
 
   const firstSelected = page.locator('section', { hasText: 'Selected' });
   await expect(firstSelected).toContainText(/Side delts|Chest|Lats|Rear delts|Biceps|Triceps/i);

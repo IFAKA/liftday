@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { MuscleBodyChart, ViewSide } from '@/components/MuscleBodyChart';
 import { TopBar } from '@/components/TopBar';
-import { WatchBarRow, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSection } from '@/components/WatchSurface';
+import { WatchBarRow, WatchCopyButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSection } from '@/components/WatchSurface';
 import { getLoggedEffectiveVolume, getPlannedEffectiveVolume, getPlannedWorkoutEffectiveVolume } from '@/lib/adaptation/volume-engine';
 import {
   formatMuscleName,
@@ -33,6 +33,7 @@ export default function MusclesPage() {
   const [lens, setLens] = useState<MuscleLens>('routine');
   const [view, setView] = useState<ViewSide>(ViewSide.FRONT);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const nextSummary = loadProgramSummary();
@@ -72,6 +73,12 @@ export default function MusclesPage() {
   const contextLabel = lens === 'today'
     ? workoutType === 'rest' ? 'Rest day' : formatWorkoutType(workoutType)
     : lens === 'week' ? 'Logged work' : summary?.routine.name ?? 'Routine';
+  const reportText = useMemo(() => formatMuscleReport({
+    lensLabel: LENS_LABELS[lens],
+    contextLabel,
+    entries,
+    totalSets,
+  }), [contextLabel, entries, lens, totalSets]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-black">
@@ -112,6 +119,19 @@ export default function MusclesPage() {
               }))}
               onChange={setLens}
               ariaLabel="Muscle map lens"
+            />
+
+            <WatchCopyButton
+              copied={copied}
+              onClick={() => {
+                navigator.clipboard.writeText(reportText).then(() => {
+                  setCopied(true);
+                  window.setTimeout(() => setCopied(false), 1800);
+                });
+              }}
+              label="Copy muscle report"
+              copiedLabel="Copied report"
+              className="mt-3"
             />
           </WatchPanel>
 
@@ -239,4 +259,30 @@ function StatusPill({ status }: { status: MuscleMapEntry['status'] }) {
       {label}
     </span>
   );
+}
+
+function formatMuscleReport({
+  lensLabel,
+  contextLabel,
+  entries,
+  totalSets,
+}: {
+  lensLabel: string;
+  contextLabel: string;
+  entries: MuscleMapEntry[];
+  totalSets: number;
+}): string {
+  const rows = entries.map((entry) => (
+    `- ${entry.label}: ${entry.sets.toFixed(1)} sets / ${entry.target} target, ` +
+    `${Math.round(entry.percentOfTarget * 100)}%, intensity ${entry.intensity}/10, ${entry.status}`
+  ));
+
+  return [
+    'LiftDay muscle report',
+    `Lens: ${lensLabel}`,
+    `Context: ${contextLabel}`,
+    `Total effective sets: ${totalSets.toFixed(1)}`,
+    '',
+    ...rows,
+  ].join('\n');
 }
