@@ -17,6 +17,10 @@ LiftDay is a Next.js 16 PWA using React 19, TypeScript, Tailwind CSS v4, and `@d
 
 Use TypeScript and React function components. Follow the existing two-space indentation and single-quote style. Components use `PascalCase` filenames, hooks use `useX.ts`, and lib modules use names such as `routine-score.ts` and `workout-utils.ts`. Preserve the dependency layering enforced in `eslint.config.mjs`: `lib` must not import app, component, or hook code; `hooks` may import `lib`; `components` may import `lib`, `hooks`, and other components; `app` may import all layers.
 
+## Muscle Map Maintenance
+
+The `/muscles` page is dynamic and reads active routine, scheduled workout, and logged history data through the shared volume engines. If you add, rename, or remove a `MuscleGroup` in `lib/types.ts` or update exercise muscle contributions in `lib/smv.ts`, also update the muscle map layer in `lib/muscle-map.ts`: region mappings, display labels/targets through `MUSCLE_PRIORITY_PROFILES`, selected-muscle behavior, and the `/muscles` Playwright coverage if the visible output changes. Do not leave a new `MuscleGroup` unmapped, because the body heatmap and copied muscle report depend on that mapping.
+
 ## Apple Watch UX/UI Requirements
 
 LiftDay must be Apple Watch first across the entire app, with Today as the primary hub and secondary areas reached through short list rows and shallow drill-downs. Before changing navigation, Program, Progress, workout, or settings screens, review the current Apple Human Interface Guidelines for watchOS and apply the relevant patterns for glanceable, wrist-sized interactions. Treat clutter as a bug: reduce dense copy, nested panels, oversized charts, repeated labels, and competing controls before adding more UI.
