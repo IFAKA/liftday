@@ -78,15 +78,15 @@ test('calculates weekly SMV volume with indirect sets', () => {
   const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
   const volume = calculateRoutineVolume(optimized.routine, getDefaultProfile(), 3);
 
-  expect(volume.side_delt).toBeGreaterThanOrEqual(16);
-  expect(volume.side_delt).toBeLessThanOrEqual(20);
+  expect(volume.side_delt).toBeGreaterThanOrEqual(14);
+  expect(volume.side_delt).toBeLessThanOrEqual(16);
   expect(volume.rear_delt).toBeGreaterThanOrEqual(9);
   expect(volume.rear_delt).toBeLessThanOrEqual(12);
   expect(volume.chest).toBeGreaterThanOrEqual(12);
   expect(volume.triceps).toBeGreaterThanOrEqual(13);
   expect(volume.biceps).toBeGreaterThanOrEqual(11);
-  expect(volume.quads).toBeGreaterThanOrEqual(7);
-  expect(volume.quads).toBeLessThanOrEqual(8);
+  expect(volume.quads).toBeGreaterThanOrEqual(6);
+  expect(volume.quads).toBeLessThanOrEqual(7);
   expect(optimized.sessionDurations.every((session) => session.minutes <= 105)).toBe(true);
   expect(optimized.sessionDurations.some((session) => session.minutes >= 45)).toBe(true);
 });

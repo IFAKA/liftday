@@ -42,7 +42,7 @@ export const MUSCLE_PROPORTION_PENALTY: Partial<Record<MuscleGroup, number>> = {
 };
 
 export const MUSCLE_TARGET_WEEKLY_SETS: Record<MuscleGroup, number> = {
-  side_delt:  16,
+  side_delt:  14,
   lats:       16,
   chest:      15,
   shoulders:   6,
@@ -149,7 +149,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
 };
 
 export const SMV_DIRECT_TARGETS: Partial<Record<MuscleGroup, { min: number; max: number }>> = {
-  side_delt: { min: 16, max: 20 },
+  side_delt: { min: 12, max: 16 },
   rear_delt: { min: 12, max: 15 },
   chest: { min: 12, max: 15 },
   lats: { min: 12, max: 16 },

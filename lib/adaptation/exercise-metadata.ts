@@ -9,7 +9,7 @@ import type {
 } from '../types';
 
 export const MUSCLE_PRIORITY_PROFILES: MusclePriorityProfile[] = [
-  profile('side_delt', 'lateral_delts', 1, 'Side delts', 24, 18, 18),
+  profile('side_delt', 'lateral_delts', 1, 'Side delts', 14, 12, 18),
   profile('chest', 'upper_chest_chest', 2, 'Chest', 16, 12, 24),
   profile('lats', 'lats', 3, 'Lats', 16, 12, 26),
   profile('rear_delt', 'rear_delts_posture', 4, 'Rear delts', 18, 12, 18),
