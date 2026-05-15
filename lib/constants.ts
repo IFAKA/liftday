@@ -370,6 +370,14 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     workoutType: 'push',
   },
   {
+    key: 'cable_y_raise',
+    name: 'CABLE Y RAISE',
+    unit: 'weighted',
+    primaryMuscle: 'side_delt',
+    instruction: 'Set cables low and use light handles. Raise in the scapular plane to a controlled Y, thumbs slightly up. Stop before shrugging. This is a side-delt-first top-up with rear-delt and upper-back overlap, not a heavy trap movement.',
+    workoutType: 'push',
+  },
+  {
     key: 'cable_tricep_pushdown',
     name: 'CABLE TRICEP PUSHDOWN',
     unit: 'weighted',

@@ -107,6 +107,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   db_lateral_raise: { side_delt: 1 },
   machine_lateral_raise: { side_delt: 1 },
   cable_lateral_raise: { side_delt: 1 },
+  cable_y_raise: { side_delt: 1, rear_delt: 0.25, upper_back: 0.25, shoulders: 0.15 },
   db_shrug: { neck: 1, upper_back: 0.25 },
   cable_tricep_pushdown: { triceps: 1 },
   overhead_tricep_ext: { triceps: 1 },

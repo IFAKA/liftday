@@ -8,7 +8,7 @@ Date: 2026-05-15
 - Failure is not treated as mandatory. Refalo et al. found no clear hypertrophy advantage for momentary failure over non-failure training, so compounds stay mostly 1-2 RIR and isolation failure is limited to clean final sets: https://link.springer.com/article/10.1007/s40279-022-01784-y
 - Longer rest is used where performance matters. A 2024 Bayesian meta-analysis found a small benefit to resting over 60 seconds and no clear additional hypertrophy advantage past 90 seconds, so compounds use 150-180 seconds and isolations use 75-90 seconds: https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2024.1429789/full
 - Machines, cables, and free weights are all valid hypertrophy tools when the target muscle can be loaded and progressed. Exercise choice is based on stability, availability, target bias, and fatigue cost, not free-weight ideology: https://bmcsportsscimedrehabil.biomedcentral.com/articles/10.1186/s13102-023-00713-4
-- For lateral delts specifically, a 2025 trained-lifter study found comparable hypertrophy from dumbbell and cable lateral raises when ROM was matched, with lateral deltoid thickness increasing 3.3-4.6 percent over 8 weeks. This supports using DB laterals as a valid Saturday top-up rather than duplicating a second cable slot: https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2025.1611468/full
+- For lateral delts specifically, a 2025 trained-lifter study found comparable hypertrophy from dumbbell and cable lateral raises when ROM was matched, with lateral deltoid thickness increasing 3.3-4.6 percent over 8 weeks. This supports treating the Saturday top-up as a low-fatigue side-delt slot rather than blindly duplicating more cable-lateral failure volume: https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2025.1611468/full
 
 ## Recovery Audit
 
@@ -28,9 +28,9 @@ Recovery windows:
 
 ## Redundancy Resolution
 
-The duplicate Saturday cable lateral raise slot is not retained as a second cable slot. It becomes a 2-set DB lateral raise at 2 RIR.
+The duplicate Saturday cable lateral raise slot is not retained as a second identical cable-lateral slot. It becomes a 2-set cable Y raise at 2 RIR.
 
-Reason: cables may provide a favorable lengthened resistance profile, but current direct evidence does not show a clear hypertrophy advantage over dumbbells when ROM is matched. The DB slot provides an available, low-setup, shortened-biased top-up and reduces the psychological and local-tissue cost of repeating the same cable pattern to failure.
+Reason: the Y raise keeps the side-delt priority but moves the arm through the scapular plane, adding small rear-delt/upper-back posture overlap without turning Saturday into another max-effort lateral raise block. It stays light and submaximal because the goal is recoverable width stimulus, not trap-dominant fatigue.
 
 ## Final Routine
 
@@ -92,7 +92,7 @@ Reason: cables may provide a favorable lengthened resistance profile, but curren
 | Exercise | Sets | Reps | RIR | Rest | Why it exists |
 |---|---:|---:|---|---:|---|
 | Cable lateral raise | 3 | 15-25 | 0-1 | 90 sec | Small side-delt specialization dose, not a junk-volume dump. |
-| DB lateral raise | 2 | 15-25 | 2 | 75 sec | Valid lateral-delt top-up with different resistance profile and lower recovery cost. |
+| Cable Y raise | 2 | 15-25 | 2 | 75 sec | Scapular-plane side-delt top-up with small posture overlap and lower recovery cost. |
 | Cable rear-delt fly | 2 | 15-25 | 0-1 | 75 sec | Posture top-up. |
 | DB shrug | 2 | 10-15 | 1-2 | 2 min | Collar/trap presence without heavy deadlift fatigue. |
 | Cable curl | 2 | 10-15 | 0-1 | 90 sec | Biceps sleeve fill. |
@@ -125,7 +125,7 @@ Scale: local stimulus 1-5 is higher-better. Systemic fatigue, axial fatigue, and
 | Exercise | Target muscles | Clothed-SMV ROI | Local stimulus | Systemic fatigue | Axial fatigue | Joint stress | Progression reliability | SFR explanation |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | Cable lateral raise | Side delts | 5 | 5 | 1 | 1 | 2 | 5 | Best width-per-fatigue movement; capped failure exposure prevents local bottleneck. |
-| DB lateral raise | Side delts | 5 | 4 | 1 | 1 | 2 | 4 | Evidence-supported lateral-delt top-up; less setup and different resistance feel than cables. |
+| Cable Y raise | Side delts, rear delts, upper back | 5 | 4 | 1 | 1 | 2 | 4 | Side-delt-primary top-up with posture overlap; kept light to avoid trap-dominant fatigue. |
 | Incline DB press | Upper chest, triceps, anterior delts | 5 | 5 | 3 | 1 | 3 | 4 | High torso ROI; DB setup is slightly less stable than machines but available and effective. |
 | Barbell bench press | Chest, triceps | 4 | 4 | 3 | 1 | 3 | 5 | Useful chest/triceps top-up; volume kept low because flat pressing is not the main SMV lever. |
 | Cable fly | Chest | 4 | 4 | 1 | 1 | 2 | 4 | Adds chest stimulus without compounding triceps and shoulder fatigue. |

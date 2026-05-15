@@ -94,6 +94,7 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   braced_cable_row: ['cable_machine'],
   cable_face_pull: ['cable_machine'],
   cable_rear_delt_fly: ['cable_machine'],
+  cable_y_raise: ['cable_machine'],
   straight_arm_pulldown_cable: ['cable_machine'],
   cable_fly: ['cable_machine'],
   pec_deck: ['pec_deck'],
