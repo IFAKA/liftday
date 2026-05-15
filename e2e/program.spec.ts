@@ -27,6 +27,7 @@ test('opens the program screen', async ({ page }) => {
 
   await expect(page.locator('body')).toContainText('Program');
   await expect(page.getByRole('link', { name: /^routine/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
   await expect(page.locator('body')).toContainText('Next days');
   await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
   await expect(page.locator('body')).toContainText(/Hold course|Add|Deload|Routine/);
@@ -42,6 +43,7 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
@@ -57,8 +59,54 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
 
   await expect(page.locator('body')).toContainText('REST');
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+});
+
+test('muscle map switches filters and body views', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await page.addInitScript(() => {
+    localStorage.setItem('traindaily_sessions', JSON.stringify({
+      '2026-05-11': {
+        logged_at: '2026-05-11T10:00:00.000Z',
+        week_number: 2,
+        workout_type: 'push_a',
+        cable_lateral_raise: [
+          { reps: 16, weight: 8, rir: 1 },
+          { reps: 15, weight: 8, rir: 1 },
+        ],
+        db_incline_press: [
+          { reps: 9, weight: 20, rir: 2 },
+          { reps: 8, weight: 20, rir: 2 },
+        ],
+      },
+    }));
+  });
+
+  await page.goto('/muscles');
+
+  await expect(page.locator('body')).toContainText('Muscles');
+  await expect(page.getByRole('button', { name: 'Routine' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('body')).toContainText('Clothed SMV Hypertrophy');
+  await expect(page.locator('.body-chart-muscle')).not.toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Today' }).click();
+  await expect(page.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('body')).toContainText('PUSH A');
+
+  await page.getByRole('button', { name: '7 days' }).click();
+  await expect(page.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('body')).toContainText('Logged work');
+
+  const firstSelected = page.locator('section', { hasText: 'Selected' });
+  await expect(firstSelected).toContainText(/Side delts|Chest|Lats|Rear delts|Biceps|Triceps/i);
+  await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page.getByRole('button', { name: 'Back' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.body-chart-muscle').first()).toBeVisible();
+
+  await page.locator('.body-chart-muscle').first().click({ force: true });
+  await expect(page.locator('section', { hasText: 'Selected' })).toContainText(/Sets|Target|Map/);
 });
 
 test('progress opens as summary and drill-down rows, not a tab section', async ({ page }) => {

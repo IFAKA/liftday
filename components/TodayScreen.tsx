@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CalendarDays, ChartBar, CheckCircle, Dumbbell, Flame } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarDays, ChartBar, CheckCircle, Dumbbell, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
@@ -170,6 +170,14 @@ nextExerciseName={workout.nextExerciseAfterRestName}
       </div>
 
       <div className="w-full px-4 mb-3 flex flex-col gap-2">
+        <WatchListItem
+          href="/muscles"
+          icon={Activity}
+          title="Muscles"
+          subtitle="What is working"
+          subtle
+          className="py-3"
+        />
         <WatchListItem
           href="/program"
           icon={CalendarDays}

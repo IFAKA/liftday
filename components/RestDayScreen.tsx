@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, ChartBar, Moon, Play } from 'lucide-react';
+import { Activity, CalendarDays, ChartBar, Moon, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { MobilityFlow } from './MobilityFlow';
 import { MobilityErrorBoundary } from './MobilityErrorBoundary';
@@ -79,6 +79,14 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
       </div>
 
       <div className="w-full shrink-0 px-4 pb-4 sm:pb-6 flex flex-col gap-2">
+        <WatchListItem
+          href="/muscles"
+          icon={Activity}
+          title="Muscles"
+          subtitle="What is working"
+          subtle
+          className="py-3"
+        />
         <WatchListItem
           href="/program"
           icon={CalendarDays}

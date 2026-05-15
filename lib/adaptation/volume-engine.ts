@@ -1,5 +1,5 @@
 import { resolveExerciseKey } from '../tiers';
-import type { EffectiveVolumeEntry, ExerciseKey, MuscleGroup, RoutineConfig, SetEntry, UserProfile, WorkoutData } from '../types';
+import type { EffectiveVolumeEntry, ExerciseKey, MuscleGroup, RoutineConfig, SetEntry, UserProfile, WorkoutData, WorkoutType } from '../types';
 import { getChainSetCount } from '../routine-plan';
 import { setEntryRir } from '../types';
 import { MUSCLE_PRIORITY_PROFILES, MUSCLE_PRIORITY_BY_MUSCLE, getExerciseAdaptationMetadata } from './exercise-metadata';
@@ -60,6 +60,26 @@ export function getPlannedEffectiveVolume(
   const tiers = profile?.tiers ?? {};
 
   for (const chain of routine.tierChains) {
+    const key = resolveExerciseKey(chain, tiers);
+    const sets = getChainSetCount(chain, fallbackSets);
+    addExerciseSets(totals, key, Array.from({ length: sets }, () => ({ reps: 10, weight: 0, rir: 2 })));
+  }
+
+  return totals;
+}
+
+export function getPlannedWorkoutEffectiveVolume(
+  routine: RoutineConfig,
+  profile: UserProfile | null,
+  fallbackSets: number,
+  workoutType: Exclude<WorkoutType, 'rest'>
+): Partial<Record<MuscleGroup, number>> {
+  const totals: Partial<Record<MuscleGroup, number>> = {};
+  const tiers = profile?.tiers ?? {};
+
+  for (const chain of routine.tierChains) {
+    if (chain.workoutType !== workoutType) continue;
+
     const key = resolveExerciseKey(chain, tiers);
     const sets = getChainSetCount(chain, fallbackSets);
     addExerciseSets(totals, key, Array.from({ length: sets }, () => ({ reps: 10, weight: 0, rir: 2 })));

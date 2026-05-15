@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Dumbbell, Settings } from 'lucide-react';
+import { Activity, ChevronLeft, Dumbbell, Settings } from 'lucide-react';
 import { WeeklySplit } from '@/components/WeeklySplit';
 import { OptimizationContext, RoutineConfig, WorkoutData } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
@@ -70,6 +70,14 @@ export default function ProgramPage() {
                 className="py-3"
               />
             )}
+            <WatchListItem
+              href="/muscles"
+              icon={Activity}
+              title="Muscles"
+              subtitle="Routine heat map"
+              subtle
+              className="py-3"
+            />
           </div>
         </WatchSection>
 
