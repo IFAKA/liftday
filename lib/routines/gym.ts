@@ -341,16 +341,6 @@ export const gymRoutine: RoutineConfig = {
       prescription: prescription(3, 15, 25, '90 sec', 'Pure side-delt volume. Stop when traps take over.', '0-1 RIR'),
     },
     {
-      slotId: 'delts_arms_cable_y_raise',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'critical',
-      selectedExercise: 'cable_y_raise',
-      alternatives: ['db_lateral_raise'],
-      exercises: ['cable_y_raise'],
-      prescription: prescription(2, 15, 25, '75 sec', 'Scapular-plane side-delt top-up. Light, smooth, no shrugging; this is not another failure slot.', '2 RIR'),
-    },
-    {
       slotId: 'delts_arms_rear_delt',
       workoutType: 'delts_arms',
       fixed: true,
