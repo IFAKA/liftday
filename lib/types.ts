@@ -445,6 +445,11 @@ export interface UserProfile {
   age?: number;
   sex?: 'male' | 'female';
   bodyComposition?: 'skinny_fat' | 'lean' | 'overweight' | 'muscular';
+  shoulderCircumferenceCm?: number;
+  chestCircumferenceCm?: number;
+  waistCircumferenceCm?: number;
+  hipCircumferenceCm?: number;
+  neckCircumferenceCm?: number;
   trainingBackground?: string;
   gymAccess?: boolean;
   injuryStatus?: string;

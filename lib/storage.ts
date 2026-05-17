@@ -155,6 +155,11 @@ export function migrateUserProfile(profile: UserProfile): UserProfile {
   if (!migrated.age) migrated.age = 26;
   if (!migrated.sex) migrated.sex = 'male';
   if (!migrated.bodyComposition) migrated.bodyComposition = 'skinny_fat';
+  if (!migrated.shoulderCircumferenceCm) migrated.shoulderCircumferenceCm = 111.76;
+  if (!migrated.chestCircumferenceCm) migrated.chestCircumferenceCm = 89.5;
+  if (!migrated.waistCircumferenceCm) migrated.waistCircumferenceCm = 76.5;
+  if (!migrated.hipCircumferenceCm) migrated.hipCircumferenceCm = 85;
+  if (!migrated.neckCircumferenceCm) migrated.neckCircumferenceCm = 37;
   if (!migrated.trainingBackground) migrated.trainingBackground = 'Rugby 15 years; intermittent gym blocks';
   if (migrated.gymAccess === undefined) migrated.gymAccess = true;
   if (!migrated.injuryStatus) migrated.injuryStatus = 'No injuries or pain';
@@ -216,6 +221,11 @@ export function getDefaultProfile(): UserProfile {
     age: 26,
     sex: 'male',
     bodyComposition: 'skinny_fat',
+    shoulderCircumferenceCm: 111.76,
+    chestCircumferenceCm: 89.5,
+    waistCircumferenceCm: 76.5,
+    hipCircumferenceCm: 85,
+    neckCircumferenceCm: 37,
     trainingBackground: 'Rugby 15 years; intermittent gym blocks',
     gymAccess: true,
     injuryStatus: 'No injuries or pain',

@@ -83,6 +83,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 }
 
 function BodyTrendRow({ trend }: { trend: ReturnType<typeof getBodyTrendSummary> }) {
+  const router = useRouter();
   const weight = trend.weightTrendKgPerWeek === null
     ? '--'
     : `${trend.weightTrendKgPerWeek > 0 ? '+' : ''}${trend.weightTrendKgPerWeek.toFixed(1)}kg`;
@@ -92,11 +93,11 @@ function BodyTrendRow({ trend }: { trend: ReturnType<typeof getBodyTrendSummary>
 
   return (
     <WatchListItem
+      onClick={() => router.push('/history/body')}
       icon={Scale}
       title="Body"
-      subtitle={trend.recoveryAlert ?? trend.nutritionAction}
+      subtitle={trend.recoveryAlert ?? `Measures · ${trend.nutritionAction}`}
       metric={`${weight} / ${waist}`}
-      trailing={null}
       subtle
       className="py-3"
     />

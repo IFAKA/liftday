@@ -183,6 +183,14 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.getByRole('button', { name: /best sets/i })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /sessions/i })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: /body/i }).click();
+  await expect(page).toHaveURL(/\/history\/body$/);
+  await expect(page.locator('body')).toContainText('Measurements');
+  await expect(page.locator('body')).toContainText('Chest');
+  await expect(page.locator('body')).toContainText('89.5cm');
+  await expect(page.locator('body')).toContainText('Hip');
+  await expect(page.locator('body')).toContainText('85cm');
 });
 
 test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {
