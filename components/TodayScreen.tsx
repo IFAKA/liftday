@@ -182,7 +182,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
           href="/program"
           icon={CalendarDays}
           title="Program"
-          subtitle="Routine and next days"
+          subtitle="Routine and options"
           subtle
           className="py-3"
         />

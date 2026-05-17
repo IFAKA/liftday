@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Activity, ChevronLeft, Dumbbell, Settings } from 'lucide-react';
-import { WeeklySplit } from '@/components/WeeklySplit';
-import { OptimizationContext, RoutineConfig, WorkoutData } from '@/lib/types';
+import { OptimizationContext, RoutineConfig } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { loadProgramSummary } from '@/lib/program-summary';
@@ -17,18 +16,16 @@ import {
 } from '@/components/WatchSurface';
 
 export default function ProgramPage() {
-  const [{ data, routine, routineDecision, adaptation }, setProgramState] = useState<{
-    data: WorkoutData;
+  const [{ routine, routineDecision, adaptation }, setProgramState] = useState<{
     routine: RoutineConfig | null;
     routineDecision: RoutineAdjustmentDecision | null;
     adaptation: OptimizationContext | null;
-  }>({ data: {}, routine: null, routineDecision: null, adaptation: null });
+  }>({ routine: null, routineDecision: null, adaptation: null });
 
   useEffect(() => {
     const summary = loadProgramSummary();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgramState({
-      data: summary.data,
       routine: summary.routine,
       routineDecision: summary.routineDecision,
       adaptation: summary.adaptation,
@@ -79,10 +76,6 @@ export default function ProgramPage() {
               className="py-3"
             />
           </div>
-        </WatchSection>
-
-        <WatchSection title="Next days">
-          <WeeklySplit currentDate={new Date()} data={data} embedded />
         </WatchSection>
 
         <WatchSection title="Options">

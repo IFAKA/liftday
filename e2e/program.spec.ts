@@ -56,7 +56,7 @@ test('opens the program screen', async ({ page }) => {
   await expect(page.locator('body')).toContainText('Program');
   await expect(page.getByRole('link', { name: /^routine/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
-  await expect(page.locator('body')).toContainText('Next days');
+  await expect(page.locator('body')).not.toContainText('Next days');
   await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
   await expect(page.locator('body')).toContainText(/Hold course|Add|Deload|Routine/);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
