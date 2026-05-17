@@ -60,8 +60,8 @@ export default function SettingsPage() {
 
         <WatchListItem
           onClick={() => router.push('/sync')}
-          label="Sync"
-          title="Phone to laptop"
+          label="Backup"
+          title="Sync & export"
         />
 
         <WatchSwitchItem

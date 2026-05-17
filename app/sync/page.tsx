@@ -265,6 +265,7 @@ function LaptopSyncPanel() {
             This QR uses localhost, which phones cannot reach. Open the Mac on its network address.
           </p>
         )}
+        <DesktopExportFallback compact />
         <ManualImportFallback onImported={() => {
           setSummary(getLocalSyncSummary());
           setState('done');
@@ -499,12 +500,20 @@ function ManualImportFallback({ onImported, compact = false }: { onImported: () 
 }
 
 function PhoneExportFallback({ compact = false }: { compact?: boolean }) {
+  return <BackupExportFallback source="phone" compact={compact} />;
+}
+
+function DesktopExportFallback({ compact = false }: { compact?: boolean }) {
+  return <BackupExportFallback source="laptop" compact={compact} />;
+}
+
+function BackupExportFallback({ source, compact = false }: { source: 'phone' | 'laptop'; compact?: boolean }) {
   function downloadExport() {
-    const blob = new Blob([JSON.stringify(createSyncSnapshot('phone'), null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(createSyncSnapshot(source), null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `liftday-phone-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `liftday-${source}-backup-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   }

@@ -152,6 +152,29 @@ test('exports and restores a full v2 local backup', async ({ page }, testInfo) =
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
 });
 
+test('exports a backup from the desktop receive view', async ({ page }, testInfo) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:15:00'));
+  await seedFullLocalState(page);
+
+  await page.goto('/sync');
+  await openFileDetails(page, 'Save backup file');
+  const download = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /save backup file/i }).click(),
+  ]).then(([downloadEvent]) => downloadEvent);
+  const backupPath = testInfo.outputPath('liftday-desktop-backup.json');
+  await download.saveAs(backupPath);
+
+  const exported = JSON.parse(await readFile(backupPath, 'utf8')) as {
+    schemaVersion: number;
+    source: string;
+    sessions: Record<string, unknown>;
+  };
+  expect(exported.schemaVersion).toBe(2);
+  expect(exported.source).toBe('laptop');
+  expect(Object.keys(exported.sessions)).toContain('2026-05-11');
+});
+
 test('imports a v1 sync file without losing current session compatibility', async ({ page }, testInfo) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:15:00'));
   await page.addInitScript(() => {
