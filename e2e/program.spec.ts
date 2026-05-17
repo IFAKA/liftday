@@ -78,6 +78,54 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
+test('today weight check logs weight or records no scale without blocking start', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await installRequiredNotificationStack(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    if (!localStorage.getItem('liftday_daily_logs')) {
+      localStorage.setItem('liftday_daily_logs', JSON.stringify({
+        '2026-05-10': {
+          dateKey: '2026-05-10',
+          morningWeightKg: 66.7,
+        },
+      }));
+    }
+  });
+
+  await page.goto('/');
+
+  await expect(page.locator('body')).toContainText('Weight');
+  await expect(page.locator('body')).toContainText('Last 66.7kg');
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
+
+  await page.getByRole('button', { name: /^no scale$/i }).click();
+  await expect(page.locator('body')).toContainText('No scale today');
+
+  await expect.poll(() => page.evaluate(() => {
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean }>;
+    return logs['2026-05-11'];
+  })).toEqual({ dateKey: '2026-05-11', weightCheckSkipped: true });
+
+  await page.getByRole('button', { name: /^log$/i }).click();
+  await page.getByRole('spinbutton', { name: /bodyweight/i }).fill('66.8');
+  await page.getByRole('button', { name: /save weight/i }).click();
+
+  await expect(page.locator('body')).toContainText('Logged today');
+  await expect(page.locator('body')).toContainText('66.8kg');
+  await expect.poll(() => page.evaluate(() => {
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean }>;
+    return logs['2026-05-11'];
+  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 66.8, weightCheckSkipped: false });
+
+  await page.goto('/history/body');
+  await expect(page.locator('body')).toContainText('66.8kg');
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /^start$/i }).click();
+  await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
+});
+
 test('rest-day today still exposes supporting drill-down rows', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-10T10:00:00'));
   await page.addInitScript(() => {

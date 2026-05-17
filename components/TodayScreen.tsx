@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, AlertTriangle, CalendarDays, ChartBar, CheckCircle, Dumbbell, Flame, Settings } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarDays, ChartBar, Check, CheckCircle, Dumbbell, Flame, Scale, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
 import { ExerciseTransition } from '@/components/ExerciseTransition';
@@ -12,12 +13,14 @@ import { RestDayScreen } from '@/components/RestDayScreen';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
-import { formatDisplayDate } from '@/lib/workout-utils';
+import { formatDateKey, formatDisplayDate } from '@/lib/workout-utils';
 import { formatWorkoutType, getWorkoutType, getTrainingStreak } from '@/lib/schedule';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
 import { WatchListItem, WatchPanel } from './WatchSurface';
+import { DailyLog } from '@/lib/types';
+import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog } from '@/lib/storage';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
@@ -52,11 +55,17 @@ export function TodayScreen() {
 
 function TodayContent({ date }: { date: Date }) {
   const [startError, setStartError] = useState<string | null>(null);
+  const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
   const workoutType = getWorkoutType(date);
   const streak = getTrainingStreak(date, workout.data);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDailyLogs(loadDailyLogs());
+  }, []);
 
   // Rest day
   if (!schedule.isTraining) {
@@ -231,6 +240,13 @@ nextExerciseName={workout.nextExerciseAfterRestName}
               </WatchPanel>
             </div>
           )}
+          <div className="w-full px-4 mb-3">
+            <WeightCheckPanel
+              date={date}
+              logs={dailyLogs}
+              onLogsChange={setDailyLogs}
+            />
+          </div>
           <div className="w-full px-4 pb-safe mb-4 shrink-0">
             <Button
               onClick={() => {
@@ -248,4 +264,167 @@ nextExerciseName={workout.nextExerciseAfterRestName}
       )}
     </motion.div>
   );
+}
+
+function WeightCheckPanel({
+  date,
+  logs,
+  onLogsChange,
+}: {
+  date: Date;
+  logs: Record<string, DailyLog>;
+  onLogsChange: (logs: Record<string, DailyLog>) => void;
+}) {
+  const dateKey = formatDateKey(date);
+  const todayLog = logs[dateKey];
+  const todayWeight = getValidWeight(todayLog?.morningWeightKg);
+  const profileWeight = getValidWeight(loadUserProfile()?.weightKg) ?? getValidWeight(getDefaultProfile().weightKg);
+  const lastWeight = getLastKnownWeight(logs, dateKey) ?? profileWeight;
+  const [isEditing, setIsEditing] = useState(false);
+  const [weightInput, setWeightInput] = useState(() => formatWeightInput(todayWeight ?? lastWeight));
+  const [inputError, setInputError] = useState<string | null>(null);
+  const isSkipped = todayLog?.weightCheckSkipped === true && todayWeight === null;
+
+  const saveWeight = () => {
+    const nextWeight = Number.parseFloat(weightInput);
+    if (!Number.isFinite(nextWeight) || nextWeight < 25 || nextWeight > 250) {
+      setInputError('Enter kg');
+      return;
+    }
+
+    saveDailyLog(dateKey, {
+      dateKey,
+      morningWeightKg: roundWeight(nextWeight),
+      weightCheckSkipped: false,
+    });
+    onLogsChange(loadDailyLogs());
+    setIsEditing(false);
+  };
+
+  const skipWeight = () => {
+    saveDailyLog(dateKey, {
+      dateKey,
+      weightCheckSkipped: true,
+    });
+    onLogsChange(loadDailyLogs());
+    setIsEditing(false);
+    setInputError(null);
+  };
+
+  const status = todayWeight !== null
+    ? 'Logged today'
+    : isSkipped
+      ? 'No scale today'
+      : lastWeight !== null
+        ? `Last ${formatWeight(lastWeight)}`
+        : 'Log before start';
+
+  const metric = todayWeight !== null
+    ? formatWeight(todayWeight)
+    : isSkipped && lastWeight !== null
+      ? `Last ${formatWeight(lastWeight)}`
+      : null;
+
+  return (
+    <WatchPanel subtle className="py-3">
+      <div className="flex items-center gap-2.5">
+        <Scale className="h-4 w-4 shrink-0 text-white/45" />
+        <div className="min-w-0 flex-1">
+          <p className="text-fluid-label font-mono uppercase text-white/35">Weight</p>
+          <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">{status}</p>
+        </div>
+        {!isEditing && metric && (
+          <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
+            {metric}
+          </p>
+        )}
+        {!isEditing && (
+          <div className="flex shrink-0 gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setWeightInput(formatWeightInput(todayWeight ?? lastWeight));
+                setInputError(null);
+                setIsEditing(true);
+              }}
+              className="h-9 w-11 rounded-full border border-white/10 bg-white/5 px-0 text-[10px] font-black uppercase text-white/80 hover:bg-white/10 hover:text-white"
+            >
+              Log
+            </Button>
+            {todayWeight === null && !isSkipped && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={skipWeight}
+                className="h-9 w-[4.25rem] rounded-full border border-white/10 bg-white/5 px-0 text-[10px] font-black uppercase text-white/55 hover:bg-white/10 hover:text-white"
+              >
+                No scale
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div className="mt-3 flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <Input
+              aria-label="Bodyweight in kilograms"
+              inputMode="decimal"
+              type="number"
+              min="25"
+              max="250"
+              step="0.1"
+              value={weightInput}
+              onChange={(event) => {
+                setWeightInput(event.target.value);
+                setInputError(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') saveWeight();
+              }}
+              className="h-11 rounded-full border-white/10 bg-black/30 text-center font-mono text-fluid-ui font-black tabular-nums text-white"
+            />
+            {inputError && (
+              <p className="mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
+            )}
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            aria-label="Save weight"
+            onClick={saveWeight}
+            className="size-11 rounded-full bg-white text-black active:scale-95"
+          >
+            <Check className="h-5 w-5" />
+          </Button>
+        </div>
+      ) : null}
+    </WatchPanel>
+  );
+}
+
+function getLastKnownWeight(logs: Record<string, DailyLog>, beforeDateKey: string): number | null {
+  const latest = Object.values(logs)
+    .filter((log) => log.dateKey < beforeDateKey && getValidWeight(log.morningWeightKg) !== null)
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
+
+  return getValidWeight(latest?.morningWeightKg);
+}
+
+function getValidWeight(value: number | undefined): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function formatWeight(value: number): string {
+  return `${formatWeightInput(value)}kg`;
+}
+
+function formatWeightInput(value: number | null | undefined): string {
+  return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(1) : '';
+}
+
+function roundWeight(value: number): number {
+  return Math.round(value * 10) / 10;
 }

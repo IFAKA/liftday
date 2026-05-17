@@ -187,6 +187,7 @@ export interface SMVSetLog {
 export interface BodyTrendLog {
   dateKey: string;
   morningWeightKg?: number;
+  weightCheckSkipped?: boolean;
   waistCm?: number;
   calories?: number;
   proteinGrams?: number;

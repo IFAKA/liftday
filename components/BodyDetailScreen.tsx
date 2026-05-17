@@ -105,7 +105,9 @@ function BodyMeasure({ label, value }: { label: string; value: string }) {
 }
 
 function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
-  const latestLog = Object.values(logs).sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
+  const latestLog = Object.values(logs)
+    .filter((log) => typeof log.morningWeightKg === 'number')
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
   const heightCm = profile.heightCm ?? 172;
   const weightKg = latestLog?.morningWeightKg ?? profile.weightKg ?? 67.8;
   const waistCm = latestLog?.waistCm ?? profile.waistCircumferenceCm ?? 76.5;
