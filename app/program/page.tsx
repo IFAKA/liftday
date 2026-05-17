@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Activity, ChevronLeft, Dumbbell, Settings } from 'lucide-react';
+import { ChevronLeft, Dumbbell } from 'lucide-react';
 import { OptimizationContext, RoutineConfig } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
@@ -67,26 +67,7 @@ export default function ProgramPage() {
                 className="py-3"
               />
             )}
-            <WatchListItem
-              href="/muscles"
-              icon={Activity}
-              title="Muscles"
-              subtitle="Routine heat map"
-              subtle
-              className="py-3"
-            />
           </div>
-        </WatchSection>
-
-        <WatchSection title="Options">
-          <WatchListItem
-            href="/settings"
-            icon={Settings}
-            title="Options"
-            subtitle="Routine, rest, body"
-            subtle
-            className="py-3"
-          />
         </WatchSection>
       </div>
     </div>

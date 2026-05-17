@@ -55,9 +55,9 @@ test('opens the program screen', async ({ page }) => {
 
   await expect(page.locator('body')).toContainText('Program');
   await expect(page.getByRole('link', { name: /^routine/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /muscles/i })).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText('Next days');
-  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /options/i })).toHaveCount(0);
   await expect(page.locator('body')).toContainText(/Hold course|Add|Deload|Routine/);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
@@ -73,6 +73,7 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
@@ -89,6 +90,7 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
@@ -176,6 +178,7 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('This week');
   await expect(page.locator('body')).toContainText('Plan');
   await expect(page.locator('body')).toContainText('Attention');
+  await expect(page.getByRole('button', { name: /muscles/i })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /detail/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /best sets/i })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /sessions/i })).toHaveCount(0);

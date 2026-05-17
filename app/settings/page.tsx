@@ -38,7 +38,7 @@ export default function SettingsPage() {
     <div className="flex flex-col h-full bg-black overflow-hidden">
       <TopBar
         leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/program')} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/')} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
             <ChevronLeft className="w-5 h-5" />
           </Button>
         }

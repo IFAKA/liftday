@@ -66,15 +66,6 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 
           <div className="flex flex-col gap-2">
             <WatchListItem
-              onClick={() => router.push('/muscles')}
-              icon={Activity}
-              title="Muscles"
-              subtitle="Routine, today, 7 days"
-              subtle
-              className="py-3"
-            />
-
-            <WatchListItem
               onClick={() => router.push('/history/detail')}
               icon={Activity}
               title="Detail"

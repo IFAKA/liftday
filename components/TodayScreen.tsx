@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, AlertTriangle, CalendarDays, ChartBar, CheckCircle, Dumbbell, Flame } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarDays, ChartBar, CheckCircle, Dumbbell, Flame, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
@@ -182,7 +182,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
           href="/program"
           icon={CalendarDays}
           title="Program"
-          subtitle="Routine and options"
+          subtitle="Routine"
           subtle
           className="py-3"
         />
@@ -191,6 +191,14 @@ nextExerciseName={workout.nextExerciseAfterRestName}
           icon={ChartBar}
           title="Progress"
           subtitle="Changes and attention"
+          subtle
+          className="py-3"
+        />
+        <WatchListItem
+          href="/settings"
+          icon={Settings}
+          title="Options"
+          subtitle="Routine, body, sync"
           subtle
           className="py-3"
         />
