@@ -362,7 +362,7 @@ function isActiveWorkoutDraft(value: unknown): value is ActiveWorkoutDraft {
   return (
     value.version === 1 &&
     typeof value.dateKey === 'string' &&
-    (value.state === 'exercising' || value.state === 'resting' || value.state === 'transitioning') &&
+    (value.state === 'warming-up' || value.state === 'exercising' || value.state === 'resting' || value.state === 'transitioning') &&
     typeof value.exerciseIndex === 'number' &&
     typeof value.currentSet === 'number' &&
     isRecord(value.sessionReps) &&

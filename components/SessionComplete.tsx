@@ -1,9 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { PrepTimer } from './PrepTimer';
 import { EXERCISES } from '@/lib/constants';
+import { STRETCH_DURATION_SECONDS } from '@/lib/constants';
 import { WorkoutData, SetEntry, setEntryReps } from '@/lib/types';
 
 type SessionCompleteProps =
@@ -19,8 +22,44 @@ type SessionCompleteProps =
 
 export function SessionComplete(props: SessionCompleteProps) {
   const isWorkout = props.mode === 'workout';
+  const [stretchActive, setStretchActive] = useState(false);
+  const [stretchSeconds, setStretchSeconds] = useState(STRETCH_DURATION_SECONDS);
   const workoutPropsTyped = isWorkout ? (props as Extract<typeof props, { mode: 'workout' }>) : null;
   const mobilityProps = !isWorkout ? (props as Extract<typeof props, { mode: 'mobility' }>) : null;
+
+  useEffect(() => {
+    if (!stretchActive || stretchSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setStretchSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [stretchActive, stretchSeconds]);
+
+  useEffect(() => {
+    if (!stretchActive || stretchSeconds > 0) return;
+    const timeout = setTimeout(() => {
+      setStretchActive(false);
+      setStretchSeconds(STRETCH_DURATION_SECONDS);
+    }, 600);
+    return () => clearTimeout(timeout);
+  }, [stretchActive, stretchSeconds]);
+
+  if (isWorkout && stretchActive) {
+    return (
+      <PrepTimer
+        mode="stretch"
+        seconds={stretchSeconds}
+        onCancel={() => {
+          setStretchActive(false);
+          setStretchSeconds(STRETCH_DURATION_SECONDS);
+        }}
+        onPrimary={() => {
+          setStretchActive(false);
+          setStretchSeconds(STRETCH_DURATION_SECONDS);
+        }}
+      />
+    );
+  }
 
   const totalReps = isWorkout && workoutPropsTyped
     ? EXERCISES.reduce((sum, ex) => {
@@ -55,7 +94,19 @@ export function SessionComplete(props: SessionCompleteProps) {
         )}
       </div>
 
-      <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
+      <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10 flex flex-col gap-3">
+        {isWorkout && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setStretchSeconds(STRETCH_DURATION_SECONDS);
+              setStretchActive(true);
+            }}
+            className="w-full btn-mobile-secondary rounded-full bg-white/10 border-white/20 text-fluid-label font-black uppercase tracking-widest text-white/80 transition-all active:scale-95 active:bg-white/20"
+          >
+            Stretch 30s
+          </Button>
+        )}
         <Button
           onClick={props.onDone}
           className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"

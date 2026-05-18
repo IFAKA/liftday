@@ -221,7 +221,7 @@ export interface WeeklyStats {
   vsLastWeek: number | null;
 }
 
-export type WorkoutState = 'idle' | 'exercising' | 'resting' | 'transitioning' | 'complete';
+export type WorkoutState = 'idle' | 'warming-up' | 'exercising' | 'resting' | 'transitioning' | 'complete';
 
 export interface ActiveWorkoutDraft {
   version: 1;

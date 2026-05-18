@@ -749,6 +749,8 @@ export const ACTIVE_WORKOUT_DRAFT_KEY = 'liftday_active_workout_draft';
 export const DAILY_LOGS_KEY = 'liftday_daily_logs';
 
 export const REST_DURATION = 90;
+export const WARMUP_DURATION_SECONDS = 60;
+export const STRETCH_DURATION_SECONDS = 30;
 
 export const DEFAULT_TARGETS_REPS = [8, 8, 8] as const;
 

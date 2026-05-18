@@ -9,6 +9,7 @@ import { ExerciseScreen } from '@/components/ExerciseScreen';
 import { RestTimer } from '@/components/RestTimer';
 import { ExerciseTransition } from '@/components/ExerciseTransition';
 import { SessionComplete } from '@/components/SessionComplete';
+import { PrepTimer } from '@/components/PrepTimer';
 import { RestDayScreen } from '@/components/RestDayScreen';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
@@ -80,6 +81,18 @@ function TodayContent({ date }: { date: Date }) {
   }
 
   // Workout in progress
+  if (workout.state === 'warming-up') {
+    return (
+      <PrepTimer
+        mode="warmup"
+        seconds={workout.timer}
+        onCancel={workout.quitWorkout}
+        onPrimary={workout.beginWorkoutAfterWarmup}
+        onPreset={workout.setWarmupDuration}
+      />
+    );
+  }
+
   if (workout.state === 'exercising') {
     return (
       <ExerciseScreen

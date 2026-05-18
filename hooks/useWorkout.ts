@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight, setEntryRir, ActiveWorkoutDraft, SMVExercisePrescription } from '@/lib/types';
-import { EXERCISES, REST_DURATION } from '@/lib/constants';
+import { EXERCISES, REST_DURATION, WARMUP_DURATION_SECONDS } from '@/lib/constants';
 import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessionDate } from '@/lib/workout-utils';
 import { getTargets, getWeightTarget, evaluateTierProgress, isDeloadWeek } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
@@ -58,6 +58,8 @@ export interface UseWorkoutReturn {
   swapAlternatives: Exercise[];
   canDeferMachineOccupied: boolean;
   startWorkout: () => Promise<void>;
+  beginWorkoutAfterWarmup: () => void;
+  setWarmupDuration: (seconds: 30 | 60) => void;
   logSet: (reps: number, weight?: number, rir?: number) => void;
   skipTimer: () => void;
   quitWorkout: () => void;
@@ -274,7 +276,10 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setNextExerciseName(draft.nextExerciseName);
     setTimerPaused(draft.timerPaused);
 
-    if (draft.state === 'resting' && !draft.timerPaused && draft.timerEndAt !== null) {
+    if (draft.state === 'warming-up' && draft.timerEndAt !== null) {
+      const remaining = Math.max(0, Math.ceil((draft.timerEndAt - Date.now()) / 1000));
+      setTimer(remaining);
+    } else if (draft.state === 'resting' && !draft.timerPaused && draft.timerEndAt !== null) {
       const remaining = Math.max(0, Math.ceil((draft.timerEndAt - Date.now()) / 1000));
       if (remaining <= 0) {
         const setCount = exercisePlan[draft.exerciseIndex]?.setCount ?? setsPerExercise;
@@ -376,6 +381,31 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [currentExercise?.name, currentSet, currentSetCount, exerciseIndex, exercises]);
 
   useEffect(() => {
+    if (state === 'warming-up' && timer > 0) {
+      if (timerEndRef.current === null) {
+        timerEndRef.current = Date.now() + timer * 1000;
+      }
+      timerRef.current = setInterval(() => {
+        const remaining = timerEndRef.current
+          ? Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000))
+          : 0;
+        setTimer((t) => {
+          if (remaining <= 0 || t <= 1) {
+            clearInterval(timerRef.current!);
+            timerRef.current = null;
+            playExerciseReady();
+            return 0;
+          }
+          if (remaining <= 3 && !countdownPlayedRef.current.has(remaining)) {
+            countdownPlayedRef.current.add(remaining);
+            playCountdownTick(remaining);
+          }
+          return remaining;
+        });
+      }, 1000);
+      return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    }
+
     if (state === 'resting' && timer > 0 && !timerPaused) {
       if (timer === restDurationRef.current) {
         countdownPlayedRef.current = new Set();
@@ -404,7 +434,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, timer === restDurationRef.current, timerPaused, notifyRestCompleteIfHidden]);
+  }, [state, timer === restDurationRef.current, timerPaused, notifyRestCompleteIfHidden, timer]);
 
   const saveAndComplete = useCallback(async () => {
     const reps = sessionRepsRef.current;
@@ -498,6 +528,17 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [state, timerPaused, advanceAfterRest, notifyRestCompleteIfHidden]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && state === 'warming-up' && timerEndRef.current) {
+        const remaining = Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000));
+        setTimer(remaining);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [state]);
+
   const finishTransition = useCallback(() => {
     playExerciseReady();
     setState('exercising');
@@ -516,7 +557,10 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setExerciseIndex(0);
     setCurrentSet(0);
     setSessionReps({});
-    setState('exercising');
+    setTimer(WARMUP_DURATION_SECONDS);
+    timerEndRef.current = Date.now() + WARMUP_DURATION_SECONDS * 1000;
+    countdownPlayedRef.current = new Set();
+    setState('warming-up');
     traceLiftDay('workout.start', {
       dateKey,
       workoutType,
@@ -524,6 +568,21 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       firstExercise: exercises[0]?.name ?? null,
     });
   }, [dateKey, exercises, workoutType]);
+
+  const beginWorkoutAfterWarmup = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerEndRef.current = null;
+    countdownPlayedRef.current = new Set();
+    playExerciseReady();
+    setState('exercising');
+  }, []);
+
+  const setWarmupDuration = useCallback((seconds: 30 | 60) => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    countdownPlayedRef.current = new Set();
+    timerEndRef.current = Date.now() + seconds * 1000;
+    setTimer(seconds);
+  }, []);
 
   const logSet = useCallback((reps: number, weight?: number, rir?: number) => {
     if (!currentExercise) return;
@@ -770,7 +829,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
-    startWorkout, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
+    startWorkout, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
   };
