@@ -57,7 +57,7 @@ export function TodayScreen() {
 function TodayContent({ date }: { date: Date }) {
   const [startError, setStartError] = useState<string | null>(null);
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
-  const [weightPromptNonce, setWeightPromptNonce] = useState(0);
+  const [isCheckingWeight, setIsCheckingWeight] = useState(false);
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
@@ -162,18 +162,36 @@ nextExerciseName={workout.nextExerciseAfterRestName}
   const todayLog = dailyLogs[dateKey];
   const hasHandledWeight = getValidWeight(todayLog?.morningWeightKg) !== null || todayLog?.weightCheckSkipped === true;
 
-  const handleStart = () => {
+  const startWarmup = () => {
     setStartError(null);
-    if (!hasHandledWeight) {
-      setStartError('Log weight or no scale first.');
-      setWeightPromptNonce((value) => value + 1);
-      return;
-    }
+    setIsCheckingWeight(false);
 
     workout.startWorkout().catch((error: unknown) => {
       setStartError(error instanceof Error ? error.message : 'Workout start failed.');
     });
   };
+
+  const handleStart = () => {
+    setStartError(null);
+    if (!hasHandledWeight) {
+      setIsCheckingWeight(true);
+      return;
+    }
+
+    startWarmup();
+  };
+
+  if (!isDone && isCheckingWeight) {
+    return (
+      <WeightCheckScreen
+        date={date}
+        logs={dailyLogs}
+        onLogsChange={setDailyLogs}
+        onCancel={() => setIsCheckingWeight(false)}
+        onComplete={startWarmup}
+      />
+    );
+  }
 
   return (
     <motion.div
@@ -273,14 +291,6 @@ nextExerciseName={workout.nextExerciseAfterRestName}
               </WatchPanel>
             </div>
           )}
-          <div className="w-full px-4 mb-3">
-            <WeightCheckPanel
-              date={date}
-              logs={dailyLogs}
-              onLogsChange={setDailyLogs}
-              promptNonce={weightPromptNonce}
-            />
-          </div>
           <div className="w-full px-4 pb-safe mb-4 shrink-0">
             <Button
               onClick={handleStart}
@@ -295,27 +305,26 @@ nextExerciseName={workout.nextExerciseAfterRestName}
   );
 }
 
-function WeightCheckPanel({
+function WeightCheckScreen({
   date,
   logs,
   onLogsChange,
-  promptNonce,
+  onCancel,
+  onComplete,
 }: {
   date: Date;
   logs: Record<string, DailyLog>;
   onLogsChange: (logs: Record<string, DailyLog>) => void;
-  promptNonce?: number;
+  onCancel: () => void;
+  onComplete: () => void;
 }) {
   const dateKey = formatDateKey(date);
   const todayLog = logs[dateKey];
   const todayWeight = getValidWeight(todayLog?.morningWeightKg);
   const profileWeight = getValidWeight(loadUserProfile()?.weightKg) ?? getValidWeight(getDefaultProfile().weightKg);
   const lastWeight = getLastKnownWeight(logs, dateKey) ?? profileWeight;
-  const [isEditing, setIsEditing] = useState(false);
   const [weightInput, setWeightInput] = useState(() => formatWeightInput(todayWeight ?? lastWeight));
   const [inputError, setInputError] = useState<string | null>(null);
-  const isSkipped = todayLog?.weightCheckSkipped === true && todayWeight === null;
-  const showEditor = isEditing || (!!promptNonce && todayWeight === null && !isSkipped);
 
   const saveWeight = () => {
     const nextWeight = Number.parseFloat(weightInput);
@@ -330,7 +339,7 @@ function WeightCheckPanel({
       weightCheckSkipped: false,
     });
     onLogsChange(loadDailyLogs());
-    setIsEditing(false);
+    onComplete();
   };
 
   const skipWeight = () => {
@@ -339,110 +348,91 @@ function WeightCheckPanel({
       weightCheckSkipped: true,
     });
     onLogsChange(loadDailyLogs());
-    setIsEditing(false);
     setInputError(null);
+    onComplete();
   };
 
-  const status = todayWeight !== null
-    ? 'Logged today'
-    : isSkipped
-      ? 'No scale today'
-      : lastWeight !== null
-        ? `Last ${formatWeight(lastWeight)}`
-        : 'Log before start';
-
-  const metric = todayWeight !== null
-    ? formatWeight(todayWeight)
-    : isSkipped && lastWeight !== null
-      ? `Last ${formatWeight(lastWeight)}`
-      : null;
+  const previousLabel = lastWeight !== null ? `Last ${formatWeight(lastWeight)}` : 'No recent weight';
 
   return (
-    <WatchPanel subtle className="py-3">
-      <div className="flex items-center gap-2.5">
-        <Scale className="h-4 w-4 shrink-0 text-white/45" />
-        <div className="min-w-0 flex-1">
-          <p className="text-fluid-label font-mono uppercase text-white/35">First: weight</p>
-          <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">{status}</p>
-        </div>
-        {!showEditor && metric && (
-          <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
-            {metric}
-          </p>
-        )}
-        {!showEditor && (
-          <div className="flex shrink-0 gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setWeightInput(formatWeightInput(todayWeight ?? lastWeight));
-                setInputError(null);
-                setIsEditing(true);
-              }}
-              className="h-9 w-11 rounded-full border border-white/10 bg-white/5 px-0 text-[10px] font-black uppercase text-white/80 hover:bg-white/10 hover:text-white"
-            >
-              Log
-            </Button>
-            {todayWeight === null && !isSkipped && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={skipWeight}
-                className="h-9 w-[4.25rem] rounded-full border border-white/10 bg-white/5 px-0 text-[10px] font-black uppercase text-white/55 hover:bg-white/10 hover:text-white"
-              >
-                No scale
-              </Button>
-            )}
-          </div>
-        )}
+    <div className="flex h-full flex-col overflow-hidden bg-black px-safe pt-safe pb-safe">
+      <TopBar
+        center={
+          <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
+            {formatDisplayDate(date)}
+          </span>
+        }
+      />
+
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4">
+        <Scale className="mb-5 h-14 w-14 text-white/35" />
+        <h1 className="text-fluid-title font-black uppercase leading-none text-white text-center">
+          WEIGHT
+        </h1>
+        <p className="mt-3 text-fluid-label font-mono font-black uppercase text-white/45">
+          {previousLabel}
+        </p>
       </div>
 
-      {showEditor ? (
-        <div className="mt-3 flex items-start gap-2">
-          <div className="min-w-0 flex-1">
-            <Input
-              aria-label="Bodyweight in kilograms"
-              inputMode="decimal"
-              type="number"
-              min="25"
-              max="250"
-              step="0.1"
-              value={weightInput}
-              onChange={(event) => {
-                setWeightInput(event.target.value);
-                setInputError(null);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') saveWeight();
-              }}
-              className="h-11 rounded-full border-white/10 bg-black/30 text-center font-mono text-fluid-ui font-black tabular-nums text-white"
-            />
-            {inputError && (
-              <p className="mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
-            )}
-            {todayWeight === null && !isSkipped && (
-              <button
-                type="button"
-                onClick={skipWeight}
-                className="mt-2 text-fluid-label font-black uppercase text-white/45 active:text-white"
-              >
-                No scale today
-              </button>
-            )}
+      <div className="w-full px-4 pb-safe mb-4 shrink-0">
+        <WatchPanel subtle className="py-4">
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <Input
+                aria-label="Bodyweight in kilograms"
+                inputMode="decimal"
+                type="number"
+                min="25"
+                max="250"
+                step="0.1"
+                value={weightInput}
+                onChange={(event) => {
+                  setWeightInput(event.target.value);
+                  setInputError(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') saveWeight();
+                }}
+                className="h-12 rounded-full border-white/10 bg-black/30 text-center font-mono text-fluid-ui font-black tabular-nums text-white"
+              />
+              {inputError ? (
+                <p className="mt-2 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
+              ) : (
+                <p className="mt-2 text-fluid-label font-mono uppercase text-white/30">kg before warm-up</p>
+              )}
+            </div>
+            <Button
+              type="button"
+              size="icon"
+              aria-label="Save weight"
+              onClick={saveWeight}
+              className="size-12 rounded-full bg-white text-black active:scale-95"
+            >
+              <Check className="h-5 w-5" />
+            </Button>
           </div>
+        </WatchPanel>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
           <Button
             type="button"
-            size="icon"
-            aria-label="Save weight"
-            onClick={saveWeight}
-            className="size-11 rounded-full bg-white text-black active:scale-95"
+            variant="outline"
+            onClick={onCancel}
+            className="btn-mobile-secondary rounded-full border-white/15 bg-white/5 text-fluid-label font-black uppercase tracking-tight text-white/70 active:scale-95"
           >
-            <Check className="h-5 w-5" />
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={skipWeight}
+            className="btn-mobile-secondary rounded-full border-white/15 bg-white/5 text-fluid-label font-black uppercase tracking-tight text-white/70 active:scale-95"
+          >
+            No scale
           </Button>
         </div>
-      ) : null}
-    </WatchPanel>
+      </div>
+    </div>
   );
 }
 
