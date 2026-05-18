@@ -57,6 +57,7 @@ export function TodayScreen() {
 function TodayContent({ date }: { date: Date }) {
   const [startError, setStartError] = useState<string | null>(null);
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
+  const [weightPromptNonce, setWeightPromptNonce] = useState(0);
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
@@ -72,6 +73,7 @@ function TodayContent({ date }: { date: Date }) {
   if (!schedule.isTraining) {
     return (
       <RestDayScreen
+        date={date}
         nextTraining={schedule.nextTraining}
         weekCompleted={schedule.weekProgress.completed}
         weekTotal={schedule.weekProgress.total}
@@ -156,6 +158,23 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
   // Idle — ready to start (or already done today)
   const isDone = schedule.isDone;
+  const dateKey = formatDateKey(date);
+  const todayLog = dailyLogs[dateKey];
+  const hasHandledWeight = getValidWeight(todayLog?.morningWeightKg) !== null || todayLog?.weightCheckSkipped === true;
+
+  const handleStart = () => {
+    setStartError(null);
+    if (!hasHandledWeight) {
+      setStartError('Log weight or no scale first.');
+      setWeightPromptNonce((value) => value + 1);
+      return;
+    }
+
+    workout.startWorkout().catch((error: unknown) => {
+      setStartError(error instanceof Error ? error.message : 'Workout start failed.');
+    });
+  };
+
   return (
     <motion.div
       className="flex flex-col h-full overflow-hidden bg-black relative"
@@ -190,6 +209,20 @@ nextExerciseName={workout.nextExerciseAfterRestName}
           </>
         )}
       </div>
+
+      {!isDone && workout.exercises[0] && workout.currentPrescription && (
+        <div className="w-full px-4 mb-3">
+          <WatchPanel subtle className="py-3">
+            <p className="text-fluid-label text-zinc-500 uppercase font-mono">Next</p>
+            <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
+              {workout.exercises[0].name}
+            </p>
+            <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
+              {workout.currentPrescription.sets}x{workout.currentPrescription.minReps}-{workout.currentPrescription.maxReps} · {workout.currentPrescription.targetRir}
+            </p>
+          </WatchPanel>
+        </div>
+      )}
 
       <div className="w-full px-4 mb-3 flex flex-col gap-2">
         <WatchListItem
@@ -240,34 +273,17 @@ nextExerciseName={workout.nextExerciseAfterRestName}
               </WatchPanel>
             </div>
           )}
-          {workout.exercises[0] && workout.currentPrescription && (
-            <div className="w-full px-4 mb-3">
-              <WatchPanel subtle className="py-3">
-                <p className="text-fluid-label text-zinc-500 uppercase font-mono">Next</p>
-                <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
-                  {workout.exercises[0].name}
-                </p>
-                <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
-                  {workout.currentPrescription.sets}x{workout.currentPrescription.minReps}-{workout.currentPrescription.maxReps} · {workout.currentPrescription.targetRir}
-                </p>
-              </WatchPanel>
-            </div>
-          )}
           <div className="w-full px-4 mb-3">
             <WeightCheckPanel
               date={date}
               logs={dailyLogs}
               onLogsChange={setDailyLogs}
+              promptNonce={weightPromptNonce}
             />
           </div>
           <div className="w-full px-4 pb-safe mb-4 shrink-0">
             <Button
-              onClick={() => {
-                setStartError(null);
-                workout.startWorkout().catch((error: unknown) => {
-                  setStartError(error instanceof Error ? error.message : 'Workout start failed.');
-                });
-              }}
+              onClick={handleStart}
               className="w-full btn-mobile-accessible rounded-full bg-white text-black active:scale-95 transition-all font-black uppercase tracking-tight shadow-xl"
             >
               Start
@@ -283,10 +299,12 @@ function WeightCheckPanel({
   date,
   logs,
   onLogsChange,
+  promptNonce,
 }: {
   date: Date;
   logs: Record<string, DailyLog>;
   onLogsChange: (logs: Record<string, DailyLog>) => void;
+  promptNonce?: number;
 }) {
   const dateKey = formatDateKey(date);
   const todayLog = logs[dateKey];
@@ -297,6 +315,7 @@ function WeightCheckPanel({
   const [weightInput, setWeightInput] = useState(() => formatWeightInput(todayWeight ?? lastWeight));
   const [inputError, setInputError] = useState<string | null>(null);
   const isSkipped = todayLog?.weightCheckSkipped === true && todayWeight === null;
+  const showEditor = isEditing || (!!promptNonce && todayWeight === null && !isSkipped);
 
   const saveWeight = () => {
     const nextWeight = Number.parseFloat(weightInput);
@@ -343,15 +362,15 @@ function WeightCheckPanel({
       <div className="flex items-center gap-2.5">
         <Scale className="h-4 w-4 shrink-0 text-white/45" />
         <div className="min-w-0 flex-1">
-          <p className="text-fluid-label font-mono uppercase text-white/35">Weight</p>
+          <p className="text-fluid-label font-mono uppercase text-white/35">First: weight</p>
           <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">{status}</p>
         </div>
-        {!isEditing && metric && (
+        {!showEditor && metric && (
           <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
             {metric}
           </p>
         )}
-        {!isEditing && (
+        {!showEditor && (
           <div className="flex shrink-0 gap-1">
             <Button
               type="button"
@@ -379,7 +398,7 @@ function WeightCheckPanel({
         )}
       </div>
 
-      {isEditing ? (
+      {showEditor ? (
         <div className="mt-3 flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <Input
@@ -401,6 +420,15 @@ function WeightCheckPanel({
             />
             {inputError && (
               <p className="mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
+            )}
+            {todayWeight === null && !isSkipped && (
+              <button
+                type="button"
+                onClick={skipWeight}
+                className="mt-2 text-fluid-label font-black uppercase text-white/45 active:text-white"
+              >
+                No scale today
+              </button>
             )}
           </div>
           <Button

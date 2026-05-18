@@ -43,6 +43,10 @@ async function prepareTodayWorkout(page: Page, sessions: Record<string, unknown>
 }
 
 async function startWarmupAndWorkout(page: Page) {
+  const noScale = page.getByRole('button', { name: /^no scale/i });
+  if (await noScale.isVisible().catch(() => false)) {
+    await noScale.click();
+  }
   await page.getByRole('button', { name: /^start$/i }).click();
   await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await page.getByRole('button', { name: /^start workout$/i }).click();
@@ -84,7 +88,7 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
-test('today weight check logs weight or records no scale without blocking start', async ({ page }) => {
+test('today requires weight logged or no scale before warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
@@ -101,11 +105,15 @@ test('today weight check logs weight or records no scale without blocking start'
 
   await page.goto('/');
 
-  await expect(page.locator('body')).toContainText('Weight');
+  await expect(page.locator('body')).toContainText('First: weight');
   await expect(page.locator('body')).toContainText('Last 66.7kg');
   await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
 
-  await page.getByRole('button', { name: /^no scale$/i }).click();
+  await page.getByRole('button', { name: /^start$/i }).click();
+  await expect(page.locator('body')).toContainText('Log weight or no scale first.');
+  await expect(page.getByRole('spinbutton', { name: /bodyweight/i })).toBeVisible();
+
+  await page.getByRole('button', { name: /^no scale/i }).click();
   await expect(page.locator('body')).toContainText('No scale today');
 
   await expect.poll(() => page.evaluate(() => {
@@ -144,6 +152,7 @@ test('today start opens warm-up before the first exercise', async ({ page }) => 
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: /^no scale/i }).click();
   await page.getByRole('button', { name: /^start$/i }).click();
 
   await expect(page.getByText(/warm up/i)).toBeVisible();
@@ -169,6 +178,7 @@ test('warm-up cancel returns to Today without logging the workout', async ({ pag
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: /^no scale/i }).click();
   await page.getByRole('button', { name: /^start$/i }).click();
   await page.getByRole('button', { name: /cancel warm-up/i }).click();
 
@@ -186,11 +196,22 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
   await page.goto('/');
 
   await expect(page.locator('body')).toContainText('REST');
+  await expect(page.locator('body')).toContainText('Sunday waist');
+  await expect(page.locator('body')).toContainText('Same conditions');
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+
+  await page.getByRole('spinbutton', { name: /waist circumference/i }).fill('76.4');
+  await page.getByRole('button', { name: /save waist/i }).click();
+  await expect(page.locator('body')).toContainText('Measured today');
+  await expect(page.locator('body')).toContainText('76.4cm');
+  await expect.poll(() => page.evaluate(() => {
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { waistCm?: number }>;
+    return logs['2026-05-10'];
+  })).toEqual({ dateKey: '2026-05-10', waistCm: 76.4 });
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {
@@ -335,6 +356,7 @@ test('restores an active workout after reload', async ({ page }) => {
   });
   await page.reload();
 
+  await page.getByRole('button', { name: /^no scale/i }).click();
   await page.getByRole('button', { name: /^start$/i }).click();
   await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await page.reload();
