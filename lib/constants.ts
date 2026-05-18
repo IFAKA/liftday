@@ -595,6 +595,14 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     youtubeId: 'TwD-YGVP4Bk',
     workoutType: 'pull',
   },
+  {
+    key: 'db_reverse_curl',
+    name: 'DUMBBELL REVERSE CURL',
+    unit: 'weighted',
+    primaryMuscle: 'forearms',
+    instruction: 'Overhand grip, elbows pinned. Curl without wrist bend, pause near the top, lower slowly. Low-dose brachioradialis and forearm extensor work for visible sleeve-to-wrist thickness.',
+    workoutType: 'pull',
+  },
 ];
 
 // GYM LEGS EXERCISES

@@ -35,6 +35,14 @@ const MUSCLE_REGION_IDS: Record<MuscleGroup, MuscleId[]> = {
     'biceps-left',
     'biceps-right',
   ],
+  forearms: [
+    'forearm-left',
+    'forearm-right',
+    'forearm-flexors-left',
+    'forearm-extensors-left',
+    'forearm-flexors-right',
+    'forearm-extensors-right',
+  ],
   glutes: [
     'gluteus-medius-left',
     'gluteus-maximus-left',

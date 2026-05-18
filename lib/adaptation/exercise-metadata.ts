@@ -18,11 +18,12 @@ export const MUSCLE_PRIORITY_PROFILES: MusclePriorityProfile[] = [
   profile('triceps', 'triceps', 7, 'Triceps', 14, 10, 22),
   profile('shoulders', 'lateral_delts', 8, 'Pressing delts', 8, 4, 24),
   profile('mid_back', 'rear_delts_posture', 9, 'Mid back', 8, 4, 30),
-  profile('neck', 'neck_traps_forearms', 10, 'Neck/traps', 5, 2, 20),
-  profile('glutes', 'legs_maintenance', 11, 'Glutes', 6, 4, 32, true),
-  profile('quads', 'legs_maintenance', 12, 'Quads', 7, 6, 34, true),
-  profile('hamstrings', 'legs_maintenance', 13, 'Hamstrings', 6, 4, 36, true),
-  profile('calves', 'legs_maintenance', 14, 'Calves', 8, 2, 22, true),
+  profile('forearms', 'neck_traps_forearms', 10, 'Forearms', 6, 2, 18),
+  profile('neck', 'neck_traps_forearms', 11, 'Neck/traps', 5, 2, 20),
+  profile('glutes', 'legs_maintenance', 12, 'Glutes', 6, 4, 32, true),
+  profile('quads', 'legs_maintenance', 13, 'Quads', 7, 6, 34, true),
+  profile('hamstrings', 'legs_maintenance', 14, 'Hamstrings', 6, 4, 36, true),
+  profile('calves', 'legs_maintenance', 15, 'Calves', 8, 2, 22, true),
 ];
 
 export const MUSCLE_PRIORITY_BY_MUSCLE = Object.fromEntries(

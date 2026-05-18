@@ -78,7 +78,8 @@ export type GymPullExerciseKey =
   | 'barbell_curl'
   | 'straight_arm_pulldown_cable'
   | 'cable_curl'
-  | 'hammer_curl';
+  | 'hammer_curl'
+  | 'db_reverse_curl';
 
 // Gym legs exercises
 export type GymLegsExerciseKey =
@@ -267,7 +268,7 @@ export type TrainingPriority = 'critical' | 'high' | 'support' | 'indirect' | 'a
 
 export type MuscleGroup =
   | 'chest' | 'shoulders' | 'side_delt' | 'triceps'
-  | 'lats' | 'mid_back' | 'rear_delt' | 'biceps' | 'upper_back'
+  | 'lats' | 'mid_back' | 'rear_delt' | 'biceps' | 'forearms' | 'upper_back'
   | 'quads' | 'hamstrings' | 'glutes' | 'calves' | 'neck';
 
 export type JointArea = 'shoulder' | 'elbow' | 'wrist' | 'hip' | 'knee' | 'ankle' | 'spine';
