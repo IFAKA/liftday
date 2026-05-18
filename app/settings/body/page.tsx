@@ -7,6 +7,7 @@ import { TopBar } from '@/components/TopBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { loadUserProfile, setBodyMetrics } from '@/lib/storage';
+import { SMV_PROFILE_DEFAULTS } from '@/lib/smv';
 
 export default function BodySettingsPage() {
   const router = useRouter();
@@ -14,13 +15,13 @@ export default function BodySettingsPage() {
     if (typeof window === 'undefined') {
       return {
         heightCm: 172,
-        weightKg: 66.6,
+        weightKg: SMV_PROFILE_DEFAULTS.weightKg,
       };
     }
     const profile = loadUserProfile();
     return {
       heightCm: profile?.heightCm ?? 172,
-      weightKg: profile?.weightKg ?? 66.6,
+      weightKg: profile?.weightKg ?? SMV_PROFILE_DEFAULTS.weightKg,
     };
   });
 

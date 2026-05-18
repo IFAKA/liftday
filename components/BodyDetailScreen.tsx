@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Ruler, Scale, Target, Utensils } from 'lucide-react';
+import { ChevronLeft, History, Ruler, Scale, Target, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { DailyLog, UserProfile } from '@/lib/types';
 import { getBodyTrendSummary } from '@/lib/progress-insights';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile } from '@/lib/storage';
 import { WatchListItem, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSignalPanel } from './WatchSurface';
+
+const CURRENT_WEIGHT_KG = 68.6;
+const CURRENT_WAIST_CM = 76.5;
 
 interface BodySnapshot {
   profile: UserProfile;
@@ -84,6 +87,32 @@ export function BodyDetailScreen() {
           </p>
         </WatchPanel>
 
+        <WatchPanel subtle className="py-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <History className="h-4 w-4 shrink-0 text-white/35" />
+              <p className="truncate text-fluid-label font-mono font-black uppercase text-white/35">History</p>
+            </div>
+            <p className="shrink-0 text-fluid-label font-mono uppercase text-white/35">
+              {body.history.length} {body.history.length === 1 ? 'entry' : 'entries'}
+            </p>
+          </div>
+          <BodyTrendChart entries={body.history} />
+          <div className="mt-3 flex flex-col gap-2">
+            {body.history.slice(-8).reverse().map((entry) => (
+              <div key={entry.dateKey} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-lg border border-white/5 bg-black/25 px-3 py-2">
+                <p className="min-w-0 truncate text-fluid-label font-mono uppercase text-white/35">{entry.label}</p>
+                <p className="text-fluid-label font-mono font-black tabular-nums uppercase text-white/70">
+                  {entry.weightKg === null ? '--' : `${formatNumber(entry.weightKg, 1)}kg`}
+                </p>
+                <p className="text-fluid-label font-mono font-black tabular-nums uppercase text-white/45">
+                  {entry.waistCm === null ? '--' : `${formatNumber(entry.waistCm, 1)}cm`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </WatchPanel>
+
         <div className="flex flex-col gap-2">
           <WatchListItem icon={Target} title="Goal" subtitle={body.goal} trailing={null} subtle className="py-3" />
           <WatchListItem icon={Utensils} title="Nutrition" subtitle={body.nutrition} trailing={null} subtle className="py-3" />
@@ -93,6 +122,13 @@ export function BodyDetailScreen() {
       </div>
     </div>
   );
+}
+
+interface BodyHistoryEntry {
+  dateKey: string;
+  label: string;
+  weightKg: number | null;
+  waistCm: number | null;
 }
 
 function BodyMeasure({ label, value }: { label: string; value: string }) {
@@ -105,18 +141,22 @@ function BodyMeasure({ label, value }: { label: string; value: string }) {
 }
 
 function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
-  const latestLog = Object.values(logs)
+  const latestWeightLog = Object.values(logs)
     .filter((log) => typeof log.morningWeightKg === 'number')
     .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
+  const latestWaistLog = Object.values(logs)
+    .filter((log) => typeof log.waistCm === 'number')
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
   const heightCm = profile.heightCm ?? 172;
-  const weightKg = latestLog?.morningWeightKg ?? profile.weightKg ?? 67.8;
-  const waistCm = latestLog?.waistCm ?? profile.waistCircumferenceCm ?? 76.5;
+  const weightKg = latestWeightLog?.morningWeightKg ?? CURRENT_WEIGHT_KG;
+  const waistCm = latestWaistLog?.waistCm ?? CURRENT_WAIST_CM;
   const shoulderCm = profile.shoulderCircumferenceCm ?? 111.76;
   const chestCm = profile.chestCircumferenceCm ?? 89.5;
   const hipCm = profile.hipCircumferenceCm ?? 85;
   const neckCm = profile.neckCircumferenceCm ?? 37;
   const bmi = weightKg / ((heightCm / 100) ** 2);
   const trend = getBodyTrendSummary(logs);
+  const history = getBodyHistory(logs, weightKg, waistCm);
   const shoulderWaist = shoulderCm / waistCm;
   const chestWaist = chestCm / waistCm;
   const proteinTarget = profile.proteinTargetGrams ?? [140, 160];
@@ -140,12 +180,100 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     frameTone: shoulderWaist >= 1.5 ? 'text-green-300' : 'text-amber-300',
     weightTrend: formatTrend(trend.weightTrendKgPerWeek, 'kg'),
     waistTrend: formatTrend(trend.waistTrendCmPerWeek, 'cm'),
+    history,
     trendSummary: trend.recoveryAlert ?? trend.nutritionAction,
     goal: profile.goal ?? 'Maximize SMV efficient frontier as fast as recoverable',
     nutrition: `Protein ${proteinTarget[0]}-${proteinTarget[1]}g. Surplus +${surplusTarget[0]}-${surplusTarget[1]} kcal/day. Creatine 5g/day, water only.`,
     profileLine: `${profile.age ?? 26}y ${profile.sex ?? 'male'} · ${formatBodyComposition(profile.bodyComposition)} · ${profile.injuryStatus ?? 'No injuries or pain'}`,
     contextLine: `${profile.trainingBackground ?? 'Rugby background'} · ${profile.maxWorkoutMinutes ?? 105} min cap · commercial gym`,
   };
+}
+
+function BodyTrendChart({ entries }: { entries: BodyHistoryEntry[] }) {
+  const width = 280;
+  const height = 108;
+  const padding = 12;
+  const weightPoints = getChartPoints(entries, 'weightKg', width, height, padding);
+  const waistPoints = getChartPoints(entries, 'waistCm', width, height, padding);
+
+  return (
+    <div className="rounded-lg border border-white/5 bg-black/30 px-2 py-3">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Weight and waist history chart" className="h-28 w-full overflow-visible">
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+        <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+        {weightPoints.path && <path d={weightPoints.path} fill="none" stroke="rgb(255,255,255)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+        {waistPoints.path && <path d={waistPoints.path} fill="none" stroke="rgb(74,222,128)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+        {weightPoints.points.map((point) => <circle key={`w-${point.x}-${point.y}`} cx={point.x} cy={point.y} r="3" fill="rgb(255,255,255)" />)}
+        {waistPoints.points.map((point) => <circle key={`c-${point.x}-${point.y}`} cx={point.x} cy={point.y} r="3" fill="rgb(74,222,128)" />)}
+      </svg>
+      <div className="mt-2 flex items-center gap-4 px-1">
+        <ChartLegend tone="bg-white" label="Weight" />
+        <ChartLegend tone="bg-green-400" label="Waist" />
+      </div>
+    </div>
+  );
+}
+
+function ChartLegend({ tone, label }: { tone: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-fluid-label font-mono uppercase text-white/40">
+      <span className={`h-1.5 w-4 rounded-full ${tone}`} />
+      {label}
+    </span>
+  );
+}
+
+function getChartPoints(
+  entries: BodyHistoryEntry[],
+  key: 'weightKg' | 'waistCm',
+  width: number,
+  height: number,
+  padding: number
+): { points: { x: number; y: number }[]; path: string } {
+  const values = entries.map((entry) => entry[key]).filter((value): value is number => typeof value === 'number');
+  if (values.length === 0) return { points: [], path: '' };
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const plotted = entries
+    .map((entry, index) => {
+      const value = entry[key];
+      if (value === null) return null;
+      const x = entries.length === 1
+        ? width / 2
+        : padding + (index / (entries.length - 1)) * (width - padding * 2);
+      const y = height - padding - ((value - min) / span) * (height - padding * 2);
+      return { x: roundChartPoint(x), y: roundChartPoint(y) };
+    })
+    .filter((point): point is { x: number; y: number } => point !== null);
+
+  return {
+    points: plotted,
+    path: plotted.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '),
+  };
+}
+
+function getBodyHistory(logs: Record<string, DailyLog>, fallbackWeightKg: number, fallbackWaistCm: number): BodyHistoryEntry[] {
+  const entries = Object.values(logs)
+    .filter((log) => typeof log.morningWeightKg === 'number' || typeof log.waistCm === 'number')
+    .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+    .map((log) => ({
+      dateKey: log.dateKey,
+      label: formatHistoryDate(log.dateKey),
+      weightKg: typeof log.morningWeightKg === 'number' ? log.morningWeightKg : null,
+      waistCm: typeof log.waistCm === 'number' ? log.waistCm : null,
+    }));
+
+  if (entries.length > 0) return entries;
+
+  const todayKey = new Date().toISOString().slice(0, 10);
+  return [{
+    dateKey: todayKey,
+    label: 'Current',
+    weightKg: fallbackWeightKg,
+    waistCm: fallbackWaistCm,
+  }];
 }
 
 function formatNumber(value: number, fractionDigits: number): string {
@@ -162,6 +290,16 @@ function formatTargetDate(value: string | undefined): string {
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function formatHistoryDate(dateKey: string): string {
+  const date = new Date(`${dateKey}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateKey;
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function roundChartPoint(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function formatBodyComposition(value: UserProfile['bodyComposition']): string {

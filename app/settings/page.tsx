@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Bug, ChevronLeft } from 'lucide-react';
 import { loadUserProfile } from '@/lib/storage';
 import { getRoutine } from '@/lib/routines';
+import { SMV_PROFILE_DEFAULTS } from '@/lib/smv';
 import { TopBar } from '@/components/TopBar';
 import { WatchListItem, WatchSwitchItem } from '@/components/WatchSurface';
 import { isDebugTraceEnabled, setDebugTraceEnabled } from '@/lib/debug-trace';
@@ -18,13 +19,13 @@ export default function SettingsPage() {
   });
   const [{ heightCm, weightKg, routineName }] = useState(() => {
     if (typeof window === 'undefined') {
-      return { heightCm: 172, weightKg: 66.6, routineName: 'Gym' };
+      return { heightCm: 172, weightKg: SMV_PROFILE_DEFAULTS.weightKg, routineName: 'Gym' };
     }
     const profile = loadUserProfile();
     const routine = getRoutine(profile?.activeRoutine ?? 'gym');
     return {
       heightCm: profile?.heightCm ?? 172,
-      weightKg: profile?.weightKg ?? 66.6,
+      weightKg: profile?.weightKg ?? SMV_PROFILE_DEFAULTS.weightKg,
       routineName: routine.name,
     };
   });

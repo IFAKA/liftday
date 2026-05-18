@@ -319,10 +319,49 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await page.getByRole('button', { name: /body/i }).click();
   await expect(page).toHaveURL(/\/history\/body$/);
   await expect(page.locator('body')).toContainText('Measurements');
+  await expect(page.locator('body')).toContainText('Weight');
+  await expect(page.locator('body')).toContainText('68.6kg');
   await expect(page.locator('body')).toContainText('Chest');
   await expect(page.locator('body')).toContainText('89.5cm');
+  await expect(page.locator('body')).toContainText('Waist');
+  await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('Hip');
   await expect(page.locator('body')).toContainText('85cm');
+  await expect(page.locator('body')).toContainText('History');
+  await expect(page.locator('body')).toContainText('Current');
+  await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
+});
+
+test('body detail shows weight and waist history over time', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_daily_logs', JSON.stringify({
+      '2026-05-04': {
+        dateKey: '2026-05-04',
+        morningWeightKg: 68.6,
+        waistCm: 76.5,
+      },
+      '2026-05-11': {
+        dateKey: '2026-05-11',
+        morningWeightKg: 69.1,
+      },
+      '2026-05-17': {
+        dateKey: '2026-05-17',
+        waistCm: 76.1,
+      },
+    }));
+  });
+
+  await page.goto('/history/body');
+
+  await expect(page.locator('body')).toContainText('History');
+  await expect(page.locator('body')).toContainText('May 4');
+  await expect(page.locator('body')).toContainText('May 11');
+  await expect(page.locator('body')).toContainText('May 17');
+  await expect(page.locator('body')).toContainText('68.6kg');
+  await expect(page.locator('body')).toContainText('69.1kg');
+  await expect(page.locator('body')).toContainText('76.5cm');
+  await expect(page.locator('body')).toContainText('76.1cm');
+  await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
 });
 
 test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {

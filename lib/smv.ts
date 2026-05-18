@@ -170,7 +170,7 @@ export const SMV_PROFILE_DEFAULTS = {
   age: 26,
   sex: 'male' as const,
   heightCm: 172,
-  weightKg: 66.7,
+  weightKg: 68.6,
   bodyComposition: 'skinny_fat' as const,
   maxWorkoutMinutes: 105,
   targetDate: '2026-10-31',
