@@ -154,22 +154,32 @@ function WaistMeasurementPanel({
 }) {
   const dateKey = formatDateKey(date);
   const todayWaist = getValidMeasurement(logs[dateKey]?.waistCm);
+  const todayShoulder = getValidMeasurement(logs[dateKey]?.shoulderCm);
   const profileWaist = getValidMeasurement(loadUserProfile()?.waistCircumferenceCm) ?? getValidMeasurement(getDefaultProfile().waistCircumferenceCm);
-  const lastWaist = getLastKnownWaist(logs, dateKey) ?? profileWaist;
-  const [isEditing, setIsEditing] = useState(todayWaist === null);
+  const profileShoulder = getValidMeasurement(loadUserProfile()?.shoulderCircumferenceCm) ?? getValidMeasurement(getDefaultProfile().shoulderCircumferenceCm);
+  const lastWaist = getLastKnownMeasurement(logs, dateKey, 'waistCm') ?? profileWaist;
+  const lastShoulder = getLastKnownMeasurement(logs, dateKey, 'shoulderCm') ?? profileShoulder;
+  const [isEditing, setIsEditing] = useState(todayWaist === null || todayShoulder === null);
   const [waistInput, setWaistInput] = useState(() => formatCmInput(todayWaist ?? lastWaist));
+  const [shoulderInput, setShoulderInput] = useState(() => formatCmInput(todayShoulder ?? lastShoulder));
   const [inputError, setInputError] = useState<string | null>(null);
 
-  const saveWaist = () => {
+  const saveMeasurements = () => {
     const nextWaist = Number.parseFloat(waistInput);
+    const nextShoulder = Number.parseFloat(shoulderInput);
     if (!Number.isFinite(nextWaist) || nextWaist < 40 || nextWaist > 180) {
-      setInputError('Enter cm');
+      setInputError('Enter waist');
+      return;
+    }
+    if (!Number.isFinite(nextShoulder) || nextShoulder < 60 || nextShoulder > 180) {
+      setInputError('Enter shoulder');
       return;
     }
 
     saveDailyLog(dateKey, {
       dateKey,
       waistCm: roundMeasurement(nextWaist),
+      shoulderCm: roundMeasurement(nextShoulder),
     });
     onLogsChange(loadDailyLogs());
     setIsEditing(false);
@@ -181,14 +191,14 @@ function WaistMeasurementPanel({
       <div className="flex items-center gap-2.5">
         <Ruler className="h-4 w-4 shrink-0 text-white/45" />
         <div className="min-w-0 flex-1">
-          <p className="text-fluid-label font-mono uppercase text-white/35">Sunday waist</p>
+          <p className="text-fluid-label font-mono uppercase text-white/35">Weekly measures</p>
           <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
-            {todayWaist !== null ? 'Measured today' : 'Same conditions'}
+            {todayWaist !== null && todayShoulder !== null ? 'Measured today' : 'Same conditions'}
           </p>
         </div>
-        {!isEditing && todayWaist !== null && (
+        {!isEditing && todayWaist !== null && todayShoulder !== null && (
           <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
-            {formatCm(todayWaist)}
+            {formatCm(todayWaist)} / {formatCm(todayShoulder)}
           </p>
         )}
         {!isEditing && (
@@ -197,6 +207,7 @@ function WaistMeasurementPanel({
             variant="ghost"
             onClick={() => {
               setWaistInput(formatCmInput(todayWaist ?? lastWaist));
+              setShoulderInput(formatCmInput(todayShoulder ?? lastShoulder));
               setInputError(null);
               setIsEditing(true);
             }}
@@ -209,35 +220,40 @@ function WaistMeasurementPanel({
 
       {isEditing ? (
         <div className="mt-3 flex items-start gap-2">
-          <div className="min-w-0 flex-1">
-            <Input
-              aria-label="Waist circumference in centimeters"
-              inputMode="decimal"
-              type="number"
-              min="40"
-              max="180"
-              step="0.1"
+          <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
+            <MeasurementInput
+              label="Waist circumference in centimeters"
+              min={40}
+              max={180}
               value={waistInput}
-              onChange={(event) => {
-                setWaistInput(event.target.value);
+              onChange={(value) => {
+                setWaistInput(value);
                 setInputError(null);
               }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') saveWaist();
+              onEnter={saveMeasurements}
+            />
+            <MeasurementInput
+              label="Shoulder circumference in centimeters"
+              min={60}
+              max={180}
+              value={shoulderInput}
+              onChange={(value) => {
+                setShoulderInput(value);
+                setInputError(null);
               }}
-              className="h-11 rounded-full border-white/10 bg-black/30 text-center font-mono text-fluid-ui font-black tabular-nums text-white"
+              onEnter={saveMeasurements}
             />
             {inputError ? (
-              <p className="mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
+              <p className="col-span-2 mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
             ) : (
-              <p className="mt-1 truncate text-fluid-label font-mono uppercase text-white/30">Same morning, relaxed</p>
+              <p className="col-span-2 mt-1 truncate text-fluid-label font-mono uppercase text-white/30">Same morning, relaxed</p>
             )}
           </div>
           <Button
             type="button"
             size="icon"
-            aria-label="Save waist"
-            onClick={saveWaist}
+            aria-label="Save waist and shoulders"
+            onClick={saveMeasurements}
             className="size-11 rounded-full bg-white text-black active:scale-95"
           >
             <Check className="h-5 w-5" />
@@ -248,12 +264,45 @@ function WaistMeasurementPanel({
   );
 }
 
-function getLastKnownWaist(logs: Record<string, DailyLog>, beforeDateKey: string): number | null {
+function MeasurementInput({
+  label,
+  min,
+  max,
+  value,
+  onChange,
+  onEnter,
+}: {
+  label: string;
+  min: number;
+  max: number;
+  value: string;
+  onChange: (value: string) => void;
+  onEnter: () => void;
+}) {
+  return (
+    <Input
+      aria-label={label}
+      inputMode="decimal"
+      type="number"
+      min={min}
+      max={max}
+      step="0.1"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') onEnter();
+      }}
+      className="h-11 rounded-full border-white/10 bg-black/30 px-2 text-center font-mono text-fluid-label font-black tabular-nums text-white"
+    />
+  );
+}
+
+function getLastKnownMeasurement(logs: Record<string, DailyLog>, beforeDateKey: string, key: 'waistCm' | 'shoulderCm'): number | null {
   const latest = Object.values(logs)
-    .filter((log) => log.dateKey < beforeDateKey && getValidMeasurement(log.waistCm) !== null)
+    .filter((log) => log.dateKey < beforeDateKey && getValidMeasurement(log[key]) !== null)
     .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
 
-  return getValidMeasurement(latest?.waistCm);
+  return getValidMeasurement(latest?.[key]);
 }
 
 function getValidMeasurement(value: number | undefined): number | null {

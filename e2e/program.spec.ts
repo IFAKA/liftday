@@ -238,7 +238,7 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
   await page.goto('/');
 
   await expect(page.locator('body')).toContainText('REST');
-  await expect(page.locator('body')).toContainText('Sunday waist');
+  await expect(page.locator('body')).toContainText('Weekly measures');
   await expect(page.locator('body')).toContainText('Same conditions');
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
@@ -247,16 +247,19 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 
   await page.getByRole('spinbutton', { name: /waist circumference/i }).fill('76.4');
-  await page.getByRole('button', { name: /save waist/i }).click();
+  await page.getByRole('spinbutton', { name: /shoulder circumference/i }).fill('112.5');
+  await page.getByRole('button', { name: /save waist and shoulders/i }).click();
   await expect(page.locator('body')).toContainText('Measured today');
   await expect(page.locator('body')).toContainText('76.4cm');
+  await expect(page.locator('body')).toContainText('112.5cm');
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { waistCm?: number }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { waistCm?: number; shoulderCm?: number }>;
     return logs['2026-05-10'];
-  })).toEqual({ dateKey: '2026-05-10', waistCm: 76.4 });
+  })).toEqual({ dateKey: '2026-05-10', waistCm: 76.4, shoulderCm: 112.5 });
 
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('76.4cm');
+  await expect(page.locator('body')).toContainText('112.5cm');
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {
@@ -358,11 +361,11 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Waist');
   await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('BMI');
-  await expect(page.locator('body')).toContainText('History');
-  await expect(page.locator('body')).toContainText('Weight / wk');
-  await expect(page.locator('body')).toContainText('Waist / wk');
+  await expect(page.locator('body')).toContainText('S/W progress');
+  await expect(page.locator('body')).toContainText('Now');
+  await expect(page.locator('body')).toContainText('Change');
   await expect(page.locator('body')).not.toContainText('Measurements');
-  await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
+  await expect(page.getByRole('img', { name: /shoulder to waist ratio progress chart/i })).toBeVisible();
   await page.getByRole('button', { name: /more body stats/i }).click();
   await expect(page.locator('body')).toContainText('Height');
   await expect(page.locator('body')).toContainText('Shoulder');
@@ -371,38 +374,48 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('85cm');
 });
 
-test('body detail shows weight and waist history over time', async ({ page }) => {
+test('body detail shows shoulder-waist progress over time', async ({ page }) => {
   await page.addInitScript(() => {
+    localStorage.setItem('liftday_user_profile', JSON.stringify({
+      createdAt: '2026-05-01T00:00:00.000Z',
+      tiers: {},
+      tierProgress: {},
+      heightCm: 172,
+      weightKg: 68.6,
+      shoulderCircumferenceCm: 111.5,
+      waistCircumferenceCm: 76.8,
+    }));
     localStorage.setItem('liftday_daily_logs', JSON.stringify({
       '2026-05-04': {
         dateKey: '2026-05-04',
         morningWeightKg: 68.6,
         waistCm: 76.5,
+        shoulderCm: 111.8,
       },
       '2026-05-11': {
         dateKey: '2026-05-11',
         morningWeightKg: 69.1,
+        shoulderCm: 112.4,
       },
       '2026-05-17': {
         dateKey: '2026-05-17',
         waistCm: 76.1,
+        shoulderCm: 112.9,
       },
     }));
   });
 
   await page.goto('/history/body');
 
-  await expect(page.locator('body')).toContainText('History');
+  await expect(page.locator('body')).toContainText('S/W progress');
   await expect(page.locator('body')).toContainText('May 4');
   await expect(page.locator('body')).toContainText('May 11');
   await expect(page.locator('body')).toContainText('May 17');
-  await expect(page.locator('body')).toContainText('68.6kg');
   await expect(page.locator('body')).toContainText('69.1kg');
-  await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('76.1cm');
-  await expect(page.locator('body')).toContainText('+0.5kg');
-  await expect(page.locator('body')).toContainText('-0.2cm');
-  await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
+  await expect(page.locator('body')).toContainText('112.9cm');
+  await expect(page.locator('body')).toContainText('+0.03');
+  await expect(page.getByRole('img', { name: /shoulder to waist ratio progress chart/i })).toBeVisible();
 });
 
 test('body detail uses profile waist as sparse history baseline', async ({ page }) => {
@@ -413,6 +426,7 @@ test('body detail uses profile waist as sparse history baseline', async ({ page 
       tierProgress: {},
       heightCm: 172,
       weightKg: 68.7,
+      shoulderCircumferenceCm: 111.8,
       waistCircumferenceCm: 76.5,
     }));
     localStorage.setItem('liftday_daily_logs', JSON.stringify({
@@ -430,14 +444,15 @@ test('body detail uses profile waist as sparse history baseline', async ({ page 
 
   await page.goto('/history/body');
 
-  await expect(page.locator('body')).toContainText('+1.4kg');
-  await expect(page.locator('body')).toContainText('0.0cm');
-  await expect(page.locator('body')).toContainText('3 entries');
+  await expect(page.locator('body')).toContainText('S/W progress');
+  await expect(page.locator('body')).toContainText('3 logs');
+  await expect(page.locator('body')).toContainText('0.00');
   await expect(page.locator('body')).toContainText('May 1');
   await expect(page.locator('body')).toContainText('May 18');
+  await expect(page.locator('body')).toContainText('111.8cm');
   await expect(page.locator('body')).toContainText('76.5cm');
-  const weightPath = await page.locator('svg[aria-label="Weight and waist history chart"] path').first().getAttribute('d');
-  const yValues = (weightPath?.match(/-?\d+(?:\.\d+)?/g) ?? [])
+  const ratioPath = await page.locator('svg[aria-label="Shoulder to waist ratio progress chart"] path').first().getAttribute('d');
+  const yValues = (ratioPath?.match(/-?\d+(?:\.\d+)?/g) ?? [])
     .map(Number)
     .filter((_, index) => index % 2 === 1);
   expect(Math.max(...yValues) - Math.min(...yValues)).toBeLessThan(20);
@@ -498,9 +513,9 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await expect(page.locator('body')).toContainText('1.46');
   await expect(page.locator('body')).toContainText('21.7');
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; waistCm?: number }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; waistCm?: number; shoulderCm?: number }>;
     return logs['2026-05-11'];
-  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, waistCm: 77.3 });
+  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, waistCm: 77.3, shoulderCm: 113.2 });
   await expect.poll(() => page.evaluate(() => {
     const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number };
     return {
