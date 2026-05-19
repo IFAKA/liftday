@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { MuscleBodyChart, ViewSide } from '@/components/MuscleBodyChart';
 import { TopBar } from '@/components/TopBar';
-import { WatchBarRow, WatchCopyButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSection } from '@/components/WatchSurface';
+import { WatchCopyButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSection } from '@/components/WatchSurface';
 import { getLoggedEffectiveVolume, getPlannedEffectiveVolume, getPlannedWorkoutEffectiveVolume } from '@/lib/adaptation/volume-engine';
 import {
   formatMuscleName,
@@ -26,6 +26,12 @@ const LENS_LABELS: Record<MuscleLens, string> = {
   routine: 'Routine',
   today: 'Today',
   week: '7 days',
+};
+
+const LENS_DESCRIPTIONS: Record<MuscleLens, string> = {
+  routine: 'Planned weekly effective sets from the active routine.',
+  today: 'Planned effective sets for today only.',
+  week: 'Logged effective sets from the last 7 days.',
 };
 
 export default function MusclesPage() {
@@ -161,20 +167,28 @@ export default function MusclesPage() {
 
           <WatchSection title="Top">
             <WatchPanel subtle className="py-3">
+              <div className="mb-3 flex items-end justify-between gap-3 border-b border-white/5 pb-3">
+                <div className="min-w-0">
+                  <p className="text-fluid-label font-mono uppercase text-white/35">Effective sets</p>
+                  <p className="mt-1 text-fluid-label leading-relaxed text-white/50">
+                    {LENS_DESCRIPTIONS[lens]}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-fluid-label font-mono uppercase text-white/25">Bar</p>
+                  <p className="text-fluid-label font-mono uppercase text-white/50">% target</p>
+                </div>
+              </div>
               {workedEntries.length === 0 ? (
                 <p className="text-fluid-label font-mono uppercase leading-relaxed text-white/45">
-                  No logged sets in this lens.
+                  No effective sets in this lens.
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">
                   {workedEntries.map((entry) => (
-                    <WatchBarRow
+                    <MuscleVolumeRow
                       key={entry.muscle}
-                      label={entry.label}
-                      value={entry.sets.toFixed(1)}
-                      meta={`${Math.round(entry.percentOfTarget * 100)}%`}
-                      percent={entry.percentOfTarget * 100}
-                      tone={entry.status === 'low' ? 'bg-orange-400' : entry.status === 'high' ? 'bg-red-400' : 'bg-green-400'}
+                      entry={entry}
                     />
                   ))}
                 </div>
@@ -195,17 +209,58 @@ export default function MusclesPage() {
                   <StatusPill status={selectedEntry.status} />
                 </div>
                 <WatchMetricGrid columns={3} className="mt-4">
-                  <WatchMetricCell label="Sets" value={selectedEntry.sets.toFixed(1)} />
-                  <WatchMetricCell label="Target" value={selectedEntry.target} />
-                  <WatchMetricCell label="Map" value={`${selectedEntry.intensity}/10`} />
+                  <WatchMetricCell label="Eff sets" value={selectedEntry.sets.toFixed(1)} />
+                  <WatchMetricCell label="Goal" value={selectedEntry.target} />
+                  <WatchMetricCell label="Heat" value={`${selectedEntry.intensity}/10`} />
                 </WatchMetricGrid>
                 <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
-                  {lowCount} muscles below floor in this lens.
+                  Goal is the weekly target. Heat is target completion mapped to the body color.
                 </p>
+                {lowCount > 0 && (
+                  <p className="mt-2 text-fluid-label font-mono uppercase leading-relaxed text-orange-300/70">
+                    {lowCount} muscles are below their minimum effective-set floor.
+                  </p>
+                )}
               </WatchPanel>
             </WatchSection>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function MuscleVolumeRow({ entry }: { entry: MuscleMapEntry }) {
+  const percent = Math.round(entry.percentOfTarget * 100);
+  const width = Math.max(4, Math.min(100, percent));
+  const tone = entry.status === 'low'
+    ? 'bg-orange-400'
+    : entry.status === 'high'
+      ? 'bg-red-400'
+      : 'bg-green-400';
+
+  return (
+    <div className="rounded-lg border border-white/5 bg-black/20 px-3 py-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-fluid-label font-black uppercase text-white/80">
+            {entry.label}
+          </p>
+          <p className="mt-0.5 text-fluid-label font-mono uppercase text-white/35">
+            {entry.sets.toFixed(1)} effective sets
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-fluid-label font-black tabular-nums text-white/70">
+            {percent}%
+          </p>
+          <p className="text-fluid-label font-mono uppercase text-white/30">
+            of {entry.target}
+          </p>
+        </div>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5" aria-hidden="true">
+        <div className={cn('h-full rounded-full', tone)} style={{ width: `${width}%` }} />
       </div>
     </div>
   );

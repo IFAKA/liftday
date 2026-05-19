@@ -280,7 +280,7 @@ test('muscle map switches filters and body views', async ({ page }) => {
   await expect(page.locator('.body-chart-muscle').first()).toBeVisible();
 
   await page.locator('.body-chart-muscle').first().click({ force: true });
-  await expect(page.locator('section', { hasText: 'Selected' })).toContainText(/Sets|Target|Map/);
+  await expect(page.locator('section', { hasText: 'Selected' })).toContainText(/Eff sets|Goal|Heat/);
 });
 
 test('progress opens as summary and drill-down rows, not a tab section', async ({ page }) => {
