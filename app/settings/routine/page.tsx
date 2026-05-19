@@ -2,11 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadUserProfile, setActiveRoutine } from '@/lib/storage';
+import { cleanRoutineDataSinceLatestRoutine, loadUserProfile, setActiveRoutine, TEMP_ROUTINE_CLEANUP_START_DATE } from '@/lib/storage';
 import { ROUTINES } from '@/lib/routines';
 import { TopBar } from '@/components/TopBar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Dumbbell, PersonStanding } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ArrowLeft, Dumbbell, PersonStanding, Trash2 } from 'lucide-react';
 import { WatchListItem } from '@/components/WatchSurface';
 
 const ICONS = {
@@ -20,11 +28,25 @@ export default function RoutineSettingPage() {
     if (typeof window === 'undefined') return 'gym';
     return loadUserProfile()?.activeRoutine ?? 'gym';
   });
+  const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
+  const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
 
   function handleSelect(id: string) {
     setActiveRoutineId(id);
     setActiveRoutine(id);
     router.back();
+  }
+
+  function handleCleanRoutineData() {
+    const result = cleanRoutineDataSinceLatestRoutine();
+    if (!result) {
+      setCleanupMessage('Clean failed');
+      setShowCleanupConfirm(false);
+      return;
+    }
+
+    setCleanupMessage(`Kept ${result.keptSessions}. Removed ${result.removedSessions}.`);
+    setShowCleanupConfirm(false);
   }
 
   return (
@@ -62,10 +84,51 @@ export default function RoutineSettingPage() {
           );
         })}
 
+        <WatchListItem
+          onClick={() => setShowCleanupConfirm(true)}
+          icon={Trash2}
+          label="Temp"
+          title="Clean routine"
+          subtitle={cleanupMessage ?? `Keep ${TEMP_ROUTINE_CLEANUP_START_DATE}+ sessions. Reset tiers.`}
+          trailing={<span className="text-fluid-label font-black uppercase text-red-300/80">Run</span>}
+          className="border-red-400/15 bg-red-500/10 text-red-100 active:bg-red-500/15"
+        />
+
         <p className="text-fluid-label text-white/20 font-mono mt-4 leading-relaxed px-1">
           Switching routines preserves all progress. Tiers are tracked independently per routine.
         </p>
       </div>
+
+      <Dialog open={showCleanupConfirm} onOpenChange={setShowCleanupConfirm}>
+        <DialogContent className="max-w-[18rem] rounded-2xl border-white/10 bg-zinc-950 p-5 text-white shadow-2xl">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-fluid-ui font-black uppercase tracking-tight">
+              Clean routine?
+            </DialogTitle>
+            <DialogDescription className="text-fluid-label leading-relaxed text-white/55">
+              Keeps sessions from {TEMP_ROUTINE_CLEANUP_START_DATE}, clears older workouts, resets tiers, and keeps body logs.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleCleanRoutineData}
+              className="min-h-11 rounded-xl font-black uppercase"
+            >
+              Clean
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCleanupConfirm(false)}
+              className="min-h-11 rounded-xl text-white/60 hover:bg-white/10 hover:text-white"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

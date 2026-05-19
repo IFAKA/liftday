@@ -3,6 +3,16 @@ import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE
 import { formatDateKey } from './workout-utils';
 import { SMV_PROFILE_DEFAULTS } from './smv';
 
+export const TEMP_ROUTINE_CLEANUP_START_DATE = '2026-05-11';
+const TEMP_ROUTINE_CLEANUP_BACKUP_PREFIX = 'liftday_temp_routine_cleanup_backup';
+
+export interface TempRoutineCleanupResult {
+  keptSessions: number;
+  removedSessions: number;
+  backupKey: string;
+  startDate: string;
+}
+
 export function loadWorkoutData(): WorkoutData {
   try {
     if (typeof window === 'undefined') return {};
@@ -235,6 +245,60 @@ export function getDefaultProfile(): UserProfile {
     proteinTargetGrams: SMV_PROFILE_DEFAULTS.proteinTargetGrams,
     calorieSurplusTarget: SMV_PROFILE_DEFAULTS.calorieSurplusTarget,
   };
+}
+
+export function cleanRoutineDataSinceLatestRoutine(startDate = TEMP_ROUTINE_CLEANUP_START_DATE): TempRoutineCleanupResult | null {
+  try {
+    if (typeof window === 'undefined') return null;
+
+    const before = {
+      cleanedAt: new Date().toISOString(),
+      startDate,
+      sessions: localStorage.getItem(STORAGE_KEY),
+      firstSessionDate: localStorage.getItem(FIRST_SESSION_KEY),
+      activeWorkoutDraft: localStorage.getItem(ACTIVE_WORKOUT_DRAFT_KEY),
+      userProfile: localStorage.getItem(USER_PROFILE_KEY),
+      dailyLogs: localStorage.getItem(DAILY_LOGS_KEY),
+    };
+    const backupKey = `${TEMP_ROUTINE_CLEANUP_BACKUP_PREFIX}_${before.cleanedAt}`;
+    localStorage.setItem(backupKey, JSON.stringify(before));
+
+    const currentData = loadWorkoutData();
+    const nextData: WorkoutData = {};
+    let keptSessions = 0;
+    let removedSessions = 0;
+
+    for (const [dateKey, session] of Object.entries(currentData)) {
+      if (dateKey >= startDate) {
+        nextData[dateKey] = session;
+        keptSessions += 1;
+      } else {
+        removedSessions += 1;
+      }
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
+    localStorage.setItem(FIRST_SESSION_KEY, startDate);
+    localStorage.removeItem(ACTIVE_WORKOUT_DRAFT_KEY);
+
+    const profile = loadUserProfile();
+    if (profile) {
+      saveUserProfile({
+        ...profile,
+        tiers: {},
+        tierProgress: {},
+      });
+    }
+
+    return {
+      keptSessions,
+      removedSessions,
+      backupKey,
+      startDate,
+    };
+  } catch {
+    return null;
+  }
 }
 
 
