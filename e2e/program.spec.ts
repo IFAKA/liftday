@@ -365,6 +365,7 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
   await page.getByRole('button', { name: /more body stats/i }).click();
   await expect(page.locator('body')).toContainText('Height');
+  await expect(page.locator('body')).toContainText('Shoulder/Waist');
   await expect(page.locator('body')).toContainText('Hip');
   await expect(page.locator('body')).toContainText('85cm');
 });
@@ -398,6 +399,8 @@ test('body detail shows weight and waist history over time', async ({ page }) =>
   await expect(page.locator('body')).toContainText('69.1kg');
   await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('76.1cm');
+  await expect(page.locator('body')).toContainText('+0.5kg');
+  await expect(page.locator('body')).toContainText('-0.2cm');
   await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
 });
 

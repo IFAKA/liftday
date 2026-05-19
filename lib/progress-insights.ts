@@ -356,10 +356,8 @@ export function scoreSessionSets(sets: SetEntry[]): number {
 export function getBodyTrendSummary(logs: Record<string, DailyLog>): BodyTrendSummary {
   const ordered = Object.values(logs).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
   const latest14 = ordered.slice(-14);
-  const first7 = latest14.slice(0, 7);
-  const last7 = latest14.slice(-7);
-  const weightTrendKgPerWeek = getTrend(first7, last7, 'morningWeightKg');
-  const waistTrendCmPerWeek = getTrend(first7, last7, 'waistCm');
+  const weightTrendKgPerWeek = getTrend(latest14, 'morningWeightKg');
+  const waistTrendCmPerWeek = getTrend(latest14, 'waistCm');
   const highWaistWeeks = waistTrendCmPerWeek !== null && waistTrendCmPerWeek > 0.5 ? 2 : 0;
   const nutrition = getNutritionAdjustment(waistTrendCmPerWeek ?? 0, highWaistWeeks);
   const fatigueDays = ordered.slice(-3).filter((log) => (log.fatigue ?? 0) >= 4).length;
@@ -378,11 +376,31 @@ export function getBodyTrendSummary(logs: Record<string, DailyLog>): BodyTrendSu
   };
 }
 
-function getTrend(logsA: DailyLog[], logsB: DailyLog[], key: 'morningWeightKg' | 'waistCm'): number | null {
-  const avgA = averageDefined(logsA.map((log) => log[key]));
-  const avgB = averageDefined(logsB.map((log) => log[key]));
+function getTrend(logs: DailyLog[], key: 'morningWeightKg' | 'waistCm'): number | null {
+  const measured = logs.filter((log) => typeof log[key] === 'number');
+  if (measured.length < 2) return null;
+
+  if (logs.length < 14) {
+    const first = measured[0];
+    const last = measured[measured.length - 1];
+    const days = daysBetween(first.dateKey, last.dateKey);
+    if (days <= 0) return null;
+    return roundOneDecimal(((last[key] as number) - (first[key] as number)) / days * 7);
+  }
+
+  const first7 = logs.slice(0, 7);
+  const last7 = logs.slice(-7);
+  const avgA = averageDefined(first7.map((log) => log[key]));
+  const avgB = averageDefined(last7.map((log) => log[key]));
   if (avgA === null || avgB === null) return null;
   return roundOneDecimal(avgB - avgA);
+}
+
+function daysBetween(startDateKey: string, endDateKey: string): number {
+  const start = new Date(`${startDateKey}T00:00:00`).getTime();
+  const end = new Date(`${endDateKey}T00:00:00`).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return 0;
+  return Math.round((end - start) / 86_400_000);
 }
 
 function averageDefined(values: (number | undefined)[]): number | null {

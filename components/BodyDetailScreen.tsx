@@ -155,6 +155,7 @@ export function BodyDetailScreen() {
           {showMoreStats && (
             <WatchMetricGrid columns={2} className="mt-2">
               <WatchMetricCell label="Height" value={`${body.heightCm}cm`} />
+              <WatchMetricCell label="Shoulder/Waist" value={body.shoulderWaistRatio} />
               <WatchMetricCell label="Hip" value={body.hipCm} />
               <WatchMetricCell label="Neck" value={body.neckCm} />
               <WatchMetricCell label="Chest/Waist" value={body.chestWaistRatio} />
