@@ -404,6 +404,37 @@ test('body detail shows weight and waist history over time', async ({ page }) =>
   await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
 });
 
+test('body detail uses profile waist as sparse history baseline', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_user_profile', JSON.stringify({
+      createdAt: '2026-05-01T00:00:00.000Z',
+      tiers: {},
+      tierProgress: {},
+      heightCm: 172,
+      weightKg: 68.7,
+      waistCircumferenceCm: 76.5,
+    }));
+    localStorage.setItem('liftday_daily_logs', JSON.stringify({
+      '2026-05-18': {
+        dateKey: '2026-05-18',
+        morningWeightKg: 68.5,
+      },
+      '2026-05-19': {
+        dateKey: '2026-05-19',
+        morningWeightKg: 68.7,
+        waistCm: 76.5,
+      },
+    }));
+  });
+
+  await page.goto('/history/body');
+
+  await expect(page.locator('body')).toContainText('+1.4kg');
+  await expect(page.locator('body')).toContainText('0.0cm');
+  await expect(page.locator('body')).toContainText('May 18');
+  await expect(page.locator('body')).toContainText('76.5cm');
+});
+
 test('body detail uses profile fallback when logs are empty', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.removeItem('liftday_daily_logs');

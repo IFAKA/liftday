@@ -268,7 +268,8 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const hipCm = profile.hipCircumferenceCm ?? 85;
   const neckCm = profile.neckCircumferenceCm ?? 37;
   const bmi = weightKg / ((heightCm / 100) ** 2);
-  const trend = getBodyTrendSummary(logs);
+  const bodyBaseline = getBodyBaseline(profile);
+  const trend = getBodyTrendSummary(logs, bodyBaseline);
   const history = getBodyHistory(logs, weightKg, waistCm);
   const shoulderWaist = shoulderCm / waistCm;
   const chestWaist = chestCm / waistCm;
@@ -388,7 +389,14 @@ function getBodyHistory(logs: Record<string, DailyLog>, fallbackWeightKg: number
       waistCm: typeof log.waistCm === 'number' ? log.waistCm : null,
     }));
 
-  if (entries.length > 0) return entries;
+  if (entries.length > 0) {
+    const [first, ...rest] = entries;
+    return [{
+      ...first,
+      weightKg: first.weightKg ?? fallbackWeightKg,
+      waistCm: first.waistCm ?? fallbackWaistCm,
+    }, ...rest];
+  }
 
   const todayKey = new Date().toISOString().slice(0, 10);
   return [{
@@ -397,6 +405,19 @@ function getBodyHistory(logs: Record<string, DailyLog>, fallbackWeightKg: number
     weightKg: fallbackWeightKg,
     waistCm: fallbackWaistCm,
   }];
+}
+
+function getBodyBaseline(profile: UserProfile): { dateKey?: string; morningWeightKg?: number; waistCm?: number } {
+  return {
+    dateKey: getProfileCreatedDateKey(profile.createdAt),
+    morningWeightKg: profile.weightKg,
+    waistCm: profile.waistCircumferenceCm,
+  };
+}
+
+function getProfileCreatedDateKey(value: string): string | undefined {
+  const dateKey = value.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateKey) ? dateKey : undefined;
 }
 
 function formatNumber(value: number, fractionDigits: number): string {

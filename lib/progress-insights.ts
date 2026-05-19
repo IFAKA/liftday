@@ -71,6 +71,12 @@ export interface BodyTrendSummary {
   recoveryAlert: string | null;
 }
 
+interface BodyTrendBaseline {
+  dateKey?: string;
+  morningWeightKg?: number;
+  waistCm?: number;
+}
+
 export interface RoutineAdjustmentDecision {
   label: string;
   summary: string;
@@ -353,16 +359,16 @@ export function scoreSessionSets(sets: SetEntry[]): number {
   return scores.reduce((sum, score) => sum + score, 0) / scores.length;
 }
 
-export function getBodyTrendSummary(logs: Record<string, DailyLog>): BodyTrendSummary {
-  const ordered = Object.values(logs).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
-  const latest14 = ordered.slice(-14);
-  const weightTrendKgPerWeek = getTrend(latest14, 'morningWeightKg');
-  const waistTrendCmPerWeek = getTrend(latest14, 'waistCm');
+export function getBodyTrendSummary(logs: Record<string, DailyLog>, baseline?: BodyTrendBaseline): BodyTrendSummary {
+  const logged = Object.values(logs).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+  const latest14 = logged.slice(-14);
+  const weightTrendKgPerWeek = getTrend(latest14, 'morningWeightKg', baseline);
+  const waistTrendCmPerWeek = getTrend(latest14, 'waistCm', baseline);
   const highWaistWeeks = waistTrendCmPerWeek !== null && waistTrendCmPerWeek > 0.5 ? 2 : 0;
   const nutrition = getNutritionAdjustment(waistTrendCmPerWeek ?? 0, highWaistWeeks);
-  const fatigueDays = ordered.slice(-3).filter((log) => (log.fatigue ?? 0) >= 4).length;
-  const poorSleepDays = ordered.slice(-3).filter((log) => (log.sleepHours ?? 8) < 6.5).length;
-  const jointPain = ordered.slice(-3).some((log) => log.jointPain);
+  const fatigueDays = logged.slice(-3).filter((log) => (log.fatigue ?? 0) >= 4).length;
+  const poorSleepDays = logged.slice(-3).filter((log) => (log.sleepHours ?? 8) < 6.5).length;
+  const jointPain = logged.slice(-3).some((log) => log.jointPain);
 
   return {
     weightTrendKgPerWeek,
@@ -376,8 +382,24 @@ export function getBodyTrendSummary(logs: Record<string, DailyLog>): BodyTrendSu
   };
 }
 
-function getTrend(logs: DailyLog[], key: 'morningWeightKg' | 'waistCm'): number | null {
-  const measured = logs.filter((log) => typeof log[key] === 'number');
+function getTrend(logs: DailyLog[], key: 'morningWeightKg' | 'waistCm', baseline?: BodyTrendBaseline): number | null {
+  let measured = logs.filter((log) => typeof log[key] === 'number');
+  const baselineValue = baseline?.[key];
+  if (measured.length === 1 && typeof baselineValue === 'number') {
+    const firstLogDateKey = logs[0]?.dateKey;
+    const firstMeasuredDateKey = measured[0].dateKey;
+    const baselineDateKey = firstLogDateKey && firstLogDateKey < firstMeasuredDateKey
+      ? firstLogDateKey
+      : baseline?.dateKey;
+
+    if (baselineDateKey && baselineDateKey < firstMeasuredDateKey) {
+      measured = [{
+        dateKey: baselineDateKey,
+        [key]: baselineValue,
+      }, ...measured];
+    }
+  }
+
   if (measured.length < 2) return null;
 
   if (logs.length < 14) {
