@@ -548,8 +548,10 @@ test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page
   }
 
   await expect(page.locator('body')).toContainText(/complete|done/i);
-  await expect(page.getByRole('button', { name: /^stretch 30s$/i })).toBeVisible();
-  await page.getByRole('button', { name: /^stretch 30s$/i }).click();
+  await expect(page.getByText(/stretch timer/i)).toBeVisible();
+  await expect(page.getByText('0:30')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
+  await page.getByRole('button', { name: /^start$/i }).click();
   await expect(page.getByText(/stretch/i)).toBeVisible();
   await expect(page.getByText('0:30')).toBeVisible();
   await page.getByRole('button', { name: /^done$/i }).click();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { PrepTimer } from './PrepTimer';
@@ -96,16 +96,29 @@ export function SessionComplete(props: SessionCompleteProps) {
 
       <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10 flex flex-col gap-3">
         {isWorkout && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              setStretchSeconds(STRETCH_DURATION_SECONDS);
-              setStretchActive(true);
-            }}
-            className="w-full btn-mobile-secondary rounded-full bg-white/10 border-white/20 text-fluid-label font-black uppercase tracking-widest text-white/80 transition-all active:scale-95 active:bg-white/20"
-          >
-            Stretch 30s
-          </Button>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-fluid-label font-mono font-black uppercase tracking-widest text-white/35">
+                  Stretch timer
+                </p>
+                <p className="mt-1 font-mono text-fluid-ui font-black tabular-nums text-white">
+                  0:30
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStretchSeconds(STRETCH_DURATION_SECONDS);
+                  setStretchActive(true);
+                }}
+                className="h-12 shrink-0 rounded-full border-white/20 bg-white/10 px-4 text-fluid-label font-black uppercase tracking-tight text-white/85 transition-all active:scale-95 active:bg-white/20"
+              >
+                <Play className="h-4 w-4 fill-current" />
+                Start
+              </Button>
+            </div>
+          </div>
         )}
         <Button
           onClick={props.onDone}
