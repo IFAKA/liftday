@@ -188,11 +188,15 @@ export function setBodyProfileFallbacks(input: {
   heightCm: number;
   weightKg: number;
   waistCircumferenceCm: number;
+  shoulderCircumferenceCm?: number;
 }): void {
   const profile = loadUserProfile() ?? getDefaultProfile();
   profile.heightCm = input.heightCm;
   profile.weightKg = input.weightKg;
   profile.waistCircumferenceCm = input.waistCircumferenceCm;
+  if (input.shoulderCircumferenceCm !== undefined) {
+    profile.shoulderCircumferenceCm = input.shoulderCircumferenceCm;
+  }
   saveUserProfile(profile);
 }
 

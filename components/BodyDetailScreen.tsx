@@ -28,7 +28,7 @@ export function BodyDetailScreen() {
   }));
   const [isEditing, setIsEditing] = useState(false);
   const [showMoreStats, setShowMoreStats] = useState(false);
-  const [draft, setDraft] = useState({ weightKg: '', waistCm: '', heightCm: '' });
+  const [draft, setDraft] = useState({ weightKg: '', waistCm: '', shoulderCm: '', heightCm: '' });
 
   function reloadSnapshot() {
     setSnapshot({
@@ -48,6 +48,7 @@ export function BodyDetailScreen() {
     setDraft({
       weightKg: formatNumber(body.weightKg, 1),
       waistCm: formatNumber(body.waistCmValue, 1),
+      shoulderCm: formatNumber(body.shoulderCmValue, 1),
       heightCm: String(body.heightCm),
     });
     setIsEditing(true);
@@ -56,8 +57,9 @@ export function BodyDetailScreen() {
   function saveBodyMeasurements() {
     const weightKg = parseMeasurement(draft.weightKg);
     const waistCm = parseMeasurement(draft.waistCm);
+    const shoulderCm = parseMeasurement(draft.shoulderCm);
     const heightCm = parseMeasurement(draft.heightCm);
-    if (weightKg === null || waistCm === null || heightCm === null) return;
+    if (weightKg === null || waistCm === null || shoulderCm === null || heightCm === null) return;
 
     const dateKey = formatDateKey(new Date());
     saveDailyLog(dateKey, {
@@ -69,6 +71,7 @@ export function BodyDetailScreen() {
       heightCm: roundMeasurement(heightCm),
       weightKg: roundMeasurement(weightKg),
       waistCircumferenceCm: roundMeasurement(waistCm),
+      shoulderCircumferenceCm: roundMeasurement(shoulderCm),
     });
     reloadSnapshot();
     setIsEditing(false);
@@ -112,9 +115,10 @@ export function BodyDetailScreen() {
           </div>
           {isEditing && (
             <div className="mb-3 rounded-lg border border-white/10 bg-black/30 p-3">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <BodyMetricInput label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => setDraft((current) => ({ ...current, weightKg }))} />
                 <BodyMetricInput label="Waist" unit="cm" value={draft.waistCm} onChange={(waistCm) => setDraft((current) => ({ ...current, waistCm }))} />
+                <BodyMetricInput label="Shoulder" unit="cm" value={draft.shoulderCm} onChange={(shoulderCm) => setDraft((current) => ({ ...current, shoulderCm }))} />
                 <BodyMetricInput label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => setDraft((current) => ({ ...current, heightCm }))} />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -155,6 +159,7 @@ export function BodyDetailScreen() {
           {showMoreStats && (
             <WatchMetricGrid columns={2} className="mt-2">
               <WatchMetricCell label="Height" value={`${body.heightCm}cm`} />
+              <WatchMetricCell label="Shoulder" value={body.shoulderCm} />
               <WatchMetricCell label="Shoulder/Waist" value={body.shoulderWaistRatio} />
               <WatchMetricCell label="Hip" value={body.hipCm} />
               <WatchMetricCell label="Neck" value={body.neckCm} />
@@ -270,7 +275,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const bmi = weightKg / ((heightCm / 100) ** 2);
   const bodyBaseline = getBodyBaseline(profile);
   const trend = getBodyTrendSummary(logs, bodyBaseline);
-  const history = getBodyHistory(logs, weightKg, waistCm);
+  const history = getBodyHistory(logs, weightKg, waistCm, bodyBaseline.dateKey);
   const shoulderWaist = shoulderCm / waistCm;
   const chestWaist = chestCm / waistCm;
   const proteinTarget = profile.proteinTargetGrams ?? [140, 160];
@@ -282,6 +287,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     bmi: bmi.toFixed(1),
     bmiTone: bmi >= 18.5 && bmi <= 24.9 ? 'text-green-300' : 'text-amber-300',
     shoulderCm: `${formatNumber(shoulderCm, 1)}cm`,
+    shoulderCmValue: shoulderCm,
     chestCm: `${formatNumber(chestCm, 1)}cm`,
     waistCm: `${formatNumber(waistCm, 1)}cm`,
     waistCmValue: waistCm,
@@ -378,7 +384,12 @@ function getChartPoints(
   };
 }
 
-function getBodyHistory(logs: Record<string, DailyLog>, fallbackWeightKg: number, fallbackWaistCm: number): BodyHistoryEntry[] {
+function getBodyHistory(
+  logs: Record<string, DailyLog>,
+  fallbackWeightKg: number,
+  fallbackWaistCm: number,
+  fallbackDateKey?: string
+): BodyHistoryEntry[] {
   const entries = Object.values(logs)
     .filter((log) => typeof log.morningWeightKg === 'number' || typeof log.waistCm === 'number')
     .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
@@ -399,9 +410,10 @@ function getBodyHistory(logs: Record<string, DailyLog>, fallbackWeightKg: number
   }
 
   const todayKey = new Date().toISOString().slice(0, 10);
+  const dateKey = fallbackDateKey ?? todayKey;
   return [{
-    dateKey: todayKey,
-    label: 'Today',
+    dateKey,
+    label: dateKey === todayKey ? 'Today' : formatHistoryDate(dateKey),
     weightKg: fallbackWeightKg,
     waistCm: fallbackWaistCm,
   }];

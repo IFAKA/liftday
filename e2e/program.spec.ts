@@ -365,6 +365,7 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
   await page.getByRole('button', { name: /more body stats/i }).click();
   await expect(page.locator('body')).toContainText('Height');
+  await expect(page.locator('body')).toContainText('Shoulder');
   await expect(page.locator('body')).toContainText('Shoulder/Waist');
   await expect(page.locator('body')).toContainText('Hip');
   await expect(page.locator('body')).toContainText('85cm');
@@ -452,6 +453,7 @@ test('body detail uses profile fallback when logs are empty', async ({ page }) =
 
   await expect(page.locator('body')).toContainText('82.4kg');
   await expect(page.locator('body')).toContainText('88.2cm');
+  await expect(page.locator('body')).toContainText('May 1');
   await expect(page.locator('body')).toContainText('Current');
   await expect(page.locator('body')).not.toContainText('68.6kg');
 });
@@ -466,6 +468,7 @@ test('body detail editor saves today body logs and profile height fallback', asy
       tierProgress: {},
       heightCm: 172,
       weightKg: 68.6,
+      shoulderCircumferenceCm: 112,
       waistCircumferenceCm: 76.5,
     }));
   });
@@ -476,6 +479,7 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await page.getByRole('button', { name: /update/i }).click();
   await page.getByRole('spinbutton', { name: /weight kg/i }).fill('70.2');
   await page.getByRole('spinbutton', { name: /waist cm/i }).fill('77.3');
+  await page.getByRole('spinbutton', { name: /shoulder cm/i }).fill('113.2');
   await page.getByRole('spinbutton', { name: /height cm/i }).fill('180');
   await page.getByRole('button', { name: /^save$/i }).click();
 
@@ -483,19 +487,22 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await expect(page.locator('body')).toContainText('77.3cm');
   await page.getByRole('button', { name: /more body stats/i }).click();
   await expect(page.locator('body')).toContainText('180cm');
+  await expect(page.locator('body')).toContainText('113.2cm');
+  await expect(page.locator('body')).toContainText('1.46');
   await expect(page.locator('body')).toContainText('21.7');
   await expect.poll(() => page.evaluate(() => {
     const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; waistCm?: number }>;
     return logs['2026-05-11'];
   })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, waistCm: 77.3 });
   await expect.poll(() => page.evaluate(() => {
-    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number };
+    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number };
     return {
       heightCm: profile.heightCm,
       weightKg: profile.weightKg,
       waistCircumferenceCm: profile.waistCircumferenceCm,
+      shoulderCircumferenceCm: profile.shoulderCircumferenceCm,
     };
-  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3 });
+  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3, shoulderCircumferenceCm: 113.2 });
 });
 
 test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {
