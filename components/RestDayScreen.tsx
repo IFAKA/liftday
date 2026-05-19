@@ -133,7 +133,7 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
         )}
         <Button
           onClick={mobility.startMobility}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-all shadow-xl"
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)] shadow-xl"
         >
           <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
           5 MIN MOBILITY

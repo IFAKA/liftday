@@ -298,7 +298,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
           <div className="w-full px-4 pb-safe mb-4 shrink-0">
             <Button
               onClick={handleStart}
-              className="w-full btn-mobile-accessible rounded-full bg-white text-black active:scale-95 transition-all font-black uppercase tracking-tight shadow-xl"
+              className="w-full btn-mobile-accessible rounded-full bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] font-black uppercase tracking-tight shadow-xl"
             >
               Start
             </Button>

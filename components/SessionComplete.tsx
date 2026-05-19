@@ -73,7 +73,7 @@ export function SessionComplete(props: SessionCompleteProps) {
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 py-8">
         <CheckCircle2
           className="w-24 h-24 sm:w-28 sm:h-28 text-green-500 mb-4"
-          style={{ animation: 'bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards' }}
+          style={{ animation: 'bounce-in 240ms var(--ease-out-ui) backwards' }}
         />
         
         <h1 className="text-fluid-label font-black tracking-[0.2em] uppercase text-white/80 mb-3 text-center">
@@ -112,7 +112,7 @@ export function SessionComplete(props: SessionCompleteProps) {
                   setStretchSeconds(STRETCH_DURATION_SECONDS);
                   setStretchActive(true);
                 }}
-                className="h-12 shrink-0 rounded-full border-white/20 bg-white/10 px-4 text-fluid-label font-black uppercase tracking-tight text-white/85 transition-all active:scale-95 active:bg-white/20"
+                className="h-12 shrink-0 rounded-full border-white/20 bg-white/10 px-4 text-fluid-label font-black uppercase tracking-tight text-white/85 transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out-ui)] active:scale-95 active:bg-white/20"
               >
                 <Play className="h-4 w-4 fill-current" />
                 Start
@@ -122,7 +122,7 @@ export function SessionComplete(props: SessionCompleteProps) {
         )}
         <Button
           onClick={props.onDone}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
         >
           DONE
         </Button>

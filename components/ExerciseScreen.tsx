@@ -8,7 +8,7 @@ import type { AdaptiveRecommendation, Exercise, ExerciseKey, SMVExercisePrescrip
 import { cn } from '@/lib/utils';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { TopBar } from './TopBar';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion, type AutoAdjustTone } from '@/lib/workout-auto-adjust';
 import type { CoachingReference } from '@/hooks/useWorkout';
@@ -71,6 +71,7 @@ export function ExerciseScreen({
   const [rir, setRir] = useState(prescription?.targetRirMax ?? 2);
   const [copiedName, setCopiedName] = useState(false);
   const [showSwapPicker, setShowSwapPicker] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     // Exercise changes reset to hook-owned progression or auto-adjust targets.
@@ -146,7 +147,7 @@ export function ExerciseScreen({
       {/* Subtle Progress Bar */}
       <Progress
         value={progressPercent}
-        className="absolute top-0 left-0 right-0 h-0.5 rounded-none bg-white/10 z-50 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-indicator]]:transition-all [&_[data-slot=progress-indicator]]:duration-500"
+        className="absolute top-0 left-0 right-0 h-0.5 rounded-none bg-white/10 z-50 [&_[data-slot=progress-indicator]]:bg-white"
       />
 
       <AnimatePresence initial={false} mode="popLayout">
@@ -203,7 +204,7 @@ export function ExerciseScreen({
                     onMachineOccupied();
                   }
                 }}
-                className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-all"
+                className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out-ui)]"
               >
                 <AlertCircle className="size-3.5 shrink-0" />
                 Machine occupied
@@ -292,7 +293,7 @@ export function ExerciseScreen({
               onClick={() => {
                 onLogSet(val, isSeconds ? undefined : weight, rir);
               }}
-              className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+              className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
             >
               LOG SET
             </Button>
@@ -310,6 +311,16 @@ export function ExerciseScreen({
         {showSwapPicker && (
           <motion.div
             key="swap-picker"
+            initial={{
+              opacity: 0,
+              transform: shouldReduceMotion ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.98)',
+            }}
+            animate={{ opacity: 1, transform: 'translateY(0) scale(1)' }}
+            exit={{
+              opacity: 0,
+              transform: shouldReduceMotion ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.98)',
+            }}
+            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
             className="absolute inset-0 z-[60] flex flex-col bg-black/95 px-4 pb-safe pt-3 backdrop-blur-xl"
             role="dialog"
             aria-modal="true"

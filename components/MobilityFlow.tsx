@@ -8,7 +8,7 @@ import { Progress } from './ui/progress';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { MobilityExercise } from '@/lib/types';
 import { ExerciseDemo } from './ExerciseDemo';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { traceLiftDay } from '@/lib/debug-trace';
 
 interface MobilityFlowProps {
@@ -39,6 +39,7 @@ export function MobilityFlow({
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const showQuitConfirmRef = useRef(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const progressPercent = (exerciseIndex / totalExercises) * 100;
 
@@ -92,7 +93,7 @@ export function MobilityFlow({
     <div className="relative w-full h-full bg-black overflow-hidden flex flex-col px-safe pb-safe">
       <Progress
         value={progressPercent}
-        className="absolute top-0 left-0 right-0 h-1 rounded-none bg-white/10 z-50 [&_[data-slot=progress-indicator]]:bg-white [&_[data-slot=progress-indicator]]:transition-all [&_[data-slot=progress-indicator]]:duration-500"
+        className="absolute top-0 left-0 right-0 h-1 rounded-none bg-white/10 z-50 [&_[data-slot=progress-indicator]]:bg-white"
       />
 
       <div className="absolute inset-0 flex flex-col items-center">
@@ -137,7 +138,7 @@ export function MobilityFlow({
           </h1>
 
           <span
-            className={`font-mono leading-none font-black tabular-nums transition-all duration-300 text-fluid-timer text-white${isPaused ? ' opacity-30' : ''}`}
+            className={`font-mono leading-none font-black tabular-nums transition-opacity duration-150 ease-[var(--ease-out-ui)] text-fluid-timer text-white${isPaused ? ' opacity-30' : ''}`}
           >
             {timer}
           </span>
@@ -146,7 +147,7 @@ export function MobilityFlow({
         <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-4">
           <Button
             onClick={onSkip}
-            className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+            className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
           >
             Skip Exercise
           </Button>
@@ -154,7 +155,7 @@ export function MobilityFlow({
           <Button
             variant="outline"
             onClick={isPaused ? onResume : onPause}
-            className="w-full btn-mobile-secondary rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-all"
+            className="w-full btn-mobile-secondary rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-[background-color,color,transform] duration-150 ease-[var(--ease-out-ui)]"
           >
             {isPaused ? 'Resume' : 'Pause Session'}
           </Button>
@@ -165,10 +166,16 @@ export function MobilityFlow({
         {showTutorial && (
           <motion.div
             key="tutorial"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+            initial={{
+              opacity: shouldReduceMotion ? 0 : 1,
+              transform: shouldReduceMotion ? 'translateX(0)' : 'translateX(100%)',
+            }}
+            animate={{ opacity: 1, transform: 'translateX(0)' }}
+            exit={{
+              opacity: shouldReduceMotion ? 0 : 1,
+              transform: shouldReduceMotion ? 'translateX(0)' : 'translateX(100%)',
+            }}
+            transition={{ duration: shouldReduceMotion ? 0.18 : 0.28, ease: [0.32, 0.72, 0, 1] }}
             className="absolute inset-0 z-40 bg-black flex flex-col"
           >
             <TopBar

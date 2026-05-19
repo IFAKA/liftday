@@ -248,7 +248,7 @@ export function WatchListItem({
   );
 
   const classes = cn(
-    'h-auto w-full justify-start whitespace-normal rounded-xl border px-4 py-4 text-left font-normal transition-all',
+    'h-auto w-full justify-start whitespace-normal rounded-xl border px-4 py-4 text-left font-normal transition-[background-color,border-color,box-shadow,color,transform] duration-150 ease-[var(--ease-out-ui)]',
     active
       ? 'border-white/25 bg-white/15 ring-2 ring-white/15'
       : subtle
@@ -300,7 +300,7 @@ export function WatchSwitchItem({
   return (
     <div
       className={cn(
-        'flex h-auto w-full items-center gap-4 rounded-xl border border-white/5 bg-white/5 px-4 py-4 text-left transition-all',
+        'flex h-auto w-full items-center gap-4 rounded-xl border border-white/5 bg-white/5 px-4 py-4 text-left transition-[background-color,opacity] duration-150 ease-[var(--ease-out-ui)]',
         disabled ? 'opacity-50' : 'active:bg-white/10',
         className
       )}

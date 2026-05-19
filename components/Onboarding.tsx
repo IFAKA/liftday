@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Dumbbell, TrendingUp, Calendar, X, ChevronLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -12,6 +12,7 @@ interface OnboardingProps {
 
 export function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
 
   const steps = [
     {
@@ -96,10 +97,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            initial={{
+              opacity: 0,
+              transform: shouldReduceMotion ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.96)',
+            }}
+            animate={{ opacity: 1, transform: 'translateY(0) scale(1)' }}
+            exit={{
+              opacity: 0,
+              transform: shouldReduceMotion ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.96)',
+            }}
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
             className="flex flex-col items-center text-center w-full"
           >
             <div className="mb-2">
@@ -129,7 +136,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {steps.map((_, i) => (
             <div
               key={i}
-              className={`h-0.5 rounded-full transition-all duration-300 ${
+              className={`h-0.5 rounded-full transition-[width,background-color] duration-180 ease-[var(--ease-out-ui)] ${
                 i === step ? 'w-3 bg-white' : 'w-0.5 bg-white/20'
               }`}
             />
@@ -138,7 +145,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
         <Button
           onClick={handleNext}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
         >
           {currentStep.action}
         </Button>

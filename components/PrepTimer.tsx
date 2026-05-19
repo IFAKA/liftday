@@ -78,7 +78,7 @@ export function PrepTimer({ mode, seconds, isRunning = true, onCancel, onPrimary
       <div className="w-full shrink-0 px-4 pb-safe mb-4">
         <Button
           onClick={handlePrimary}
-          className="w-full btn-mobile-accessible rounded-full !bg-white font-black uppercase tracking-tight !text-black shadow-xl transition-all active:scale-95"
+          className="w-full btn-mobile-accessible rounded-full !bg-white font-black uppercase tracking-tight !text-black shadow-xl transition-transform duration-150 ease-[var(--ease-out-ui)] active:scale-95"
         >
           {primaryLabel}
         </Button>

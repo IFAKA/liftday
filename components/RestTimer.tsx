@@ -110,8 +110,8 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
           </svg>
 
           <span
-            className={`font-mono font-black tabular-nums tracking-tighter transition-all duration-300 z-10 text-fluid-timer text-white${seconds <= 3 && seconds > 0 ? ' scale-110' : ''}`}
-            style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 0.15s ease-out' } : undefined}
+            className={`font-mono font-black tabular-nums tracking-tighter transition-transform duration-150 ease-[var(--ease-out-ui)] z-10 text-fluid-timer text-white${seconds <= 3 && seconds > 0 ? ' scale-105' : ''}`}
+            style={seconds <= 3 && seconds > 0 ? { animation: 'countdown-pulse 150ms var(--ease-out-ui)' } : undefined}
             key={seconds <= 3 ? seconds : 'normal'}
           >
             {display}
@@ -129,7 +129,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
       <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-4 z-20">
         <Button
           onClick={onSkip}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
         >
           Skip Rest
         </Button>
@@ -137,7 +137,7 @@ export function RestTimer({ seconds, isPaused, onSkip, onQuit, onUndo, nextExerc
         <Button
           variant="outline"
           onClick={onUndo}
-          className="w-full btn-mobile-secondary rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/10 border-white/20 text-white/80 active:bg-white/20 active:scale-95 transition-all"
+          className="w-full btn-mobile-secondary rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/10 border-white/20 text-white/80 active:bg-white/20 active:scale-95 transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out-ui)]"
         >
           Undo Last Set
         </Button>
