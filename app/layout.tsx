@@ -1,19 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { WakeLockProvider } from '@/components/WakeLockProvider';
 import { DebugTraceButton } from '@/components/DebugTraceButton';
 import { MotionConfig } from 'framer-motion';
-
-const geist = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
   title: 'LiftDay',
@@ -45,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-black text-foreground overflow-hidden h-[100dvh]`}>
+      <body className="font-sans antialiased bg-black text-foreground overflow-hidden h-[100dvh]">
         <MotionConfig reducedMotion="user">
           <div className="mx-auto h-full w-full max-w-[430px] overflow-hidden bg-background relative flex flex-col">
             <div className="flex-1 min-h-0 overflow-hidden">

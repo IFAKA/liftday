@@ -90,12 +90,16 @@ async function chooseSyncMode(page: Page, mode: 'Receive' | 'Send') {
 }
 
 async function openFileDetails(page: Page, text: string) {
-  const details = page.locator('details').filter({ hasText: text });
-  await details.evaluateAll((elements) => {
-    for (const element of elements) {
-      (element as HTMLDetailsElement).open = true;
+  const details = page.locator('details');
+  const count = await details.count();
+  for (let index = 0; index < count; index += 1) {
+    const detail = details.nth(index);
+    const isOpen = await detail.evaluate((element) => (element as HTMLDetailsElement).open);
+    if (!isOpen) {
+      await detail.locator(':scope > summary').click();
     }
-  });
+  }
+  await expect(page.getByText(text).first()).toBeVisible();
   return details;
 }
 

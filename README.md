@@ -67,4 +67,6 @@ npm install
 npm run dev
 npm run test:e2e
 ```
+
+`npm run build` is the production/PWA verification build and must stay on webpack so `@ducanh2912/next-pwa` can generate the service worker. `npm run build:turbo` is only a diagnostic speed check and does not verify PWA output.
 # Deployment trigger Thu Mar  5 19:54:50 CET 2026
