@@ -12,6 +12,7 @@ import { ActiveWorkoutDraft, DailyLog, UserProfile, WorkoutData, WorkoutSession 
 const SYNC_SCHEMA_VERSION = 2;
 const BACKUP_PREFIX = 'liftday_sync_backup_';
 const LAST_IMPORT_KEY = 'liftday_sync_last_import';
+const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
 type SyncSource = 'phone' | 'laptop' | 'unknown';
 type UnknownRecord = Record<string, unknown>;
@@ -38,6 +39,7 @@ export interface SyncSnapshotV2 {
   activeWorkoutDraft: ActiveWorkoutDraft | null;
   firstSessionDate: string | null;
   mobilityDoneDate: string | null;
+  onboardingCompleted?: boolean;
 }
 
 export type SyncSnapshot = SyncSnapshotV1 | SyncSnapshotV2;
@@ -54,6 +56,7 @@ export interface ImportResult {
   activeWorkoutDraftImported: boolean;
   firstSessionDateImported: boolean;
   mobilityDoneDateImported: boolean;
+  onboardingCompletedImported: boolean;
   backupKey: string;
   exportedAt: string;
 }
@@ -70,6 +73,7 @@ export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshot
     activeWorkoutDraft: readActiveWorkoutDraft(),
     firstSessionDate: readString(FIRST_SESSION_KEY),
     mobilityDoneDate: readString(MOBILITY_DONE_KEY),
+    onboardingCompleted: readBooleanFlag(ONBOARDING_KEY),
   };
 }
 
@@ -171,6 +175,12 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     localStorage.setItem(ACTIVE_WORKOUT_DRAFT_KEY, JSON.stringify(importedDraft));
   }
 
+  const onboardingCompleted = getSnapshotOnboardingCompleted(snapshot, incomingSessions);
+  const onboardingCompletedImported = onboardingCompleted && readBooleanFlag(ONBOARDING_KEY) !== true;
+  if (onboardingCompleted) {
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+  }
+
   localStorage.setItem(LAST_IMPORT_KEY, JSON.stringify({
     importedAt: new Date().toISOString(),
     exportedAt: snapshot.exportedAt,
@@ -180,6 +190,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     profileImported,
     activeWorkoutDraftImported,
     mobilityDoneDateImported,
+    onboardingCompletedImported,
     backupKey,
   }));
 
@@ -195,6 +206,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     activeWorkoutDraftImported,
     firstSessionDateImported,
     mobilityDoneDateImported,
+    onboardingCompletedImported,
     backupKey,
     exportedAt: snapshot.exportedAt,
   };
@@ -268,6 +280,15 @@ function readString(key: string): string | null {
   }
 }
 
+function readBooleanFlag(key: string): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(key) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 function newerSession(current: WorkoutSession, incoming: WorkoutSession): WorkoutSession {
   const currentTime = Date.parse(current.logged_at);
   const incomingTime = Date.parse(incoming.logged_at);
@@ -312,7 +333,8 @@ function isSyncSnapshotV2(value: unknown): value is SyncSnapshotV2 {
     (value.profile === null || isUserProfile(value.profile)) &&
     (value.activeWorkoutDraft === null || isActiveWorkoutDraft(value.activeWorkoutDraft)) &&
     (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
-    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string')
+    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string') &&
+    (value.onboardingCompleted === undefined || typeof value.onboardingCompleted === 'boolean')
   );
 }
 
@@ -389,6 +411,13 @@ function getSnapshotDailyLogs(snapshot: SyncSnapshot): Record<string, DailyLog> 
 
 function getSnapshotActiveWorkoutDraft(snapshot: SyncSnapshot): ActiveWorkoutDraft | null {
   return snapshot.schemaVersion === 1 ? null : snapshot.activeWorkoutDraft;
+}
+
+function getSnapshotOnboardingCompleted(snapshot: SyncSnapshot, incomingSessions: WorkoutData): boolean {
+  if (snapshot.schemaVersion === 2 && typeof snapshot.onboardingCompleted === 'boolean') {
+    return snapshot.onboardingCompleted;
+  }
+  return Boolean(snapshot.profile || Object.keys(incomingSessions).length > 0);
 }
 
 function shouldImportDraft(current: ActiveWorkoutDraft | null, incoming: ActiveWorkoutDraft | null): boolean {
