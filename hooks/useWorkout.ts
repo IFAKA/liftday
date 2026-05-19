@@ -58,6 +58,7 @@ export interface UseWorkoutReturn {
   swapAlternatives: Exercise[];
   canDeferMachineOccupied: boolean;
   startWorkout: () => Promise<void>;
+  startWarmupTimer: () => void;
   beginWorkoutAfterWarmup: () => void;
   setWarmupDuration: (seconds: 30 | 60) => void;
   logSet: (reps: number, weight?: number, rir?: number) => void;
@@ -242,7 +243,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     };
   }, [currentExercise, currentSet, previousEntry, sessionReps]);
 
-  useEffect(() => { if (state !== 'resting') setTimerPaused(false); }, [state]);
+  useEffect(() => {
+    if (state !== 'resting' && state !== 'warming-up') setTimerPaused(false);
+  }, [state]);
 
   useEffect(() => {
     if (!hydrated || restoredDraftRef.current || workoutType === 'rest' || exercises.length === 0) return;
@@ -276,7 +279,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setNextExerciseName(draft.nextExerciseName);
     setTimerPaused(draft.timerPaused);
 
-    if (draft.state === 'warming-up' && draft.timerEndAt !== null) {
+    if (draft.state === 'warming-up' && !draft.timerPaused && draft.timerEndAt !== null) {
       const remaining = Math.max(0, Math.ceil((draft.timerEndAt - Date.now()) / 1000));
       setTimer(remaining);
     } else if (draft.state === 'resting' && !draft.timerPaused && draft.timerEndAt !== null) {
@@ -381,7 +384,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [currentExercise?.name, currentSet, currentSetCount, exerciseIndex, exercises]);
 
   useEffect(() => {
-    if (state === 'warming-up' && timer > 0) {
+    if (state === 'warming-up' && !timerPaused && timer > 0) {
       if (timerEndRef.current === null) {
         timerEndRef.current = Date.now() + timer * 1000;
       }
@@ -558,7 +561,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setCurrentSet(0);
     setSessionReps({});
     setTimer(WARMUP_DURATION_SECONDS);
-    timerEndRef.current = Date.now() + WARMUP_DURATION_SECONDS * 1000;
+    timerEndRef.current = null;
+    setTimerPaused(true);
     countdownPlayedRef.current = new Set();
     setState('warming-up');
     traceLiftDay('workout.start', {
@@ -569,10 +573,22 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     });
   }, [dateKey, exercises, workoutType]);
 
+  const startWarmupTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    unlockAudio();
+    playStart();
+    timerEndRef.current = Date.now() + timer * 1000;
+    timerPauseStartRef.current = null;
+    countdownPlayedRef.current = new Set();
+    setTimerPaused(false);
+  }, [timer]);
+
   const beginWorkoutAfterWarmup = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     timerEndRef.current = null;
+    timerPauseStartRef.current = null;
     countdownPlayedRef.current = new Set();
+    setTimerPaused(false);
     playExerciseReady();
     setState('exercising');
   }, []);
@@ -580,9 +596,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const setWarmupDuration = useCallback((seconds: 30 | 60) => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     countdownPlayedRef.current = new Set();
-    timerEndRef.current = Date.now() + seconds * 1000;
+    timerEndRef.current = timerPaused ? null : Date.now() + seconds * 1000;
     setTimer(seconds);
-  }, []);
+  }, [timerPaused]);
 
   const logSet = useCallback((reps: number, weight?: number, rir?: number) => {
     if (!currentExercise) return;
@@ -609,6 +625,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         const restSeconds = currentPrescription?.restSeconds ?? restDurationRef.current;
         setTimer(restSeconds);
         timerEndRef.current = Date.now() + restSeconds * 1000;
+        setTimerPaused(false);
         setState('resting');
       }
     }, 700);
@@ -829,7 +846,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
-    startWorkout, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
+    startWorkout, startWarmupTimer, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
   };

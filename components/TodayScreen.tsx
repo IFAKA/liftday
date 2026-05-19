@@ -88,8 +88,10 @@ function TodayContent({ date }: { date: Date }) {
       <PrepTimer
         mode="warmup"
         seconds={workout.timer}
+        isRunning={!workout.timerPaused}
         onCancel={workout.quitWorkout}
         onPrimary={workout.beginWorkoutAfterWarmup}
+        onStartTimer={workout.startWarmupTimer}
         onPreset={workout.setWarmupDuration}
       />
     );

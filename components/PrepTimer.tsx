@@ -8,19 +8,25 @@ import { motion } from 'framer-motion';
 interface PrepTimerProps {
   mode: 'warmup' | 'stretch';
   seconds: number;
+  isRunning?: boolean;
   onCancel: () => void;
   onPrimary: () => void;
+  onStartTimer?: () => void;
   onPreset?: (seconds: 30 | 60) => void;
 }
 
-export function PrepTimer({ mode, seconds, onCancel, onPrimary, onPreset }: PrepTimerProps) {
+export function PrepTimer({ mode, seconds, isRunning = true, onCancel, onPrimary, onStartTimer, onPreset }: PrepTimerProps) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   const display = seconds <= 0
     ? 'READY'
     : `${mins}:${secs.toString().padStart(2, '0')}`;
   const title = mode === 'warmup' ? 'Warm Up' : 'Stretch';
-  const primaryLabel = mode === 'warmup' ? 'Start Workout' : 'Done';
+  const isWaitingToStart = mode === 'warmup' && !isRunning && seconds > 0;
+  const primaryLabel = isWaitingToStart
+    ? 'Start Timer'
+    : mode === 'warmup' ? 'Start Workout' : 'Done';
+  const handlePrimary = isWaitingToStart && onStartTimer ? onStartTimer : onPrimary;
 
   return (
     <motion.div className="flex h-full w-full flex-col items-center overflow-hidden bg-black">
@@ -71,7 +77,7 @@ export function PrepTimer({ mode, seconds, onCancel, onPrimary, onPreset }: Prep
 
       <div className="w-full shrink-0 px-4 pb-safe mb-4">
         <Button
-          onClick={onPrimary}
+          onClick={handlePrimary}
           className="w-full btn-mobile-accessible rounded-full !bg-white font-black uppercase tracking-tight !text-black shadow-xl transition-all active:scale-95"
         >
           {primaryLabel}
