@@ -352,18 +352,21 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
 
   await page.getByRole('button', { name: /body/i }).click();
   await expect(page).toHaveURL(/\/history\/body$/);
-  await expect(page.locator('body')).toContainText('Measurements');
+  await expect(page.locator('body')).toContainText('Current');
   await expect(page.locator('body')).toContainText('Weight');
   await expect(page.locator('body')).toContainText('68.6kg');
-  await expect(page.locator('body')).toContainText('Chest');
-  await expect(page.locator('body')).toContainText('89.5cm');
   await expect(page.locator('body')).toContainText('Waist');
   await expect(page.locator('body')).toContainText('76.5cm');
+  await expect(page.locator('body')).toContainText('BMI');
+  await expect(page.locator('body')).toContainText('History');
+  await expect(page.locator('body')).toContainText('Weight / wk');
+  await expect(page.locator('body')).toContainText('Waist / wk');
+  await expect(page.locator('body')).not.toContainText('Measurements');
+  await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
+  await page.getByRole('button', { name: /more body stats/i }).click();
+  await expect(page.locator('body')).toContainText('Height');
   await expect(page.locator('body')).toContainText('Hip');
   await expect(page.locator('body')).toContainText('85cm');
-  await expect(page.locator('body')).toContainText('History');
-  await expect(page.locator('body')).toContainText('Current');
-  await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
 });
 
 test('body detail shows weight and waist history over time', async ({ page }) => {
@@ -444,6 +447,7 @@ test('body detail editor saves today body logs and profile height fallback', asy
 
   await expect(page.locator('body')).toContainText('70.2kg');
   await expect(page.locator('body')).toContainText('77.3cm');
+  await page.getByRole('button', { name: /more body stats/i }).click();
   await expect(page.locator('body')).toContainText('180cm');
   await expect(page.locator('body')).toContainText('21.7');
   await expect.poll(() => page.evaluate(() => {

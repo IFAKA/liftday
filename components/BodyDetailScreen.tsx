@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, History, Pencil, Ruler, Scale, Target, Utensils } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, History, Pencil, Ruler, Scale, Target, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TopBar } from '@/components/TopBar';
@@ -27,6 +27,7 @@ export function BodyDetailScreen() {
     logs: {},
   }));
   const [isEditing, setIsEditing] = useState(false);
+  const [showMoreStats, setShowMoreStats] = useState(false);
   const [draft, setDraft] = useState({ weightKg: '', waistCm: '', heightCm: '' });
 
   function reloadSnapshot() {
@@ -95,16 +96,9 @@ export function BodyDetailScreen() {
           active
         />
 
-        <WatchMetricGrid columns={2}>
-          <WatchMetricCell label="Height" value={`${body.heightCm}cm`} />
-          <WatchMetricCell label="Weight" value={`${formatNumber(body.weightKg, 1)}kg`} />
-          <WatchMetricCell label="BMI" value={body.bmi} tone={body.bmiTone} />
-          <WatchMetricCell label="Target" value={body.targetDate} />
-        </WatchMetricGrid>
-
         <WatchPanel subtle className="py-3">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-fluid-label font-mono font-black uppercase text-white/35">Measurements</p>
+            <p className="text-fluid-label font-mono font-black uppercase text-white/35">Current</p>
             <Button
               type="button"
               variant="ghost"
@@ -142,25 +136,30 @@ export function BodyDetailScreen() {
               </div>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2">
-            <BodyMeasure label="Shoulders" value={body.shoulderCm} />
-            <BodyMeasure label="Chest" value={body.chestCm} />
-            <BodyMeasure label="Waist" value={body.waistCm} />
-            <BodyMeasure label="Hip" value={body.hipCm} />
-            <BodyMeasure label="Neck" value={body.neckCm} />
-            <BodyMeasure label="Chest/Waist" value={body.chestWaistRatio} />
-          </div>
-        </WatchPanel>
-
-        <WatchPanel subtle className="py-3">
-          <p className="mb-3 text-fluid-label font-mono font-black uppercase text-white/35">Trend</p>
-          <div className="grid grid-cols-2 gap-2">
-            <BodyMeasure label="Weight / wk" value={body.weightTrend} />
-            <BodyMeasure label="Waist / wk" value={body.waistTrend} />
-          </div>
-          <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/45">
-            {body.trendSummary}
-          </p>
+          <WatchMetricGrid columns={2}>
+            <WatchMetricCell label="Weight" value={`${formatNumber(body.weightKg, 1)}kg`} />
+            <WatchMetricCell label="Waist" value={body.waistCm} />
+            <WatchMetricCell label="BMI" value={body.bmi} tone={body.bmiTone} />
+            <WatchMetricCell label="Target" value={body.targetDate} />
+          </WatchMetricGrid>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setShowMoreStats((current) => !current)}
+            aria-expanded={showMoreStats}
+            className="mt-3 h-10 w-full justify-between rounded-lg border border-white/5 bg-black/25 px-3 text-fluid-label font-mono font-black uppercase text-white/45 hover:bg-white/10 hover:text-white"
+          >
+            More body stats
+            {showMoreStats ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+          {showMoreStats && (
+            <WatchMetricGrid columns={2} className="mt-2">
+              <WatchMetricCell label="Height" value={`${body.heightCm}cm`} />
+              <WatchMetricCell label="Hip" value={body.hipCm} />
+              <WatchMetricCell label="Neck" value={body.neckCm} />
+              <WatchMetricCell label="Chest/Waist" value={body.chestWaistRatio} />
+            </WatchMetricGrid>
+          )}
         </WatchPanel>
 
         <WatchPanel subtle className="py-3">
@@ -173,7 +172,14 @@ export function BodyDetailScreen() {
               {body.history.length} {body.history.length === 1 ? 'entry' : 'entries'}
             </p>
           </div>
-          <BodyTrendChart entries={body.history} />
+          <div className="grid grid-cols-2 gap-2">
+            <BodyMeasure label="Weight / wk" value={body.weightTrend} />
+            <BodyMeasure label="Waist / wk" value={body.waistTrend} />
+          </div>
+          <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/45">
+            {body.trendSummary}
+          </p>
+          <BodyTrendChart entries={body.history} className="mt-3" />
           <div className="mt-3 flex flex-col gap-2">
             {body.history.slice(-8).reverse().map((entry) => (
               <div key={entry.dateKey} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-lg border border-white/5 bg-black/25 px-3 py-2">
@@ -283,7 +289,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     chestWaistRatio: chestWaist.toFixed(2),
     targetDate: formatTargetDate(profile.targetDate),
     frameLabel: shoulderWaist >= 1.5 ? 'Strong taper' : 'Build width',
-    frameSummary: `Shoulders ${formatNumber(shoulderCm, 1)}cm against ${formatNumber(waistCm, 1)}cm waist. Chest ${formatNumber(chestCm, 1)}cm, hip ${formatNumber(hipCm, 1)}cm.`,
+    frameSummary: `Shoulders ${formatNumber(shoulderCm, 1)}cm and chest ${formatNumber(chestCm, 1)}cm set the frame. Waist anchors the S/W score.`,
     frameTone: shoulderWaist >= 1.5 ? 'text-green-300' : 'text-amber-300',
     weightTrend: formatTrend(trend.weightTrendKgPerWeek, 'kg'),
     waistTrend: formatTrend(trend.waistTrendCmPerWeek, 'cm'),
@@ -305,7 +311,7 @@ function roundMeasurement(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-function BodyTrendChart({ entries }: { entries: BodyHistoryEntry[] }) {
+function BodyTrendChart({ entries, className = '' }: { entries: BodyHistoryEntry[]; className?: string }) {
   const width = 280;
   const height = 108;
   const padding = 12;
@@ -313,7 +319,7 @@ function BodyTrendChart({ entries }: { entries: BodyHistoryEntry[] }) {
   const waistPoints = getChartPoints(entries, 'waistCm', width, height, padding);
 
   return (
-    <div className="rounded-lg border border-white/5 bg-black/30 px-2 py-3">
+    <div className={`rounded-lg border border-white/5 bg-black/30 px-2 py-3 ${className}`}>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Weight and waist history chart" className="h-28 w-full overflow-visible">
         <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
         <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
@@ -386,7 +392,7 @@ function getBodyHistory(logs: Record<string, DailyLog>, fallbackWeightKg: number
   const todayKey = new Date().toISOString().slice(0, 10);
   return [{
     dateKey: todayKey,
-    label: 'Current',
+    label: 'Today',
     weightKg: fallbackWeightKg,
     waistCm: fallbackWaistCm,
   }];
