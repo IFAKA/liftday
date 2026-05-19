@@ -6,7 +6,12 @@ import { ChevronLeft } from 'lucide-react';
 import { MuscleBodyChart, ViewSide } from '@/components/MuscleBodyChart';
 import { TopBar } from '@/components/TopBar';
 import { WatchCopyButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSection } from '@/components/WatchSurface';
-import { getLoggedEffectiveVolume, getPlannedEffectiveVolume, getPlannedWorkoutEffectiveVolume } from '@/lib/adaptation/volume-engine';
+import {
+  getLoggedEffectiveVolume,
+  getLoggedWorkoutEffectiveVolume,
+  getPlannedEffectiveVolume,
+  getPlannedWorkoutEffectiveVolume,
+} from '@/lib/adaptation/volume-engine';
 import {
   formatMuscleName,
   getDefaultSelectedMuscle,
@@ -30,28 +35,22 @@ const LENS_LABELS: Record<MuscleLens, string> = {
 
 const LENS_DESCRIPTIONS: Record<MuscleLens, string> = {
   routine: 'Planned weekly effective sets from the active routine.',
-  today: 'Planned effective sets for today only.',
+  today: 'Logged effective sets against today\'s plan.',
   week: 'Logged effective sets from the last 7 days.',
 };
 
 export default function MusclesPage() {
   const [summary, setSummary] = useState<ProgramSummary | null>(null);
-  const [lens, setLens] = useState<MuscleLens>('routine');
+  const [lens, setLens] = useState<MuscleLens>('today');
   const [view, setView] = useState<ViewSide>(ViewSide.FRONT);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const nextSummary = loadProgramSummary();
-    const entries = getMuscleMapEntries(getPlannedEffectiveVolume(
-      nextSummary.routine,
-      nextSummary.profile,
-      nextSummary.setsPerExercise
-    ));
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSummary(nextSummary);
-    setSelectedMuscle(getDefaultSelectedMuscle(entries));
   }, []);
 
   const today = useMemo(() => new Date(), []);
@@ -60,21 +59,38 @@ export default function MusclesPage() {
   const volume = useMemo(() => {
     if (!summary) return {};
     if (lens === 'today') {
-      if (workoutType === 'rest') return {};
-      return getPlannedWorkoutEffectiveVolume(summary.routine, summary.profile, summary.setsPerExercise, workoutType);
+      return getLoggedWorkoutEffectiveVolume(summary.data, today);
     }
     if (lens === 'week') {
       return getLoggedEffectiveVolume(summary.data, today);
     }
     return getPlannedEffectiveVolume(summary.routine, summary.profile, summary.setsPerExercise);
-  }, [lens, summary, today, workoutType]);
+  }, [lens, summary, today]);
 
-  const entries = useMemo(() => getMuscleMapEntries(volume), [volume]);
+  const targetVolume = useMemo(() => {
+    if (!summary || lens !== 'today') return undefined;
+    if (workoutType === 'rest') return {};
+    return getPlannedWorkoutEffectiveVolume(summary.routine, summary.profile, summary.setsPerExercise, workoutType);
+  }, [lens, summary, workoutType]);
+
+  const entries = useMemo(() => getMuscleMapEntries(volume, {
+    targetOverrides: targetVolume,
+    minimumOverrides: targetVolume,
+  }), [targetVolume, volume]);
+
+  useEffect(() => {
+    if (entries.length === 0) return;
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedMuscle(getDefaultSelectedMuscle(entries));
+  }, [entries, lens]);
+
   const bodyState = useMemo(() => getMuscleBodyState(entries, selectedMuscle), [entries, selectedMuscle]);
   const selectedEntry = entries.find((entry) => entry.muscle === selectedMuscle) ?? entries[0];
-  const workedEntries = entries.filter((entry) => entry.sets > 0).slice(0, 5);
+  const workedEntries = entries.filter((entry) => entry.sets > 0 || (lens === 'today' && entry.target > 0)).slice(0, 5);
   const totalSets = entries.reduce((sum, entry) => sum + entry.sets, 0);
-  const lowCount = entries.filter((entry) => entry.status === 'low').length;
+  const totalTarget = lens === 'today' ? entries.reduce((sum, entry) => sum + entry.target, 0) : null;
+  const lowCount = entries.filter((entry) => entry.status === 'low' && (lens !== 'today' || entry.target > 0)).length;
 
   const contextLabel = lens === 'today'
     ? workoutType === 'rest' ? 'Rest day' : formatWorkoutType(workoutType)
@@ -112,8 +128,12 @@ export default function MusclesPage() {
                 </h1>
               </div>
               <div className="text-right">
-                <p className="text-fluid-ui font-black tabular-nums text-white">{Math.round(totalSets)}</p>
-                <p className="text-fluid-label font-mono uppercase text-white/30">sets</p>
+                <p className="text-fluid-ui font-black tabular-nums text-white">
+                  {totalTarget === null ? Math.round(totalSets) : `${Math.round(totalSets)}/${Math.round(totalTarget)}`}
+                </p>
+                <p className="text-fluid-label font-mono uppercase text-white/30">
+                  {totalTarget === null ? 'sets' : 'hit / goal'}
+                </p>
               </div>
             </div>
 
@@ -214,7 +234,7 @@ export default function MusclesPage() {
                   <WatchMetricCell label="Heat" value={`${selectedEntry.intensity}/10`} />
                 </WatchMetricGrid>
                 <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
-                  Goal is the weekly target. Heat is target completion mapped to the body color.
+                  Goal is {lens === 'today' ? 'today\'s planned effective sets' : 'the weekly target'}. Heat is target completion mapped to the body color.
                 </p>
                 {lowCount > 0 && (
                   <p className="mt-2 text-fluid-label font-mono uppercase leading-relaxed text-orange-300/70">

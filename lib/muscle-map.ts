@@ -8,6 +8,11 @@ export interface MuscleMapEntry extends EffectiveVolumeEntry {
   percentOfTarget: number;
 }
 
+interface MuscleMapOptions {
+  targetOverrides?: Partial<Record<MuscleGroup, number>>;
+  minimumOverrides?: Partial<Record<MuscleGroup, number>>;
+}
+
 const MUSCLE_REGION_IDS: Record<MuscleGroup, MuscleId[]> = {
   side_delt: [
     'shoulder-side-left',
@@ -111,22 +116,29 @@ export function getMuscleForRegion(regionId: MuscleId): MuscleGroup | null {
 }
 
 export function getMuscleMapEntries(
-  volume: Partial<Record<MuscleGroup, number>>
+  volume: Partial<Record<MuscleGroup, number>>,
+  options: MuscleMapOptions = {}
 ): MuscleMapEntry[] {
   return MUSCLE_PRIORITY_PROFILES.map((profile) => {
     const sets = roundOne(volume[profile.muscle] ?? 0);
-    const percentOfTarget = profile.targetWeeklySets > 0 ? sets / profile.targetWeeklySets : 0;
-    const highThreshold = profile.targetWeeklySets * 1.18;
+    const target = roundOne(options.targetOverrides
+      ? options.targetOverrides[profile.muscle] ?? 0
+      : profile.targetWeeklySets);
+    const minimum = roundOne(options.minimumOverrides
+      ? options.minimumOverrides[profile.muscle] ?? 0
+      : profile.minimumWeeklySets);
+    const percentOfTarget = target > 0 ? sets / target : sets > 0 ? 1 : 0;
+    const highThreshold = target * 1.18;
     const status: EffectiveVolumeEntry['status'] = profile.maintenanceOnly
-      ? sets >= profile.minimumWeeklySets ? 'maintenance' : 'low'
-      : sets < profile.minimumWeeklySets ? 'low' : sets > highThreshold ? 'high' : 'productive';
+      ? sets >= minimum ? 'maintenance' : 'low'
+      : sets < minimum ? 'low' : sets > highThreshold ? 'high' : 'productive';
 
     return {
       muscle: profile.muscle,
       label: profile.label,
       sets,
-      target: profile.targetWeeklySets,
-      minimum: profile.minimumWeeklySets,
+      target,
+      minimum,
       priorityRank: profile.rank,
       status,
       percentOfTarget,

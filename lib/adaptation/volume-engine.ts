@@ -2,6 +2,7 @@ import { resolveExerciseKey } from '../tiers';
 import type { EffectiveVolumeEntry, ExerciseKey, MuscleGroup, RoutineConfig, SetEntry, UserProfile, WorkoutData, WorkoutType } from '../types';
 import { getChainSetCount } from '../routine-plan';
 import { setEntryRir } from '../types';
+import { formatDateKey } from '../workout-utils';
 import { MUSCLE_PRIORITY_PROFILES, MUSCLE_PRIORITY_BY_MUSCLE, getExerciseAdaptationMetadata } from './exercise-metadata';
 
 export function getEffectiveWeeklyVolume(input: {
@@ -46,6 +47,19 @@ export function getLoggedEffectiveVolume(data: WorkoutData, today: Date = new Da
       if (!Array.isArray(value)) continue;
       addExerciseSets(totals, key as ExerciseKey, value);
     }
+  }
+
+  return totals;
+}
+
+export function getLoggedWorkoutEffectiveVolume(data: WorkoutData, date: Date = new Date()): Partial<Record<MuscleGroup, number>> {
+  const session = data[formatDateKey(date)];
+  const totals: Partial<Record<MuscleGroup, number>> = {};
+  if (!session?.logged_at) return totals;
+
+  for (const [key, value] of Object.entries(session)) {
+    if (!Array.isArray(value)) continue;
+    addExerciseSets(totals, key as ExerciseKey, value);
   }
 
   return totals;

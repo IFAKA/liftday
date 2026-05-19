@@ -257,13 +257,14 @@ test('muscle map switches filters and body views', async ({ page }) => {
   await page.goto('/muscles');
 
   await expect(page.locator('body')).toContainText('Muscles');
-  await expect(page.getByRole('button', { name: 'Routine' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('body')).toContainText('Clothed SMV Hypertrophy');
-  await expect(page.locator('.body-chart-muscle')).not.toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Today' }).click();
   await expect(page.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toContainText('PUSH A');
+  await expect(page.locator('body')).toContainText('hit / goal');
+  await expect(page.locator('.body-chart-muscle')).not.toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Routine' }).click();
+  await expect(page.getByRole('button', { name: 'Routine' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('body')).toContainText('Clothed SMV Hypertrophy');
 
   await page.getByRole('button', { name: '7 days' }).click();
   await expect(page.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true');
