@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { X, ChevronLeft, AlertCircle, Check, Copy } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import type { Exercise, ExerciseKey, SMVExercisePrescription, SetEntry } from '@/lib/types';
+import type { AdaptiveRecommendation, Exercise, ExerciseKey, SMVExercisePrescription, SetEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TopBar } from './TopBar';
-import { assessSetCoaching, type SetCoachingTone } from '@/lib/set-coaching';
+import { getNextSetAutoAdjust, type AutoAdjustSuggestion, type AutoAdjustTone } from '@/lib/workout-auto-adjust';
 import type { CoachingReference } from '@/hooks/useWorkout';
 
 interface ExerciseScreenProps {
@@ -25,6 +25,8 @@ interface ExerciseScreenProps {
   previousRep: number | null;
   previousWeight: number | null;
   coachingReference: CoachingReference | null;
+  autoAdjustSuggestion: AutoAdjustSuggestion | null;
+  topRecommendation: AdaptiveRecommendation | null;
   currentExerciseSets: SetEntry[];
   flashColor: 'green' | 'red' | null;
   onLogSet: (reps: number, weight?: number, rir?: number) => void;
@@ -47,6 +49,8 @@ export function ExerciseScreen({
   previousRep,
   previousWeight,
   coachingReference,
+  autoAdjustSuggestion,
+  topRecommendation,
   currentExerciseSets,
   flashColor,
   onLogSet,
@@ -67,17 +71,12 @@ export function ExerciseScreen({
   const [rir, setRir] = useState(prescription?.targetRirMax ?? 2);
   const [copiedName, setCopiedName] = useState(false);
   const [showSwapPicker, setShowSwapPicker] = useState(false);
-  const [lastLoggedVal, setLastLoggedVal] = useState<number | null>(null);
-  const [lastLoggedWeight, setLastLoggedWeight] = useState<number | null>(null);
 
   useEffect(() => {
-    // When the exercise changes, reset to progression targets and clear last-logged memory.
-    // Within the same exercise, sets will pre-fill from the last logged set instead.
-    setLastLoggedVal(null);
-    setLastLoggedWeight(null);
+    // Exercise changes reset to hook-owned progression or auto-adjust targets.
     setVal(defaultVal);
     setWeight(defaultWeight);
-    setRir(prescription?.targetRirMax ?? 2);
+    setRir(autoAdjustSuggestion?.rir ?? prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
     setCopiedName(false);
     setShowSwapPicker(false);
@@ -88,20 +87,18 @@ export function ExerciseScreen({
     if (currentSet !== 0) return;
     setVal(defaultVal);
     setWeight(defaultWeight);
-    setRir(currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2);
-  }, [currentSet, defaultVal, defaultWeight, prescription, setsPerExercise]);
+    setRir(autoAdjustSuggestion?.rir ?? (currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2));
+  }, [currentSet, defaultVal, defaultWeight, prescription, setsPerExercise, autoAdjustSuggestion]);
 
   useEffect(() => {
-    // Between sets of the same exercise, prefer last logged values over progression target.
     if (currentSet === 0) return;
-    setVal(lastLoggedVal ?? currentTarget);
-    setWeight(lastLoggedWeight ?? currentWeightTarget);
-    setRir(currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2);
+    setVal(currentTarget);
+    setWeight(currentWeightTarget);
+    setRir(autoAdjustSuggestion?.rir ?? (currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2));
     setShowQuitConfirm(false);
     setCopiedName(false);
     setShowSwapPicker(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSet, prescription, setsPerExercise]);
+  }, [currentSet, currentTarget, currentWeightTarget, prescription, setsPerExercise, autoAdjustSuggestion]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -116,15 +113,24 @@ export function ExerciseScreen({
   const totalSets = Math.max(1, totalPlannedSets);
   const completedSets = completedPlannedSets;
   const progressPercent = (completedSets / totalSets) * 100;
-  const coaching = assessSetCoaching({
+  const coaching = getNextSetAutoAdjust({
     unit: exercise.unit,
-    reps: val,
-    weight: isSeconds ? null : weight,
-    rir,
+    loggedSet: {
+      reps: val,
+      weight: exercise.unit === 'weighted' ? weight : null,
+      rir,
+    },
     prescription,
-    previous: coachingReference,
     priorSets: currentExerciseSets,
-    plannedSets: setsPerExercise,
+    previousSessionReference: coachingReference
+      ? {
+          reps: coachingReference.reps,
+          weight: coachingReference.weight,
+          rir: coachingReference.rir ?? prescription?.targetRirMax ?? 2,
+        }
+      : null,
+    topRecommendation,
+    currentSuggestion: autoAdjustSuggestion,
   });
   const referenceLabel = formatReferenceLabel(coachingReference);
   const coachingToneClass = getCoachingToneClass(coaching.tone);
@@ -249,12 +255,18 @@ export function ExerciseScreen({
                     {referenceLabel}
                   </span>
                   <span className={cn('shrink-0 rounded-full px-2 py-1 text-[11px] font-black uppercase', coachingToneClass)}>
-                    {coaching.label}
+                    {coaching.status}
                   </span>
                 </div>
-                <p className="mx-auto -mt-1 mb-2 w-full max-w-xs truncate text-center text-xs font-medium text-white/45">
-                  {coaching.detail}
-                </p>
+                <div className="mx-auto -mt-1 mb-2 flex w-full max-w-xs flex-col gap-1 text-center text-xs font-medium leading-snug">
+                  <p className="line-clamp-2 text-white/55">{coaching.reason}</p>
+                  {coaching.programContext && (
+                    <p className="line-clamp-1 font-mono uppercase text-white/35">{coaching.programContext}</p>
+                  )}
+                  {coaching.warning && (
+                    <p className="line-clamp-2 text-amber-200/80">{coaching.warning}</p>
+                  )}
+                </div>
                 <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1">
                   {[0, 1, 2, 3, 4].map((option) => (
                     <button
@@ -278,8 +290,6 @@ export function ExerciseScreen({
           <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
             <Button
               onClick={() => {
-                setLastLoggedVal(val);
-                setLastLoggedWeight(weight);
                 onLogSet(val, isSeconds ? undefined : weight, rir);
               }}
               className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-all shadow-xl"
@@ -376,7 +386,7 @@ async function copyText(text: string): Promise<void> {
   textarea.remove();
 }
 
-function getCoachingToneClass(tone: SetCoachingTone): string {
+function getCoachingToneClass(tone: AutoAdjustTone): string {
   switch (tone) {
     case 'good':
       return 'bg-emerald-400/15 text-emerald-200';

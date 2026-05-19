@@ -9,6 +9,7 @@ import { getEffectiveWeeklyVolume } from '@/lib/adaptation/volume-engine';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { assessSetCoaching } from '@/lib/set-coaching';
+import { getNextSetAutoAdjust } from '@/lib/workout-auto-adjust';
 import {
   calculateRoutineVolume,
   evaluateDoubleProgression,
@@ -196,6 +197,111 @@ test('coaches sets with RIR-normalized performance, not raw load only', () => {
     prescription: testPrescription,
     previous: { reps: 8, weight: 40, rir: 1 },
   }).label).toBe('Reduce load');
+});
+
+test('auto-adjusts next workout set from RIR, reps, prior sets, and program guardrails', () => {
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 8, weight: 40, rir: 4 },
+    prescription: testPrescription,
+  })).toMatchObject({
+    reps: 10,
+    weight: 40,
+    rir: 2,
+    status: 'Add reps',
+  });
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 8, weight: 40, rir: 0 },
+    prescription: testPrescription,
+    priorSets: [{ reps: 10, weight: 40, rir: 2 }],
+  })).toMatchObject({
+    weight: 37.5,
+    status: 'Reduce load',
+  });
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 7, weight: 40, rir: 1 },
+    prescription: testPrescription,
+  })).toMatchObject({
+    weight: 37.5,
+    reps: 8,
+    status: 'Reduce load',
+  });
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 10, weight: 40, rir: 4 },
+    prescription: testPrescription,
+    priorSets: [
+      { reps: 10, weight: 40, rir: 3 },
+      { reps: 10, weight: 40, rir: 3 },
+    ],
+  })).toMatchObject({
+    weight: 42.5,
+    reps: 8,
+    status: 'Small jump next',
+  });
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 10, weight: 40, rir: 4 },
+    prescription: testPrescription,
+    priorSets: [
+      { reps: 10, weight: 40, rir: 3 },
+      { reps: 10, weight: 40, rir: 3 },
+    ],
+    topRecommendation: {
+      action: 'deload',
+      title: 'Deload First',
+      summary: 'Fatigue is hiding output.',
+      reason: 'Recovery is constrained.',
+      stimulusGain: 0,
+      fatigueCost: -28,
+      recoveryState: 0.4,
+      blockedConstraints: [],
+      confidence: 0.8,
+    },
+  })).toMatchObject({
+    weight: 37.5,
+    status: 'Reduce load',
+    programContext: 'Program says Deload First: Fatigue is hiding output.',
+  });
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 10, weight: 40, rir: 4 },
+    prescription: testPrescription,
+    priorSets: [
+      { reps: 10, weight: 40, rir: 3 },
+      { reps: 10, weight: 40, rir: 3 },
+    ],
+    topRecommendation: {
+      action: 'hold_progression',
+      muscle: 'chest',
+      title: 'Hold Chest',
+      summary: 'Keep load steady today.',
+      reason: 'local recovery is below the add-volume threshold',
+      stimulusGain: 0,
+      fatigueCost: 0,
+      recoveryState: 0.5,
+      blockedConstraints: ['local recovery is below the add-volume threshold'],
+      confidence: 0.7,
+    },
+  })).toMatchObject({
+    weight: 40,
+    status: 'Hold',
+    programContext: 'Program says Hold Chest: Keep load steady today.',
+  });
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 9, weight: 40, rir: 2 },
+    prescription: testPrescription,
+    currentSuggestion: { reps: 10, weight: 40, rir: 2 },
+  }).warning).toMatch(/changed the target/i);
 });
 
 test('detects deload and waist calorie adjustment triggers', () => {

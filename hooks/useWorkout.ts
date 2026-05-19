@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight, setEntryRir, ActiveWorkoutDraft, SMVExercisePrescription } from '@/lib/types';
+import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight, setEntryRir, ActiveWorkoutDraft, SMVExercisePrescription, AdaptiveRecommendation } from '@/lib/types';
 import { EXERCISES, REST_DURATION, WARMUP_DURATION_SECONDS } from '@/lib/constants';
 import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessionDate } from '@/lib/workout-utils';
 import { getTargets, getWeightTarget, evaluateTierProgress, isDeloadWeek } from '@/lib/progression';
@@ -16,6 +16,8 @@ import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { evaluateDoubleProgression, getPrescriptionForChain } from '@/lib/smv';
 import { hasExplicitInjuryMode } from '@/lib/session-volume-constraints';
+import { getProgramSummary } from '@/lib/program-summary';
+import { getNextSetAutoAdjust, type AutoAdjustSuggestion } from '@/lib/workout-auto-adjust';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -42,6 +44,8 @@ export interface UseWorkoutReturn {
   previousWeight: number | null;
   previousRir: number | null;
   coachingReference: CoachingReference | null;
+  autoAdjustSuggestion: AutoAdjustSuggestion | null;
+  topRecommendation: AdaptiveRecommendation | null;
   flashColor: 'green' | 'red' | null;
   sessionReps: Record<string, SetEntry[]>;
   weekNumber: number;
@@ -97,6 +101,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [skippedChainIndices, setSkippedChainIndices] = useState<Set<number>>(new Set());
   const [requeuedExercises, setRequeuedExercises] = useState<RequeuedExercise[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [autoAdjustSuggestions, setAutoAdjustSuggestions] = useState<Record<string, AutoAdjustSuggestion>>({});
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownPlayedRef = useRef<Set<number>>(new Set());
@@ -197,17 +202,32 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     .reduce((sum, item) => sum + item.setCount, currentSet);
 
   const currentExercise = exercises[exerciseIndex];
+  const currentSuggestionKey = currentExercise ? getSuggestionKey(currentExercise.key, currentSet) : null;
+  const autoAdjustSuggestion = currentSuggestionKey ? autoAdjustSuggestions[currentSuggestionKey] ?? null : null;
+  const topRecommendation = useMemo(() => {
+    if (!hydrated || workoutType === 'rest') return null;
+    return getProgramSummary(data, userProfile, date).adaptation.recommendations[0] ?? null;
+  }, [data, date, hydrated, userProfile, workoutType]);
   const targets = currentExercise ? getTargets(currentExercise.key, weekNumber, date, data) : [];
   const previousLoggedSet = useMemo(() => {
     if (!currentExercise || currentSet === 0) return null;
     const loggedSets = sessionReps[currentExercise.key] ?? [];
     return loggedSets[currentSet - 1] ?? null;
   }, [currentExercise, currentSet, sessionReps]);
-  const currentTarget = previousLoggedSet !== null
-    ? setEntryReps(previousLoggedSet)
-    : currentPrescription?.minReps ?? targets[currentSet] ?? targets[0] ?? 10;
+  const previousEntry = useMemo(() => {
+    if (!currentExercise) return null;
+    const prev = getPreviousExerciseSessionDate(date, data, currentExercise.key as ExerciseKey);
+    if (!prev) return null;
+    const sets = data[prev]?.[currentExercise.key as ExerciseKey];
+    return sets && sets.length > currentSet ? sets[currentSet] : null;
+  }, [data, date, currentExercise, currentSet]);
+  const currentTarget = autoAdjustSuggestion?.reps
+    ?? (previousLoggedSet !== null
+      ? setEntryReps(previousLoggedSet)
+      : currentPrescription?.minReps ?? targets[currentSet] ?? targets[0] ?? 10);
   const currentWeightTarget = useMemo(() => {
     if (!currentExercise || currentExercise.unit !== 'weighted') return 0;
+    if (autoAdjustSuggestion?.weight !== null && autoAdjustSuggestion?.weight !== undefined) return autoAdjustSuggestion.weight;
     const previousWeight = previousLoggedSet !== null ? setEntryWeight(previousLoggedSet) : null;
     if (previousWeight !== null) return previousWeight;
     const baseWeight = getWeightTarget(currentExercise.key, date, data);
@@ -217,15 +237,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (!prevSets) return baseWeight;
     const decision = evaluateDoubleProgression(prevSets, currentPrescription);
     return decision.increaseLoad ? baseWeight + getLoadJump(baseWeight) : baseWeight;
-  }, [currentExercise, previousLoggedSet, date, data, currentPrescription]);
-
-  const previousEntry = useMemo(() => {
-    if (!currentExercise) return null;
-    const prev = getPreviousExerciseSessionDate(date, data, currentExercise.key as ExerciseKey);
-    if (!prev) return null;
-    const sets = data[prev]?.[currentExercise.key as ExerciseKey];
-    return sets && sets.length > currentSet ? sets[currentSet] : null;
-  }, [data, date, currentExercise, currentSet]);
+  }, [currentExercise, previousLoggedSet, autoAdjustSuggestion, date, data, currentPrescription]);
 
   const previousRep = previousEntry !== null ? setEntryReps(previousEntry) : null;
   const previousWeight = previousEntry !== null ? setEntryWeight(previousEntry) : null;
@@ -560,6 +572,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setExerciseIndex(0);
     setCurrentSet(0);
     setSessionReps({});
+    setAutoAdjustSuggestions({});
     setTimer(WARMUP_DURATION_SECONDS);
     timerEndRef.current = null;
     setTimerPaused(true);
@@ -616,6 +629,31 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     const isLastSet = currentSet + 1 >= currentSetCount;
     const isLastExercise = exerciseIndex + 1 >= exercises.length;
+    if (!isLastSet) {
+      const nextSuggestion = getNextSetAutoAdjust({
+        unit: currentExercise.unit,
+        loggedSet: {
+          reps,
+          weight: currentExercise.unit === 'weighted' ? weight ?? 0 : null,
+          rir: rir ?? currentPrescription?.targetRirMax ?? 2,
+        },
+        prescription: currentPrescription,
+        priorSets: sessionRepsRef.current[key]?.slice(0, -1) ?? [],
+        previousSessionReference: previousEntry
+          ? {
+              reps: setEntryReps(previousEntry),
+              weight: setEntryWeight(previousEntry),
+              rir: setEntryRir(previousEntry) ?? currentPrescription?.targetRirMax ?? 2,
+            }
+          : null,
+        topRecommendation,
+        currentSuggestion: autoAdjustSuggestion,
+      });
+      setAutoAdjustSuggestions((prev) => ({
+        ...prev,
+        [getSuggestionKey(key, currentSet + 1)]: nextSuggestion,
+      }));
+    }
 
     setTimeout(() => {
       if (isLastSet && isLastExercise) {
@@ -629,7 +667,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         setState('resting');
       }
     }, 700);
-  }, [currentExercise, currentSet, currentSetCount, exerciseIndex, exercises, currentPrescription, currentTarget, saveAndComplete]);
+  }, [currentExercise, currentSet, currentSetCount, exerciseIndex, exercises, currentPrescription, currentTarget, previousEntry, topRecommendation, autoAdjustSuggestion, saveAndComplete]);
 
   const skipTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -655,6 +693,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setExerciseIndex(0);
     setCurrentSet(0);
     setSessionReps({});
+    setAutoAdjustSuggestions({});
   }, []);
 
   const togglePauseTimer = useCallback(() => {
@@ -678,10 +717,15 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const updated = { ...sessionRepsRef.current, [key]: (sessionRepsRef.current[key] || []).slice(0, -1) };
     sessionRepsRef.current = updated;
     setSessionReps(updated);
+    setAutoAdjustSuggestions((prev) => {
+      const next = { ...prev };
+      delete next[getSuggestionKey(key, currentSet)];
+      return next;
+    });
     playUndo();
     setTimer(currentPrescription?.restSeconds ?? REST_DURATION);
     setState('exercising');
-  }, [currentExercise, currentPrescription]);
+  }, [currentExercise, currentPrescription, currentSet]);
 
   const refreshData = useCallback(() => {
     storageAdapter.loadWorkoutData().then(setData);
@@ -751,6 +795,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const selectedExercise = EXERCISES.find((entry) => entry.key === exerciseKey);
     if (!selectedExercise) return;
     setUnavailableEquipment(newUnavailable);
+    setAutoAdjustSuggestions({});
     if (exerciseIndex < derivedPlan.length) {
       setSelectedSubstitutions((prev) => ({ ...prev, [chainIdx]: exerciseKey }));
     } else {
@@ -779,6 +824,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       if (chainIdx === undefined) return;
       setSkippedChainIndices((prev) => new Set([...prev, chainIdx]));
       setRequeuedExercises((prev) => [...prev, { exercise: ex, setCount: currentSetCount, chainIndex: chainIdx }]);
+      setAutoAdjustSuggestions({});
       setCurrentSet(0);
       return;
     }
@@ -791,6 +837,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       next.push(current);
       return next;
     });
+    setAutoAdjustSuggestions({});
     setCurrentSet(0);
   }, [currentSetCount, derivedPlan, exerciseIndex, exercises]);
 
@@ -809,6 +856,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       if (chainIdx === undefined) return;
       setSkippedChainIndices((prev) => new Set([...prev, chainIdx]));
       setRequeuedExercises((prev) => [...prev, { exercise: ex, setCount: currentSetCount, chainIndex: chainIdx }]);
+      setAutoAdjustSuggestions({});
       setCurrentSet(0);
       // After re-derive, exerciseIndex unchanged but now points to the next exercise
     } else {
@@ -842,7 +890,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   return {
     state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, currentExercise, currentTarget,
-    currentWeightTarget, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, flashColor, sessionReps, weekNumber, data,
+    currentWeightTarget, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
@@ -856,4 +904,8 @@ function getLoadJump(currentWeight: number): number {
   if (currentWeight < 20) return 1;
   if (currentWeight < 60) return 2.5;
   return 5;
+}
+
+function getSuggestionKey(exerciseKey: ExerciseKey, setIndex: number): string {
+  return `${exerciseKey}:${setIndex}`;
 }

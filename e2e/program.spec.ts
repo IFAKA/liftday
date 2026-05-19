@@ -545,7 +545,7 @@ test('shows set 1 coaching reference from the previous workout', async ({ page }
   const logSet = page.getByRole('button', { name: /log set/i });
   await expect(previousRow).toBeVisible();
   await expect(logSet).toBeVisible();
-  await expect(page.getByText('Hold weight')).toBeVisible();
+  await expect(page.getByText('Hold')).toBeVisible();
 
   const previousBox = await previousRow.boundingBox();
   const logBox = await logSet.boundingBox();
@@ -554,13 +554,31 @@ test('shows set 1 coaching reference from the previous workout', async ({ page }
   expect(previousBox!.y + previousBox!.height).toBeLessThan(logBox!.y);
 
   await page.getByRole('button', { name: '4 RIR' }).click();
-  await expect(page.getByText('Too easy')).toBeVisible();
+  await expect(page.getByText(/top reps were easy/i)).toBeVisible();
 });
 
 test('shows no coaching reference on set 1 without prior workout data', async ({ page }) => {
   await prepareTodayWorkout(page, null);
 
   await expect(page.getByText(/^No reference$/)).toBeVisible();
+});
+
+test('auto-fills adjusted next set while allowing manual edits', async ({ page }) => {
+  await prepareTodayWorkout(page, null);
+
+  await page.getByRole('button', { name: '4 RIR' }).click();
+  await page.getByRole('button', { name: /log set/i }).click();
+  await expect(page.getByText(/resting/i)).toBeVisible();
+  await page.getByRole('button', { name: /skip rest/i }).click();
+  await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
+
+  await expect(page.getByText('Add reps')).toBeVisible();
+  await expect(page.locator('body')).toContainText(/14\s*REPS/);
+  await expect(page.getByText(/nudge reps while staying in the rep range/i)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Decrease' }).nth(1).click();
+  await expect(page.locator('body')).toContainText(/13\s*REPS/);
+  await expect(page.getByText(/changed the target/i)).toBeVisible();
 });
 
 test('set 2 coaching reference uses today set 1 when prior workout only has set 1', async ({ page }) => {
