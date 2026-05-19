@@ -432,6 +432,8 @@ test('body detail uses profile waist as sparse history baseline', async ({ page 
 
   await expect(page.locator('body')).toContainText('+1.4kg');
   await expect(page.locator('body')).toContainText('0.0cm');
+  await expect(page.locator('body')).toContainText('3 entries');
+  await expect(page.locator('body')).toContainText('May 1');
   await expect(page.locator('body')).toContainText('May 18');
   await expect(page.locator('body')).toContainText('76.5cm');
 });

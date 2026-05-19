@@ -275,7 +275,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const bmi = weightKg / ((heightCm / 100) ** 2);
   const bodyBaseline = getBodyBaseline(profile);
   const trend = getBodyTrendSummary(logs, bodyBaseline);
-  const history = getBodyHistory(logs, weightKg, waistCm, bodyBaseline.dateKey);
+  const history = getBodyHistory(logs, weightKg, waistCm, bodyBaseline);
   const shoulderWaist = shoulderCm / waistCm;
   const chestWaist = chestCm / waistCm;
   const proteinTarget = profile.proteinTargetGrams ?? [140, 160];
@@ -388,7 +388,7 @@ function getBodyHistory(
   logs: Record<string, DailyLog>,
   fallbackWeightKg: number,
   fallbackWaistCm: number,
-  fallbackDateKey?: string
+  baseline: { dateKey?: string; morningWeightKg?: number; waistCm?: number }
 ): BodyHistoryEntry[] {
   const entries = Object.values(logs)
     .filter((log) => typeof log.morningWeightKg === 'number' || typeof log.waistCm === 'number')
@@ -401,6 +401,11 @@ function getBodyHistory(
     }));
 
   if (entries.length > 0) {
+    const baselineEntry = getBaselineHistoryEntry(baseline, entries[0].dateKey);
+    if (baselineEntry) {
+      return [baselineEntry, ...entries];
+    }
+
     const [first, ...rest] = entries;
     return [{
       ...first,
@@ -410,13 +415,28 @@ function getBodyHistory(
   }
 
   const todayKey = new Date().toISOString().slice(0, 10);
-  const dateKey = fallbackDateKey ?? todayKey;
+  const dateKey = baseline.dateKey ?? todayKey;
   return [{
     dateKey,
     label: dateKey === todayKey ? 'Today' : formatHistoryDate(dateKey),
-    weightKg: fallbackWeightKg,
-    waistCm: fallbackWaistCm,
+    weightKg: baseline.morningWeightKg ?? fallbackWeightKg,
+    waistCm: baseline.waistCm ?? fallbackWaistCm,
   }];
+}
+
+function getBaselineHistoryEntry(
+  baseline: { dateKey?: string; morningWeightKg?: number; waistCm?: number },
+  firstLogDateKey: string
+): BodyHistoryEntry | null {
+  if (!baseline.dateKey || baseline.dateKey >= firstLogDateKey) return null;
+  if (typeof baseline.morningWeightKg !== 'number' && typeof baseline.waistCm !== 'number') return null;
+
+  return {
+    dateKey: baseline.dateKey,
+    label: formatHistoryDate(baseline.dateKey),
+    weightKg: typeof baseline.morningWeightKg === 'number' ? baseline.morningWeightKg : null,
+    waistCm: typeof baseline.waistCm === 'number' ? baseline.waistCm : null,
+  };
 }
 
 function getBodyBaseline(profile: UserProfile): { dateKey?: string; morningWeightKg?: number; waistCm?: number } {
