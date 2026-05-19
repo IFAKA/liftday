@@ -238,7 +238,7 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
   await page.goto('/');
 
   await expect(page.locator('body')).toContainText('REST');
-  await expect(page.locator('body')).toContainText('Weekly measures');
+  await expect(page.locator('body')).toContainText('Waist + shoulders');
   await expect(page.locator('body')).toContainText('Same conditions');
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();

@@ -191,7 +191,7 @@ function WaistMeasurementPanel({
       <div className="flex items-center gap-2.5">
         <Ruler className="h-4 w-4 shrink-0 text-white/45" />
         <div className="min-w-0 flex-1">
-          <p className="text-fluid-label font-mono uppercase text-white/35">Weekly measures</p>
+          <p className="text-fluid-label font-mono uppercase text-white/35">Waist + shoulders</p>
           <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
             {todayWaist !== null && todayShoulder !== null ? 'Measured today' : 'Same conditions'}
           </p>
