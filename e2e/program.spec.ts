@@ -436,6 +436,11 @@ test('body detail uses profile waist as sparse history baseline', async ({ page 
   await expect(page.locator('body')).toContainText('May 1');
   await expect(page.locator('body')).toContainText('May 18');
   await expect(page.locator('body')).toContainText('76.5cm');
+  const weightPath = await page.locator('svg[aria-label="Weight and waist history chart"] path').first().getAttribute('d');
+  const yValues = (weightPath?.match(/-?\d+(?:\.\d+)?/g) ?? [])
+    .map(Number)
+    .filter((_, index) => index % 2 === 1);
+  expect(Math.max(...yValues) - Math.min(...yValues)).toBeLessThan(20);
 });
 
 test('body detail uses profile fallback when logs are empty', async ({ page }) => {

@@ -365,7 +365,11 @@ function getChartPoints(
 
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const span = max - min || 1;
+  const minimumVisualSpan = key === 'weightKg' ? 2 : 4;
+  const rawSpan = max - min;
+  const span = Math.max(rawSpan, minimumVisualSpan);
+  const midpoint = (min + max) / 2;
+  const domainMin = midpoint - span / 2;
   const plotted = entries
     .map((entry, index) => {
       const value = entry[key];
@@ -373,7 +377,7 @@ function getChartPoints(
       const x = entries.length === 1
         ? width / 2
         : padding + (index / (entries.length - 1)) * (width - padding * 2);
-      const y = height - padding - ((value - min) / span) * (height - padding * 2);
+      const y = height - padding - ((value - domainMin) / span) * (height - padding * 2);
       return { x: roundChartPoint(x), y: roundChartPoint(y) };
     })
     .filter((point): point is { x: number; y: number } => point !== null);
