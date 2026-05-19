@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, History, Ruler, Scale, Target, Utensils } from 'lucide-react';
+import { ChevronLeft, History, Pencil, Ruler, Scale, Target, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { TopBar } from '@/components/TopBar';
 import { DailyLog, UserProfile } from '@/lib/types';
 import { getBodyTrendSummary } from '@/lib/progress-insights';
-import { getDefaultProfile, loadDailyLogs, loadUserProfile } from '@/lib/storage';
+import { formatDateKey } from '@/lib/workout-utils';
+import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog, setBodyProfileFallbacks } from '@/lib/storage';
 import { WatchListItem, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSignalPanel } from './WatchSurface';
 
 const CURRENT_WEIGHT_KG = 68.6;
@@ -24,16 +26,52 @@ export function BodyDetailScreen() {
     profile: getDefaultProfile(),
     logs: {},
   }));
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState({ weightKg: '', waistCm: '', heightCm: '' });
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  function reloadSnapshot() {
     setSnapshot({
       profile: loadUserProfile() ?? getDefaultProfile(),
       logs: loadDailyLogs(),
     });
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    reloadSnapshot();
   }, []);
 
   const body = useMemo(() => getBodyModel(snapshot.profile, snapshot.logs), [snapshot]);
+
+  function openEditor() {
+    setDraft({
+      weightKg: formatNumber(body.weightKg, 1),
+      waistCm: formatNumber(body.waistCmValue, 1),
+      heightCm: String(body.heightCm),
+    });
+    setIsEditing(true);
+  }
+
+  function saveBodyMeasurements() {
+    const weightKg = parseMeasurement(draft.weightKg);
+    const waistCm = parseMeasurement(draft.waistCm);
+    const heightCm = parseMeasurement(draft.heightCm);
+    if (weightKg === null || waistCm === null || heightCm === null) return;
+
+    const dateKey = formatDateKey(new Date());
+    saveDailyLog(dateKey, {
+      dateKey,
+      morningWeightKg: roundMeasurement(weightKg),
+      waistCm: roundMeasurement(waistCm),
+    });
+    setBodyProfileFallbacks({
+      heightCm: roundMeasurement(heightCm),
+      weightKg: roundMeasurement(weightKg),
+      waistCircumferenceCm: roundMeasurement(waistCm),
+    });
+    reloadSnapshot();
+    setIsEditing(false);
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-black pb-safe">
@@ -65,7 +103,45 @@ export function BodyDetailScreen() {
         </WatchMetricGrid>
 
         <WatchPanel subtle className="py-3">
-          <p className="mb-3 text-fluid-label font-mono font-black uppercase text-white/35">Measurements</p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-fluid-label font-mono font-black uppercase text-white/35">Measurements</p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={openEditor}
+              className="h-9 shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 text-white/60 hover:bg-white/10 hover:text-white"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-mono font-black uppercase tracking-widest">Update</span>
+            </Button>
+          </div>
+          {isEditing && (
+            <div className="mb-3 rounded-lg border border-white/10 bg-black/30 p-3">
+              <div className="grid grid-cols-3 gap-2">
+                <BodyMetricInput label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => setDraft((current) => ({ ...current, weightKg }))} />
+                <BodyMetricInput label="Waist" unit="cm" value={draft.waistCm} onChange={(waistCm) => setDraft((current) => ({ ...current, waistCm }))} />
+                <BodyMetricInput label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => setDraft((current) => ({ ...current, heightCm }))} />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsEditing(false)}
+                  className="h-10 rounded-lg border border-white/10 bg-white/5 text-fluid-label font-mono font-black uppercase text-white/55 hover:bg-white/10 hover:text-white"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={saveBodyMeasurements}
+                  className="h-10 rounded-lg bg-white text-fluid-label font-mono font-black uppercase text-black hover:bg-white/90"
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <BodyMeasure label="Shoulders" value={body.shoulderCm} />
             <BodyMeasure label="Chest" value={body.chestCm} />
@@ -140,6 +216,36 @@ function BodyMeasure({ label, value }: { label: string; value: string }) {
   );
 }
 
+function BodyMetricInput({
+  label,
+  unit,
+  value,
+  onChange,
+}: {
+  label: string;
+  unit: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="min-w-0">
+      <span className="block truncate text-fluid-label font-mono uppercase text-white/30">{label}</span>
+      <div className="mt-1 flex min-w-0 items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-2">
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.1"
+          value={value}
+          aria-label={`${label} ${unit}`}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-10 border-0 bg-transparent px-0 text-fluid-label font-black tabular-nums text-white shadow-none focus-visible:ring-0"
+        />
+        <span className="shrink-0 text-[10px] font-mono uppercase text-white/30">{unit}</span>
+      </div>
+    </label>
+  );
+}
+
 function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const latestWeightLog = Object.values(logs)
     .filter((log) => typeof log.morningWeightKg === 'number')
@@ -148,8 +254,8 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     .filter((log) => typeof log.waistCm === 'number')
     .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
   const heightCm = profile.heightCm ?? 172;
-  const weightKg = latestWeightLog?.morningWeightKg ?? CURRENT_WEIGHT_KG;
-  const waistCm = latestWaistLog?.waistCm ?? CURRENT_WAIST_CM;
+  const weightKg = latestWeightLog?.morningWeightKg ?? profile.weightKg ?? CURRENT_WEIGHT_KG;
+  const waistCm = latestWaistLog?.waistCm ?? profile.waistCircumferenceCm ?? CURRENT_WAIST_CM;
   const shoulderCm = profile.shoulderCircumferenceCm ?? 111.76;
   const chestCm = profile.chestCircumferenceCm ?? 89.5;
   const hipCm = profile.hipCircumferenceCm ?? 85;
@@ -170,6 +276,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     shoulderCm: `${formatNumber(shoulderCm, 1)}cm`,
     chestCm: `${formatNumber(chestCm, 1)}cm`,
     waistCm: `${formatNumber(waistCm, 1)}cm`,
+    waistCmValue: waistCm,
     hipCm: `${formatNumber(hipCm, 1)}cm`,
     neckCm: `${formatNumber(neckCm, 1)}cm`,
     shoulderWaistRatio: shoulderWaist.toFixed(2),
@@ -187,6 +294,15 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     profileLine: `${profile.age ?? 26}y ${profile.sex ?? 'male'} · ${formatBodyComposition(profile.bodyComposition)} · ${profile.injuryStatus ?? 'No injuries or pain'}`,
     contextLine: `${profile.trainingBackground ?? 'Rugby background'} · ${profile.maxWorkoutMinutes ?? 105} min cap · commercial gym`,
   };
+}
+
+function parseMeasurement(value: string): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function roundMeasurement(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function BodyTrendChart({ entries }: { entries: BodyHistoryEntry[] }) {

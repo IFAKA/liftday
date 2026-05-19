@@ -184,6 +184,18 @@ export function setBodyMetrics(heightCm: number, weightKg: number): void {
   saveUserProfile(profile);
 }
 
+export function setBodyProfileFallbacks(input: {
+  heightCm: number;
+  weightKg: number;
+  waistCircumferenceCm: number;
+}): void {
+  const profile = loadUserProfile() ?? getDefaultProfile();
+  profile.heightCm = input.heightCm;
+  profile.weightKg = input.weightKg;
+  profile.waistCircumferenceCm = input.waistCircumferenceCm;
+  saveUserProfile(profile);
+}
+
 export function setTrainingProfile(input: {
   age: number;
   sex: 'male' | 'female';

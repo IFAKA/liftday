@@ -91,6 +91,29 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
+test('settings body row opens the canonical body screen', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.setItem('liftday_user_profile', JSON.stringify({
+      createdAt: '2026-05-01T00:00:00.000Z',
+      tiers: {},
+      tierProgress: {},
+      heightCm: 181,
+      weightKg: 82.4,
+      waistCircumferenceCm: 88.2,
+    }));
+  });
+
+  await page.goto('/settings');
+
+  const bodyRow = page.getByRole('button', { name: /body weight, waist, height/i });
+  await expect(bodyRow).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('82.4kg');
+
+  await bodyRow.click();
+  await expect(page).toHaveURL(/\/history\/body$/);
+});
+
 test('today start opens weight check before warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
@@ -231,6 +254,9 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
     const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { waistCm?: number }>;
     return logs['2026-05-10'];
   })).toEqual({ dateKey: '2026-05-10', waistCm: 76.4 });
+
+  await page.goto('/history/body');
+  await expect(page.locator('body')).toContainText('76.4cm');
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {
@@ -370,6 +396,68 @@ test('body detail shows weight and waist history over time', async ({ page }) =>
   await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('76.1cm');
   await expect(page.getByRole('img', { name: /weight and waist history chart/i })).toBeVisible();
+});
+
+test('body detail uses profile fallback when logs are empty', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem('liftday_daily_logs');
+    localStorage.setItem('liftday_user_profile', JSON.stringify({
+      createdAt: '2026-05-01T00:00:00.000Z',
+      tiers: {},
+      tierProgress: {},
+      heightCm: 181,
+      weightKg: 82.4,
+      waistCircumferenceCm: 88.2,
+    }));
+  });
+
+  await page.goto('/history/body');
+
+  await expect(page.locator('body')).toContainText('82.4kg');
+  await expect(page.locator('body')).toContainText('88.2cm');
+  await expect(page.locator('body')).toContainText('Current');
+  await expect(page.locator('body')).not.toContainText('68.6kg');
+});
+
+test('body detail editor saves today body logs and profile height fallback', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await page.addInitScript(() => {
+    localStorage.removeItem('liftday_daily_logs');
+    localStorage.setItem('liftday_user_profile', JSON.stringify({
+      createdAt: '2026-05-01T00:00:00.000Z',
+      tiers: {},
+      tierProgress: {},
+      heightCm: 172,
+      weightKg: 68.6,
+      waistCircumferenceCm: 76.5,
+    }));
+  });
+
+  await page.goto('/history/body');
+  await expect(page.locator('body')).toContainText('23.2');
+
+  await page.getByRole('button', { name: /update/i }).click();
+  await page.getByRole('spinbutton', { name: /weight kg/i }).fill('70.2');
+  await page.getByRole('spinbutton', { name: /waist cm/i }).fill('77.3');
+  await page.getByRole('spinbutton', { name: /height cm/i }).fill('180');
+  await page.getByRole('button', { name: /^save$/i }).click();
+
+  await expect(page.locator('body')).toContainText('70.2kg');
+  await expect(page.locator('body')).toContainText('77.3cm');
+  await expect(page.locator('body')).toContainText('180cm');
+  await expect(page.locator('body')).toContainText('21.7');
+  await expect.poll(() => page.evaluate(() => {
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; waistCm?: number }>;
+    return logs['2026-05-11'];
+  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, waistCm: 77.3 });
+  await expect.poll(() => page.evaluate(() => {
+    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number };
+    return {
+      heightCm: profile.heightCm,
+      weightKg: profile.weightKg,
+      waistCircumferenceCm: profile.waistCircumferenceCm,
+    };
+  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3 });
 });
 
 test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {
