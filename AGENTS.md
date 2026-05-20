@@ -21,6 +21,12 @@ Use TypeScript and React function components. Follow the existing two-space inde
 
 The `/muscles` page is dynamic and reads active routine, scheduled workout, and logged history data through the shared volume engines. If you add, rename, or remove a `MuscleGroup` in `lib/types.ts` or update exercise muscle contributions in `lib/smv.ts`, also update the muscle map layer in `lib/muscle-map.ts`: region mappings, display labels/targets through `MUSCLE_PRIORITY_PROFILES`, selected-muscle behavior, and the `/muscles` Playwright coverage if the visible output changes. Do not leave a new `MuscleGroup` unmapped, because the body heatmap and copied muscle report depend on that mapping.
 
+## Private Agent Context
+
+The private training objective is maximum clothed SMV: optimize the athlete's visible, clothed physique signal with priority on shoulder-to-waist ratio, lateral delts, lats/back width, upper chest, posture, and recoverable hypertrophy. Keep this objective in mind when changing programming, scoring, progression, muscle-map logic, or body-progress logic.
+
+Do not expose this private objective in public-facing surfaces. UI copy, `README.md`, copied routine reports, screenshots, and user-visible labels should stay neutral and describe workouts, measurements, body ratio, targets, and routine management without naming the aesthetic goal or personal rationale.
+
 ## Apple Watch UX/UI Requirements
 
 LiftDay must be Apple Watch first across the entire app, with Today as the primary hub and secondary areas reached through short list rows and shallow drill-downs. Before changing navigation, Program, Progress, workout, or settings screens, review the current Apple Human Interface Guidelines for watchOS and apply the relevant patterns for glanceable, wrist-sized interactions. Treat clutter as a bug: reduce dense copy, nested panels, oversized charts, repeated labels, and competing controls before adding more UI.
