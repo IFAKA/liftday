@@ -69,6 +69,14 @@ function TodayContent({ date }: { date: Date }) {
     setDailyLogs(loadDailyLogs());
   }, []);
 
+  if (!workout.isReady) {
+    return (
+      <div className="flex items-center justify-center h-[100dvh] bg-black">
+        <Dumbbell className="w-8 h-8 text-white/50 animate-pulse" />
+      </div>
+    );
+  }
+
   // Rest day
   if (!schedule.isTraining) {
     return (

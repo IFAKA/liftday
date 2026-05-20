@@ -61,6 +61,7 @@ export interface UseWorkoutReturn {
   hasSwapAlternative: boolean;
   swapAlternatives: Exercise[];
   canDeferMachineOccupied: boolean;
+  isReady: boolean;
   startWorkout: () => Promise<void>;
   startWarmupTimer: () => void;
   beginWorkoutAfterWarmup: () => void;
@@ -101,6 +102,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [skippedChainIndices, setSkippedChainIndices] = useState<Set<number>>(new Set());
   const [requeuedExercises, setRequeuedExercises] = useState<RequeuedExercise[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [restorationChecked, setRestorationChecked] = useState(false);
   const [autoAdjustSuggestions, setAutoAdjustSuggestions] = useState<Record<string, AutoAdjustSuggestion>>({});
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -260,11 +262,16 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [state]);
 
   useEffect(() => {
-    if (!hydrated || restoredDraftRef.current || workoutType === 'rest' || exercises.length === 0) return;
+    if (!hydrated || restoredDraftRef.current) return;
     restoredDraftRef.current = true;
+    if (workoutType === 'rest' || exercises.length === 0) {
+      setRestorationChecked(true);
+      return;
+    }
     const draft = loadActiveWorkoutDraft();
     if (!draft || draft.dateKey !== dateKey || draft.workoutType !== workoutType) {
       if (draft && draft.dateKey !== dateKey) clearActiveWorkoutDraft();
+      setRestorationChecked(true);
       return;
     }
 
@@ -302,6 +309,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
           setCurrentSet(draft.currentSet + 1);
           setTimer(currentPrescription?.restSeconds ?? restDurationRef.current);
           setState('exercising');
+          setRestorationChecked(true);
           return;
         }
         const nextIdx = draft.exerciseIndex + 1;
@@ -311,6 +319,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
           setNextExerciseName(exercises[nextIdx].name);
           setTimer(currentPrescription?.restSeconds ?? restDurationRef.current);
           setState('transitioning');
+          setRestorationChecked(true);
           return;
         }
       } else {
@@ -321,6 +330,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     }
 
     setState(draft.state);
+    setRestorationChecked(true);
   }, [currentPrescription, dateKey, exercisePlan, exercises, hydrated, setsPerExercise, workoutType]);
 
   const persistActiveDraft = useCallback((stateToPersist: ActiveWorkoutDraft['state']) => {
@@ -895,6 +905,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
+    isReady: hydrated && restorationChecked,
     startWorkout, startWarmupTimer, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,

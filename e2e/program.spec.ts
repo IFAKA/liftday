@@ -91,6 +91,36 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
+test('completed today mounts done state without flashing start state', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.setItem('traindaily_sessions', JSON.stringify({
+      '2026-05-11': {
+        logged_at: '2026-05-11T10:00:00.000Z',
+        started_at: '2026-05-11T09:30:00.000Z',
+        week_number: 1,
+        workout_type: 'push_a',
+      },
+    }));
+    (window as typeof window & { __sawStartBeforeDone?: boolean }).__sawStartBeforeDone = false;
+    const interval = window.setInterval(() => {
+      const text = document.body.innerText;
+      if (/\bSTART\b/.test(text) && !/\bDONE\b/.test(text)) {
+        (window as typeof window & { __sawStartBeforeDone?: boolean }).__sawStartBeforeDone = true;
+        window.clearInterval(interval);
+      }
+    }, 0);
+  });
+
+  await page.goto('/');
+
+  await expect(page.locator('body')).toContainText('DONE');
+  await page.waitForTimeout(250);
+  await expect.poll(() => page.evaluate(() => (window as typeof window & { __sawStartBeforeDone?: boolean }).__sawStartBeforeDone)).toBe(false);
+  await expect(page.getByRole('button', { name: /^start$/i })).toHaveCount(0);
+});
+
 test('settings body row opens the canonical body screen', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');
