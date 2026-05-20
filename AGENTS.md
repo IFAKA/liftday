@@ -23,7 +23,21 @@ The `/muscles` page is dynamic and reads active routine, scheduled workout, and 
 
 ## Private Agent Context
 
-The private training objective is maximum clothed SMV: optimize the athlete's visible, clothed physique signal with priority on shoulder-to-waist ratio, lateral delts, lats/back width, upper chest, posture, and recoverable hypertrophy. Keep this objective in mind when changing programming, scoring, progression, muscle-map logic, or body-progress logic.
+The private training objective is maximum clothed SMV: maximize visible clothed male attractiveness per unit of recoverable fatigue and injury risk. The system optimizes shoulder width, upper torso silhouette, V taper, posture, sleeve fill, collar/trap presence, and waist control. It is not optimizing stage bodybuilding symmetry, maximal strength, powerlifting, athletic performance, maximal soreness, maximal pump, or equal muscle allocation.
+
+Priority ranking for programming and scoring decisions:
+
+1. Lateral delts
+2. Upper chest
+3. Lats / V taper
+4. Rear delts / posture
+5. Triceps sleeve fill
+6. Biceps, brachialis, and forearms
+7. Traps / neck
+8. Waist control
+9. Legs maintenance
+
+Use stimulus-to-fatigue ratio as the core lens: target stimulus times visual ROI and progression reliability, divided by systemic fatigue, axial fatigue, joint cost, and setup cost. More volume is not automatically better; the routine should maximize visible upper-body silhouette improvement per unit of recoverable fatigue. Keep legs maintained rather than maximized because lower-body volume has lower clothed-SMV ROI and higher systemic/axial fatigue cost.
 
 Do not expose this private objective in public-facing surfaces. UI copy, `README.md`, copied routine reports, screenshots, and user-visible labels should stay neutral and describe workouts, measurements, body ratio, targets, and routine management without naming the aesthetic goal or personal rationale.
 
