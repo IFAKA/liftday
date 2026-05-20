@@ -196,6 +196,10 @@ export interface BodyTrendLog {
   chestCm?: number;
   hipCm?: number;
   neckCm?: number;
+  quadCm?: number;
+  calfCm?: number;
+  forearmCm?: number;
+  bicepsCm?: number;
   calories?: number;
   proteinGrams?: number;
 }
@@ -458,6 +462,11 @@ export interface UserProfile {
   waistCircumferenceCm?: number;
   hipCircumferenceCm?: number;
   neckCircumferenceCm?: number;
+  quadCircumferenceCm?: number;
+  calfCircumferenceCm?: number;
+  forearmCircumferenceCm?: number;
+  bicepsCircumferenceCm?: number;
+  targetWeightKg?: number;
   trainingBackground?: string;
   gymAccess?: boolean;
   injuryStatus?: string;

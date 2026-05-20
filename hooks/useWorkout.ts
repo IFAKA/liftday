@@ -629,6 +629,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     const isLastSet = currentSet + 1 >= currentSetCount;
     const isLastExercise = exerciseIndex + 1 >= exercises.length;
+    if (isLastSet && isLastExercise) {
+      saveAndComplete();
+      return;
+    }
+
     if (!isLastSet) {
       const nextSuggestion = getNextSetAutoAdjust({
         unit: currentExercise.unit,
@@ -656,16 +661,12 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     }
 
     setTimeout(() => {
-      if (isLastSet && isLastExercise) {
-        saveAndComplete();
-      } else {
-        restCompletionNotifiedRef.current = false;
-        const restSeconds = currentPrescription?.restSeconds ?? restDurationRef.current;
-        setTimer(restSeconds);
-        timerEndRef.current = Date.now() + restSeconds * 1000;
-        setTimerPaused(false);
-        setState('resting');
-      }
+      restCompletionNotifiedRef.current = false;
+      const restSeconds = currentPrescription?.restSeconds ?? restDurationRef.current;
+      setTimer(restSeconds);
+      timerEndRef.current = Date.now() + restSeconds * 1000;
+      setTimerPaused(false);
+      setState('resting');
     }, 700);
   }, [currentExercise, currentSet, currentSetCount, exerciseIndex, exercises, currentPrescription, currentTarget, previousEntry, topRecommendation, autoAdjustSuggestion, saveAndComplete]);
 

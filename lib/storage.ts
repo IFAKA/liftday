@@ -107,6 +107,11 @@ export function migrateUserProfile(profile: UserProfile): UserProfile {
   if (!migrated.waistCircumferenceCm) migrated.waistCircumferenceCm = 76.5;
   if (!migrated.hipCircumferenceCm) migrated.hipCircumferenceCm = 85;
   if (!migrated.neckCircumferenceCm) migrated.neckCircumferenceCm = 37;
+  if (!migrated.quadCircumferenceCm) migrated.quadCircumferenceCm = 50;
+  if (!migrated.calfCircumferenceCm) migrated.calfCircumferenceCm = 35;
+  if (!migrated.forearmCircumferenceCm) migrated.forearmCircumferenceCm = 25.5;
+  if (!migrated.bicepsCircumferenceCm) migrated.bicepsCircumferenceCm = 28;
+  if (!migrated.targetWeightKg) migrated.targetWeightKg = 72;
   if (!migrated.trainingBackground) migrated.trainingBackground = 'Rugby 15 years; intermittent gym blocks';
   if (migrated.gymAccess === undefined) migrated.gymAccess = true;
   if (!migrated.injuryStatus) migrated.injuryStatus = 'No injuries or pain';
@@ -139,6 +144,11 @@ export function setBodyProfileFallbacks(input: {
   chestCircumferenceCm?: number;
   hipCircumferenceCm?: number;
   neckCircumferenceCm?: number;
+  quadCircumferenceCm?: number;
+  calfCircumferenceCm?: number;
+  forearmCircumferenceCm?: number;
+  bicepsCircumferenceCm?: number;
+  targetWeightKg?: number;
 }): void {
   const profile = loadUserProfile() ?? getDefaultProfile();
   profile.heightCm = input.heightCm;
@@ -155,6 +165,21 @@ export function setBodyProfileFallbacks(input: {
   }
   if (input.neckCircumferenceCm !== undefined) {
     profile.neckCircumferenceCm = input.neckCircumferenceCm;
+  }
+  if (input.quadCircumferenceCm !== undefined) {
+    profile.quadCircumferenceCm = input.quadCircumferenceCm;
+  }
+  if (input.calfCircumferenceCm !== undefined) {
+    profile.calfCircumferenceCm = input.calfCircumferenceCm;
+  }
+  if (input.forearmCircumferenceCm !== undefined) {
+    profile.forearmCircumferenceCm = input.forearmCircumferenceCm;
+  }
+  if (input.bicepsCircumferenceCm !== undefined) {
+    profile.bicepsCircumferenceCm = input.bicepsCircumferenceCm;
+  }
+  if (input.targetWeightKg !== undefined) {
+    profile.targetWeightKg = input.targetWeightKg;
   }
   saveUserProfile(profile);
 }
@@ -196,6 +221,11 @@ export function getDefaultProfile(): UserProfile {
     waistCircumferenceCm: 76.5,
     hipCircumferenceCm: 85,
     neckCircumferenceCm: 37,
+    quadCircumferenceCm: 50,
+    calfCircumferenceCm: 35,
+    forearmCircumferenceCm: 25.5,
+    bicepsCircumferenceCm: 28,
+    targetWeightKg: 72,
     trainingBackground: 'Rugby 15 years; intermittent gym blocks',
     gymAccess: true,
     injuryStatus: 'No injuries or pain',
