@@ -1,22 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { Activity, AlertTriangle, CalendarDays, ChartBar, Check, CheckCircle, Dumbbell, Flame, Scale, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ExerciseScreen } from '@/components/ExerciseScreen';
-import { RestTimer } from '@/components/RestTimer';
-import { ExerciseTransition } from '@/components/ExerciseTransition';
-import { SessionComplete } from '@/components/SessionComplete';
-import { PrepTimer } from '@/components/PrepTimer';
-import { RestDayScreen } from '@/components/RestDayScreen';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
 import { formatDateKey, formatDisplayDate } from '@/lib/workout-utils';
 import { formatWorkoutType, getWorkoutType, getTrainingStreak } from '@/lib/schedule';
-import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
 import { WatchListItem, WatchPanel } from './WatchSurface';
@@ -24,34 +18,60 @@ import { DailyLog } from '@/lib/types';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog } from '@/lib/storage';
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
+const ScreenFallback = () => <LoadingScreen />;
+
+const ExerciseScreen = dynamic(
+  () => import('@/components/ExerciseScreen').then((mod) => mod.ExerciseScreen),
+  { loading: ScreenFallback, ssr: false }
+);
+const RestTimer = dynamic(
+  () => import('@/components/RestTimer').then((mod) => mod.RestTimer),
+  { loading: ScreenFallback, ssr: false }
+);
+const ExerciseTransition = dynamic(
+  () => import('@/components/ExerciseTransition').then((mod) => mod.ExerciseTransition),
+  { loading: ScreenFallback, ssr: false }
+);
+const SessionComplete = dynamic(
+  () => import('@/components/SessionComplete').then((mod) => mod.SessionComplete),
+  { loading: ScreenFallback, ssr: false }
+);
+const PrepTimer = dynamic(
+  () => import('@/components/PrepTimer').then((mod) => mod.PrepTimer),
+  { loading: ScreenFallback, ssr: false }
+);
+const RestDayScreen = dynamic(
+  () => import('@/components/RestDayScreen').then((mod) => mod.RestDayScreen),
+  { loading: ScreenFallback, ssr: false }
+);
 
 export function TodayScreen() {
-  const [mounted, setMounted] = useState(false);
+  const [today, setToday] = useState<Date | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
     if (!hasSeenOnboarding) {
       router.replace('/onboarding');
+      return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setToday(new Date());
   }, [router]);
 
-  const today = useMemo(() => {
-    if (!mounted) return null;
-    return new Date();
-  }, [mounted]);
-
   if (!today) {
-    return (
-      <div className="flex items-center justify-center h-[100dvh] bg-black">
-        <Dumbbell className="w-8 h-8 text-white/50 animate-pulse" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return <TodayContent date={today} />;
+}
+
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-[100dvh] bg-black">
+      <Dumbbell className="w-8 h-8 text-white/50 animate-pulse" />
+    </div>
+  );
 }
 
 function TodayContent({ date }: { date: Date }) {
@@ -70,11 +90,7 @@ function TodayContent({ date }: { date: Date }) {
   }, []);
 
   if (!workout.isReady) {
-    return (
-      <div className="flex items-center justify-center h-[100dvh] bg-black">
-        <Dumbbell className="w-8 h-8 text-white/50 animate-pulse" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Rest day
@@ -206,9 +222,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
   }
 
   return (
-    <motion.div
-      className="flex flex-col h-full overflow-hidden bg-black relative"
-    >
+    <div className="flex flex-col h-full overflow-hidden bg-black relative">
       <TopBar
         center={
           <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
@@ -313,7 +327,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
           </div>
         </>
       )}
-    </motion.div>
+    </div>
   );
 }
 

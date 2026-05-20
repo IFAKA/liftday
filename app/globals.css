@@ -242,6 +242,17 @@ input[type="number"] {
   to { transform: translateY(0); opacity: 1; }
 }
 
+[data-route-transition] {
+  animation: route-slide-in 0.18s var(--ease-drawer-ui) both;
+  contain: layout paint;
+  will-change: transform;
+}
+
+@keyframes route-slide-in {
+  from { transform: translateX(18px); }
+  to { transform: translateX(0); }
+}
+
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -250,6 +261,10 @@ input[type="number"] {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  [data-route-transition] {
+    animation: none !important;
   }
 }
 

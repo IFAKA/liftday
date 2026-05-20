@@ -3,7 +3,6 @@ import './globals.css';
 import { WakeLockProvider } from '@/components/WakeLockProvider';
 import { DebugTraceButton } from '@/components/DebugTraceButton';
 import { RouteTransition } from '@/components/RouteTransition';
-import { MotionConfig } from 'framer-motion';
 
 export const metadata: Metadata = {
   title: 'LiftDay',
@@ -36,16 +35,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="font-sans antialiased bg-black text-foreground overflow-hidden h-[100dvh]">
-        <MotionConfig reducedMotion="user">
-          <div className="mx-auto h-full w-full max-w-[430px] overflow-hidden bg-background relative flex flex-col">
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <WakeLockProvider>
-                <RouteTransition>{children}</RouteTransition>
-              </WakeLockProvider>
-            </div>
-            <DebugTraceButton />
+        <div className="mx-auto h-full w-full max-w-[430px] overflow-hidden bg-background relative flex flex-col">
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <WakeLockProvider>
+              <RouteTransition>{children}</RouteTransition>
+            </WakeLockProvider>
           </div>
-        </MotionConfig>
+          <DebugTraceButton />
+        </div>
       </body>
     </html>
   );
