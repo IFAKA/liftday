@@ -5,21 +5,9 @@ import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { RoutineScreen } from '@/components/RoutineScreen';
 import { loadWorkoutData } from '@/lib/storage';
-import { WorkoutData, WorkoutType, Exercise, SetEntry } from '@/lib/types';
+import { WorkoutData, Exercise, SetEntry } from '@/lib/types';
 import { EXERCISES } from '@/lib/constants';
-import { formatWorkoutType } from '@/lib/schedule';
-
-const TYPE_COLOR: Record<Exclude<WorkoutType, 'rest'>, string> = {
-  push_a: 'text-orange-400',
-  pull_a: 'text-blue-400',
-  legs_maintenance: 'text-green-400',
-  push_b: 'text-orange-300',
-  pull_b: 'text-sky-300',
-  delts_arms: 'text-pink-300',
-  push: 'text-orange-400',
-  pull: 'text-blue-400',
-  legs: 'text-green-400',
-};
+import { formatWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 
 export default function HistoryDetailPage() {
   const params = useParams<{ date: string }>();
@@ -54,7 +42,7 @@ export default function HistoryDetailPage() {
     <RoutineScreen
       exercises={exercisesWithReps}
       title={wt ? formatWorkoutType(wt) : ''}
-      titleColor={wt ? TYPE_COLOR[wt] : 'text-white'}
+      titleColor={wt ? getWorkoutTypeTone(wt) : 'text-white'}
       subtitle={format(displayDate, 'MMM d, EEE').toUpperCase()}
       loggedReps={loggedReps}
     />

@@ -7,13 +7,7 @@ import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import { EXERCISES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { formatWorkoutType } from '@/lib/schedule';
-
-const TYPE_COLOR: Record<string, string> = {
-  push: 'text-orange-400',
-  pull: 'text-blue-400',
-  legs: 'text-green-400',
-};
+import { formatWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 
 export default function ExerciseDetailPage() {
   const router = useRouter();
@@ -56,7 +50,7 @@ export default function ExerciseDetailPage() {
             <button
               type="button"
               onClick={handleCopyName}
-              className={cn('max-w-52 truncate rounded-lg px-2 py-1 text-fluid-ui font-black uppercase tracking-tight leading-none active:bg-white/10', TYPE_COLOR[ex.workoutType] ?? 'text-white')}
+              className={cn('max-w-52 truncate rounded-lg px-2 py-1 text-fluid-ui font-black uppercase tracking-tight leading-none active:bg-white/10', getWorkoutTypeTone(ex.workoutType))}
               aria-label={`Copy ${exerciseName}`}
             >
               {exerciseName}
@@ -90,7 +84,7 @@ export default function ExerciseDetailPage() {
           </div>
           <div className="flex flex-col gap-1 px-4 py-3 rounded-xl bg-white/5 flex-1">
             <span className="text-fluid-label font-mono text-white/30 uppercase tracking-widest">Type</span>
-            <span className={cn('text-fluid-ui font-black uppercase', TYPE_COLOR[ex.workoutType] ?? 'text-white')}>{formatWorkoutType(ex.workoutType)}</span>
+            <span className={cn('text-fluid-ui font-black uppercase', getWorkoutTypeTone(ex.workoutType))}>{formatWorkoutType(ex.workoutType)}</span>
           </div>
         </div>
 

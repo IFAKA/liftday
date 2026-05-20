@@ -3,28 +3,15 @@
 import { startOfWeek, addDays, isSameDay, isBefore, format } from 'date-fns';
 import { CheckCircle2, Circle, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatWorkoutType, getWorkoutType } from '@/lib/schedule';
+import { formatWorkoutType, getWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
-import { WorkoutData, WorkoutType } from '@/lib/types';
+import { WorkoutData } from '@/lib/types';
 
 interface WeeklySplitProps {
   currentDate: Date;
   data: WorkoutData;
   embedded?: boolean;
 }
-
-const WORKOUT_TYPE_COLORS: Record<WorkoutType, string> = {
-  push_a: 'text-orange-400',
-  pull_a: 'text-blue-400',
-  legs_maintenance: 'text-green-400',
-  push_b: 'text-orange-300',
-  pull_b: 'text-sky-300',
-  delts_arms: 'text-pink-300',
-  push: 'text-orange-400',
-  pull: 'text-blue-400',
-  legs: 'text-green-400',
-  rest: 'text-white/20',
-};
 
 export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplitProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -60,7 +47,7 @@ export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplit
                   <span
                     className={cn(
                       'mt-1 text-fluid-ui font-black uppercase leading-none truncate',
-                      WORKOUT_TYPE_COLORS[workoutType],
+                      getWorkoutTypeTone(workoutType),
                     )}
                   >
                     {formatWorkoutType(workoutType)}

@@ -3,6 +3,18 @@ import { WorkoutType } from './types';
 import { formatDateKey, formatDisplayDate } from './workout-utils';
 
 const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'];
+const WORKOUT_TYPE_TONES: Record<WorkoutType, string> = {
+  push_a: 'text-orange-400',
+  pull_a: 'text-blue-400',
+  legs_maintenance: 'text-green-400',
+  push_b: 'text-orange-300',
+  pull_b: 'text-sky-300',
+  delts_arms: 'text-pink-300',
+  push: 'text-orange-400',
+  pull: 'text-blue-400',
+  legs: 'text-green-400',
+  rest: 'text-white/20',
+};
 
 /** Returns the workout type for a given date using the routine's schedule (or the default 6-day PPL). */
 export function getWorkoutType(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[]): WorkoutType {
@@ -80,6 +92,10 @@ export function formatWorkoutType(workoutType: WorkoutType): string {
     case 'delts_arms': return 'DELTS + ARMS';
     default: return workoutType.toUpperCase();
   }
+}
+
+export function getWorkoutTypeTone(workoutType: WorkoutType): string {
+  return WORKOUT_TYPE_TONES[workoutType];
 }
 
 export function getTrainingStreak(

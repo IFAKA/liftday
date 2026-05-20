@@ -17,7 +17,7 @@ import {
   WatchPanel,
   WatchSection,
 } from './WatchSurface';
-import { formatWorkoutType } from '@/lib/schedule';
+import { formatWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 
 export function ProgramDetailScreen() {
   const router = useRouter();
@@ -79,7 +79,7 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
 
         return (
           <WatchPanel key={`${workoutType}-${dayIndex}`} subtle>
-            <p className={cn('mb-3 text-fluid-label font-black uppercase', getWorkoutTone(workoutType))}>
+            <p className={cn('mb-3 text-fluid-label font-black uppercase', getWorkoutTypeTone(workoutType))}>
               {formatWorkoutType(workoutType)}
             </p>
             <div className="flex flex-col gap-2">
@@ -138,11 +138,4 @@ async function copyText(text: string): Promise<void> {
   textarea.select();
   document.execCommand('copy');
   textarea.remove();
-}
-
-function getWorkoutTone(workoutType: string): string {
-  if (workoutType.startsWith('push')) return 'text-orange-400';
-  if (workoutType.startsWith('pull')) return 'text-blue-400';
-  if (workoutType === 'delts_arms') return 'text-pink-300';
-  return 'text-green-400';
 }

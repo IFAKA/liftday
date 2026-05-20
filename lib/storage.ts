@@ -2,16 +2,10 @@ import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserPr
 import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY, DAILY_LOGS_KEY } from './constants';
 import { formatDateKey } from './workout-utils';
 import { SMV_PROFILE_DEFAULTS } from './smv';
+import { readJsonStorage, readStorageValue, removeStorageValue, writeJsonStorage, writeStorageValue } from './browser-storage';
 
 export function loadWorkoutData(): WorkoutData {
-  try {
-    if (typeof window === 'undefined') return {};
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    return migrateWorkoutData(JSON.parse(raw) as WorkoutData);
-  } catch {
-    return {};
-  }
+  return readJsonStorage(STORAGE_KEY, {}, (value) => migrateWorkoutData(value as WorkoutData));
 }
 
 export function migrateWorkoutData(data: WorkoutData): WorkoutData {
@@ -33,14 +27,7 @@ export function migrateWorkoutData(data: WorkoutData): WorkoutData {
 }
 
 export function loadDailyLogs(): Record<string, DailyLog> {
-  try {
-    if (typeof window === 'undefined') return {};
-    const raw = localStorage.getItem(DAILY_LOGS_KEY);
-    if (!raw) return {};
-    return migrateDailyLogs(JSON.parse(raw) as Record<string, DailyLog>);
-  } catch {
-    return {};
-  }
+  return readJsonStorage(DAILY_LOGS_KEY, {}, (value) => migrateDailyLogs(value as Record<string, DailyLog>));
 }
 
 export function migrateDailyLogs(logs: Record<string, DailyLog>): Record<string, DailyLog> {
@@ -60,52 +47,28 @@ export function migrateDailyLogs(logs: Record<string, DailyLog>): Record<string,
 }
 
 export function saveDailyLog(dateKey: string, log: DailyLog): void {
-  try {
-    if (typeof window === 'undefined') return;
-    const logs = loadDailyLogs();
-    logs[dateKey] = { ...logs[dateKey], ...log, dateKey };
-    localStorage.setItem(DAILY_LOGS_KEY, JSON.stringify(logs));
-  } catch {
-    // localStorage full or unavailable
-  }
+  const logs = loadDailyLogs();
+  logs[dateKey] = { ...logs[dateKey], ...log, dateKey };
+  writeJsonStorage(DAILY_LOGS_KEY, logs);
 }
 
 export function saveWorkoutData(data: WorkoutData): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // localStorage full or unavailable
-  }
+  writeJsonStorage(STORAGE_KEY, data);
 }
 
 export function loadActiveWorkoutDraft(): ActiveWorkoutDraft | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    const raw = localStorage.getItem(ACTIVE_WORKOUT_DRAFT_KEY);
-    if (!raw) return null;
-    const draft = JSON.parse(raw) as ActiveWorkoutDraft;
+  return readJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => {
+    const draft = value as ActiveWorkoutDraft;
     return draft.version === 1 ? draft : null;
-  } catch {
-    return null;
-  }
+  });
 }
 
 export function saveActiveWorkoutDraft(draft: ActiveWorkoutDraft): void {
-  try {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(ACTIVE_WORKOUT_DRAFT_KEY, JSON.stringify(draft));
-  } catch {
-    // localStorage full or unavailable
-  }
+  writeJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, draft);
 }
 
 export function clearActiveWorkoutDraft(): void {
-  try {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(ACTIVE_WORKOUT_DRAFT_KEY);
-  } catch {
-    // ignore
-  }
+  removeStorageValue(ACTIVE_WORKOUT_DRAFT_KEY);
 }
 
 export function saveSession(dateKey: string, session: WorkoutSession): void {
@@ -115,35 +78,19 @@ export function saveSession(dateKey: string, session: WorkoutSession): void {
 }
 
 export function getFirstSessionDate(): string | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(FIRST_SESSION_KEY);
-  } catch {
-    return null;
-  }
+  return readStorageValue(FIRST_SESSION_KEY);
 }
 
 export function setFirstSessionDate(dateKey: string): void {
-  try {
-    if (!localStorage.getItem(FIRST_SESSION_KEY)) {
-      localStorage.setItem(FIRST_SESSION_KEY, dateKey);
-    }
-  } catch {
-    // ignore
+  if (!readStorageValue(FIRST_SESSION_KEY)) {
+    writeStorageValue(FIRST_SESSION_KEY, dateKey);
   }
 }
 
 // ── User Profile ──────────────────────────────────────────────────────────────
 
 export function loadUserProfile(): UserProfile | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    const raw = localStorage.getItem(USER_PROFILE_KEY);
-    if (!raw) return null;
-    return migrateUserProfile(JSON.parse(raw) as UserProfile);
-  } catch {
-    return null;
-  }
+  return readJsonStorage(USER_PROFILE_KEY, null, (value) => migrateUserProfile(value as UserProfile));
 }
 
 export function migrateUserProfile(profile: UserProfile): UserProfile {
@@ -216,12 +163,7 @@ export function setTrainingProfile(input: {
 }
 
 export function saveUserProfile(profile: UserProfile): void {
-  try {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
-  } catch {
-    // localStorage full or unavailable
-  }
+  writeJsonStorage(USER_PROFILE_KEY, profile);
 }
 
 /** Default profile for brand-new users — all tiers start at 0. */
@@ -260,18 +202,8 @@ export const pwaStorage: StorageAdapter = {
   saveDailyLog: async (dateKey, log) => saveDailyLog(dateKey, log),
   getFirstSessionDate: async () => getFirstSessionDate(),
   setFirstSessionDate: async (dateKey) => setFirstSessionDate(dateKey),
-  getMobilityDone: async (dateKey) => {
-    try {
-      return localStorage.getItem(MOBILITY_DONE_KEY) === dateKey;
-    } catch {
-      return false;
-    }
-  },
+  getMobilityDone: async (dateKey) => readStorageValue(MOBILITY_DONE_KEY) === dateKey,
   setMobilityDone: async () => {
-    try {
-      localStorage.setItem(MOBILITY_DONE_KEY, formatDateKey(new Date()));
-    } catch {
-      // ignore
-    }
+    writeStorageValue(MOBILITY_DONE_KEY, formatDateKey(new Date()));
   },
 };

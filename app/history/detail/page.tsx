@@ -1,18 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useEffect } from 'react';
 import { ProgressDetailScreen } from '@/components/ProgressDetailScreen';
-import { loadWorkoutData } from '@/lib/storage';
-import { WorkoutData } from '@/lib/types';
+import { useStoredWorkoutData } from '@/hooks/useStoredWorkoutData';
 
 export default function HistoryDetailPage() {
-  const [data, setData] = useState<WorkoutData>({});
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setData(loadWorkoutData());
-  }, []);
-
+  const data = useStoredWorkoutData();
   return <ProgressDetailScreen data={data} />;
 }

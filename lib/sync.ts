@@ -6,6 +6,7 @@ import {
   STORAGE_KEY,
   USER_PROFILE_KEY,
 } from './constants';
+import { readBooleanFlag, readJsonStorage, readStorageValue, writeJsonStorage, writeStorageValue } from './browser-storage';
 import { migrateDailyLogs, migrateUserProfile, migrateWorkoutData } from './storage';
 import { ActiveWorkoutDraft, DailyLog, UserProfile, WorkoutData, WorkoutSession } from './types';
 
@@ -71,8 +72,8 @@ export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshot
     dailyLogs: readDailyLogs(),
     profile: readProfile(),
     activeWorkoutDraft: readActiveWorkoutDraft(),
-    firstSessionDate: readString(FIRST_SESSION_KEY),
-    mobilityDoneDate: readString(MOBILITY_DONE_KEY),
+    firstSessionDate: readStorageValue(FIRST_SESSION_KEY),
+    mobilityDoneDate: readStorageValue(MOBILITY_DONE_KEY),
     onboardingCompleted: readBooleanFlag(ONBOARDING_KEY),
   };
 }
@@ -100,7 +101,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
 
   const current = createSyncSnapshot('laptop');
   const backupKey = `${BACKUP_PREFIX}${new Date().toISOString()}`;
-  localStorage.setItem(backupKey, serializeSyncSnapshot(current));
+  writeStorageValue(backupKey, serializeSyncSnapshot(current));
 
   const incomingSessions = getSnapshotSessions(snapshot);
   const mergedData: WorkoutData = { ...current.sessions };
@@ -125,7 +126,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     mergedData[dateKey] = newerSession(existingSession, incomingSession);
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedData));
+  writeJsonStorage(STORAGE_KEY, mergedData);
 
   const incomingDailyLogs = getSnapshotDailyLogs(snapshot);
   const mergedDailyLogs: Record<string, DailyLog> = { ...current.dailyLogs };
@@ -148,40 +149,40 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
   }
 
   if (Object.keys(incomingDailyLogs).length > 0) {
-    localStorage.setItem(DAILY_LOGS_KEY, JSON.stringify(mergedDailyLogs));
+    writeJsonStorage(DAILY_LOGS_KEY, mergedDailyLogs);
   }
 
   let profileImported = false;
   if (snapshot.profile) {
-    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(migrateUserProfile(snapshot.profile)));
+    writeJsonStorage(USER_PROFILE_KEY, migrateUserProfile(snapshot.profile));
     profileImported = true;
   }
 
   const firstSessionDate = earliestDate(current.firstSessionDate, snapshot.firstSessionDate);
   const firstSessionDateImported = firstSessionDate !== current.firstSessionDate;
   if (firstSessionDate) {
-    localStorage.setItem(FIRST_SESSION_KEY, firstSessionDate);
+    writeStorageValue(FIRST_SESSION_KEY, firstSessionDate);
   }
 
   let mobilityDoneDateImported = false;
   if (snapshot.mobilityDoneDate) {
-    localStorage.setItem(MOBILITY_DONE_KEY, snapshot.mobilityDoneDate);
+    writeStorageValue(MOBILITY_DONE_KEY, snapshot.mobilityDoneDate);
     mobilityDoneDateImported = snapshot.mobilityDoneDate !== current.mobilityDoneDate;
   }
 
   const importedDraft = getSnapshotActiveWorkoutDraft(snapshot);
   const activeWorkoutDraftImported = shouldImportDraft(current.activeWorkoutDraft, importedDraft);
   if (activeWorkoutDraftImported && importedDraft) {
-    localStorage.setItem(ACTIVE_WORKOUT_DRAFT_KEY, JSON.stringify(importedDraft));
+    writeJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, importedDraft);
   }
 
   const onboardingCompleted = getSnapshotOnboardingCompleted(snapshot, incomingSessions);
   const onboardingCompletedImported = onboardingCompleted && readBooleanFlag(ONBOARDING_KEY) !== true;
   if (onboardingCompleted) {
-    localStorage.setItem(ONBOARDING_KEY, 'true');
+    writeStorageValue(ONBOARDING_KEY, 'true');
   }
 
-  localStorage.setItem(LAST_IMPORT_KEY, JSON.stringify({
+  writeJsonStorage(LAST_IMPORT_KEY, {
     importedAt: new Date().toISOString(),
     exportedAt: snapshot.exportedAt,
     source: snapshot.source,
@@ -192,7 +193,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     mobilityDoneDateImported,
     onboardingCompletedImported,
     backupKey,
-  }));
+  });
 
   return {
     importedSessions: Object.keys(incomingSessions).length,
@@ -217,76 +218,26 @@ export function getLocalSyncSummary() {
   const dates = Object.keys(data).sort();
   return {
     sessionCount: dates.length,
-    firstSessionDate: readString(FIRST_SESSION_KEY) ?? dates[0] ?? null,
+    firstSessionDate: readStorageValue(FIRST_SESSION_KEY) ?? dates[0] ?? null,
     latestSessionDate: dates.at(-1) ?? null,
-    lastImport: readString(LAST_IMPORT_KEY),
+    lastImport: readStorageValue(LAST_IMPORT_KEY),
   };
 }
 
 function readWorkoutData(): WorkoutData {
-  try {
-    if (typeof window === 'undefined') return {};
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as unknown;
-    return isWorkoutData(parsed) ? migrateWorkoutData(parsed) : {};
-  } catch {
-    return {};
-  }
+  return readJsonStorage(STORAGE_KEY, {}, (value) => isWorkoutData(value) ? migrateWorkoutData(value) : {});
 }
 
 function readDailyLogs(): Record<string, DailyLog> {
-  try {
-    if (typeof window === 'undefined') return {};
-    const raw = localStorage.getItem(DAILY_LOGS_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as unknown;
-    return isDailyLogs(parsed) ? migrateDailyLogs(parsed) : {};
-  } catch {
-    return {};
-  }
+  return readJsonStorage(DAILY_LOGS_KEY, {}, (value) => isDailyLogs(value) ? migrateDailyLogs(value) : {});
 }
 
 function readProfile(): UserProfile | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    const raw = localStorage.getItem(USER_PROFILE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    return isUserProfile(parsed) ? migrateUserProfile(parsed) : null;
-  } catch {
-    return null;
-  }
+  return readJsonStorage(USER_PROFILE_KEY, null, (value) => isUserProfile(value) ? migrateUserProfile(value) : null);
 }
 
 function readActiveWorkoutDraft(): ActiveWorkoutDraft | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    const raw = localStorage.getItem(ACTIVE_WORKOUT_DRAFT_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    return isActiveWorkoutDraft(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function readString(key: string): string | null {
-  try {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function readBooleanFlag(key: string): boolean {
-  try {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(key) === 'true';
-  } catch {
-    return false;
-  }
+  return readJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => isActiveWorkoutDraft(value) ? value : null);
 }
 
 function newerSession(current: WorkoutSession, incoming: WorkoutSession): WorkoutSession {
