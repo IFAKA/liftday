@@ -65,7 +65,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col items-center overflow-hidden bg-black">
       <TopBar
         leftAction={
           step > 0 ? (
