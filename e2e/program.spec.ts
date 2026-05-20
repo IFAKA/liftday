@@ -106,7 +106,7 @@ test('settings body row opens the canonical body screen', async ({ page }) => {
 
   await page.goto('/settings');
 
-  const bodyRow = page.getByRole('button', { name: /body weight, waist, height/i });
+  const bodyRow = page.getByRole('button', { name: /body weight, measurements/i });
   await expect(bodyRow).toBeVisible();
   await expect(page.locator('body')).not.toContainText('82.4kg');
 
@@ -372,6 +372,7 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Height');
   await expect(page.locator('body')).toContainText('Shoulder');
   await expect(page.locator('body')).toContainText('Body ratio');
+  await expect(page.locator('body')).toContainText('Chest');
   await expect(page.locator('body')).toContainText('Hip');
   await expect(page.locator('body')).toContainText('85cm');
 });
@@ -494,6 +495,9 @@ test('body detail editor saves today body logs and profile height fallback', asy
       weightKg: 68.6,
       shoulderCircumferenceCm: 112,
       waistCircumferenceCm: 76.5,
+      chestCircumferenceCm: 90,
+      hipCircumferenceCm: 85,
+      neckCircumferenceCm: 37,
     }));
   });
 
@@ -504,6 +508,9 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await page.getByRole('spinbutton', { name: /weight kg/i }).fill('70.2');
   await page.getByRole('spinbutton', { name: /waist cm/i }).fill('77.3');
   await page.getByRole('spinbutton', { name: /shoulder cm/i }).fill('113.2');
+  await page.getByRole('spinbutton', { name: /chest cm/i }).fill('91.4');
+  await page.getByRole('spinbutton', { name: /hip cm/i }).fill('86.5');
+  await page.getByRole('spinbutton', { name: /neck cm/i }).fill('37.8');
   await page.getByRole('spinbutton', { name: /height cm/i }).fill('180');
   await page.getByRole('button', { name: /^save$/i }).click();
 
@@ -512,21 +519,27 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await page.getByRole('button', { name: /more body stats/i }).click();
   await expect(page.locator('body')).toContainText('180cm');
   await expect(page.locator('body')).toContainText('113.2cm');
+  await expect(page.locator('body')).toContainText('91.4cm');
+  await expect(page.locator('body')).toContainText('86.5cm');
+  await expect(page.locator('body')).toContainText('37.8cm');
   await expect(page.locator('body')).toContainText('1.46');
   await expect(page.locator('body')).toContainText('21.7');
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; waistCm?: number; shoulderCm?: number }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; heightCm?: number; waistCm?: number; shoulderCm?: number; chestCm?: number; hipCm?: number; neckCm?: number }>;
     return logs['2026-05-11'];
-  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, waistCm: 77.3, shoulderCm: 113.2 });
+  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, heightCm: 180, waistCm: 77.3, shoulderCm: 113.2, chestCm: 91.4, hipCm: 86.5, neckCm: 37.8 });
   await expect.poll(() => page.evaluate(() => {
-    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number };
+    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number; chestCircumferenceCm?: number; hipCircumferenceCm?: number; neckCircumferenceCm?: number };
     return {
       heightCm: profile.heightCm,
       weightKg: profile.weightKg,
       waistCircumferenceCm: profile.waistCircumferenceCm,
       shoulderCircumferenceCm: profile.shoulderCircumferenceCm,
+      chestCircumferenceCm: profile.chestCircumferenceCm,
+      hipCircumferenceCm: profile.hipCircumferenceCm,
+      neckCircumferenceCm: profile.neckCircumferenceCm,
     };
-  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3, shoulderCircumferenceCm: 113.2 });
+  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3, shoulderCircumferenceCm: 113.2, chestCircumferenceCm: 91.4, hipCircumferenceCm: 86.5, neckCircumferenceCm: 37.8 });
 });
 
 test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {

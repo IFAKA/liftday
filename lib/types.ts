@@ -190,8 +190,12 @@ export interface BodyTrendLog {
   dateKey: string;
   morningWeightKg?: number;
   weightCheckSkipped?: boolean;
+  heightCm?: number;
   waistCm?: number;
   shoulderCm?: number;
+  chestCm?: number;
+  hipCm?: number;
+  neckCm?: number;
   calories?: number;
   proteinGrams?: number;
 }

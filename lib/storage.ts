@@ -136,6 +136,9 @@ export function setBodyProfileFallbacks(input: {
   weightKg: number;
   waistCircumferenceCm: number;
   shoulderCircumferenceCm?: number;
+  chestCircumferenceCm?: number;
+  hipCircumferenceCm?: number;
+  neckCircumferenceCm?: number;
 }): void {
   const profile = loadUserProfile() ?? getDefaultProfile();
   profile.heightCm = input.heightCm;
@@ -143,6 +146,15 @@ export function setBodyProfileFallbacks(input: {
   profile.waistCircumferenceCm = input.waistCircumferenceCm;
   if (input.shoulderCircumferenceCm !== undefined) {
     profile.shoulderCircumferenceCm = input.shoulderCircumferenceCm;
+  }
+  if (input.chestCircumferenceCm !== undefined) {
+    profile.chestCircumferenceCm = input.chestCircumferenceCm;
+  }
+  if (input.hipCircumferenceCm !== undefined) {
+    profile.hipCircumferenceCm = input.hipCircumferenceCm;
+  }
+  if (input.neckCircumferenceCm !== undefined) {
+    profile.neckCircumferenceCm = input.neckCircumferenceCm;
   }
   saveUserProfile(profile);
 }

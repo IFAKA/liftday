@@ -51,7 +51,7 @@ export default function SettingsPage() {
         <WatchListItem
           onClick={() => router.push('/history/body')}
           title="Body"
-          subtitle="Weight, waist, height"
+          subtitle="Weight, measurements"
         />
 
         <WatchListItem

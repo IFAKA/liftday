@@ -27,7 +27,15 @@ export function BodyDetailScreen() {
   }));
   const [isEditing, setIsEditing] = useState(false);
   const [showMoreStats, setShowMoreStats] = useState(false);
-  const [draft, setDraft] = useState({ weightKg: '', waistCm: '', shoulderCm: '', heightCm: '' });
+  const [draft, setDraft] = useState({
+    weightKg: '',
+    waistCm: '',
+    shoulderCm: '',
+    chestCm: '',
+    hipCm: '',
+    neckCm: '',
+    heightCm: '',
+  });
 
   function reloadSnapshot() {
     setSnapshot({
@@ -48,6 +56,9 @@ export function BodyDetailScreen() {
       weightKg: formatNumber(body.weightKg, 1),
       waistCm: formatNumber(body.waistCmValue, 1),
       shoulderCm: formatNumber(body.shoulderCmValue, 1),
+      chestCm: formatNumber(body.chestCmValue, 1),
+      hipCm: formatNumber(body.hipCmValue, 1),
+      neckCm: formatNumber(body.neckCmValue, 1),
       heightCm: String(body.heightCm),
     });
     setIsEditing(true);
@@ -57,21 +68,31 @@ export function BodyDetailScreen() {
     const weightKg = parseMeasurement(draft.weightKg);
     const waistCm = parseMeasurement(draft.waistCm);
     const shoulderCm = parseMeasurement(draft.shoulderCm);
+    const chestCm = parseMeasurement(draft.chestCm);
+    const hipCm = parseMeasurement(draft.hipCm);
+    const neckCm = parseMeasurement(draft.neckCm);
     const heightCm = parseMeasurement(draft.heightCm);
-    if (weightKg === null || waistCm === null || shoulderCm === null || heightCm === null) return;
+    if (weightKg === null || waistCm === null || shoulderCm === null || chestCm === null || hipCm === null || neckCm === null || heightCm === null) return;
 
     const dateKey = formatDateKey(new Date());
     saveDailyLog(dateKey, {
       dateKey,
       morningWeightKg: roundMeasurement(weightKg),
+      heightCm: roundMeasurement(heightCm),
       waistCm: roundMeasurement(waistCm),
       shoulderCm: roundMeasurement(shoulderCm),
+      chestCm: roundMeasurement(chestCm),
+      hipCm: roundMeasurement(hipCm),
+      neckCm: roundMeasurement(neckCm),
     });
     setBodyProfileFallbacks({
       heightCm: roundMeasurement(heightCm),
       weightKg: roundMeasurement(weightKg),
       waistCircumferenceCm: roundMeasurement(waistCm),
       shoulderCircumferenceCm: roundMeasurement(shoulderCm),
+      chestCircumferenceCm: roundMeasurement(chestCm),
+      hipCircumferenceCm: roundMeasurement(hipCm),
+      neckCircumferenceCm: roundMeasurement(neckCm),
     });
     reloadSnapshot();
     setIsEditing(false);
@@ -119,6 +140,9 @@ export function BodyDetailScreen() {
                 <BodyMetricInput label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => setDraft((current) => ({ ...current, weightKg }))} />
                 <BodyMetricInput label="Waist" unit="cm" value={draft.waistCm} onChange={(waistCm) => setDraft((current) => ({ ...current, waistCm }))} />
                 <BodyMetricInput label="Shoulder" unit="cm" value={draft.shoulderCm} onChange={(shoulderCm) => setDraft((current) => ({ ...current, shoulderCm }))} />
+                <BodyMetricInput label="Chest" unit="cm" value={draft.chestCm} onChange={(chestCm) => setDraft((current) => ({ ...current, chestCm }))} />
+                <BodyMetricInput label="Hip" unit="cm" value={draft.hipCm} onChange={(hipCm) => setDraft((current) => ({ ...current, hipCm }))} />
+                <BodyMetricInput label="Neck" unit="cm" value={draft.neckCm} onChange={(neckCm) => setDraft((current) => ({ ...current, neckCm }))} />
                 <BodyMetricInput label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => setDraft((current) => ({ ...current, heightCm }))} />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -160,6 +184,7 @@ export function BodyDetailScreen() {
             <WatchMetricGrid columns={2} className="mt-2">
               <WatchMetricCell label="Height" value={`${body.heightCm}cm`} />
               <WatchMetricCell label="Body ratio" value={body.shoulderWaistRatio} />
+              <WatchMetricCell label="Chest" value={body.chestCm} />
               <WatchMetricCell label="Hip" value={body.hipCm} />
               <WatchMetricCell label="Neck" value={body.neckCm} />
               <WatchMetricCell label="Chest/Waist" value={body.chestWaistRatio} />
@@ -183,16 +208,8 @@ export function BodyDetailScreen() {
           </WatchMetricGrid>
           <RatioTrendChart entries={body.ratioHistory} className="mt-3" />
           <div className="mt-3 flex flex-col gap-2">
-            {body.ratioHistory.slice(-8).reverse().map((entry) => (
-              <div key={entry.dateKey} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-lg border border-white/5 bg-black/25 px-3 py-2">
-                <p className="min-w-0 truncate text-fluid-label font-mono uppercase text-white/35">{entry.label}</p>
-                <p className="text-fluid-label font-mono font-black tabular-nums uppercase text-white/70">
-                  {formatNumber(entry.shoulderCm, 1)}cm
-                </p>
-                <p className="text-fluid-label font-mono font-black tabular-nums uppercase text-white/45">
-                  {entry.ratio.toFixed(2)}
-                </p>
-              </div>
+            {body.history.slice(-6).reverse().map((entry) => (
+              <BodyHistoryRow key={entry.dateKey} entry={entry} />
             ))}
           </div>
         </WatchPanel>
@@ -210,9 +227,13 @@ export function BodyDetailScreen() {
 interface BodyHistoryEntry {
   dateKey: string;
   label: string;
+  heightCm: number | null;
   weightKg: number | null;
   waistCm: number | null;
   shoulderCm: number | null;
+  chestCm: number | null;
+  hipCm: number | null;
+  neckCm: number | null;
 }
 
 interface RatioHistoryEntry {
@@ -252,26 +273,57 @@ function BodyMetricInput({
   );
 }
 
+function BodyHistoryRow({ entry }: { entry: BodyHistoryEntry }) {
+  const metrics = [
+    { label: 'Wt', value: formatMeasurement(entry.weightKg, 'kg') },
+    { label: 'Waist', value: formatMeasurement(entry.waistCm, 'cm') },
+    { label: 'Sh', value: formatMeasurement(entry.shoulderCm, 'cm') },
+    { label: 'Chest', value: formatMeasurement(entry.chestCm, 'cm') },
+    { label: 'Hip', value: formatMeasurement(entry.hipCm, 'cm') },
+    { label: 'Neck', value: formatMeasurement(entry.neckCm, 'cm') },
+  ].filter((metric) => metric.value !== null);
+
+  return (
+    <div className="rounded-lg border border-white/5 bg-black/25 px-3 py-2">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-fluid-label font-mono uppercase text-white/35">{entry.label}</p>
+        {entry.heightCm && (
+          <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/35">
+            {formatNumber(entry.heightCm, 1)}cm height
+          </p>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {metrics.map((metric) => (
+          <div key={metric.label} className="min-w-0 rounded-md bg-white/[0.03] px-2 py-1">
+            <p className="truncate text-[9px] font-mono uppercase text-white/25">{metric.label}</p>
+            <p className="truncate text-[11px] font-mono font-black tabular-nums uppercase text-white/65">{metric.value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
-  const latestWeightLog = Object.values(logs)
-    .filter((log) => typeof log.morningWeightKg === 'number')
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
-  const latestWaistLog = Object.values(logs)
-    .filter((log) => typeof log.waistCm === 'number')
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
-  const latestShoulderLog = Object.values(logs)
-    .filter((log) => typeof log.shoulderCm === 'number')
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
-  const heightCm = profile.heightCm ?? 172;
-  const weightKg = latestWeightLog?.morningWeightKg ?? profile.weightKg ?? CURRENT_WEIGHT_KG;
-  const waistCm = latestWaistLog?.waistCm ?? profile.waistCircumferenceCm ?? CURRENT_WAIST_CM;
-  const shoulderCm = latestShoulderLog?.shoulderCm ?? profile.shoulderCircumferenceCm ?? 111.76;
-  const chestCm = profile.chestCircumferenceCm ?? 89.5;
-  const hipCm = profile.hipCircumferenceCm ?? 85;
-  const neckCm = profile.neckCircumferenceCm ?? 37;
+  const heightCm = getLatestBodyValue(logs, 'heightCm') ?? profile.heightCm ?? 172;
+  const weightKg = getLatestBodyValue(logs, 'morningWeightKg') ?? profile.weightKg ?? CURRENT_WEIGHT_KG;
+  const waistCm = getLatestBodyValue(logs, 'waistCm') ?? profile.waistCircumferenceCm ?? CURRENT_WAIST_CM;
+  const shoulderCm = getLatestBodyValue(logs, 'shoulderCm') ?? profile.shoulderCircumferenceCm ?? 111.76;
+  const chestCm = getLatestBodyValue(logs, 'chestCm') ?? profile.chestCircumferenceCm ?? 89.5;
+  const hipCm = getLatestBodyValue(logs, 'hipCm') ?? profile.hipCircumferenceCm ?? 85;
+  const neckCm = getLatestBodyValue(logs, 'neckCm') ?? profile.neckCircumferenceCm ?? 37;
   const bmi = weightKg / ((heightCm / 100) ** 2);
   const bodyBaseline = getBodyBaseline(profile);
-  const history = getBodyHistory(logs, weightKg, waistCm, bodyBaseline);
+  const history = getBodyHistory(logs, {
+    heightCm,
+    weightKg,
+    waistCm,
+    shoulderCm,
+    chestCm,
+    hipCm,
+    neckCm,
+  }, bodyBaseline);
   const ratioHistory = getRatioHistory(history, shoulderCm, waistCm);
   const ratioDelta = ratioHistory.length > 1 ? ratioHistory[ratioHistory.length - 1].ratio - ratioHistory[0].ratio : 0;
   const shoulderWaist = shoulderCm / waistCm;
@@ -287,15 +339,19 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     shoulderCm: `${formatNumber(shoulderCm, 1)}cm`,
     shoulderCmValue: shoulderCm,
     chestCm: `${formatNumber(chestCm, 1)}cm`,
+    chestCmValue: chestCm,
     waistCm: `${formatNumber(waistCm, 1)}cm`,
     waistCmValue: waistCm,
     hipCm: `${formatNumber(hipCm, 1)}cm`,
+    hipCmValue: hipCm,
     neckCm: `${formatNumber(neckCm, 1)}cm`,
+    neckCmValue: neckCm,
     shoulderWaistRatio: shoulderWaist.toFixed(2),
     chestWaistRatio: chestWaist.toFixed(2),
     frameLabel: 'Body metrics',
     frameSummary: `Shoulder ${formatNumber(shoulderCm, 1)}cm, waist ${formatNumber(waistCm, 1)}cm, chest ${formatNumber(chestCm, 1)}cm.`,
     frameTone: 'text-white',
+    history,
     ratioHistory,
     ratioChange: formatRatioChange(ratioDelta),
     ratioTone: ratioDelta >= 0 ? 'text-green-300' : 'text-amber-300',
@@ -312,6 +368,26 @@ function parseMeasurement(value: string): number | null {
 
 function roundMeasurement(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+type BodyMeasurementKey = 'heightCm' | 'morningWeightKg' | 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm';
+
+interface BodyMeasurementFallbacks {
+  heightCm: number;
+  weightKg: number;
+  waistCm: number;
+  shoulderCm: number;
+  chestCm: number;
+  hipCm: number;
+  neckCm: number;
+}
+
+type BodyBaseline = Partial<BodyMeasurementFallbacks> & { dateKey?: string };
+
+function getLatestBodyValue(logs: Record<string, DailyLog>, key: BodyMeasurementKey): number | undefined {
+  return Object.values(logs)
+    .filter((log) => typeof log[key] === 'number')
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0]?.[key];
 }
 
 function RatioTrendChart({ entries, className = '' }: { entries: RatioHistoryEntry[]; className?: string }) {
@@ -376,19 +452,22 @@ function getRatioChartPoints(
 
 function getBodyHistory(
   logs: Record<string, DailyLog>,
-  fallbackWeightKg: number,
-  fallbackWaistCm: number,
-  baseline: { dateKey?: string; morningWeightKg?: number; waistCm?: number; shoulderCm?: number }
+  fallbacks: BodyMeasurementFallbacks,
+  baseline: BodyBaseline
 ): BodyHistoryEntry[] {
   const entries = Object.values(logs)
-    .filter((log) => typeof log.morningWeightKg === 'number' || typeof log.waistCm === 'number' || typeof log.shoulderCm === 'number')
+    .filter((log) => hasBodyMeasurement(log))
     .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
     .map((log) => ({
       dateKey: log.dateKey,
       label: formatHistoryDate(log.dateKey),
+      heightCm: typeof log.heightCm === 'number' ? log.heightCm : null,
       weightKg: typeof log.morningWeightKg === 'number' ? log.morningWeightKg : null,
       waistCm: typeof log.waistCm === 'number' ? log.waistCm : null,
       shoulderCm: typeof log.shoulderCm === 'number' ? log.shoulderCm : null,
+      chestCm: typeof log.chestCm === 'number' ? log.chestCm : null,
+      hipCm: typeof log.hipCm === 'number' ? log.hipCm : null,
+      neckCm: typeof log.neckCm === 'number' ? log.neckCm : null,
     }));
 
   if (entries.length > 0) {
@@ -400,9 +479,13 @@ function getBodyHistory(
     const [first, ...rest] = entries;
     return [{
       ...first,
-      weightKg: first.weightKg ?? fallbackWeightKg,
-      waistCm: first.waistCm ?? fallbackWaistCm,
-      shoulderCm: first.shoulderCm ?? baseline.shoulderCm ?? null,
+      heightCm: first.heightCm ?? fallbacks.heightCm,
+      weightKg: first.weightKg ?? fallbacks.weightKg,
+      waistCm: first.waistCm ?? fallbacks.waistCm,
+      shoulderCm: first.shoulderCm ?? baseline.shoulderCm ?? fallbacks.shoulderCm,
+      chestCm: first.chestCm ?? baseline.chestCm ?? fallbacks.chestCm,
+      hipCm: first.hipCm ?? baseline.hipCm ?? fallbacks.hipCm,
+      neckCm: first.neckCm ?? baseline.neckCm ?? fallbacks.neckCm,
     }, ...rest];
   }
 
@@ -411,35 +494,67 @@ function getBodyHistory(
   return [{
     dateKey,
     label: dateKey === todayKey ? 'Today' : formatHistoryDate(dateKey),
-    weightKg: baseline.morningWeightKg ?? fallbackWeightKg,
-    waistCm: baseline.waistCm ?? fallbackWaistCm,
-    shoulderCm: baseline.shoulderCm ?? null,
+    heightCm: baseline.heightCm ?? fallbacks.heightCm,
+    weightKg: baseline.weightKg ?? fallbacks.weightKg,
+    waistCm: baseline.waistCm ?? fallbacks.waistCm,
+    shoulderCm: baseline.shoulderCm ?? fallbacks.shoulderCm,
+    chestCm: baseline.chestCm ?? fallbacks.chestCm,
+    hipCm: baseline.hipCm ?? fallbacks.hipCm,
+    neckCm: baseline.neckCm ?? fallbacks.neckCm,
   }];
 }
 
 function getBaselineHistoryEntry(
-  baseline: { dateKey?: string; morningWeightKg?: number; waistCm?: number; shoulderCm?: number },
+  baseline: BodyBaseline,
   firstLogDateKey: string
 ): BodyHistoryEntry | null {
   if (!baseline.dateKey || baseline.dateKey >= firstLogDateKey) return null;
-  if (typeof baseline.morningWeightKg !== 'number' && typeof baseline.waistCm !== 'number' && typeof baseline.shoulderCm !== 'number') return null;
+  if (!hasBaselineMeasurement(baseline)) return null;
 
   return {
     dateKey: baseline.dateKey,
     label: formatHistoryDate(baseline.dateKey),
-    weightKg: typeof baseline.morningWeightKg === 'number' ? baseline.morningWeightKg : null,
+    heightCm: typeof baseline.heightCm === 'number' ? baseline.heightCm : null,
+    weightKg: typeof baseline.weightKg === 'number' ? baseline.weightKg : null,
     waistCm: typeof baseline.waistCm === 'number' ? baseline.waistCm : null,
     shoulderCm: typeof baseline.shoulderCm === 'number' ? baseline.shoulderCm : null,
+    chestCm: typeof baseline.chestCm === 'number' ? baseline.chestCm : null,
+    hipCm: typeof baseline.hipCm === 'number' ? baseline.hipCm : null,
+    neckCm: typeof baseline.neckCm === 'number' ? baseline.neckCm : null,
   };
 }
 
-function getBodyBaseline(profile: UserProfile): { dateKey?: string; morningWeightKg?: number; waistCm?: number; shoulderCm?: number } {
+function getBodyBaseline(profile: UserProfile): BodyBaseline {
   return {
     dateKey: getProfileCreatedDateKey(profile.createdAt),
-    morningWeightKg: profile.weightKg,
+    heightCm: profile.heightCm,
+    weightKg: profile.weightKg,
     waistCm: profile.waistCircumferenceCm,
     shoulderCm: profile.shoulderCircumferenceCm,
+    chestCm: profile.chestCircumferenceCm,
+    hipCm: profile.hipCircumferenceCm,
+    neckCm: profile.neckCircumferenceCm,
   };
+}
+
+function hasBodyMeasurement(log: DailyLog): boolean {
+  return typeof log.morningWeightKg === 'number'
+    || typeof log.heightCm === 'number'
+    || typeof log.waistCm === 'number'
+    || typeof log.shoulderCm === 'number'
+    || typeof log.chestCm === 'number'
+    || typeof log.hipCm === 'number'
+    || typeof log.neckCm === 'number';
+}
+
+function hasBaselineMeasurement(baseline: BodyBaseline): boolean {
+  return typeof baseline.weightKg === 'number'
+    || typeof baseline.heightCm === 'number'
+    || typeof baseline.waistCm === 'number'
+    || typeof baseline.shoulderCm === 'number'
+    || typeof baseline.chestCm === 'number'
+    || typeof baseline.hipCm === 'number'
+    || typeof baseline.neckCm === 'number';
 }
 
 function getRatioHistory(entries: BodyHistoryEntry[], fallbackShoulderCm: number, fallbackWaistCm: number): RatioHistoryEntry[] {
@@ -465,6 +580,10 @@ function getProfileCreatedDateKey(value: string): string | undefined {
 
 function formatNumber(value: number, fractionDigits: number): string {
   return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(fractionDigits);
+}
+
+function formatMeasurement(value: number | null, unit: 'kg' | 'cm'): string | null {
+  return typeof value === 'number' ? `${formatNumber(value, 1)}${unit}` : null;
 }
 
 function formatRatioChange(value: number): string {
