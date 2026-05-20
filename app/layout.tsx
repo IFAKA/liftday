@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { WakeLockProvider } from '@/components/WakeLockProvider';
 import { DebugTraceButton } from '@/components/DebugTraceButton';
+import { RouteTransition } from '@/components/RouteTransition';
 import { MotionConfig } from 'framer-motion';
 
 export const metadata: Metadata = {
@@ -38,7 +39,9 @@ export default function RootLayout({
         <MotionConfig reducedMotion="user">
           <div className="mx-auto h-full w-full max-w-[430px] overflow-hidden bg-background relative flex flex-col">
             <div className="flex-1 min-h-0 overflow-hidden">
-              <WakeLockProvider>{children}</WakeLockProvider>
+              <WakeLockProvider>
+                <RouteTransition>{children}</RouteTransition>
+              </WakeLockProvider>
             </div>
             <DebugTraceButton />
           </div>
