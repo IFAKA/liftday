@@ -24,6 +24,7 @@ export type EquipmentKey =
   | 'leg_extension_machine'
   | 'calf_raise_machine'
   | 'leg_press_machine'
+  | 'glute_machine'
   | 'hip_abduction_machine';
 
 export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
@@ -112,6 +113,7 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   leg_curl_machine: ['leg_curl_machine'],
   leg_extension_machine: ['leg_extension_machine'],
   standing_calf_raise_machine: ['calf_raise_machine'],
+  glute_machine: ['glute_machine'],
   hack_squat: ['hack_squat_machine'],
   smith_squat: ['smith_machine'],
   leg_press: ['leg_press_machine'],

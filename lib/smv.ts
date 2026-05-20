@@ -148,6 +148,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   leg_curl_machine: { hamstrings: 1 },
   leg_extension_machine: { quads: 1 },
   standing_calf_raise_machine: { calves: 1 },
+  glute_machine: { glutes: 1, hamstrings: 0.15 },
   cable_glute_kickback: { glutes: 1 },
   hip_abduction_machine: { glutes: 0.85 },
 };

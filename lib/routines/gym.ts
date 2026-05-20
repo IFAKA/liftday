@@ -176,6 +176,7 @@ export const gymRoutine: RoutineConfig = {
       fixed: true,
       priority: 'support',
       selectedExercise: 'romanian_deadlift',
+      alternatives: ['glute_machine', 'leg_curl_machine'],
       exercises: ['romanian_deadlift'],
       prescription: prescription(2, 6, 10, '3 min', 'Hamstring stretch. Low back quiet.', '2 RIR'),
     },

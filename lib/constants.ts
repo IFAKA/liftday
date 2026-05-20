@@ -687,6 +687,14 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
     workoutType: 'legs',
   },
   {
+    key: 'glute_machine',
+    name: 'GLUTE MACHINE',
+    unit: 'weighted',
+    primaryMuscle: 'glutes',
+    instruction: 'Set the pad just above the working leg and brace against the handles. Drive the thigh back through hip extension, squeeze the glute hard at peak, then return slowly without rotating the hips. Treat it as direct glute work, not a deadlift replacement for hamstrings or back.',
+    workoutType: 'legs',
+  },
+  {
     key: 'front_squat',
     name: 'FRONT SQUAT',
     unit: 'weighted',

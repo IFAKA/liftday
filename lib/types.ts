@@ -95,6 +95,7 @@ export type GymLegsExerciseKey =
   | 'leg_curl_machine'
   | 'leg_extension_machine'
   | 'standing_calf_raise_machine'
+  | 'glute_machine'
   | 'cable_glute_kickback'
   | 'hip_abduction_machine';
 
