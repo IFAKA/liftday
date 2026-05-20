@@ -132,7 +132,7 @@ export default function MusclesPage() {
                   {totalTarget === null ? Math.round(totalSets) : `${Math.round(totalSets)}/${Math.round(totalTarget)}`}
                 </p>
                 <p className="text-fluid-label font-mono uppercase text-white/30">
-                  {totalTarget === null ? 'sets' : 'hit / goal'}
+                  {totalTarget === null ? 'sets' : 'hit / plan'}
                 </p>
               </div>
             </div>
@@ -230,11 +230,11 @@ export default function MusclesPage() {
                 </div>
                 <WatchMetricGrid columns={3} className="mt-4">
                   <WatchMetricCell label="Eff sets" value={selectedEntry.sets.toFixed(1)} />
-                  <WatchMetricCell label="Goal" value={selectedEntry.target} />
+                  <WatchMetricCell label="Target" value={selectedEntry.target} />
                   <WatchMetricCell label="Heat" value={`${selectedEntry.intensity}/10`} />
                 </WatchMetricGrid>
                 <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
-                  Goal is {lens === 'today' ? 'today\'s planned effective sets' : 'the weekly target'}. Heat is target completion mapped to the body color.
+                  Target is {lens === 'today' ? 'today\'s planned effective sets' : 'the weekly target'}. Heat is target completion mapped to the body color.
                 </p>
                 {lowCount > 0 && (
                   <p className="mt-2 text-fluid-label font-mono uppercase leading-relaxed text-orange-300/70">

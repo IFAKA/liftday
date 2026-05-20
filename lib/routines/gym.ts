@@ -44,8 +44,8 @@ function prescription(
 
 export const gymRoutine: RoutineConfig = {
   id: 'gym',
-  name: 'Clothed SMV Hypertrophy',
-  description: 'Six-day clothed-SMV routine: side delts, upper chest, lats, posture, sleeve fill, and lower-body maintenance with recoverable fatigue.',
+  name: 'Gym Hypertrophy',
+  description: 'Six-day gym routine with delts, chest, back, arms, legs, and recoverable fatigue.',
   icon: 'dumbbell',
   schedule: ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'],
   tierChains: [

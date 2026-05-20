@@ -43,7 +43,7 @@ export default function RoutineSettingPage() {
           href="/program/detail"
           label="Active plan"
           title="View routine"
-          subtitle="Exercises, set counts, SMV score, copy"
+          subtitle="Exercises, set counts, weekly summary, copy"
         />
 
         {ROUTINES.map(({ id, name, description, icon }) => {

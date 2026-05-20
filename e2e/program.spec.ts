@@ -288,12 +288,12 @@ test('muscle map switches filters and body views', async ({ page }) => {
   await expect(page.locator('body')).toContainText('Muscles');
   await expect(page.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toContainText('PUSH A');
-  await expect(page.locator('body')).toContainText('hit / goal');
+  await expect(page.locator('body')).toContainText('hit / plan');
   await expect(page.locator('.body-chart-muscle')).not.toHaveCount(0);
 
   await page.getByRole('button', { name: 'Routine' }).click();
   await expect(page.getByRole('button', { name: 'Routine' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('body')).toContainText('Clothed SMV Hypertrophy');
+  await expect(page.locator('body')).toContainText('Gym Hypertrophy');
 
   await page.getByRole('button', { name: '7 days' }).click();
   await expect(page.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true');
@@ -310,7 +310,7 @@ test('muscle map switches filters and body views', async ({ page }) => {
   await expect(page.locator('.body-chart-muscle').first()).toBeVisible();
 
   await page.locator('.body-chart-muscle').first().click({ force: true });
-  await expect(page.locator('section', { hasText: 'Selected' })).toContainText(/Eff sets|Goal|Heat/);
+  await expect(page.locator('section', { hasText: 'Selected' })).toContainText(/Eff sets|Target|Heat/);
 });
 
 test('progress opens as summary and drill-down rows, not a tab section', async ({ page }) => {
@@ -361,17 +361,17 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Waist');
   await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('BMI');
-  await expect(page.locator('body')).toContainText('S/W progress');
+  await expect(page.locator('body')).toContainText('Ratio progress');
   await expect(page.locator('body')).toContainText('Now');
   await expect(page.locator('body')).toContainText('Change');
   await expect(page.locator('body')).not.toContainText('Measurements');
-  await expect(page.getByRole('img', { name: /shoulder to waist ratio progress chart/i })).toBeVisible();
+  await expect(page.getByRole('img', { name: /body ratio progress chart/i })).toBeVisible();
   const moreBodyStats = page.getByRole('button', { name: /more body stats/i });
   await moreBodyStats.click({ force: true });
   await expect(moreBodyStats).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('body')).toContainText('Height');
   await expect(page.locator('body')).toContainText('Shoulder');
-  await expect(page.locator('body')).toContainText('Shoulder/Waist');
+  await expect(page.locator('body')).toContainText('Body ratio');
   await expect(page.locator('body')).toContainText('Hip');
   await expect(page.locator('body')).toContainText('85cm');
 });
@@ -409,7 +409,7 @@ test('body detail shows shoulder-waist progress over time', async ({ page }) => 
 
   await page.goto('/history/body');
 
-  await expect(page.locator('body')).toContainText('S/W progress');
+  await expect(page.locator('body')).toContainText('Ratio progress');
   await expect(page.locator('body')).toContainText('May 4');
   await expect(page.locator('body')).toContainText('May 11');
   await expect(page.locator('body')).toContainText('May 17');
@@ -417,7 +417,7 @@ test('body detail shows shoulder-waist progress over time', async ({ page }) => 
   await expect(page.locator('body')).toContainText('76.1cm');
   await expect(page.locator('body')).toContainText('112.9cm');
   await expect(page.locator('body')).toContainText('+0.03');
-  await expect(page.getByRole('img', { name: /shoulder to waist ratio progress chart/i })).toBeVisible();
+  await expect(page.getByRole('img', { name: /body ratio progress chart/i })).toBeVisible();
 });
 
 test('body detail uses profile waist as sparse history baseline', async ({ page }) => {
@@ -446,14 +446,14 @@ test('body detail uses profile waist as sparse history baseline', async ({ page 
 
   await page.goto('/history/body');
 
-  await expect(page.locator('body')).toContainText('S/W progress');
+  await expect(page.locator('body')).toContainText('Ratio progress');
   await expect(page.locator('body')).toContainText('3 logs');
   await expect(page.locator('body')).toContainText('0.00');
   await expect(page.locator('body')).toContainText('May 1');
   await expect(page.locator('body')).toContainText('May 18');
   await expect(page.locator('body')).toContainText('111.8cm');
   await expect(page.locator('body')).toContainText('76.5cm');
-  const ratioPath = await page.locator('svg[aria-label="Shoulder to waist ratio progress chart"] path').first().getAttribute('d');
+  const ratioPath = await page.locator('svg[aria-label="Body ratio progress chart"] path').first().getAttribute('d');
   const yValues = (ratioPath?.match(/-?\d+(?:\.\d+)?/g) ?? [])
     .map(Number)
     .filter((_, index) => index % 2 === 1);

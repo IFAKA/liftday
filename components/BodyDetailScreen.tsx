@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronLeft, ChevronUp, Pencil, Ruler, Scale, Target, TrendingUp, Utensils } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, Pencil, Ruler, Scale, TrendingUp, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TopBar } from '@/components/TopBar';
@@ -90,11 +90,11 @@ export function BodyDetailScreen() {
 
       <div className="mt-2 flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-8 no-scrollbar">
         <WatchSignalPanel
-          label="Frame"
+          label="Measure"
           title={body.frameLabel}
           summary={body.frameSummary}
           metric={body.shoulderWaistRatio}
-          metricLabel="S/W"
+          metricLabel="Ratio"
           tone={body.frameTone}
           active
         />
@@ -143,8 +143,8 @@ export function BodyDetailScreen() {
           <WatchMetricGrid columns={2}>
             <WatchMetricCell label="Weight" value={`${formatNumber(body.weightKg, 1)}kg`} />
             <WatchMetricCell label="Waist" value={body.waistCm} />
+            <WatchMetricCell label="Shoulder" value={body.shoulderCm} />
             <WatchMetricCell label="BMI" value={body.bmi} tone={body.bmiTone} />
-            <WatchMetricCell label="Target" value={body.targetDate} />
           </WatchMetricGrid>
           <Button
             type="button"
@@ -159,8 +159,7 @@ export function BodyDetailScreen() {
           {showMoreStats && (
             <WatchMetricGrid columns={2} className="mt-2">
               <WatchMetricCell label="Height" value={`${body.heightCm}cm`} />
-              <WatchMetricCell label="Shoulder" value={body.shoulderCm} />
-              <WatchMetricCell label="Shoulder/Waist" value={body.shoulderWaistRatio} />
+              <WatchMetricCell label="Body ratio" value={body.shoulderWaistRatio} />
               <WatchMetricCell label="Hip" value={body.hipCm} />
               <WatchMetricCell label="Neck" value={body.neckCm} />
               <WatchMetricCell label="Chest/Waist" value={body.chestWaistRatio} />
@@ -172,7 +171,7 @@ export function BodyDetailScreen() {
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
               <TrendingUp className="h-4 w-4 shrink-0 text-white/35" />
-              <p className="truncate text-fluid-label font-mono font-black uppercase text-white/35">S/W progress</p>
+              <p className="truncate text-fluid-label font-mono font-black uppercase text-white/35">Ratio progress</p>
             </div>
             <p className="shrink-0 text-fluid-label font-mono uppercase text-white/35">
               {body.ratioHistory.length} {body.ratioHistory.length === 1 ? 'log' : 'logs'}
@@ -199,7 +198,6 @@ export function BodyDetailScreen() {
         </WatchPanel>
 
         <div className="flex flex-col gap-2">
-          <WatchListItem icon={Target} title="Goal" subtitle={body.goal} trailing={null} subtle className="py-3" />
           <WatchListItem icon={Utensils} title="Nutrition" subtitle={body.nutrition} trailing={null} subtle className="py-3" />
           <WatchListItem icon={Scale} title="Profile" subtitle={body.profileLine} trailing={null} subtle className="py-3" />
           <WatchListItem icon={Ruler} title="Context" subtitle={body.contextLine} trailing={null} subtle className="py-3" />
@@ -295,14 +293,12 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     neckCm: `${formatNumber(neckCm, 1)}cm`,
     shoulderWaistRatio: shoulderWaist.toFixed(2),
     chestWaistRatio: chestWaist.toFixed(2),
-    targetDate: formatTargetDate(profile.targetDate),
-    frameLabel: shoulderWaist >= 1.5 ? 'Strong taper' : 'Build width',
-    frameSummary: `Shoulders ${formatNumber(shoulderCm, 1)}cm and chest ${formatNumber(chestCm, 1)}cm set the frame. Waist anchors the S/W score.`,
-    frameTone: shoulderWaist >= 1.5 ? 'text-green-300' : 'text-amber-300',
+    frameLabel: 'Body metrics',
+    frameSummary: `Shoulder ${formatNumber(shoulderCm, 1)}cm, waist ${formatNumber(waistCm, 1)}cm, chest ${formatNumber(chestCm, 1)}cm.`,
+    frameTone: 'text-white',
     ratioHistory,
     ratioChange: formatRatioChange(ratioDelta),
     ratioTone: ratioDelta >= 0 ? 'text-green-300' : 'text-amber-300',
-    goal: profile.goal ?? 'Maximize SMV efficient frontier as fast as recoverable',
     nutrition: `Protein ${proteinTarget[0]}-${proteinTarget[1]}g. Surplus +${surplusTarget[0]}-${surplusTarget[1]} kcal/day. Creatine 5g/day, water only.`,
     profileLine: `${profile.age ?? 26}y ${profile.sex ?? 'male'} · ${formatBodyComposition(profile.bodyComposition)} · ${profile.injuryStatus ?? 'No injuries or pain'}`,
     contextLine: `${profile.trainingBackground ?? 'Rugby background'} · ${profile.maxWorkoutMinutes ?? 105} min cap · commercial gym`,
@@ -326,14 +322,14 @@ function RatioTrendChart({ entries, className = '' }: { entries: RatioHistoryEnt
 
   return (
     <div className={`rounded-lg border border-white/5 bg-black/30 px-2 py-3 ${className}`}>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Shoulder to waist ratio progress chart" className="h-28 w-full overflow-visible">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Body ratio progress chart" className="h-28 w-full overflow-visible">
         <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
         <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
         {ratioPoints.path && <path d={ratioPoints.path} fill="none" stroke="rgb(74,222,128)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
         {ratioPoints.points.map((point) => <circle key={`${point.x}-${point.y}`} cx={point.x} cy={point.y} r="3" fill="rgb(74,222,128)" />)}
       </svg>
       <div className="mt-2 flex items-center gap-4 px-1">
-        <ChartLegend tone="bg-green-400" label="Shoulder/Waist" />
+        <ChartLegend tone="bg-green-400" label="Body ratio" />
       </div>
     </div>
   );
@@ -473,13 +469,6 @@ function formatNumber(value: number, fractionDigits: number): string {
 
 function formatRatioChange(value: number): string {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
-}
-
-function formatTargetDate(value: string | undefined): string {
-  if (!value) return '--';
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 function formatHistoryDate(dateKey: string): string {

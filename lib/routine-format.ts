@@ -15,7 +15,6 @@ export function formatRoutineForCopy(
     '# Current training routine',
     '',
     `Routine: ${routine.name} (${routine.id})`,
-    `Goal: ${profile?.goal ?? 'Not set'}`,
     `Profile: ${profile?.age ?? '?'} year old ${profile?.sex ?? 'unknown'}, ${profile?.heightCm ?? '?'} cm, ${profile?.weightKg ?? '?'} kg, ${profile?.bodyComposition ?? 'body composition not set'}`,
     `Training background: ${profile?.trainingBackground ?? 'Not set'}`,
     `Injuries/pain: ${profile?.injuryStatus ?? 'Not set'}`,
