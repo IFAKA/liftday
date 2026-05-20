@@ -46,22 +46,15 @@ const RestDayScreen = dynamic(
 );
 
 export function TodayScreen() {
-  const [today, setToday] = useState<Date | null>(null);
+  const [today] = useState(() => new Date());
   const router = useRouter();
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
     if (!hasSeenOnboarding) {
       router.replace('/onboarding');
-      return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setToday(new Date());
   }, [router]);
-
-  if (!today) {
-    return <LoadingScreen />;
-  }
 
   return <TodayContent date={today} />;
 }
@@ -89,9 +82,11 @@ function TodayContent({ date }: { date: Date }) {
     setDailyLogs(loadDailyLogs());
   }, []);
 
-  if (!workout.isReady) {
+  if (workout.isRestoringActiveWorkout) {
     return <LoadingScreen />;
   }
+
+  const storageReady = workout.isStorageHydrated;
 
   // Rest day
   if (!schedule.isTraining) {
@@ -185,7 +180,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
   }
 
   // Idle — ready to start (or already done today)
-  const isDone = schedule.isDone;
+  const isDone = storageReady && schedule.isDone;
   const dateKey = formatDateKey(date);
   const todayLog = dailyLogs[dateKey];
   const hasHandledWeight = getValidWeight(todayLog?.morningWeightKg) !== null || todayLog?.weightCheckSkipped === true;
@@ -254,7 +249,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
         )}
       </div>
 
-      {!isDone && workout.exercises[0] && workout.currentPrescription && (
+      {storageReady && !isDone && workout.exercises[0] && workout.currentPrescription && (
         <div className="w-full px-4 mb-3">
           <WatchPanel subtle className="py-3">
             <p className="text-fluid-label text-zinc-500 uppercase font-mono">Next</p>
@@ -303,7 +298,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
         />
       </div>
 
-      {!isDone && (
+      {storageReady && !isDone && (
         <>
           {startError && (
             <div className="w-full px-4 mb-3">

@@ -91,6 +91,43 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
+test('returning from program does not flash the home loader', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.removeItem('liftday_active_workout_draft');
+  });
+
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
+
+  await page.evaluate(() => {
+    const testWindow = window as typeof window & { __sawHomeLoaderAfterProgram?: boolean };
+    testWindow.__sawHomeLoaderAfterProgram = false;
+    const observer = new MutationObserver(() => {
+      if (window.location.pathname === '/' && document.querySelector('svg.animate-pulse')) {
+        testWindow.__sawHomeLoaderAfterProgram = true;
+      }
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+      childList: true,
+      subtree: true,
+    });
+  });
+
+  await page.getByRole('link', { name: /program/i }).click();
+  await expect(page.locator('body')).toContainText('Program');
+  await page.getByLabel('Back').click();
+
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
+  await page.waitForTimeout(100);
+  await expect.poll(() => page.evaluate(() => (
+    window as typeof window & { __sawHomeLoaderAfterProgram?: boolean }
+  ).__sawHomeLoaderAfterProgram)).toBe(false);
+});
+
 test('completed today mounts done state without flashing start state', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {

@@ -62,6 +62,8 @@ export interface UseWorkoutReturn {
   swapAlternatives: Exercise[];
   canDeferMachineOccupied: boolean;
   isReady: boolean;
+  isStorageHydrated: boolean;
+  isRestoringActiveWorkout: boolean;
   startWorkout: () => Promise<void>;
   startWarmupTimer: () => void;
   beginWorkoutAfterWarmup: () => void;
@@ -899,13 +901,21 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     return exercises[exerciseIndex + 1]?.name ?? null;
   }, [state, currentSet, currentSetCount, exercises, exerciseIndex]);
 
+  const isRestoringActiveWorkout = useMemo(() => {
+    if (!hydrated || restorationChecked || workoutType === 'rest' || exercises.length === 0) return false;
+    const draft = loadActiveWorkoutDraft();
+    return draft?.dateKey === dateKey && draft.workoutType === workoutType;
+  }, [dateKey, exercises.length, hydrated, restorationChecked, workoutType]);
+
   return {
     state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, currentExercise, currentTarget,
     currentWeightTarget, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
-    isReady: hydrated && restorationChecked,
+    isReady: hydrated && !isRestoringActiveWorkout,
+    isStorageHydrated: hydrated,
+    isRestoringActiveWorkout,
     startWorkout, startWarmupTimer, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
