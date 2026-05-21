@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { RotateCcw, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
 import { motion } from 'framer-motion';
@@ -9,29 +9,44 @@ interface PrepTimerProps {
   mode: 'warmup' | 'stretch';
   seconds: number;
   isRunning?: boolean;
-  onCancel: () => void;
+  onCancel?: () => void;
   onPrimary: () => void;
   onStartTimer?: () => void;
   onPreset?: (seconds: 30 | 60) => void;
+  onRepeat?: () => void;
+  requireCompletionBeforePrimary?: boolean;
 }
 
-export function PrepTimer({ mode, seconds, isRunning = true, onCancel, onPrimary, onStartTimer, onPreset }: PrepTimerProps) {
+export function PrepTimer({
+  mode,
+  seconds,
+  isRunning = true,
+  onCancel,
+  onPrimary,
+  onStartTimer,
+  onPreset,
+  onRepeat,
+  requireCompletionBeforePrimary = false,
+}: PrepTimerProps) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   const display = seconds <= 0
     ? 'READY'
     : `${mins}:${secs.toString().padStart(2, '0')}`;
   const title = mode === 'warmup' ? 'Warm Up' : 'Stretch';
-  const isWaitingToStart = mode === 'warmup' && !isRunning && seconds > 0;
+  const isWaitingToStart = !isRunning && seconds > 0 && Boolean(onStartTimer);
+  const isPrimaryLocked = requireCompletionBeforePrimary && isRunning && seconds > 0;
   const primaryLabel = isWaitingToStart
     ? 'Start Timer'
-    : mode === 'warmup' ? 'Start Workout' : 'Done';
+    : isPrimaryLocked
+      ? 'Stretching'
+      : mode === 'warmup' ? 'Start Workout' : 'Done';
   const handlePrimary = isWaitingToStart && onStartTimer ? onStartTimer : onPrimary;
 
   return (
     <motion.div className="flex h-full w-full flex-col items-center overflow-hidden bg-black">
       <TopBar
-        leftAction={
+        leftAction={onCancel ? (
           <Button
             variant="ghost"
             size="icon-xl"
@@ -41,7 +56,7 @@ export function PrepTimer({ mode, seconds, isRunning = true, onCancel, onPrimary
           >
             <X className="icon-lg" />
           </Button>
-        }
+        ) : undefined}
         center={<span className="text-fluid-label font-black uppercase tracking-[0.2em] text-white/80">{title}</span>}
       />
 
@@ -73,11 +88,23 @@ export function PrepTimer({ mode, seconds, isRunning = true, onCancel, onPrimary
             </Button>
           </div>
         )}
+
+        {onRepeat && seconds <= 0 && (
+          <Button
+            variant="outline"
+            onClick={onRepeat}
+            className="mt-3 h-12 rounded-full border-white/15 bg-white/10 px-5 text-fluid-label font-black uppercase tracking-widest text-white/80 active:scale-95 active:bg-white/20"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Repeat 30s
+          </Button>
+        )}
       </div>
 
       <div className="w-full shrink-0 px-4 pb-safe mb-4">
         <Button
           onClick={handlePrimary}
+          disabled={isPrimaryLocked}
           className="w-full btn-mobile-accessible rounded-full !bg-white font-black uppercase tracking-tight !text-black shadow-xl transition-transform duration-150 ease-[var(--ease-out-ui)] active:scale-95"
         >
           {primaryLabel}

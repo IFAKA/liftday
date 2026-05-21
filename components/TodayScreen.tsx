@@ -183,6 +183,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
   const isDone = storageReady && schedule.isDone;
   const dateKey = formatDateKey(date);
   const todayLog = dailyLogs[dateKey];
+  const isWeightCheckDay = date.getDay() === 6;
   const hasHandledWeight = getValidWeight(todayLog?.morningWeightKg) !== null || todayLog?.weightCheckSkipped === true;
 
   const startWarmup = () => {
@@ -196,7 +197,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
   const handleStart = () => {
     setStartError(null);
-    if (!hasHandledWeight) {
+    if (isWeightCheckDay && !hasHandledWeight) {
       setIsCheckingWeight(true);
       return;
     }
