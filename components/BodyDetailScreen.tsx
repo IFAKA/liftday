@@ -2,13 +2,22 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronLeft, ChevronUp, Pencil, Ruler, Scale, TrendingUp, Utensils } from 'lucide-react';
+import { ChevronLeft, Pencil, Ruler, Scale, TrendingUp, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TopBar } from '@/components/TopBar';
 import { DailyLog, UserProfile } from '@/lib/types';
 import { formatDateKey } from '@/lib/workout-utils';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog, setBodyProfileFallbacks } from '@/lib/storage';
+import {
+  BODY_MEASUREMENT_DEFINITIONS,
+  formatBodyChange,
+  formatBodyMeasurement,
+  getBodyProgressSummary,
+  getLatestMeasurementValue,
+  getMeasurementHistory,
+  roundBodyValue,
+} from '@/lib/body-progress';
 import { WatchListItem, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSignalPanel } from './WatchSurface';
 
 const CURRENT_WEIGHT_KG = 68.6;
@@ -26,7 +35,6 @@ export function BodyDetailScreen() {
     logs: {},
   }));
   const [isEditing, setIsEditing] = useState(false);
-  const [showMoreStats, setShowMoreStats] = useState(false);
   const [draft, setDraft] = useState({
     weightKg: '',
     waistCm: '',
@@ -136,11 +144,11 @@ export function BodyDetailScreen() {
       <div className="mt-2 flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-8 no-scrollbar">
         <WatchSignalPanel
           label="Measure"
-          title={body.frameLabel}
-          summary={body.frameSummary}
-          metric={body.shoulderWaistRatio}
-          metricLabel="Ratio"
-          tone={body.frameTone}
+          title="Body progress"
+          summary={body.progressSummary}
+          metric={body.progressMetric}
+          metricLabel="Changed"
+          tone="text-white/45"
           active
         />
 
@@ -193,38 +201,19 @@ export function BodyDetailScreen() {
               </div>
             </div>
           )}
-          <WatchMetricGrid columns={2}>
-            <WatchMetricCell label="Weight" value={`${formatNumber(body.weightKg, 1)}kg`} />
-            <WatchMetricCell label="Waist" value={body.waistCm} />
-            <WatchMetricCell label="Shoulder" value={body.shoulderCm} />
-            <WatchMetricCell label="BMI" value={body.bmi} tone={body.bmiTone} />
-          </WatchMetricGrid>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setShowMoreStats((current) => !current)}
-            aria-expanded={showMoreStats}
-            className="mt-3 h-10 w-full justify-between rounded-lg border border-white/5 bg-black/25 px-3 text-fluid-label font-mono font-black uppercase text-white/45 hover:bg-white/10 hover:text-white"
-          >
-            More body stats
-            {showMoreStats ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-          {showMoreStats && (
-            <WatchMetricGrid columns={2} className="mt-2">
-              <WatchMetricCell label="Height" value={`${body.heightCm}cm`} />
-              <WatchMetricCell label="Ideal wt" value={body.targetWeightKg} />
-              <WatchMetricCell label="To ideal" value={body.weightTargetDelta} tone={body.weightTargetTone} />
-              <WatchMetricCell label="Chest" value={body.chestCm} />
-              <WatchMetricCell label="Hip" value={body.hipCm} />
-              <WatchMetricCell label="Neck" value={body.neckCm} />
-              <WatchMetricCell label="Quad" value={body.quadCm} />
-              <WatchMetricCell label="Calf" value={body.calfCm} />
-              <WatchMetricCell label="Forearm" value={body.forearmCm} />
-              <WatchMetricCell label="Biceps" value={body.bicepsCm} />
-              <WatchMetricCell label="Body ratio" value={body.shoulderWaistRatio} />
-              <WatchMetricCell label="Chest/Waist" value={body.chestWaistRatio} />
-            </WatchMetricGrid>
-          )}
+          <div className="flex flex-col gap-2">
+            {body.measurements.map((measurement) => (
+              <WatchListItem
+                key={measurement.id}
+                href={`/history/body/${measurement.id}`}
+                title={measurement.label}
+                subtitle={measurement.subtitle}
+                metric={measurement.value}
+                subtle
+                className="min-h-14 rounded-lg px-3 py-3"
+              />
+            ))}
+          </div>
         </WatchPanel>
 
         <WatchPanel subtle className="py-3">
@@ -349,18 +338,18 @@ function BodyHistoryRow({ entry }: { entry: BodyHistoryEntry }) {
 }
 
 function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
-  const heightCm = getLatestBodyValue(logs, 'heightCm') ?? profile.heightCm ?? 172;
-  const weightKg = getLatestBodyValue(logs, 'morningWeightKg') ?? profile.weightKg ?? CURRENT_WEIGHT_KG;
-  const waistCm = getLatestBodyValue(logs, 'waistCm') ?? profile.waistCircumferenceCm ?? CURRENT_WAIST_CM;
-  const shoulderCm = getLatestBodyValue(logs, 'shoulderCm') ?? profile.shoulderCircumferenceCm ?? 111.76;
-  const chestCm = getLatestBodyValue(logs, 'chestCm') ?? profile.chestCircumferenceCm ?? 89.5;
-  const hipCm = getLatestBodyValue(logs, 'hipCm') ?? profile.hipCircumferenceCm ?? 85;
-  const neckCm = getLatestBodyValue(logs, 'neckCm') ?? profile.neckCircumferenceCm ?? 37;
-  const quadCm = getLatestBodyValue(logs, 'quadCm') ?? profile.quadCircumferenceCm ?? 50;
-  const calfCm = getLatestBodyValue(logs, 'calfCm') ?? profile.calfCircumferenceCm ?? 35;
-  const forearmCm = getLatestBodyValue(logs, 'forearmCm') ?? profile.forearmCircumferenceCm ?? 25.5;
-  const bicepsCm = getLatestBodyValue(logs, 'bicepsCm') ?? profile.bicepsCircumferenceCm ?? 28;
-  const targetWeightKg = profile.targetWeightKg ?? 72;
+  const heightCm = getMeasurementValue('height') ?? 172;
+  const weightKg = getMeasurementValue('weight') ?? CURRENT_WEIGHT_KG;
+  const waistCm = getMeasurementValue('waist') ?? CURRENT_WAIST_CM;
+  const shoulderCm = getMeasurementValue('shoulder') ?? 111.76;
+  const chestCm = getMeasurementValue('chest') ?? 89.5;
+  const hipCm = getMeasurementValue('hip') ?? 85;
+  const neckCm = getMeasurementValue('neck') ?? 37;
+  const quadCm = getMeasurementValue('quad') ?? 50;
+  const calfCm = getMeasurementValue('calf') ?? 35;
+  const forearmCm = getMeasurementValue('forearm') ?? 25.5;
+  const bicepsCm = getMeasurementValue('biceps') ?? 28;
+  const targetWeightKg = getMeasurementValue('target-weight') ?? 72;
   const bmi = weightKg / ((heightCm / 100) ** 2);
   const bodyBaseline = getBodyBaseline(profile);
   const history = getBodyHistory(logs, {
@@ -383,6 +372,29 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const weightTargetGap = targetWeightKg - weightKg;
   const proteinTarget = profile.proteinTargetGrams ?? [140, 160];
   const surplusTarget = profile.calorieSurplusTarget ?? [200, 300];
+  const bodySummary = getBodyProgressSummary(profile, logs);
+  const measurements = BODY_MEASUREMENT_DEFINITIONS.map((definition) => {
+    const value = getLatestMeasurementValue(definition, profile, logs);
+    const historyForMeasurement = getMeasurementHistory(definition, profile, logs);
+    const first = historyForMeasurement[0]?.value;
+    const change = typeof first === 'number' && historyForMeasurement.length > 1
+      ? roundBodyValue(value - first)
+      : null;
+
+    return {
+      id: definition.id,
+      label: definition.label,
+      value: formatBodyMeasurement(value, definition.unit),
+      subtitle: change === null
+        ? 'No logged change'
+        : `Total ${formatBodyChange(change, definition.unit)}`,
+    };
+  });
+
+  function getMeasurementValue(id: (typeof BODY_MEASUREMENT_DEFINITIONS)[number]['id']): number | null {
+    const definition = BODY_MEASUREMENT_DEFINITIONS.find((item) => item.id === id);
+    return definition ? getLatestMeasurementValue(definition, profile, logs) : null;
+  }
 
   return {
     heightCm,
@@ -416,6 +428,9 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     frameLabel: 'Body metrics',
     frameSummary: `Shoulder ${formatNumber(shoulderCm, 1)}cm, waist ${formatNumber(waistCm, 1)}cm, chest ${formatNumber(chestCm, 1)}cm.`,
     frameTone: 'text-white',
+    measurements,
+    progressSummary: `${bodySummary.latestLogCount} ${bodySummary.latestLogCount === 1 ? 'log' : 'logs'} with measurements. Ratio change ${formatRatioChange(bodySummary.ratioChange)}.`,
+    progressMetric: String(bodySummary.changedMeasurements),
     history,
     ratioHistory,
     ratioChange: formatRatioChange(ratioDelta),
@@ -435,8 +450,6 @@ function roundMeasurement(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-type BodyMeasurementKey = 'heightCm' | 'morningWeightKg' | 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'bicepsCm';
-
 interface BodyMeasurementFallbacks {
   heightCm: number;
   weightKg: number;
@@ -452,12 +465,6 @@ interface BodyMeasurementFallbacks {
 }
 
 type BodyBaseline = Partial<BodyMeasurementFallbacks> & { dateKey?: string };
-
-function getLatestBodyValue(logs: Record<string, DailyLog>, key: BodyMeasurementKey): number | undefined {
-  return Object.values(logs)
-    .filter((log) => typeof log[key] === 'number')
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0]?.[key];
-}
 
 function RatioTrendChart({ entries, className = '' }: { entries: RatioHistoryEntry[]; className?: string }) {
   const width = 280;
