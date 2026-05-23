@@ -467,7 +467,8 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Waist');
   await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('Ratio progress');
-  await expect(page.locator('body')).toContainText('Now');
+  await expect(page.locator('body')).toContainText('Adonis');
+  await expect(page.locator('body')).toContainText('Target gap');
   await expect(page.locator('body')).toContainText('Change');
   await expect(page.locator('body')).not.toContainText('Measurements');
   await expect(page.getByRole('img', { name: /body ratio progress chart/i })).toBeVisible();
@@ -523,6 +524,8 @@ test('body detail shows shoulder-waist progress over time', async ({ page }) => 
   await expect(page.locator('body')).toContainText('69.1kg');
   await expect(page.locator('body')).toContainText('76.1cm');
   await expect(page.locator('body')).toContainText('112.9cm');
+  await expect(page.locator('body')).toContainText('Adonis');
+  await expect(page.locator('body')).toContainText('+0.14');
   await expect(page.locator('body')).toContainText('+0.03');
   await expect(page.getByRole('img', { name: /body ratio progress chart/i })).toBeVisible();
 });

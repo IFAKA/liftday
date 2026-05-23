@@ -22,6 +22,7 @@ import { WatchListItem, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSigna
 
 const CURRENT_WEIGHT_KG = 68.6;
 const CURRENT_WAIST_CM = 76.5;
+const ADONIS_INDEX_TARGET = 1.62;
 
 interface BodySnapshot {
   profile: UserProfile;
@@ -227,7 +228,8 @@ export function BodyDetailScreen() {
             </p>
           </div>
           <WatchMetricGrid columns={2}>
-            <WatchMetricCell label="Now" value={body.shoulderWaistRatio} tone={body.frameTone} />
+            <WatchMetricCell label="Adonis" value={body.adonisIndex} tone={body.adonisTone} />
+            <WatchMetricCell label="Target gap" value={body.adonisGap} tone={body.adonisGapTone} />
             <WatchMetricCell label="Change" value={body.ratioChange} tone={body.ratioTone} />
           </WatchMetricGrid>
           <RatioTrendChart entries={body.ratioHistory} className="mt-3" />
@@ -368,6 +370,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const ratioHistory = getRatioHistory(history, shoulderCm, waistCm);
   const ratioDelta = ratioHistory.length > 1 ? ratioHistory[ratioHistory.length - 1].ratio - ratioHistory[0].ratio : 0;
   const shoulderWaist = shoulderCm / waistCm;
+  const adonisGap = ADONIS_INDEX_TARGET - shoulderWaist;
   const chestWaist = chestCm / waistCm;
   const weightTargetGap = targetWeightKg - weightKg;
   const proteinTarget = profile.proteinTargetGrams ?? [140, 160];
@@ -423,6 +426,10 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     targetWeightKgValue: targetWeightKg,
     weightTargetDelta: `${weightTargetGap >= 0 ? '+' : ''}${formatNumber(weightTargetGap, 1)}kg`,
     weightTargetTone: Math.abs(weightTargetGap) <= 0.5 ? 'text-green-300' : 'text-white',
+    adonisIndex: shoulderWaist.toFixed(2),
+    adonisTone: shoulderWaist >= ADONIS_INDEX_TARGET ? 'text-green-300' : 'text-white',
+    adonisGap: formatRatioGap(adonisGap),
+    adonisGapTone: adonisGap <= 0 ? 'text-green-300' : 'text-amber-300',
     shoulderWaistRatio: shoulderWaist.toFixed(2),
     chestWaistRatio: chestWaist.toFixed(2),
     frameLabel: 'Body metrics',
@@ -448,6 +455,11 @@ function parseMeasurement(value: string): number | null {
 
 function roundMeasurement(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+function formatRatioGap(value: number): string {
+  if (Math.abs(value) < 0.005) return '0.00';
+  return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
 }
 
 interface BodyMeasurementFallbacks {
