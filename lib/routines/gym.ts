@@ -339,7 +339,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_lateral_raise',
       alternatives: ['db_lateral_raise'],
       exercises: ['cable_lateral_raise'],
-      prescription: prescription(3, 15, 25, '90 sec', 'Pure side-delt volume. Stop when traps take over.', '0-1 RIR'),
+      prescription: prescription(5, 15, 25, '90 sec', 'Pure side-delt volume. Stop when traps take over.', '0-1 RIR'),
     },
     {
       slotId: 'delts_arms_rear_delt',
@@ -349,7 +349,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_rear_delt_fly',
       alternatives: ['reverse_pec_deck', 'cable_face_pull'],
       exercises: ['cable_rear_delt_fly'],
-      prescription: prescription(2, 15, 25, '75 sec', 'Posture top-up. Rear delts only, traps quiet.', '0-1 RIR'),
+      prescription: prescription(4, 15, 25, '75 sec', 'Posture top-up. Rear delts only, traps quiet.', '0-1 RIR'),
     },
     {
       slotId: 'delts_arms_shrug',
