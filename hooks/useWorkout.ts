@@ -8,7 +8,7 @@ import { getTargets, getWeightTarget, evaluateTierProgress, isDeloadWeek } from 
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
 import { clearActiveWorkoutDraft, loadActiveWorkoutDraft, pwaStorage, saveActiveWorkoutDraft, loadUserProfile, saveUserProfile } from '@/lib/storage';
 import { getChainsForRoutine, getProgressionPath, getSubstitutionPath, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
-import { EquipmentKey, canPerformExercise, getRequiredEquipment } from '@/lib/equipment';
+import { EquipmentKey, canPerformExercise, getRequiredEquipment, getUnavailableProfileEquipment } from '@/lib/equipment';
 import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
 import { requireRestNotificationPermission, showRestCompleteNotification } from '@/lib/rest-notifications';
@@ -18,6 +18,7 @@ import { evaluateDoubleProgression, getPrescriptionForChain } from '@/lib/smv';
 import { hasExplicitInjuryMode } from '@/lib/session-volume-constraints';
 import { getProgramSummary } from '@/lib/program-summary';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion } from '@/lib/workout-auto-adjust';
+import { getExerciseLoadStep, getNextHigherLoad, snapLoadTarget } from '@/lib/load-targets';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -39,6 +40,7 @@ export interface UseWorkoutReturn {
   currentExercise: Exercise | undefined;
   currentTarget: number;
   currentWeightTarget: number;
+  currentWeightStep: number;
   currentPrescription: SMVExercisePrescription | null;
   previousRep: number | null;
   previousWeight: number | null;
@@ -141,6 +143,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const { workoutType, workoutOccurrenceIndex, derivedPlan } = useMemo(() => {
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
     const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const unavailableForPlan = routine.id === 'gym'
+      ? [...new Set([...getUnavailableProfileEquipment(userProfile?.availableEquipment), ...unavailableEquipment])]
+      : unavailableEquipment;
     const wt = getWorkoutType(date, routine.schedule);
     if (wt === 'rest') {
       return {
@@ -160,12 +165,12 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       activeChains,
       tiers,
       setsPerExercise,
-      unavailableEquipment,
+      unavailableForPlan,
       { allowVolumeReduction: isDeloadWeek(weekNumber) || hasExplicitInjuryMode(userProfile) }
     ).map((item) => {
       const chainIndex = chainIndexLookup.get(item.chain.slotId) ?? item.chainIndex;
       const selectedKey = selectedSubstitutions[chainIndex];
-      const selectedExercise = selectedKey && canPerformExercise(selectedKey, unavailableEquipment)
+      const selectedExercise = selectedKey && canPerformExercise(selectedKey, unavailableForPlan)
         ? EXERCISES.find((entry) => entry.key === selectedKey)
         : null;
       return {
@@ -231,20 +236,25 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       : currentPrescription?.minReps ?? targets[currentSet] ?? targets[0] ?? 10);
   const currentWeightTarget = useMemo(() => {
     if (!currentExercise || currentExercise.unit !== 'weighted') return 0;
-    if (autoAdjustSuggestion?.weight !== null && autoAdjustSuggestion?.weight !== undefined) return autoAdjustSuggestion.weight;
+    if (autoAdjustSuggestion?.weight !== null && autoAdjustSuggestion?.weight !== undefined) {
+      return snapLoadTarget(currentExercise.key, autoAdjustSuggestion.weight, 'nearest') ?? autoAdjustSuggestion.weight;
+    }
     const previousWeight = previousLoggedSet !== null ? setEntryWeight(previousLoggedSet) : null;
-    if (previousWeight !== null) return previousWeight;
+    if (previousWeight !== null) return snapLoadTarget(currentExercise.key, previousWeight, 'nearest') ?? previousWeight;
     const baseWeight = getWeightTarget(currentExercise.key, date, data);
     if (!currentPrescription) return baseWeight;
     const prevDateKey = getPreviousExerciseSessionDate(date, data, currentExercise.key as ExerciseKey);
     const prevSets = prevDateKey ? data[prevDateKey]?.[currentExercise.key as ExerciseKey] : null;
     if (!prevSets) return baseWeight;
     const decision = evaluateDoubleProgression(prevSets, currentPrescription);
-    return decision.increaseLoad ? baseWeight + getLoadJump(baseWeight) : baseWeight;
+    return decision.increaseLoad ? getNextHigherLoad(currentExercise.key, baseWeight) ?? baseWeight : baseWeight;
   }, [currentExercise, previousLoggedSet, autoAdjustSuggestion, date, data, currentPrescription]);
 
   const previousRep = previousEntry !== null ? setEntryReps(previousEntry) : null;
-  const previousWeight = previousEntry !== null ? setEntryWeight(previousEntry) : null;
+  const rawPreviousWeight = previousEntry !== null ? setEntryWeight(previousEntry) : null;
+  const previousWeight = currentExercise && rawPreviousWeight !== null
+    ? snapLoadTarget(currentExercise.key, rawPreviousWeight, 'nearest')
+    : rawPreviousWeight;
   const previousRir = previousEntry !== null ? setEntryRir(previousEntry) : null;
   const coachingReference = useMemo<CoachingReference | null>(() => {
     if (!currentExercise) return null;
@@ -254,7 +264,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (entry === null) return null;
     return {
       reps: setEntryReps(entry),
-      weight: setEntryWeight(entry),
+      weight: snapLoadTarget(currentExercise.key, setEntryWeight(entry), 'nearest'),
       rir: setEntryRir(entry),
     };
   }, [currentExercise, currentSet, previousEntry, sessionReps]);
@@ -628,7 +638,10 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const logSet = useCallback((reps: number, weight?: number, rir?: number) => {
     if (!currentExercise) return;
     const key = currentExercise.key;
-    const entry: SetEntry = weight !== undefined ? { reps, weight, rir } : reps;
+    const loggedWeight = currentExercise.unit === 'weighted'
+      ? snapLoadTarget(currentExercise.key, weight ?? 0, 'nearest') ?? 0
+      : null;
+    const entry: SetEntry = loggedWeight !== null ? { reps, weight: loggedWeight, rir } : reps;
     const targetTop = currentPrescription?.maxReps ?? currentTarget;
     const hitTarget = reps >= targetTop && (rir === undefined || (rir >= (currentPrescription?.targetRirMin ?? 0) && rir <= (currentPrescription?.targetRirMax ?? 10)));
     setFlashColor(hitTarget ? 'green' : 'red');
@@ -648,10 +661,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     if (!isLastSet) {
       const nextSuggestion = getNextSetAutoAdjust({
+        exerciseKey: currentExercise.key,
         unit: currentExercise.unit,
         loggedSet: {
           reps,
-          weight: currentExercise.unit === 'weighted' ? weight ?? 0 : null,
+          weight: loggedWeight,
           rir: rir ?? currentPrescription?.targetRirMax ?? 2,
         },
         prescription: currentPrescription,
@@ -750,9 +764,10 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (!ex) return false;
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return false;
-    const newUnavailable = [...new Set([...unavailableEquipment, ...required])];
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
     const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
+    const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
     if (workoutType === 'rest') return false;
     const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
     const chainIdx = derivedPlan[exerciseIndex]?.chainIndex;
@@ -769,9 +784,10 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (!ex) return [];
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return [];
-    const newUnavailable = [...new Set([...unavailableEquipment, ...required])];
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
     const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
+    const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
     if (workoutType === 'rest') return [];
     const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
     const chainIdx = currentPlanItem.chainIndex;
@@ -803,11 +819,15 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const chainIdx = exercisePlan[exerciseIndex]?.chainIndex;
     if (chainIdx === undefined || chainIdx < 0) return;
     const required = getRequiredEquipment(ex.key);
-    const newUnavailable = [...new Set([...unavailableEquipment, ...required])];
-    if (!canPerformExercise(exerciseKey, newUnavailable)) return;
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
+    const sessionUnavailable = [...new Set([...unavailableEquipment, ...required])];
+    const combinedUnavailable = [...new Set([...profileUnavailable, ...sessionUnavailable])];
+    if (!canPerformExercise(exerciseKey, combinedUnavailable)) return;
     const selectedExercise = EXERCISES.find((entry) => entry.key === exerciseKey);
     if (!selectedExercise) return;
-    setUnavailableEquipment(newUnavailable);
+    setUnavailableEquipment(sessionUnavailable);
     setAutoAdjustSuggestions({});
     if (exerciseIndex < derivedPlan.length) {
       setSelectedSubstitutions((prev) => ({ ...prev, [chainIdx]: exerciseKey }));
@@ -818,7 +838,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       )));
     }
     setCurrentSet(0);
-  }, [derivedPlan.length, exerciseIndex, exercisePlan, exercises, unavailableEquipment]);
+  }, [data, derivedPlan.length, exerciseIndex, exercisePlan, exercises, setsPerExercise, unavailableEquipment, userProfile]);
 
   const canDeferMachineOccupied = exerciseIndex + 1 < exercises.length;
 
@@ -909,7 +929,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   return {
     state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, currentExercise, currentTarget,
-    currentWeightTarget, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
+    currentWeightTarget, currentWeightStep: currentExercise ? getExerciseLoadStep(currentExercise.key) : 2.5, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
     timerPaused, advancedTiers,
@@ -920,12 +940,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
   };
-}
-
-function getLoadJump(currentWeight: number): number {
-  if (currentWeight < 20) return 1;
-  if (currentWeight < 60) return 2.5;
-  return 5;
 }
 
 function getSuggestionKey(exerciseKey: ExerciseKey, setIndex: number): string {

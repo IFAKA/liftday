@@ -27,6 +27,71 @@ export type EquipmentKey =
   | 'glute_machine'
   | 'hip_abduction_machine';
 
+export const DEFAULT_AVAILABLE_EQUIPMENT: EquipmentKey[] = [
+  'none',
+  'pullup_bar',
+  'dip_bars',
+  'barbell',
+  'dumbbells',
+  'cable_machine',
+  'bench',
+  'squat_rack',
+  'hack_squat_machine',
+  'chest_press_machine',
+  'row_machine',
+  'pec_deck',
+  'reverse_pec_deck',
+  'preacher_curl_station',
+  'lat_pulldown_machine',
+  'leg_curl_machine',
+  'leg_extension_machine',
+  'calf_raise_machine',
+  'leg_press_machine',
+  'glute_machine',
+  'hip_abduction_machine',
+];
+
+export function getProfileAvailableEquipment(availableEquipment?: string[]): EquipmentKey[] {
+  if (!availableEquipment?.length) return DEFAULT_AVAILABLE_EQUIPMENT;
+  const known = new Set<EquipmentKey>(DEFAULT_AVAILABLE_EQUIPMENT);
+  known.add('trx');
+  known.add('smith_machine');
+  known.add('shoulder_press_machine');
+  known.add('lateral_raise_machine');
+  return availableEquipment.filter((item): item is EquipmentKey => known.has(item as EquipmentKey));
+}
+
+export function getUnavailableProfileEquipment(availableEquipment?: string[]): EquipmentKey[] {
+  const available = new Set(getProfileAvailableEquipment(availableEquipment));
+  const all: EquipmentKey[] = [
+    'trx',
+    'pullup_bar',
+    'dip_bars',
+    'barbell',
+    'dumbbells',
+    'cable_machine',
+    'bench',
+    'squat_rack',
+    'smith_machine',
+    'hack_squat_machine',
+    'shoulder_press_machine',
+    'chest_press_machine',
+    'row_machine',
+    'lateral_raise_machine',
+    'pec_deck',
+    'reverse_pec_deck',
+    'preacher_curl_station',
+    'lat_pulldown_machine',
+    'leg_curl_machine',
+    'leg_extension_machine',
+    'calf_raise_machine',
+    'leg_press_machine',
+    'glute_machine',
+    'hip_abduction_machine',
+  ];
+  return all.filter((item) => !available.has(item));
+}
+
 export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   // Bodyweight
   incline_pushup: ['none'],

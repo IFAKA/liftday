@@ -3,6 +3,7 @@ import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE
 import { formatDateKey } from './workout-utils';
 import { SMV_PROFILE_DEFAULTS } from './smv';
 import { readJsonStorage, readStorageValue, removeStorageValue, writeJsonStorage, writeStorageValue } from './browser-storage';
+import { DEFAULT_AVAILABLE_EQUIPMENT } from './equipment';
 
 export function loadWorkoutData(): WorkoutData {
   return readJsonStorage(STORAGE_KEY, {}, (value) => migrateWorkoutData(value as WorkoutData));
@@ -120,6 +121,7 @@ export function migrateUserProfile(profile: UserProfile): UserProfile {
   if (!migrated.targetDate) migrated.targetDate = SMV_PROFILE_DEFAULTS.targetDate;
   if (!migrated.proteinTargetGrams) migrated.proteinTargetGrams = SMV_PROFILE_DEFAULTS.proteinTargetGrams;
   if (!migrated.calorieSurplusTarget) migrated.calorieSurplusTarget = SMV_PROFILE_DEFAULTS.calorieSurplusTarget;
+  if (!migrated.availableEquipment?.length) migrated.availableEquipment = DEFAULT_AVAILABLE_EQUIPMENT;
   return migrated;
 }
 
@@ -234,6 +236,7 @@ export function getDefaultProfile(): UserProfile {
     targetDate: SMV_PROFILE_DEFAULTS.targetDate,
     proteinTargetGrams: SMV_PROFILE_DEFAULTS.proteinTargetGrams,
     calorieSurplusTarget: SMV_PROFILE_DEFAULTS.calorieSurplusTarget,
+    availableEquipment: DEFAULT_AVAILABLE_EQUIPMENT,
   };
 }
 

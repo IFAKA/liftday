@@ -10,6 +10,7 @@ import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { assessSetCoaching } from '@/lib/set-coaching';
 import { getNextSetAutoAdjust } from '@/lib/workout-auto-adjust';
+import { getNextHigherLoad, getNextLowerLoad, snapLoadTarget } from '@/lib/load-targets';
 import {
   calculateRoutineVolume,
   evaluateDoubleProgression,
@@ -302,6 +303,55 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
     prescription: testPrescription,
     currentSuggestion: { reps: 10, weight: 40, rir: 2 },
   }).warning).toMatch(/changed the target/i);
+});
+
+test('snaps recommendation loads to valid exercise increments', () => {
+  expect([4, 4.5, 5.5, 6.5]).not.toContain(snapLoadTarget('cable_lateral_raise', 6.5, 'nearest'));
+  expect(getNextLowerLoad('cable_lateral_raise', 6.5)).toBe(5);
+  expect(getNextHigherLoad('cable_lateral_raise', 6.5)).toBe(7.5);
+  expect(snapLoadTarget('hammer_curl', 11.5, 'nearest')).toBe(12.5);
+
+  expect(getNextSetAutoAdjust({
+    exerciseKey: 'cable_lateral_raise',
+    unit: 'weighted',
+    loggedSet: { reps: 7, weight: 6.5, rir: 1 },
+    prescription: { ...testPrescription, exerciseKey: 'cable_lateral_raise', minReps: 12, maxReps: 20 },
+  })).toMatchObject({
+    weight: 5,
+    status: 'Reduce load',
+  });
+
+  expect(getNextSetAutoAdjust({
+    exerciseKey: 'hammer_curl',
+    unit: 'weighted',
+    loggedSet: { reps: 7, weight: 11.5, rir: 1 },
+    prescription: testPrescription,
+  })).toMatchObject({
+    weight: 10,
+    status: 'Reduce load',
+  });
+});
+
+test('no reference and hard-but-valid sets avoid noisy load reductions', () => {
+  expect(getNextSetAutoAdjust({
+    exerciseKey: 'cable_lateral_raise',
+    unit: 'weighted',
+    loggedSet: { reps: 12, weight: 6.5, rir: 0 },
+    prescription: { ...testPrescription, exerciseKey: 'cable_lateral_raise', minReps: 12, maxReps: 20 },
+  })).toMatchObject({
+    weight: 7.5,
+    status: 'Add rest',
+  });
+
+  expect(getNextSetAutoAdjust({
+    exerciseKey: 'cable_lateral_raise',
+    unit: 'weighted',
+    loggedSet: { reps: 11, weight: 6.5, rir: 1 },
+    prescription: { ...testPrescription, exerciseKey: 'cable_lateral_raise', minReps: 12, maxReps: 20 },
+  })).toMatchObject({
+    weight: 5,
+    status: 'Reduce load',
+  });
 });
 
 test('detects deload and waist calorie adjustment triggers', () => {

@@ -790,7 +790,7 @@ test('shows set 1 coaching reference from the previous workout', async ({ page }
     },
   });
 
-  const previousRow = page.getByText(/^Ref 10kg x 20 @2$/);
+  const previousRow = page.getByText(/^Last: 10kg x 20 @2$/);
   const logSet = page.getByRole('button', { name: /log set/i });
   await expect(previousRow).toBeVisible();
   await expect(logSet).toBeVisible();
@@ -809,7 +809,7 @@ test('shows set 1 coaching reference from the previous workout', async ({ page }
 test('shows no coaching reference on set 1 without prior workout data', async ({ page }) => {
   await prepareTodayWorkout(page, null);
 
-  await expect(page.getByText(/^No reference$/)).toBeVisible();
+  await expect(page.getByText(/^No prior set$/)).toBeVisible();
 });
 
 test('auto-fills adjusted next set while allowing manual edits', async ({ page }) => {
@@ -844,7 +844,7 @@ test('set 2 coaching reference uses today set 1 when prior workout only has set 
 
   await logFirstSetAndSkipRest(page, 4);
 
-  await expect(page.getByText(/^Ref 10kg x 20 @4$/)).toBeVisible();
+  await expect(page.getByText(/^Last: 10kg x 20 @4$/)).toBeVisible();
 });
 
 test('set 2 coaching reference prefers today set 1 over prior workout set 2', async ({ page }) => {
@@ -862,8 +862,8 @@ test('set 2 coaching reference prefers today set 1 over prior workout set 2', as
 
   await logFirstSetAndSkipRest(page, 4);
 
-  await expect(page.getByText(/^Ref 10kg x 20 @4$/)).toBeVisible();
-  await expect(page.getByText(/^Ref 12.5kg x 12 @2$/)).toHaveCount(0);
+  await expect(page.getByText(/^Last: 10kg x 20 @4$/)).toBeVisible();
+  await expect(page.getByText(/^Last: 12.5kg x 12 @2$/)).toHaveCount(0);
 });
 
 test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { EXERCISES } from './constants';
-import { EquipmentKey, getRequiredEquipment } from './equipment';
+import { EquipmentKey, getRequiredEquipment, getUnavailableProfileEquipment } from './equipment';
 import { getChainsForRoutine, getSelectedExerciseKey } from './tiers';
 import { getExerciseMuscleContribution, scoreWeeklyVolume, RoutineScoreResult, MUSCLE_MIN_WEEKLY_SETS } from './smv';
 import { scoreSessionSets } from './progress-insights';
@@ -65,8 +65,6 @@ export interface FrontierOptimizerResult {
 const DEFAULT_SESSION_SET_CAP = 22;
 const MAX_SESSION_SET_CAP = 27;
 const SET_MINUTES = 4;
-const DEFAULT_UNAVAILABLE_EQUIPMENT: EquipmentKey[] = ['smith_machine', 'shoulder_press_machine', 'lateral_raise_machine'];
-
 function prescription(
   minReps: number,
   maxReps: number,
@@ -603,11 +601,7 @@ function getAvailableCandidates(profile: UserProfile | null): FrontierCandidate[
 }
 
 function getUnavailableEquipment(profile: UserProfile | null): EquipmentKey[] {
-  if (profile?.availableEquipment?.length) {
-    const available = new Set(profile.availableEquipment);
-    return DEFAULT_UNAVAILABLE_EQUIPMENT.filter((equipment) => !available.has(equipment));
-  }
-  return DEFAULT_UNAVAILABLE_EQUIPMENT;
+  return getUnavailableProfileEquipment(profile?.availableEquipment);
 }
 
 function isExerciseCompatible(exerciseKey: ExerciseKey, profile: UserProfile | null, unavailable: EquipmentKey[]): boolean {

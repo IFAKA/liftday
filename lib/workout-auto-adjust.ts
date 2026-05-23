@@ -1,6 +1,7 @@
-import type { AdaptiveRecommendation, Exercise, SMVExercisePrescription, SetEntry } from './types';
+import type { AdaptiveRecommendation, Exercise, ExerciseKey, SMVExercisePrescription, SetEntry } from './types';
 import { setEntryReps, setEntryRir, setEntryWeight } from './types';
 import { getNormalizedSetScore } from './set-coaching';
+import { getNextHigherLoad, getNextLowerLoad, snapLoadTarget } from './load-targets';
 
 export type AutoAdjustStatus =
   | 'Add reps'
@@ -26,6 +27,7 @@ export interface AutoAdjustSuggestion extends AutoAdjustSetTarget {
 }
 
 export interface AutoAdjustInput {
+  exerciseKey?: ExerciseKey;
   unit: Exercise['unit'];
   loggedSet: AutoAdjustSetTarget;
   prescription: SMVExercisePrescription | null;
@@ -46,7 +48,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
   const previousReps = previousSet ? setEntryReps(previousSet) : input.previousSessionReference?.reps ?? null;
   const previousWeight = previousSet ? setEntryWeight(previousSet) : input.previousSessionReference?.weight ?? null;
   const previousRir = previousSet ? setEntryRir(previousSet) : input.previousSessionReference?.rir ?? null;
-  const logged = clampTarget(input.loggedSet, minReps, maxReps, targetRirMin, targetRirMax);
+  const logged = clampTarget(input.loggedSet, input.exerciseKey, input.unit, minReps, maxReps, targetRirMin, targetRirMax);
   const guardrail = getProgramGuardrail(input.topRecommendation);
   const missedMinReps = input.loggedSet.reps < minReps;
   const tooEasy = input.loggedSet.rir > targetRirMax;
@@ -69,7 +71,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
   if (guardrail.kind === 'deload') {
     suggestion = makeSuggestion({
       ...logged,
-      weight: reduceWeight(logged.weight),
+      weight: reduceWeight(input.exerciseKey, logged.weight),
       reps: Math.max(minReps, Math.min(logged.reps, maxReps - 1)),
       rir: targetRirMax,
       status: 'Reduce load',
@@ -80,7 +82,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
   } else if (missedMinReps || tooHard || (performanceDropped && (repsDropped || loadIncreased))) {
     suggestion = makeSuggestion({
       ...logged,
-      weight: reduceWeight(logged.weight),
+      weight: missedMinReps || performanceDropped ? reduceWeight(input.exerciseKey, logged.weight) : logged.weight,
       reps: Math.max(minReps, Math.min(logged.reps, previousReps ?? logged.reps)),
       rir: targetRirMax,
       status: missedMinReps || performanceDropped ? 'Reduce load' : 'Add rest',
@@ -102,7 +104,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
     const canJumpNow = input.unit === 'weighted' && allStrong && guardrail.allowsLoadJump;
     suggestion = makeSuggestion({
       ...logged,
-      weight: canJumpNow ? addSmallLoadJump(logged.weight) : logged.weight,
+      weight: canJumpNow ? addSmallLoadJump(input.exerciseKey, logged.weight) : logged.weight,
       reps: canJumpNow ? minReps : maxReps,
       rir: targetRirMax,
       status: canJumpNow ? 'Small jump next' : 'Hold',
@@ -163,13 +165,15 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
 
 function clampTarget(
   target: AutoAdjustSetTarget,
+  exerciseKey: ExerciseKey | undefined,
+  unit: Exercise['unit'],
   minReps: number,
   maxReps: number,
   targetRirMin: number,
   targetRirMax: number
 ): AutoAdjustSetTarget {
   return {
-    weight: target.weight,
+    weight: unit === 'weighted' ? snapLoadTarget(exerciseKey, target.weight, 'nearest') : null,
     reps: Math.max(minReps, Math.min(maxReps, target.reps)),
     rir: Math.max(0, Math.min(4, target.rir ?? targetRirMax, Math.max(targetRirMin, targetRirMax))),
   };
@@ -185,21 +189,12 @@ function getRepNudge(rir: number, targetRirMax: number): number {
   return rir >= targetRirMax + 2 ? 2 : 1;
 }
 
-function reduceWeight(weight: number | null): number | null {
-  if (weight === null || weight <= 0) return weight;
-  const jump = getLoadJump(weight);
-  return Math.max(0, Math.round((weight - jump) * 10) / 10);
+function reduceWeight(exerciseKey: ExerciseKey | undefined, weight: number | null): number | null {
+  return getNextLowerLoad(exerciseKey, weight);
 }
 
-function addSmallLoadJump(weight: number | null): number | null {
-  if (weight === null) return null;
-  return Math.round((weight + getLoadJump(weight)) * 10) / 10;
-}
-
-function getLoadJump(currentWeight: number): number {
-  if (currentWeight < 20) return 1;
-  if (currentWeight < 60) return 2.5;
-  return 5;
+function addSmallLoadJump(exerciseKey: ExerciseKey | undefined, weight: number | null): number | null {
+  return getNextHigherLoad(exerciseKey, weight);
 }
 
 function getHardSetReason(input: {
@@ -207,9 +202,9 @@ function getHardSetReason(input: {
   repsDropped: boolean;
   performanceDropped: boolean;
 }): string {
-  if (input.missedMinReps) return 'You missed the rep floor, so reduce load and rebuild clean reps.';
-  if (input.repsDropped || input.performanceDropped) return 'Output dropped at hard effort, so reduce load or add rest now.';
-  return 'RIR was below target, so keep effort controlled on the next set.';
+  if (input.missedMinReps) return 'Missed rep floor: reduce to the next valid load.';
+  if (input.repsDropped || input.performanceDropped) return 'Set output dipped at hard effort; reduce to the next valid load.';
+  return 'Hard but still in range: hold load and add rest.';
 }
 
 function getProgramGuardrail(recommendation: AdaptiveRecommendation | null | undefined): {

@@ -12,6 +12,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { TopBar } from './TopBar';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion, type AutoAdjustTone } from '@/lib/workout-auto-adjust';
 import type { CoachingReference } from '@/hooks/useWorkout';
+import { formatLoadTarget } from '@/lib/load-targets';
 
 interface ExerciseScreenProps {
   exercise: Exercise;
@@ -21,6 +22,7 @@ interface ExerciseScreenProps {
   setsPerExercise: number;
   currentTarget: number;
   currentWeightTarget: number;
+  currentWeightStep: number;
   prescription: SMVExercisePrescription | null;
   previousRep: number | null;
   previousWeight: number | null;
@@ -45,6 +47,7 @@ export function ExerciseScreen({
   setsPerExercise,
   currentTarget,
   currentWeightTarget,
+  currentWeightStep,
   prescription,
   previousRep,
   previousWeight,
@@ -115,6 +118,7 @@ export function ExerciseScreen({
   const completedSets = completedPlannedSets;
   const progressPercent = (completedSets / totalSets) * 100;
   const coaching = getNextSetAutoAdjust({
+    exerciseKey: exercise.key,
     unit: exercise.unit,
     loggedSet: {
       reps: val,
@@ -237,7 +241,7 @@ export function ExerciseScreen({
                   defaultValue={defaultWeight}
                   min={0}
                   max={500}
-                  step={2.5}
+                  step={currentWeightStep}
                   label="KG"
                   compact
                   onChange={setWeight}
@@ -411,8 +415,8 @@ function getCoachingToneClass(tone: AutoAdjustTone): string {
 }
 
 function formatReferenceLabel(reference: CoachingReference | null): string {
-  if (reference === null) return 'No reference';
+  if (reference === null) return 'No prior set';
   const effort = reference.rir === null ? '' : ` @${reference.rir}`;
-  if (reference.weight !== null) return `Ref ${reference.weight}kg x ${reference.reps}${effort}`;
-  return `Ref ${reference.reps}${effort}`;
+  if (reference.weight !== null) return `Last: ${formatLoadTarget(reference.weight)} x ${reference.reps}${effort}`;
+  return `Last: ${reference.reps}${effort}`;
 }

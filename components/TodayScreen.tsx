@@ -142,6 +142,7 @@ function TodayContent({ date }: { date: Date }) {
         setsPerExercise={workout.setsPerExercise}
         currentTarget={workout.currentTarget}
         currentWeightTarget={workout.currentWeightTarget}
+        currentWeightStep={workout.currentWeightStep}
         prescription={workout.currentPrescription}
         previousRep={workout.previousRep}
         previousWeight={workout.previousWeight}

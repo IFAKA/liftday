@@ -95,7 +95,12 @@ function AdaptiveRecommendationPanel({ adaptation }: { adaptation: OptimizationC
       </WatchMetricGrid>
       {(bottleneck || guardrail) && (
         <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
-          {guardrail ?? `Bottleneck: ${bottleneck!.muscle.replace('_', ' ')}`}
+          {guardrail ?? recommendation.blockedConstraints[0] ?? recommendation.reason ?? `Bottleneck: ${bottleneck!.muscle.replace('_', ' ')}`}
+        </p>
+      )}
+      {!bottleneck && !guardrail && (recommendation.reason || recommendation.blockedConstraints[0]) && (
+        <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
+          {recommendation.blockedConstraints[0] ?? recommendation.reason}
         </p>
       )}
     </WatchSignalPanel>

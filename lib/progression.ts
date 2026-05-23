@@ -2,6 +2,7 @@ import { WorkoutData, ExerciseKey, TrainingPriority, UserProfile, TierChain, Set
 import { getPreviousExerciseSessionDate, getSetsForWeek } from './workout-utils';
 import { loadUserProfile } from './storage';
 import { getProgressionPath } from './tiers';
+import { getDefaultLoadTarget, snapLoadTarget } from './load-targets';
 
 const MIN_REPS = 6;
 const MAX_REPS = 20;
@@ -36,8 +37,6 @@ export function getTargets(
   return Array(sets).fill(Math.min(MAX_REPS, Math.max(MIN_REPS, avg + 1)));
 }
 
-const DEFAULT_WEIGHT = 20;
-
 /** Returns the average weight used in the last session for this exercise. */
 export function getWeightTarget(
   exerciseKey: ExerciseKey,
@@ -45,12 +44,13 @@ export function getWeightTarget(
   data: WorkoutData
 ): number {
   const prevDateKey = getPreviousExerciseSessionDate(currentDate, data, exerciseKey);
-  if (!prevDateKey) return DEFAULT_WEIGHT;
+  const defaultWeight = getDefaultLoadTarget(exerciseKey, 'weighted');
+  if (!prevDateKey) return defaultWeight;
   const prevSets = data[prevDateKey]?.[exerciseKey];
-  if (!prevSets || prevSets.length === 0) return DEFAULT_WEIGHT;
+  if (!prevSets || prevSets.length === 0) return defaultWeight;
   const weights = prevSets.map(setEntryWeight).filter((w): w is number => w !== null);
-  if (weights.length === 0) return DEFAULT_WEIGHT;
-  return Math.round(weights.reduce((s, w) => s + w, 0) / weights.length);
+  if (weights.length === 0) return defaultWeight;
+  return snapLoadTarget(exerciseKey, weights.reduce((s, w) => s + w, 0) / weights.length, 'nearest') ?? defaultWeight;
 }
 
 /** How many consecutive max-rep sessions are needed to advance a tier. */
