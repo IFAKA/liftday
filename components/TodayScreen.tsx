@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Activity, AlertTriangle, CalendarDays, ChartBar, Check, CheckCircle, Dumbbell, Flame, Scale, Settings } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarDays, ChartBar, Check, CheckCircle, Dumbbell, Flame, Ruler, Scale, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useWorkout } from '@/hooks/useWorkout';
@@ -14,8 +14,24 @@ import { formatWorkoutType, getWorkoutType, getTrainingStreak } from '@/lib/sche
 import { Badge } from '@/components/ui/badge';
 import { TopBar } from './TopBar';
 import { WatchListItem, WatchPanel } from './WatchSurface';
-import { DailyLog } from '@/lib/types';
-import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog } from '@/lib/storage';
+import { DailyLog, UserProfile } from '@/lib/types';
+import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog, setBodyProfileFallbacks } from '@/lib/storage';
+
+type PreWorkoutGate = 'measurements' | 'weight' | null;
+type WeeklyMeasurementKey = keyof Pick<DailyLog, 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'bicepsCm'>;
+type WeeklyMeasurements = Record<WeeklyMeasurementKey, number>;
+
+const WEEKLY_MEASUREMENT_FIELDS = [
+  { key: 'waistCm', label: 'Waist' },
+  { key: 'shoulderCm', label: 'Shoulder' },
+  { key: 'chestCm', label: 'Chest' },
+  { key: 'hipCm', label: 'Hip' },
+  { key: 'neckCm', label: 'Neck' },
+  { key: 'quadCm', label: 'Quad' },
+  { key: 'calfCm', label: 'Calf' },
+  { key: 'forearmCm', label: 'Forearm' },
+  { key: 'bicepsCm', label: 'Biceps' },
+] as const satisfies readonly { key: WeeklyMeasurementKey; label: string }[];
 
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 const ScreenFallback = () => <LoadingScreen />;
@@ -70,7 +86,7 @@ function LoadingScreen() {
 function TodayContent({ date }: { date: Date }) {
   const [startError, setStartError] = useState<string | null>(null);
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
-  const [isCheckingWeight, setIsCheckingWeight] = useState(false);
+  const [preWorkoutGate, setPreWorkoutGate] = useState<PreWorkoutGate>(null);
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
@@ -184,35 +200,67 @@ nextExerciseName={workout.nextExerciseAfterRestName}
   const dateKey = formatDateKey(date);
   const todayLog = dailyLogs[dateKey];
   const isWeightCheckDay = date.getDay() === 6;
+  const hasHandledMeasurements = hasWeeklyMeasurements(todayLog);
   const hasHandledWeight = getValidWeight(todayLog?.morningWeightKg) !== null || todayLog?.weightCheckSkipped === true;
 
   const startWarmup = () => {
     setStartError(null);
-    setIsCheckingWeight(false);
+    setPreWorkoutGate(null);
 
     workout.startWorkout().catch((error: unknown) => {
       setStartError(error instanceof Error ? error.message : 'Workout start failed.');
     });
   };
 
-  const handleStart = () => {
-    setStartError(null);
-    if (isWeightCheckDay && !hasHandledWeight) {
-      setIsCheckingWeight(true);
+  const continueAfterMeasurements = (nextLogs: Record<string, DailyLog>) => {
+    setDailyLogs(nextLogs);
+    const nextTodayLog = nextLogs[dateKey];
+    if (isWeightCheckDay && getValidWeight(nextTodayLog?.morningWeightKg) === null && nextTodayLog?.weightCheckSkipped !== true) {
+      setPreWorkoutGate('weight');
       return;
     }
 
     startWarmup();
   };
 
-  if (!isDone && isCheckingWeight) {
+  const continueAfterWeight = (nextLogs: Record<string, DailyLog>) => {
+    setDailyLogs(nextLogs);
+    startWarmup();
+  };
+
+  const handleStart = () => {
+    setStartError(null);
+    if (isWeightCheckDay && !hasHandledMeasurements) {
+      setPreWorkoutGate('measurements');
+      return;
+    }
+
+    if (isWeightCheckDay && !hasHandledWeight) {
+      setPreWorkoutGate('weight');
+      return;
+    }
+
+    startWarmup();
+  };
+
+  if (!isDone && preWorkoutGate === 'measurements') {
+    return (
+      <WeeklyMeasurementScreen
+        date={date}
+        logs={dailyLogs}
+        onCancel={() => setPreWorkoutGate(null)}
+        onComplete={continueAfterMeasurements}
+      />
+    );
+  }
+
+  if (!isDone && preWorkoutGate === 'weight') {
     return (
       <WeightCheckScreen
         date={date}
         logs={dailyLogs}
-        onLogsChange={setDailyLogs}
-        onCancel={() => setIsCheckingWeight(false)}
-        onComplete={startWarmup}
+        onCancel={() => setPreWorkoutGate(null)}
+        onComplete={continueAfterWeight}
       />
     );
   }
@@ -330,15 +378,13 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 function WeightCheckScreen({
   date,
   logs,
-  onLogsChange,
   onCancel,
   onComplete,
 }: {
   date: Date;
   logs: Record<string, DailyLog>;
-  onLogsChange: (logs: Record<string, DailyLog>) => void;
   onCancel: () => void;
-  onComplete: () => void;
+  onComplete: (logs: Record<string, DailyLog>) => void;
 }) {
   const dateKey = formatDateKey(date);
   const todayLog = logs[dateKey];
@@ -360,8 +406,7 @@ function WeightCheckScreen({
       morningWeightKg: roundWeight(nextWeight),
       weightCheckSkipped: false,
     });
-    onLogsChange(loadDailyLogs());
-    onComplete();
+    onComplete(loadDailyLogs());
   };
 
   const skipWeight = () => {
@@ -369,9 +414,8 @@ function WeightCheckScreen({
       dateKey,
       weightCheckSkipped: true,
     });
-    onLogsChange(loadDailyLogs());
     setInputError(null);
-    onComplete();
+    onComplete(loadDailyLogs());
   };
 
   const previousLabel = lastWeight !== null ? `Last ${formatWeight(lastWeight)}` : 'No recent weight';
@@ -458,6 +502,199 @@ function WeightCheckScreen({
   );
 }
 
+function WeeklyMeasurementScreen({
+  date,
+  logs,
+  onCancel,
+  onComplete,
+}: {
+  date: Date;
+  logs: Record<string, DailyLog>;
+  onCancel: () => void;
+  onComplete: (logs: Record<string, DailyLog>) => void;
+}) {
+  const dateKey = formatDateKey(date);
+  const todayLog = logs[dateKey];
+  const profile = loadUserProfile() ?? getDefaultProfile();
+  const [draft, setDraft] = useState(() => {
+    return Object.fromEntries(WEEKLY_MEASUREMENT_FIELDS.map(({ key }) => [
+      key,
+      formatMeasurementInput(getValidMeasurement(todayLog?.[key]) ?? getLastKnownMeasurement(logs, dateKey, key) ?? getProfileMeasurement(profile, key)),
+    ])) as Record<(typeof WEEKLY_MEASUREMENT_FIELDS)[number]['key'], string>;
+  });
+  const [inputError, setInputError] = useState<string | null>(null);
+
+  const saveMeasurements = () => {
+    const values = WEEKLY_MEASUREMENT_FIELDS.map(({ key }) => [key, parseMeasurement(draft[key])] as const);
+    if (values.some(([, value]) => value === null || value < 10 || value > 250)) {
+      setInputError('Check cm');
+      return;
+    }
+
+    const measurementLog = values.reduce<WeeklyMeasurements>((nextLog, [key, value]) => {
+      nextLog[key] = roundMeasurement(value!);
+      return nextLog;
+    }, {} as WeeklyMeasurements);
+    const defaultProfile = getDefaultProfile();
+    saveDailyLog(dateKey, {
+      dateKey,
+      ...measurementLog,
+    });
+    setBodyProfileFallbacks({
+      heightCm: getValidMeasurement(todayLog?.heightCm) ?? getValidMeasurement(profile.heightCm) ?? defaultProfile.heightCm ?? 172,
+      weightKg: getValidWeight(todayLog?.morningWeightKg) ?? getValidWeight(profile.weightKg) ?? defaultProfile.weightKg ?? 68.6,
+      waistCircumferenceCm: measurementLog.waistCm,
+      shoulderCircumferenceCm: measurementLog.shoulderCm,
+      chestCircumferenceCm: measurementLog.chestCm,
+      hipCircumferenceCm: measurementLog.hipCm,
+      neckCircumferenceCm: measurementLog.neckCm,
+      quadCircumferenceCm: measurementLog.quadCm,
+      calfCircumferenceCm: measurementLog.calfCm,
+      forearmCircumferenceCm: measurementLog.forearmCm,
+      bicepsCircumferenceCm: measurementLog.bicepsCm,
+    });
+    onComplete(loadDailyLogs());
+  };
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden bg-black px-safe pt-safe pb-safe">
+      <TopBar
+        center={
+          <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
+            {formatDisplayDate(date)}
+          </span>
+        }
+      />
+
+      <div className="flex min-h-0 flex-1 flex-col px-4">
+        <div className="flex shrink-0 items-center gap-3 py-4">
+          <Ruler className="h-10 w-10 shrink-0 text-white/35" />
+          <div className="min-w-0">
+            <h1 className="text-fluid-ui font-black uppercase leading-none text-white">
+              Measurements
+            </h1>
+            <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
+              Tape check before gym
+            </p>
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
+          <WatchPanel subtle className="py-3">
+            <div className="grid grid-cols-2 gap-2">
+              {WEEKLY_MEASUREMENT_FIELDS.map(({ key, label }) => (
+                <WeeklyMeasurementInput
+                  key={key}
+                  label={label}
+                  value={draft[key]}
+                  onChange={(value) => {
+                    setDraft((current) => ({ ...current, [key]: value }));
+                    setInputError(null);
+                  }}
+                />
+              ))}
+            </div>
+            {inputError && (
+              <p className="mt-3 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
+            )}
+          </WatchPanel>
+        </div>
+      </div>
+
+      <div className="w-full px-4 pb-safe mb-4 shrink-0">
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="btn-mobile-secondary rounded-full border-white/15 bg-white/5 text-fluid-label font-black uppercase tracking-tight text-white/70 active:scale-95"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={saveMeasurements}
+            className="btn-mobile-secondary rounded-full bg-white text-fluid-label font-black uppercase tracking-tight text-black active:scale-95"
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WeeklyMeasurementInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="min-w-0">
+      <span className="block truncate text-fluid-label font-mono uppercase text-white/35">{label}</span>
+      <div className="mt-1 flex min-w-0 items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-2">
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.1"
+          value={value}
+          aria-label={`${label} centimeters`}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-10 border-0 bg-transparent px-0 text-fluid-label font-black tabular-nums text-white shadow-none focus-visible:ring-0"
+        />
+        <span className="shrink-0 text-[10px] font-mono uppercase text-white/30">cm</span>
+      </div>
+    </label>
+  );
+}
+
+function hasWeeklyMeasurements(log: DailyLog | undefined): boolean {
+  return WEEKLY_MEASUREMENT_FIELDS.every(({ key }) => getValidMeasurement(log?.[key]) !== null);
+}
+
+function getLastKnownMeasurement(
+  logs: Record<string, DailyLog>,
+  beforeDateKey: string,
+  key: (typeof WEEKLY_MEASUREMENT_FIELDS)[number]['key']
+): number | null {
+  const latest = Object.values(logs)
+    .filter((log) => log.dateKey < beforeDateKey && getValidMeasurement(log[key]) !== null)
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
+
+  return getValidMeasurement(latest?.[key]);
+}
+
+function getProfileMeasurement(
+  profile: UserProfile,
+  key: (typeof WEEKLY_MEASUREMENT_FIELDS)[number]['key']
+): number {
+  const defaultProfile = getDefaultProfile();
+  switch (key) {
+    case 'waistCm':
+      return profile.waistCircumferenceCm ?? defaultProfile.waistCircumferenceCm ?? 76.5;
+    case 'shoulderCm':
+      return profile.shoulderCircumferenceCm ?? defaultProfile.shoulderCircumferenceCm ?? 111.76;
+    case 'chestCm':
+      return profile.chestCircumferenceCm ?? defaultProfile.chestCircumferenceCm ?? 89.5;
+    case 'hipCm':
+      return profile.hipCircumferenceCm ?? defaultProfile.hipCircumferenceCm ?? 85;
+    case 'neckCm':
+      return profile.neckCircumferenceCm ?? defaultProfile.neckCircumferenceCm ?? 37;
+    case 'quadCm':
+      return profile.quadCircumferenceCm ?? defaultProfile.quadCircumferenceCm ?? 50;
+    case 'calfCm':
+      return profile.calfCircumferenceCm ?? defaultProfile.calfCircumferenceCm ?? 35;
+    case 'forearmCm':
+      return profile.forearmCircumferenceCm ?? defaultProfile.forearmCircumferenceCm ?? 25.5;
+    case 'bicepsCm':
+      return profile.bicepsCircumferenceCm ?? defaultProfile.bicepsCircumferenceCm ?? 28;
+  }
+}
+
 function getLastKnownWeight(logs: Record<string, DailyLog>, beforeDateKey: string): number | null {
   const latest = Object.values(logs)
     .filter((log) => log.dateKey < beforeDateKey && getValidWeight(log.morningWeightKg) !== null)
@@ -468,6 +705,23 @@ function getLastKnownWeight(logs: Record<string, DailyLog>, beforeDateKey: strin
 
 function getValidWeight(value: number | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function getValidMeasurement(value: number | undefined): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function parseMeasurement(value: string): number | null {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatMeasurementInput(value: number | null | undefined): string {
+  return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(1) : '';
+}
+
+function roundMeasurement(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function formatWeight(value: number): string {

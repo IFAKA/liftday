@@ -181,11 +181,28 @@ test('settings body row opens the canonical body screen', async ({ page }) => {
   await expect(page).toHaveURL(/\/history\/body$/);
 });
 
-test('saturday start opens weekly weight check before warm-up', async ({ page }) => {
+test('saturday start opens weekly measurements, gym weight check, then warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.setItem('liftday_user_profile', JSON.stringify({
+      createdAt: '2026-05-01T00:00:00.000Z',
+      tiers: {},
+      tierProgress: {},
+      heightCm: 181,
+      weightKg: 66.5,
+      waistCircumferenceCm: 77.3,
+      shoulderCircumferenceCm: 113.2,
+      chestCircumferenceCm: 91.4,
+      hipCircumferenceCm: 86.5,
+      neckCircumferenceCm: 37.8,
+      quadCircumferenceCm: 50,
+      calfCircumferenceCm: 35,
+      forearmCircumferenceCm: 25.5,
+      bicepsCircumferenceCm: 28,
+      targetWeightKg: 72,
+    }));
     if (!localStorage.getItem('liftday_daily_logs')) {
       localStorage.setItem('liftday_daily_logs', JSON.stringify({
         '2026-05-10': {
@@ -202,6 +219,12 @@ test('saturday start opens weekly weight check before warm-up', async ({ page })
   await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
 
   await page.getByRole('button', { name: /^start$/i }).click();
+  await expect(page.locator('body')).toContainText('Measurements');
+  await expect(page.getByRole('spinbutton', { name: /waist centimeters/i })).toBeVisible();
+  await page.getByRole('spinbutton', { name: /waist centimeters/i }).fill('77.6');
+  await page.getByRole('spinbutton', { name: /shoulder centimeters/i }).fill('113.7');
+  await page.getByRole('button', { name: /^save$/i }).click();
+
   await expect(page.locator('body')).toContainText('WEIGHT');
   await expect(page.locator('body')).toContainText('Last 66.7kg');
   await expect(page.getByRole('spinbutton', { name: /bodyweight/i })).toBeVisible();
@@ -212,9 +235,9 @@ test('saturday start opens weekly weight check before warm-up', async ({ page })
   await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
 
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number }>;
     return logs['2026-05-16'];
-  })).toEqual({ dateKey: '2026-05-16', morningWeightKg: 66.8, weightCheckSkipped: false });
+  })).toMatchObject({ dateKey: '2026-05-16', waistCm: 77.6, shoulderCm: 113.7, morningWeightKg: 66.8, weightCheckSkipped: false });
 
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('66.8kg');
@@ -237,13 +260,14 @@ test('saturday weight check can record no scale and continue to warm-up', async 
 
   await page.goto('/');
   await page.getByRole('button', { name: /^start$/i }).click();
+  await page.getByRole('button', { name: /^save$/i }).click();
   await page.getByRole('button', { name: /^no scale$/i }).click();
 
   await expect(page.getByText(/warm up/i)).toBeVisible();
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { weightCheckSkipped?: boolean }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number }>;
     return logs['2026-05-16'];
-  })).toEqual({ dateKey: '2026-05-16', weightCheckSkipped: true });
+  })).toMatchObject({ dateKey: '2026-05-16', weightCheckSkipped: true, waistCm: 76.5, shoulderCm: 111.8 });
 });
 
 test('weekday start skips weight check and opens warm-up', async ({ page }) => {
