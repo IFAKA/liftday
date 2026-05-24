@@ -16,6 +16,7 @@ import { TopBar } from './TopBar';
 import { WatchListItem, WatchPanel } from './WatchSurface';
 import { DailyLog, UserProfile } from '@/lib/types';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog, setBodyProfileFallbacks } from '@/lib/storage';
+import { getStorageIssues } from '@/lib/browser-storage';
 
 type PreWorkoutGate = 'measurements' | 'weight' | null;
 type WeeklyMeasurementKey = keyof Pick<DailyLog, 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'wristCm' | 'ankleCm' | 'bicepsCm'>;
@@ -88,6 +89,7 @@ function LoadingScreen() {
 function TodayContent({ date }: { date: Date }) {
   const [startError, setStartError] = useState<string | null>(null);
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
+  const [storageIssue, setStorageIssue] = useState<string | null>(null);
   const [preWorkoutGate, setPreWorkoutGate] = useState<PreWorkoutGate>(null);
   const workout = useWorkout(date);
   const schedule = useSchedule(date, workout.data);
@@ -98,6 +100,10 @@ function TodayContent({ date }: { date: Date }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDailyLogs(loadDailyLogs());
+    const latestIssue = getStorageIssues().at(-1);
+    if (latestIssue) {
+      setStorageIssue(`${latestIssue.reason} Recovery: ${latestIssue.recoveryKey ?? 'not available'}.`);
+    }
   }, []);
 
   if (workout.isRestoringActiveWorkout) {
@@ -105,6 +111,7 @@ function TodayContent({ date }: { date: Date }) {
   }
 
   const storageReady = workout.isStorageHydrated;
+  const storageIssueMessage = storageIssue ?? formatStorageIssue(getStorageIssues().at(-1));
 
   // Rest day
   if (!schedule.isTraining) {
@@ -153,7 +160,9 @@ function TodayContent({ date }: { date: Date }) {
         topRecommendation={workout.topRecommendation}
         currentExerciseSets={workout.sessionReps[workout.currentExercise!.key] ?? []}
         flashColor={workout.flashColor}
+        persistenceError={workout.persistenceError}
         onLogSet={workout.logSet}
+        onRetryComplete={workout.retryWorkoutSave}
         onQuit={workout.quitWorkout}
         onMachineOccupied={workout.handleMachineOccupied}
         swapAlternatives={workout.swapAlternatives}
@@ -352,6 +361,18 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
       {storageReady && !isDone && (
         <>
+          {storageIssueMessage && (
+            <div className="w-full px-4 mb-3">
+              <WatchPanel className="border-amber-300/35 bg-amber-300/10 py-3">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-amber-200" />
+                  <p className="text-fluid-label font-black uppercase leading-tight text-amber-100">
+                    Storage issue. {storageIssueMessage}
+                  </p>
+                </div>
+              </WatchPanel>
+            </div>
+          )}
           {startError && (
             <div className="w-full px-4 mb-3">
               <WatchPanel className="border-red-500/40 bg-red-500/10 py-3">
@@ -743,4 +764,9 @@ function formatWeightInput(value: number | null | undefined): string {
 
 function roundWeight(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+function formatStorageIssue(issue: ReturnType<typeof getStorageIssues>[number] | undefined): string | null {
+  if (!issue) return null;
+  return `${issue.reason} Recovery: ${issue.recoveryKey ?? 'not available'}.`;
 }

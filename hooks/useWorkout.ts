@@ -66,6 +66,7 @@ export interface UseWorkoutReturn {
   isReady: boolean;
   isStorageHydrated: boolean;
   isRestoringActiveWorkout: boolean;
+  persistenceError: string | null;
   startWorkout: () => Promise<void>;
   startWarmupTimer: () => void;
   beginWorkoutAfterWarmup: () => void;
@@ -82,6 +83,7 @@ export interface UseWorkoutReturn {
   deferCurrentForOccupied: () => void;
   requeueCurrent: () => void;
   handleMachineOccupied: () => void;
+  retryWorkoutSave: () => void;
 }
 
 type RequeuedExercise = { exercise: Exercise; setCount: number; chainIndex?: number };
@@ -108,6 +110,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [hydrated, setHydrated] = useState(false);
   const [restorationChecked, setRestorationChecked] = useState(false);
   const [autoAdjustSuggestions, setAutoAdjustSuggestions] = useState<Record<string, AutoAdjustSuggestion>>({});
+  const [persistenceError, setPersistenceError] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownPlayedRef = useRef<Set<number>>(new Set());
@@ -474,6 +477,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [state, timer === restDurationRef.current, timerPaused, notifyRestCompleteIfHidden, timer]);
 
   const saveAndComplete = useCallback(async () => {
+    setPersistenceError(null);
     const reps = sessionRepsRef.current;
     const session: WorkoutData[string] = {
       logged_at: new Date().toISOString(),
@@ -484,8 +488,16 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     for (const ex of exercises) {
       if (reps[ex.key]) (session as Record<string, unknown>)[ex.key] = reps[ex.key];
     }
-    await storageAdapter.saveSession(dateKey, session);
-    await storageAdapter.setFirstSessionDate(dateKey);
+    const sessionResult = await storageAdapter.saveSession(dateKey, session);
+    if (!sessionResult.success) {
+      setPersistenceError(sessionResult.reason);
+      return;
+    }
+    const firstSessionResult = await storageAdapter.setFirstSessionDate(dateKey);
+    if (!firstSessionResult.success) {
+      setPersistenceError(firstSessionResult.reason);
+      return;
+    }
     setData(await storageAdapter.loadWorkoutData());
 
     // Evaluate tier progress for non-fixed chains
@@ -516,13 +528,21 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         }
       }
       setAdvancedTiers(advanced);
-      saveUserProfile(updatedProfile);
+      const profileResult = saveUserProfile(updatedProfile);
+      if (!profileResult.success) {
+        setPersistenceError(profileResult.reason);
+        return;
+      }
       userProfileRef.current = updatedProfile;
       setUserProfile(updatedProfile);
     }
 
     playSessionComplete();
-    clearActiveWorkoutDraft();
+    const clearDraftResult = clearActiveWorkoutDraft();
+    if (!clearDraftResult.success) {
+      setPersistenceError(clearDraftResult.reason);
+      return;
+    }
     setState('complete');
   }, [dateKey, weekNumber, exercises, workoutType, workoutOccurrenceIndex, storageAdapter, data, setsPerExercise]);
 
@@ -582,6 +602,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, []);
 
   const startWorkout = useCallback(async () => {
+    setPersistenceError(null);
     unlockAudio();
     await requireRestNotificationPermission();
     playStart();
@@ -637,6 +658,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const logSet = useCallback((reps: number, weight?: number, rir?: number) => {
     if (!currentExercise) return;
+    setPersistenceError(null);
     const key = currentExercise.key;
     const loggedWeight = currentExercise.unit === 'weighted'
       ? snapLoadTarget(currentExercise.key, weight ?? 0, 'nearest') ?? 0
@@ -936,9 +958,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     isReady: hydrated && !isRestoringActiveWorkout,
     isStorageHydrated: hydrated,
     isRestoringActiveWorkout,
+    persistenceError,
     startWorkout, startWarmupTimer, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
+    retryWorkoutSave: () => { void saveAndComplete(); },
   };
 }
 

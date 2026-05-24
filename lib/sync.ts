@@ -6,7 +6,7 @@ import {
   STORAGE_KEY,
   USER_PROFILE_KEY,
 } from './constants';
-import { readBooleanFlag, readJsonStorage, readStorageValue, writeJsonStorage, writeStorageValue } from './browser-storage';
+import { readBooleanFlag, readJsonStorageResult, readStorageValue, readStorageValueResult, removeStorageValue, writeStorageValue } from './browser-storage';
 import { migrateDailyLogs, migrateUserProfile, migrateWorkoutData } from './storage';
 import { ActiveWorkoutDraft, DailyLog, UserProfile, WorkoutData, WorkoutSession } from './types';
 
@@ -99,9 +99,8 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     throw new Error('Sync import only works in the browser.');
   }
 
-  const current = createSyncSnapshot('laptop');
+  const current = createImportBaseSnapshot();
   const backupKey = `${BACKUP_PREFIX}${new Date().toISOString()}`;
-  writeStorageValue(backupKey, serializeSyncSnapshot(current));
 
   const incomingSessions = getSnapshotSessions(snapshot);
   const mergedData: WorkoutData = { ...current.sessions };
@@ -126,7 +125,9 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     mergedData[dateKey] = newerSession(existingSession, incomingSession);
   }
 
-  writeJsonStorage(STORAGE_KEY, mergedData);
+  const writes = new Map<string, string | null>();
+  writes.set(backupKey, serializeSyncSnapshot(current));
+  writes.set(STORAGE_KEY, JSON.stringify(mergedData));
 
   const incomingDailyLogs = getSnapshotDailyLogs(snapshot);
   const mergedDailyLogs: Record<string, DailyLog> = { ...current.dailyLogs };
@@ -149,40 +150,40 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
   }
 
   if (Object.keys(incomingDailyLogs).length > 0) {
-    writeJsonStorage(DAILY_LOGS_KEY, mergedDailyLogs);
+    writes.set(DAILY_LOGS_KEY, JSON.stringify(mergedDailyLogs));
   }
 
   let profileImported = false;
   if (snapshot.profile) {
-    writeJsonStorage(USER_PROFILE_KEY, migrateUserProfile(snapshot.profile));
+    writes.set(USER_PROFILE_KEY, JSON.stringify(migrateUserProfile(snapshot.profile)));
     profileImported = true;
   }
 
   const firstSessionDate = earliestDate(current.firstSessionDate, snapshot.firstSessionDate);
   const firstSessionDateImported = firstSessionDate !== current.firstSessionDate;
   if (firstSessionDate) {
-    writeStorageValue(FIRST_SESSION_KEY, firstSessionDate);
+    writes.set(FIRST_SESSION_KEY, firstSessionDate);
   }
 
   let mobilityDoneDateImported = false;
   if (snapshot.mobilityDoneDate) {
-    writeStorageValue(MOBILITY_DONE_KEY, snapshot.mobilityDoneDate);
+    writes.set(MOBILITY_DONE_KEY, snapshot.mobilityDoneDate);
     mobilityDoneDateImported = snapshot.mobilityDoneDate !== current.mobilityDoneDate;
   }
 
   const importedDraft = getSnapshotActiveWorkoutDraft(snapshot);
   const activeWorkoutDraftImported = shouldImportDraft(current.activeWorkoutDraft, importedDraft);
   if (activeWorkoutDraftImported && importedDraft) {
-    writeJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, importedDraft);
+    writes.set(ACTIVE_WORKOUT_DRAFT_KEY, JSON.stringify(importedDraft));
   }
 
   const onboardingCompleted = getSnapshotOnboardingCompleted(snapshot, incomingSessions);
   const onboardingCompletedImported = onboardingCompleted && readBooleanFlag(ONBOARDING_KEY) !== true;
   if (onboardingCompleted) {
-    writeStorageValue(ONBOARDING_KEY, 'true');
+    writes.set(ONBOARDING_KEY, 'true');
   }
 
-  writeJsonStorage(LAST_IMPORT_KEY, {
+  writes.set(LAST_IMPORT_KEY, JSON.stringify({
     importedAt: new Date().toISOString(),
     exportedAt: snapshot.exportedAt,
     source: snapshot.source,
@@ -193,7 +194,9 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     mobilityDoneDateImported,
     onboardingCompletedImported,
     backupKey,
-  });
+  }));
+
+  applyTransactionalWrites(writes);
 
   return {
     importedSessions: Object.keys(incomingSessions).length,
@@ -213,6 +216,69 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
   };
 }
 
+function createImportBaseSnapshot(): SyncSnapshotV2 {
+  const sessions = readWorkoutDataResult();
+  const dailyLogs = readDailyLogsResult();
+  const profile = readProfileResult();
+  const draft = readActiveWorkoutDraftResult();
+  const firstSessionDate = readStorageValueResult(FIRST_SESSION_KEY);
+  const mobilityDoneDate = readStorageValueResult(MOBILITY_DONE_KEY);
+
+  const failed = [sessions, dailyLogs, profile, draft, firstSessionDate, mobilityDoneDate]
+    .find((entry) => !entry.success);
+  if (failed && !failed.success) {
+    throw new Error(`Cannot import backup until current storage is recoverable: ${failed.reason}`);
+  }
+
+  return {
+    app: 'liftday',
+    schemaVersion: SYNC_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    source: 'laptop',
+    sessions: sessions.value,
+    dailyLogs: dailyLogs.value,
+    profile: profile.value,
+    activeWorkoutDraft: draft.value,
+    firstSessionDate: firstSessionDate.value,
+    mobilityDoneDate: mobilityDoneDate.value,
+    onboardingCompleted: readBooleanFlag(ONBOARDING_KEY),
+  };
+}
+
+function applyTransactionalWrites(writes: Map<string, string | null>): void {
+  const originals = new Map<string, string | null>();
+
+  for (const key of writes.keys()) {
+    const original = readStorageValueResult(key);
+    if (!original.success) {
+      throw new Error(`Import aborted before writing: ${original.reason}`);
+    }
+    originals.set(key, original.value);
+  }
+
+  const applied: string[] = [];
+  for (const [key, value] of writes.entries()) {
+    const result = value === null ? removeStorageValue(key) : writeStorageValue(key, value);
+    if (result.success) {
+      applied.push(key);
+      continue;
+    }
+
+    rollbackTransactionalWrites(originals, applied);
+    throw new Error(`Import aborted and rolled back: ${result.reason}`);
+  }
+}
+
+function rollbackTransactionalWrites(originals: Map<string, string | null>, applied: string[]): void {
+  for (const key of applied.reverse()) {
+    const original = originals.get(key) ?? null;
+    const result = original === null ? removeStorageValue(key) : writeStorageValue(key, original);
+    if (!result.success) {
+      console.error(`Rollback failed for local storage key "${key}".`, result.error);
+    }
+  }
+}
+
 export function getLocalSyncSummary() {
   const data = readWorkoutData();
   const dates = Object.keys(data).sort();
@@ -225,19 +291,35 @@ export function getLocalSyncSummary() {
 }
 
 function readWorkoutData(): WorkoutData {
-  return readJsonStorage(STORAGE_KEY, {}, (value) => isWorkoutData(value) ? migrateWorkoutData(value) : {});
+  return readWorkoutDataResult().value;
+}
+
+function readWorkoutDataResult() {
+  return readJsonStorageResult(STORAGE_KEY, {}, (value) => isWorkoutData(value) ? migrateWorkoutData(value) : null);
 }
 
 function readDailyLogs(): Record<string, DailyLog> {
-  return readJsonStorage(DAILY_LOGS_KEY, {}, (value) => isDailyLogs(value) ? migrateDailyLogs(value) : {});
+  return readDailyLogsResult().value;
+}
+
+function readDailyLogsResult() {
+  return readJsonStorageResult(DAILY_LOGS_KEY, {}, (value) => isDailyLogs(value) ? migrateDailyLogs(value) : null);
 }
 
 function readProfile(): UserProfile | null {
-  return readJsonStorage(USER_PROFILE_KEY, null, (value) => isUserProfile(value) ? migrateUserProfile(value) : null);
+  return readProfileResult().value;
+}
+
+function readProfileResult() {
+  return readJsonStorageResult(USER_PROFILE_KEY, null, (value) => value === null ? null : isUserProfile(value) ? migrateUserProfile(value) : null);
 }
 
 function readActiveWorkoutDraft(): ActiveWorkoutDraft | null {
-  return readJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => isActiveWorkoutDraft(value) ? value : null);
+  return readActiveWorkoutDraftResult().value;
+}
+
+function readActiveWorkoutDraftResult() {
+  return readJsonStorageResult(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => value === null ? null : isActiveWorkoutDraft(value) ? value : null);
 }
 
 function newerSession(current: WorkoutSession, incoming: WorkoutSession): WorkoutSession {

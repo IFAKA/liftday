@@ -1,12 +1,16 @@
-import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId, DailyLog, setEntryReps, setEntryWeight } from './types';
+import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId, DailyLog, setEntryReps, setEntryWeight, PersistenceReadResult, PersistenceResult } from './types';
 import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY, DAILY_LOGS_KEY } from './constants';
 import { formatDateKey } from './workout-utils';
 import { SMV_PROFILE_DEFAULTS } from './smv';
-import { readJsonStorage, readStorageValue, removeStorageValue, writeJsonStorage, writeStorageValue } from './browser-storage';
+import { fail, ok, readJsonStorage, readJsonStorageResult, readStorageValue, removeStorageValue, writeJsonStorage, writeStorageValue } from './browser-storage';
 import { DEFAULT_AVAILABLE_EQUIPMENT } from './equipment';
 
 export function loadWorkoutData(): WorkoutData {
-  return readJsonStorage(STORAGE_KEY, {}, (value) => migrateWorkoutData(value as WorkoutData));
+  return loadWorkoutDataResult().value;
+}
+
+export function loadWorkoutDataResult(): PersistenceReadResult<WorkoutData> {
+  return readJsonStorageResult(STORAGE_KEY, {}, (value) => migrateWorkoutData(value as WorkoutData));
 }
 
 export function migrateWorkoutData(data: WorkoutData): WorkoutData {
@@ -28,7 +32,11 @@ export function migrateWorkoutData(data: WorkoutData): WorkoutData {
 }
 
 export function loadDailyLogs(): Record<string, DailyLog> {
-  return readJsonStorage(DAILY_LOGS_KEY, {}, (value) => migrateDailyLogs(value as Record<string, DailyLog>));
+  return loadDailyLogsResult().value;
+}
+
+export function loadDailyLogsResult(): PersistenceReadResult<Record<string, DailyLog>> {
+  return readJsonStorageResult(DAILY_LOGS_KEY, {}, (value) => migrateDailyLogs(value as Record<string, DailyLog>));
 }
 
 export function migrateDailyLogs(logs: Record<string, DailyLog>): Record<string, DailyLog> {
@@ -47,14 +55,16 @@ export function migrateDailyLogs(logs: Record<string, DailyLog>): Record<string,
   return migrated;
 }
 
-export function saveDailyLog(dateKey: string, log: DailyLog): void {
-  const logs = loadDailyLogs();
+export function saveDailyLog(dateKey: string, log: DailyLog): PersistenceResult {
+  const loaded = loadDailyLogsResult();
+  if (!loaded.success) return fail(`Daily logs were not saved because existing data could not be read: ${loaded.reason}`, loaded.error);
+  const logs = loaded.value;
   logs[dateKey] = { ...logs[dateKey], ...log, dateKey };
-  writeJsonStorage(DAILY_LOGS_KEY, logs);
+  return writeJsonStorage(DAILY_LOGS_KEY, logs);
 }
 
-export function saveWorkoutData(data: WorkoutData): void {
-  writeJsonStorage(STORAGE_KEY, data);
+export function saveWorkoutData(data: WorkoutData): PersistenceResult {
+  return writeJsonStorage(STORAGE_KEY, data);
 }
 
 export function loadActiveWorkoutDraft(): ActiveWorkoutDraft | null {
@@ -64,28 +74,31 @@ export function loadActiveWorkoutDraft(): ActiveWorkoutDraft | null {
   });
 }
 
-export function saveActiveWorkoutDraft(draft: ActiveWorkoutDraft): void {
-  writeJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, draft);
+export function saveActiveWorkoutDraft(draft: ActiveWorkoutDraft): PersistenceResult {
+  return writeJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, draft);
 }
 
-export function clearActiveWorkoutDraft(): void {
-  removeStorageValue(ACTIVE_WORKOUT_DRAFT_KEY);
+export function clearActiveWorkoutDraft(): PersistenceResult {
+  return removeStorageValue(ACTIVE_WORKOUT_DRAFT_KEY);
 }
 
-export function saveSession(dateKey: string, session: WorkoutSession): void {
-  const data = loadWorkoutData();
+export function saveSession(dateKey: string, session: WorkoutSession): PersistenceResult {
+  const loaded = loadWorkoutDataResult();
+  if (!loaded.success) return fail(`Workout was not saved because existing workout data could not be read: ${loaded.reason}`, loaded.error);
+  const data = loaded.value;
   data[dateKey] = session;
-  saveWorkoutData(data);
+  return saveWorkoutData(data);
 }
 
 export function getFirstSessionDate(): string | null {
   return readStorageValue(FIRST_SESSION_KEY);
 }
 
-export function setFirstSessionDate(dateKey: string): void {
+export function setFirstSessionDate(dateKey: string): PersistenceResult {
   if (!readStorageValue(FIRST_SESSION_KEY)) {
-    writeStorageValue(FIRST_SESSION_KEY, dateKey);
+    return writeStorageValue(FIRST_SESSION_KEY, dateKey);
   }
+  return ok();
 }
 
 // ── User Profile ──────────────────────────────────────────────────────────────
@@ -127,17 +140,17 @@ export function migrateUserProfile(profile: UserProfile): UserProfile {
   return migrated;
 }
 
-export function setActiveRoutine(id: RoutineId): void {
+export function setActiveRoutine(id: RoutineId): PersistenceResult {
   const profile = loadUserProfile() ?? getDefaultProfile();
   profile.activeRoutine = id;
-  saveUserProfile(profile);
+  return saveUserProfile(profile);
 }
 
-export function setBodyMetrics(heightCm: number, weightKg: number): void {
+export function setBodyMetrics(heightCm: number, weightKg: number): PersistenceResult {
   const profile = loadUserProfile() ?? getDefaultProfile();
   profile.heightCm = heightCm;
   profile.weightKg = weightKg;
-  saveUserProfile(profile);
+  return saveUserProfile(profile);
 }
 
 export function setBodyProfileFallbacks(input: {
@@ -155,7 +168,7 @@ export function setBodyProfileFallbacks(input: {
   ankleCircumferenceCm?: number;
   bicepsCircumferenceCm?: number;
   targetWeightKg?: number;
-}): void {
+}): PersistenceResult {
   const profile = loadUserProfile() ?? getDefaultProfile();
   profile.heightCm = input.heightCm;
   profile.weightKg = input.weightKg;
@@ -193,7 +206,7 @@ export function setBodyProfileFallbacks(input: {
   if (input.targetWeightKg !== undefined) {
     profile.targetWeightKg = input.targetWeightKg;
   }
-  saveUserProfile(profile);
+  return saveUserProfile(profile);
 }
 
 export function setTrainingProfile(input: {
@@ -205,14 +218,14 @@ export function setTrainingProfile(input: {
   injuryStatus: string;
   maxWorkoutMinutes: number;
   goal: string;
-}): void {
+}): PersistenceResult {
   const profile = loadUserProfile() ?? getDefaultProfile();
   Object.assign(profile, input);
-  saveUserProfile(profile);
+  return saveUserProfile(profile);
 }
 
-export function saveUserProfile(profile: UserProfile): void {
-  writeJsonStorage(USER_PROFILE_KEY, profile);
+export function saveUserProfile(profile: UserProfile): PersistenceResult {
+  return writeJsonStorage(USER_PROFILE_KEY, profile);
 }
 
 /** Default profile for brand-new users — all tiers start at 0. */
@@ -261,6 +274,6 @@ export const pwaStorage: StorageAdapter = {
   setFirstSessionDate: async (dateKey) => setFirstSessionDate(dateKey),
   getMobilityDone: async (dateKey) => readStorageValue(MOBILITY_DONE_KEY) === dateKey,
   setMobilityDone: async () => {
-    writeStorageValue(MOBILITY_DONE_KEY, formatDateKey(new Date()));
+    return writeStorageValue(MOBILITY_DONE_KEY, formatDateKey(new Date()));
   },
 };

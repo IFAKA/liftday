@@ -462,18 +462,25 @@ function ScannerPanel() {
 
 function ManualImportFallback({ onImported, compact = false }: { onImported: () => void; compact?: boolean }) {
   const [rawImport, setRawImport] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
 
   async function readImportFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
     setRawImport(await file.text());
+    setImportError(null);
   }
 
   function importData() {
-    const snapshot = parseSyncSnapshot(rawImport);
-    importPhoneSnapshot(snapshot);
-    onImported();
-    setRawImport('');
+    try {
+      const snapshot = parseSyncSnapshot(rawImport);
+      importPhoneSnapshot(snapshot);
+      onImported();
+      setRawImport('');
+      setImportError(null);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'Import failed.');
+    }
   }
 
   return (
@@ -495,6 +502,11 @@ function ManualImportFallback({ onImported, compact = false }: { onImported: () 
         <Check />
         Import
       </Button>
+      {importError && (
+        <p className="mt-2 rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-xs font-black uppercase leading-snug text-red-100">
+          {importError}
+        </p>
+      )}
     </details>
   );
 }

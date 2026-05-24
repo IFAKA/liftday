@@ -755,6 +755,7 @@ export const MOBILITY_DONE_KEY = 'traindaily_mobility_done';
 export const USER_PROFILE_KEY = 'liftday_user_profile';
 export const ACTIVE_WORKOUT_DRAFT_KEY = 'liftday_active_workout_draft';
 export const DAILY_LOGS_KEY = 'liftday_daily_logs';
+export const STORAGE_ISSUES_KEY = 'liftday_storage_issues';
 
 export const REST_DURATION = 90;
 export const WARMUP_DURATION_SECONDS = 60;

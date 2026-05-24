@@ -37,6 +37,8 @@ interface ExerciseScreenProps {
   swapAlternatives?: Exercise[];
   onSelectAlternative?: (exerciseKey: ExerciseKey) => void;
   canDeferMachineOccupied?: boolean;
+  persistenceError?: string | null;
+  onRetryComplete?: () => void;
 }
 
 export function ExerciseScreen({
@@ -62,6 +64,8 @@ export function ExerciseScreen({
   swapAlternatives = [],
   onSelectAlternative,
   canDeferMachineOccupied = false,
+  persistenceError = null,
+  onRetryComplete,
 }: ExerciseScreenProps) {
   const isSeconds = exercise.unit === 'seconds';
   const firstSetVal = previousRep ?? currentTarget;
@@ -271,6 +275,11 @@ export function ExerciseScreen({
                   {coaching.warning && (
                     <p className="line-clamp-2 text-amber-200/80">{coaching.warning}</p>
                   )}
+                  {persistenceError && (
+                    <p className="rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-red-100">
+                      Save failed. {persistenceError}
+                    </p>
+                  )}
                 </div>
                 <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1">
                   {[0, 1, 2, 3, 4].map((option) => (
@@ -295,11 +304,15 @@ export function ExerciseScreen({
           <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
             <Button
               onClick={() => {
+                if (persistenceError && onRetryComplete) {
+                  onRetryComplete();
+                  return;
+                }
                 onLogSet(val, isSeconds ? undefined : weight, rir);
               }}
               className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
             >
-              LOG SET
+              {persistenceError ? 'RETRY SAVE' : 'LOG SET'}
             </Button>
           </div>
         </motion.div>

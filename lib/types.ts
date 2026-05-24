@@ -222,6 +222,22 @@ export interface WorkoutData {
   [dateKey: string]: WorkoutSession;
 }
 
+export type PersistenceResult =
+  | { success: true }
+  | { success: false; reason: string; error?: unknown };
+
+export type PersistenceReadResult<T> =
+  | { success: true; value: T }
+  | { success: false; value: T; reason: string; raw?: string; error?: unknown };
+
+export interface StorageIssue {
+  key: string;
+  operation: 'read' | 'write' | 'remove' | 'parse' | 'validate' | 'import';
+  reason: string;
+  happenedAt: string;
+  recoveryKey?: string;
+}
+
 export interface ComparisonResult {
   status: 'improved' | 'decreased' | 'same' | 'none';
   previousValue: number | null;
@@ -265,13 +281,13 @@ export interface MobilityExercise {
 
 export interface StorageAdapter {
   loadWorkoutData(): Promise<WorkoutData>;
-  saveSession(dateKey: string, session: WorkoutSession): Promise<void>;
+  saveSession(dateKey: string, session: WorkoutSession): Promise<PersistenceResult>;
   loadDailyLogs(): Promise<Record<string, DailyLog>>;
-  saveDailyLog(dateKey: string, log: DailyLog): Promise<void>;
+  saveDailyLog(dateKey: string, log: DailyLog): Promise<PersistenceResult>;
   getFirstSessionDate(): Promise<string | null>;
-  setFirstSessionDate(dateKey: string): Promise<void>;
+  setFirstSessionDate(dateKey: string): Promise<PersistenceResult>;
   getMobilityDone(dateKey: string): Promise<boolean>;
-  setMobilityDone(dateKey: string): Promise<void>;
+  setMobilityDone(dateKey: string): Promise<PersistenceResult>;
   clearAll?(): Promise<void>;
 }
 
