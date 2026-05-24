@@ -361,10 +361,17 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
   await expect(page.locator('body')).toContainText('Measured today');
   await expect(page.locator('body')).toContainText('76.4cm');
   await expect(page.locator('body')).toContainText('112.5cm');
+  await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => {
     const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { waistCm?: number; shoulderCm?: number }>;
     return logs['2026-05-10'];
   })).toEqual({ dateKey: '2026-05-10', waistCm: 76.4, shoulderCm: 112.5 });
+  await expect(page.locator('body')).not.toContainText('Waist + shoulders', { timeout: 3000 });
+  await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /mobility/i })).toBeVisible();
 
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('76.4cm');

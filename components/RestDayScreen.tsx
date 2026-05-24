@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Activity, CalendarDays, ChartBar, Check, Moon, Play, Ruler, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -39,6 +41,7 @@ interface RestDayScreenProps {
 export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mobility }: RestDayScreenProps) {
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>(() => loadDailyLogs());
   const isSunday = date.getDay() === 0;
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -92,38 +95,46 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
       </div>
 
       <div className="w-full shrink-0 px-4 pb-4 sm:pb-6 flex flex-col gap-2">
-        <WatchListItem
-          href="/muscles"
-          icon={Activity}
-          title="Muscles"
-          subtitle="What is working"
-          subtle
-          className="py-3"
-        />
-        <WatchListItem
-          href="/program"
-          icon={CalendarDays}
-          title="Program"
-          subtitle="Routine"
-          subtle
-          className="py-3"
-        />
-        <WatchListItem
-          href="/history"
-          icon={ChartBar}
-          title="Progress"
-          subtitle="Changes and attention"
-          subtle
-          className="py-3"
-        />
-        <WatchListItem
-          href="/settings"
-          icon={Settings}
-          title="Options"
-          subtitle="Routine, body, sync"
-          subtle
-          className="py-3"
-        />
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+          <WatchListItem
+            href="/muscles"
+            icon={Activity}
+            title="Muscles"
+            subtitle="What is working"
+            subtle
+            className="py-3"
+          />
+        </RestDayActionRow>
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+          <WatchListItem
+            href="/program"
+            icon={CalendarDays}
+            title="Program"
+            subtitle="Routine"
+            subtle
+            className="py-3"
+          />
+        </RestDayActionRow>
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+          <WatchListItem
+            href="/history"
+            icon={ChartBar}
+            title="Progress"
+            subtitle="Changes and attention"
+            subtle
+            className="py-3"
+          />
+        </RestDayActionRow>
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+          <WatchListItem
+            href="/settings"
+            icon={Settings}
+            title="Options"
+            subtitle="Routine, body, sync"
+            subtle
+            className="py-3"
+          />
+        </RestDayActionRow>
         {isSunday && (
           <WaistMeasurementPanel
             date={date}
@@ -131,17 +142,38 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
             onLogsChange={setDailyLogs}
           />
         )}
-        <Button
-          onClick={mobility.startMobility}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)] shadow-xl"
-        >
-          <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
-          5 MIN MOBILITY
-        </Button>
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+          <Button
+            onClick={mobility.startMobility}
+            className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)] shadow-xl"
+          >
+            <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
+            5 MIN MOBILITY
+          </Button>
+        </RestDayActionRow>
       </div>
     </div>
   );
 }
+
+function RestDayActionRow({
+  children,
+  shouldReduceMotion,
+}: {
+  children: ReactNode;
+  shouldReduceMotion: boolean | null;
+}) {
+  return (
+    <motion.div
+      layout={shouldReduceMotion ? false : 'position'}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+type MeasurementSaveState = 'editing' | 'logged' | 'saved' | 'dismissed';
 
 function WaistMeasurementPanel({
   date,
@@ -159,10 +191,24 @@ function WaistMeasurementPanel({
   const profileShoulder = getValidMeasurement(loadUserProfile()?.shoulderCircumferenceCm) ?? getValidMeasurement(getDefaultProfile().shoulderCircumferenceCm);
   const lastWaist = getLastKnownMeasurement(logs, dateKey, 'waistCm') ?? profileWaist;
   const lastShoulder = getLastKnownMeasurement(logs, dateKey, 'shoulderCm') ?? profileShoulder;
-  const [isEditing, setIsEditing] = useState(todayWaist === null || todayShoulder === null);
+  const [saveState, setSaveState] = useState<MeasurementSaveState>(todayWaist === null || todayShoulder === null ? 'editing' : 'logged');
   const [waistInput, setWaistInput] = useState(() => formatCmInput(todayWaist ?? lastWaist));
   const [shoulderInput, setShoulderInput] = useState(() => formatCmInput(todayShoulder ?? lastShoulder));
+  const [savedMeasurements, setSavedMeasurements] = useState<{ waist: number; shoulder: number } | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
+  const shouldReduceMotion = useReducedMotion();
+  const displayedWaist = savedMeasurements?.waist ?? todayWaist;
+  const displayedShoulder = savedMeasurements?.shoulder ?? todayShoulder;
+
+  useEffect(() => {
+    if (saveState !== 'saved') return undefined;
+
+    const timeout = window.setTimeout(() => {
+      setSaveState('dismissed');
+    }, 900);
+
+    return () => window.clearTimeout(timeout);
+  }, [saveState]);
 
   const saveMeasurements = () => {
     const nextWaist = Number.parseFloat(waistInput);
@@ -176,91 +222,115 @@ function WaistMeasurementPanel({
       return;
     }
 
+    const roundedWaist = roundMeasurement(nextWaist);
+    const roundedShoulder = roundMeasurement(nextShoulder);
+
     saveDailyLog(dateKey, {
       dateKey,
-      waistCm: roundMeasurement(nextWaist),
-      shoulderCm: roundMeasurement(nextShoulder),
+      waistCm: roundedWaist,
+      shoulderCm: roundedShoulder,
     });
     onLogsChange(loadDailyLogs());
-    setIsEditing(false);
+    setSavedMeasurements({ waist: roundedWaist, shoulder: roundedShoulder });
+    setSaveState('saved');
     setInputError(null);
   };
 
   return (
-    <WatchPanel subtle className="py-3">
-      <div className="flex items-center gap-2.5">
-        <Ruler className="h-4 w-4 shrink-0 text-white/45" />
-        <div className="min-w-0 flex-1">
-          <p className="text-fluid-label font-mono uppercase text-white/35">Waist + shoulders</p>
-          <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
-            {todayWaist !== null && todayShoulder !== null ? 'Measured today' : 'Same conditions'}
-          </p>
-        </div>
-        {!isEditing && todayWaist !== null && todayShoulder !== null && (
-          <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
-            {formatCm(todayWaist)} / {formatCm(todayShoulder)}
-          </p>
-        )}
-        {!isEditing && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              setWaistInput(formatCmInput(todayWaist ?? lastWaist));
-              setShoulderInput(formatCmInput(todayShoulder ?? lastShoulder));
-              setInputError(null);
-              setIsEditing(true);
-            }}
-            className="h-9 w-11 shrink-0 rounded-full border border-white/10 bg-white/5 px-0 text-[10px] font-black uppercase text-white/80 hover:bg-white/10 hover:text-white"
+    <AnimatePresence initial={false}>
+      {saveState !== 'dismissed' && (
+        <motion.div
+          layout={shouldReduceMotion ? false : 'position'}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+          animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0, marginBottom: 0, y: -6 }}
+          transition={{ duration: shouldReduceMotion ? 0.12 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+          className="overflow-hidden"
+        >
+          <WatchPanel
+            subtle
+            className={saveState === 'saved' ? 'border-green-400/25 bg-green-400/10 py-3' : 'py-3'}
           >
-            Log
-          </Button>
-        )}
-      </div>
+            <div className="flex items-center gap-2.5">
+              {saveState === 'saved' ? (
+                <Check className="h-4 w-4 shrink-0 text-green-300" />
+              ) : (
+                <Ruler className="h-4 w-4 shrink-0 text-white/45" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-fluid-label font-mono uppercase text-white/35">Waist + shoulders</p>
+                <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
+                  {todayWaist !== null && todayShoulder !== null ? 'Measured today' : 'Same conditions'}
+                </p>
+              </div>
+              {saveState !== 'editing' && displayedWaist !== null && displayedShoulder !== null && (
+                <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
+                  {formatCm(displayedWaist)} / {formatCm(displayedShoulder)}
+                </p>
+              )}
+              {saveState === 'logged' && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setWaistInput(formatCmInput(todayWaist ?? lastWaist));
+                    setShoulderInput(formatCmInput(todayShoulder ?? lastShoulder));
+                    setInputError(null);
+                    setSaveState('editing');
+                  }}
+                  className="h-9 w-11 shrink-0 rounded-full border border-white/10 bg-white/5 px-0 text-[10px] font-black uppercase text-white/80 hover:bg-white/10 hover:text-white"
+                >
+                  Log
+                </Button>
+              )}
+            </div>
 
-      {isEditing ? (
-        <div className="mt-3 flex items-start gap-2">
-          <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
-            <MeasurementInput
-              label="Waist circumference in centimeters"
-              min={40}
-              max={180}
-              value={waistInput}
-              onChange={(value) => {
-                setWaistInput(value);
-                setInputError(null);
-              }}
-              onEnter={saveMeasurements}
-            />
-            <MeasurementInput
-              label="Shoulder circumference in centimeters"
-              min={60}
-              max={180}
-              value={shoulderInput}
-              onChange={(value) => {
-                setShoulderInput(value);
-                setInputError(null);
-              }}
-              onEnter={saveMeasurements}
-            />
-            {inputError ? (
-              <p className="col-span-2 mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
-            ) : (
-              <p className="col-span-2 mt-1 truncate text-fluid-label font-mono uppercase text-white/30">Same morning, relaxed</p>
-            )}
-          </div>
-          <Button
-            type="button"
-            size="icon"
-            aria-label="Save waist and shoulders"
-            onClick={saveMeasurements}
-            className="size-11 rounded-full bg-white text-black active:scale-95"
-          >
-            <Check className="h-5 w-5" />
-          </Button>
-        </div>
-      ) : null}
-    </WatchPanel>
+            {saveState === 'editing' ? (
+              <div className="mt-3 flex items-start gap-2">
+                <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
+                  <MeasurementInput
+                    label="Waist circumference in centimeters"
+                    min={40}
+                    max={180}
+                    value={waistInput}
+                    onChange={(value) => {
+                      setWaistInput(value);
+                      setInputError(null);
+                    }}
+                    onEnter={saveMeasurements}
+                  />
+                  <MeasurementInput
+                    label="Shoulder circumference in centimeters"
+                    min={60}
+                    max={180}
+                    value={shoulderInput}
+                    onChange={(value) => {
+                      setShoulderInput(value);
+                      setInputError(null);
+                    }}
+                    onEnter={saveMeasurements}
+                  />
+                  {inputError ? (
+                    <p className="col-span-2 mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
+                  ) : (
+                    <p className="col-span-2 mt-1 truncate text-fluid-label font-mono uppercase text-white/30">Same morning, relaxed</p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  aria-label="Save waist and shoulders"
+                  onClick={saveMeasurements}
+                  className="size-11 rounded-full bg-white text-black active:scale-95"
+                >
+                  <Check className="h-5 w-5" />
+                </Button>
+              </div>
+            ) : null}
+          </WatchPanel>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
