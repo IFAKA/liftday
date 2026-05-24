@@ -37,7 +37,7 @@ interface RestDayScreenProps {
 }
 
 export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mobility }: RestDayScreenProps) {
-  const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
+  const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>(() => loadDailyLogs());
   const isSunday = date.getDay() === 0;
 
   useEffect(() => {

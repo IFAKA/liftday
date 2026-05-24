@@ -112,6 +112,7 @@ export function migrateUserProfile(profile: UserProfile): UserProfile {
   if (!migrated.calfCircumferenceCm) migrated.calfCircumferenceCm = 35;
   if (!migrated.forearmCircumferenceCm) migrated.forearmCircumferenceCm = 25.5;
   if (!migrated.wristCircumferenceCm) migrated.wristCircumferenceCm = 16.5;
+  if (!migrated.ankleCircumferenceCm) migrated.ankleCircumferenceCm = 22.5;
   if (!migrated.bicepsCircumferenceCm) migrated.bicepsCircumferenceCm = 28;
   if (!migrated.targetWeightKg) migrated.targetWeightKg = 72;
   if (!migrated.trainingBackground) migrated.trainingBackground = 'Rugby 15 years; intermittent gym blocks';
@@ -151,6 +152,7 @@ export function setBodyProfileFallbacks(input: {
   calfCircumferenceCm?: number;
   forearmCircumferenceCm?: number;
   wristCircumferenceCm?: number;
+  ankleCircumferenceCm?: number;
   bicepsCircumferenceCm?: number;
   targetWeightKg?: number;
 }): void {
@@ -181,6 +183,9 @@ export function setBodyProfileFallbacks(input: {
   }
   if (input.wristCircumferenceCm !== undefined) {
     profile.wristCircumferenceCm = input.wristCircumferenceCm;
+  }
+  if (input.ankleCircumferenceCm !== undefined) {
+    profile.ankleCircumferenceCm = input.ankleCircumferenceCm;
   }
   if (input.bicepsCircumferenceCm !== undefined) {
     profile.bicepsCircumferenceCm = input.bicepsCircumferenceCm;
@@ -232,6 +237,7 @@ export function getDefaultProfile(): UserProfile {
     calfCircumferenceCm: 35,
     forearmCircumferenceCm: 25.5,
     wristCircumferenceCm: 16.5,
+    ankleCircumferenceCm: 22.5,
     bicepsCircumferenceCm: 28,
     targetWeightKg: 72,
     trainingBackground: 'Rugby 15 years; intermittent gym blocks',

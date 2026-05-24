@@ -200,6 +200,7 @@ export interface BodyTrendLog {
   calfCm?: number;
   forearmCm?: number;
   wristCm?: number;
+  ankleCm?: number;
   bicepsCm?: number;
   calories?: number;
   proteinGrams?: number;
@@ -467,6 +468,7 @@ export interface UserProfile {
   calfCircumferenceCm?: number;
   forearmCircumferenceCm?: number;
   wristCircumferenceCm?: number;
+  ankleCircumferenceCm?: number;
   bicepsCircumferenceCm?: number;
   targetWeightKg?: number;
   trainingBackground?: string;

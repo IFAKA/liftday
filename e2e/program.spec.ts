@@ -200,6 +200,8 @@ test('saturday start opens weekly measurements, gym weight check, then warm-up',
       quadCircumferenceCm: 50,
       calfCircumferenceCm: 35,
       forearmCircumferenceCm: 25.5,
+      wristCircumferenceCm: 16.5,
+      ankleCircumferenceCm: 22.5,
       bicepsCircumferenceCm: 28,
       targetWeightKg: 72,
     }));
@@ -223,6 +225,8 @@ test('saturday start opens weekly measurements, gym weight check, then warm-up',
   await expect(page.getByRole('spinbutton', { name: /waist centimeters/i })).toBeVisible();
   await page.getByRole('spinbutton', { name: /waist centimeters/i }).fill('77.6');
   await page.getByRole('spinbutton', { name: /shoulder centimeters/i }).fill('113.7');
+  await page.getByRole('spinbutton', { name: /wrist centimeters/i }).fill('16.7');
+  await page.getByRole('spinbutton', { name: /ankle centimeters/i }).fill('22.8');
   await page.getByRole('button', { name: /^save$/i }).click();
 
   await expect(page.locator('body')).toContainText('WEIGHT');
@@ -235,9 +239,9 @@ test('saturday start opens weekly measurements, gym weight check, then warm-up',
   await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
 
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number; wristCm?: number; ankleCm?: number }>;
     return logs['2026-05-16'];
-  })).toMatchObject({ dateKey: '2026-05-16', waistCm: 77.6, shoulderCm: 113.7, morningWeightKg: 66.8, weightCheckSkipped: false });
+  })).toMatchObject({ dateKey: '2026-05-16', waistCm: 77.6, shoulderCm: 113.7, wristCm: 16.7, ankleCm: 22.8, morningWeightKg: 66.8, weightCheckSkipped: false });
 
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('66.8kg');
@@ -365,6 +369,13 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('76.4cm');
   await expect(page.locator('body')).toContainText('112.5cm');
+
+  await page.goto('/program');
+  await page.goto('/');
+  await expect(page.locator('body')).toContainText('Measured today');
+  await expect(page.locator('body')).toContainText('76.4cm');
+  await expect(page.locator('body')).toContainText('112.5cm');
+  await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {
@@ -467,8 +478,8 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Waist');
   await expect(page.locator('body')).toContainText('76.5cm');
   await expect(page.locator('body')).toContainText('Ratio progress');
-  await expect(page.locator('body')).toContainText('Adonis');
-  await expect(page.locator('body')).toContainText('Target gap');
+  await expect(page.locator('body')).toContainText('Shoulder/waist');
+  await expect(page.locator('body')).toContainText('To target');
   await expect(page.locator('body')).toContainText('Change');
   await expect(page.locator('body')).not.toContainText('Measurements');
   await expect(page.getByRole('img', { name: /body ratio progress chart/i })).toBeVisible();
@@ -524,7 +535,7 @@ test('body detail shows shoulder-waist progress over time', async ({ page }) => 
   await expect(page.locator('body')).toContainText('69.1kg');
   await expect(page.locator('body')).toContainText('76.1cm');
   await expect(page.locator('body')).toContainText('112.9cm');
-  await expect(page.locator('body')).toContainText('Adonis');
+  await expect(page.locator('body')).toContainText('Shoulder/waist');
   await expect(page.locator('body')).toContainText('+0.14');
   await expect(page.locator('body')).toContainText('+0.03');
   await expect(page.getByRole('img', { name: /body ratio progress chart/i })).toBeVisible();
@@ -658,6 +669,8 @@ test('body detail editor saves today body logs and profile height fallback', asy
       quadCircumferenceCm: 50,
       calfCircumferenceCm: 35,
       forearmCircumferenceCm: 25.5,
+      wristCircumferenceCm: 16.5,
+      ankleCircumferenceCm: 22.5,
       bicepsCircumferenceCm: 28,
       targetWeightKg: 72,
     }));
@@ -676,6 +689,7 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await page.getByRole('spinbutton', { name: /calf cm/i }).fill('35');
   await page.getByRole('spinbutton', { name: /forearm cm/i }).fill('25.5');
   await page.getByRole('spinbutton', { name: /wrist cm/i }).fill('16.7');
+  await page.getByRole('spinbutton', { name: /ankle cm/i }).fill('22.8');
   await page.getByRole('spinbutton', { name: /biceps cm/i }).fill('28');
   await page.getByRole('spinbutton', { name: /ideal weight kg/i }).fill('72');
   await page.getByRole('spinbutton', { name: /height cm/i }).fill('180');
@@ -692,15 +706,16 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await expect(page.locator('body')).toContainText('35cm');
   await expect(page.locator('body')).toContainText('25.5cm');
   await expect(page.locator('body')).toContainText('16.7cm');
+  await expect(page.locator('body')).toContainText('22.8cm');
   await expect(page.locator('body')).toContainText('28cm');
   await expect(page.locator('body')).toContainText('72kg');
   await expect(page.locator('body')).toContainText('1.46');
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; heightCm?: number; waistCm?: number; shoulderCm?: number; chestCm?: number; hipCm?: number; neckCm?: number; quadCm?: number; calfCm?: number; forearmCm?: number; wristCm?: number; bicepsCm?: number }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; heightCm?: number; waistCm?: number; shoulderCm?: number; chestCm?: number; hipCm?: number; neckCm?: number; quadCm?: number; calfCm?: number; forearmCm?: number; wristCm?: number; ankleCm?: number; bicepsCm?: number }>;
     return logs['2026-05-11'];
-  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, heightCm: 180, waistCm: 77.3, shoulderCm: 113.2, chestCm: 91.4, hipCm: 86.5, neckCm: 37.8, quadCm: 50, calfCm: 35, forearmCm: 25.5, wristCm: 16.7, bicepsCm: 28 });
+  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, heightCm: 180, waistCm: 77.3, shoulderCm: 113.2, chestCm: 91.4, hipCm: 86.5, neckCm: 37.8, quadCm: 50, calfCm: 35, forearmCm: 25.5, wristCm: 16.7, ankleCm: 22.8, bicepsCm: 28 });
   await expect.poll(() => page.evaluate(() => {
-    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number; chestCircumferenceCm?: number; hipCircumferenceCm?: number; neckCircumferenceCm?: number; quadCircumferenceCm?: number; calfCircumferenceCm?: number; forearmCircumferenceCm?: number; wristCircumferenceCm?: number; bicepsCircumferenceCm?: number; targetWeightKg?: number };
+    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number; chestCircumferenceCm?: number; hipCircumferenceCm?: number; neckCircumferenceCm?: number; quadCircumferenceCm?: number; calfCircumferenceCm?: number; forearmCircumferenceCm?: number; wristCircumferenceCm?: number; ankleCircumferenceCm?: number; bicepsCircumferenceCm?: number; targetWeightKg?: number };
     return {
       heightCm: profile.heightCm,
       weightKg: profile.weightKg,
@@ -713,10 +728,11 @@ test('body detail editor saves today body logs and profile height fallback', asy
       calfCircumferenceCm: profile.calfCircumferenceCm,
       forearmCircumferenceCm: profile.forearmCircumferenceCm,
       wristCircumferenceCm: profile.wristCircumferenceCm,
+      ankleCircumferenceCm: profile.ankleCircumferenceCm,
       bicepsCircumferenceCm: profile.bicepsCircumferenceCm,
       targetWeightKg: profile.targetWeightKg,
     };
-  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3, shoulderCircumferenceCm: 113.2, chestCircumferenceCm: 91.4, hipCircumferenceCm: 86.5, neckCircumferenceCm: 37.8, quadCircumferenceCm: 50, calfCircumferenceCm: 35, forearmCircumferenceCm: 25.5, wristCircumferenceCm: 16.7, bicepsCircumferenceCm: 28, targetWeightKg: 72 });
+  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3, shoulderCircumferenceCm: 113.2, chestCircumferenceCm: 91.4, hipCircumferenceCm: 86.5, neckCircumferenceCm: 37.8, quadCircumferenceCm: 50, calfCircumferenceCm: 35, forearmCircumferenceCm: 25.5, wristCircumferenceCm: 16.7, ankleCircumferenceCm: 22.8, bicepsCircumferenceCm: 28, targetWeightKg: 72 });
 });
 
 test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {

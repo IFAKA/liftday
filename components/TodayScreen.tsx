@@ -18,7 +18,7 @@ import { DailyLog, UserProfile } from '@/lib/types';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog, setBodyProfileFallbacks } from '@/lib/storage';
 
 type PreWorkoutGate = 'measurements' | 'weight' | null;
-type WeeklyMeasurementKey = keyof Pick<DailyLog, 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'bicepsCm'>;
+type WeeklyMeasurementKey = keyof Pick<DailyLog, 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'wristCm' | 'ankleCm' | 'bicepsCm'>;
 type WeeklyMeasurements = Record<WeeklyMeasurementKey, number>;
 
 const WEEKLY_MEASUREMENT_FIELDS = [
@@ -30,6 +30,8 @@ const WEEKLY_MEASUREMENT_FIELDS = [
   { key: 'quadCm', label: 'Quad' },
   { key: 'calfCm', label: 'Calf' },
   { key: 'forearmCm', label: 'Forearm' },
+  { key: 'wristCm', label: 'Wrist' },
+  { key: 'ankleCm', label: 'Ankle' },
   { key: 'bicepsCm', label: 'Biceps' },
 ] as const satisfies readonly { key: WeeklyMeasurementKey; label: string }[];
 
@@ -552,6 +554,8 @@ function WeeklyMeasurementScreen({
       quadCircumferenceCm: measurementLog.quadCm,
       calfCircumferenceCm: measurementLog.calfCm,
       forearmCircumferenceCm: measurementLog.forearmCm,
+      wristCircumferenceCm: measurementLog.wristCm,
+      ankleCircumferenceCm: measurementLog.ankleCm,
       bicepsCircumferenceCm: measurementLog.bicepsCm,
     });
     onComplete(loadDailyLogs());
@@ -691,6 +695,10 @@ function getProfileMeasurement(
       return profile.calfCircumferenceCm ?? defaultProfile.calfCircumferenceCm ?? 35;
     case 'forearmCm':
       return profile.forearmCircumferenceCm ?? defaultProfile.forearmCircumferenceCm ?? 25.5;
+    case 'wristCm':
+      return profile.wristCircumferenceCm ?? defaultProfile.wristCircumferenceCm ?? 16.5;
+    case 'ankleCm':
+      return profile.ankleCircumferenceCm ?? defaultProfile.ankleCircumferenceCm ?? 22.5;
     case 'bicepsCm':
       return profile.bicepsCircumferenceCm ?? defaultProfile.bicepsCircumferenceCm ?? 28;
   }
