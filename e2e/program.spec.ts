@@ -379,10 +379,12 @@ test('rest-day today still exposes supporting drill-down rows', async ({ page })
 
   await page.goto('/program');
   await page.goto('/');
-  await expect(page.locator('body')).toContainText('Measured today');
-  await expect(page.locator('body')).toContainText('76.4cm');
-  await expect(page.locator('body')).toContainText('112.5cm');
+  await expect(page.locator('body')).toContainText('REST');
+  await expect(page.locator('body')).not.toContainText('Waist + shoulders');
+  await expect(page.locator('body')).not.toContainText('Measured today');
   await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /mobility/i })).toBeVisible();
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {

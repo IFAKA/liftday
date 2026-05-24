@@ -94,8 +94,8 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
         )}
       </div>
 
-      <div className="w-full shrink-0 px-4 pb-4 sm:pb-6 flex flex-col gap-2">
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+      <div className="w-full shrink-0 px-4 pb-4 sm:pb-6 flex flex-col">
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
           <WatchListItem
             href="/muscles"
             icon={Activity}
@@ -105,7 +105,7 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
             className="py-3"
           />
         </RestDayActionRow>
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
           <WatchListItem
             href="/program"
             icon={CalendarDays}
@@ -115,7 +115,7 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
             className="py-3"
           />
         </RestDayActionRow>
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
           <WatchListItem
             href="/history"
             icon={ChartBar}
@@ -125,7 +125,7 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
             className="py-3"
           />
         </RestDayActionRow>
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
           <WatchListItem
             href="/settings"
             icon={Settings}
@@ -158,22 +158,25 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
 
 function RestDayActionRow({
   children,
+  className,
   shouldReduceMotion,
 }: {
   children: ReactNode;
+  className?: string;
   shouldReduceMotion: boolean | null;
 }) {
   return (
     <motion.div
       layout={shouldReduceMotion ? false : 'position'}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
     >
       {children}
     </motion.div>
   );
 }
 
-type MeasurementSaveState = 'editing' | 'logged' | 'saved' | 'dismissed';
+type MeasurementSaveState = 'editing' | 'saved' | 'dismissed';
 
 function WaistMeasurementPanel({
   date,
@@ -191,7 +194,7 @@ function WaistMeasurementPanel({
   const profileShoulder = getValidMeasurement(loadUserProfile()?.shoulderCircumferenceCm) ?? getValidMeasurement(getDefaultProfile().shoulderCircumferenceCm);
   const lastWaist = getLastKnownMeasurement(logs, dateKey, 'waistCm') ?? profileWaist;
   const lastShoulder = getLastKnownMeasurement(logs, dateKey, 'shoulderCm') ?? profileShoulder;
-  const [saveState, setSaveState] = useState<MeasurementSaveState>(todayWaist === null || todayShoulder === null ? 'editing' : 'logged');
+  const [saveState, setSaveState] = useState<MeasurementSaveState>(todayWaist === null || todayShoulder === null ? 'editing' : 'dismissed');
   const [waistInput, setWaistInput] = useState(() => formatCmInput(todayWaist ?? lastWaist));
   const [shoulderInput, setShoulderInput] = useState(() => formatCmInput(todayShoulder ?? lastShoulder));
   const [savedMeasurements, setSavedMeasurements] = useState<{ waist: number; shoulder: number } | null>(null);
@@ -245,7 +248,7 @@ function WaistMeasurementPanel({
           animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
           exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0, marginBottom: 0, y: -6 }}
           transition={{ duration: shouldReduceMotion ? 0.12 : 0.24, ease: [0.22, 1, 0.36, 1] }}
-          className="overflow-hidden"
+          className="mb-2 overflow-hidden"
         >
           <WatchPanel
             subtle
@@ -267,21 +270,6 @@ function WaistMeasurementPanel({
                 <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
                   {formatCm(displayedWaist)} / {formatCm(displayedShoulder)}
                 </p>
-              )}
-              {saveState === 'logged' && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setWaistInput(formatCmInput(todayWaist ?? lastWaist));
-                    setShoulderInput(formatCmInput(todayShoulder ?? lastShoulder));
-                    setInputError(null);
-                    setSaveState('editing');
-                  }}
-                  className="h-9 w-11 shrink-0 rounded-full border border-white/10 bg-white/5 px-0 text-[10px] font-black uppercase text-white/80 hover:bg-white/10 hover:text-white"
-                >
-                  Log
-                </Button>
               )}
             </div>
 
