@@ -247,6 +247,19 @@ export function BodyDetailScreen() {
           <p className="mt-2 px-1 text-fluid-label leading-snug text-white/45">
             Shoulder width divided by waist. To target is the remaining ratio points.
           </p>
+          <div className="mt-3 rounded-lg border border-white/5 bg-black/25 p-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="truncate text-fluid-label font-mono font-black uppercase text-white/35">Ratio targets</p>
+              <p className="shrink-0 text-fluid-label font-mono uppercase text-white/25">
+                {body.ratiosAtTarget}/{body.ratios.length}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              {body.ratios.map((ratio) => (
+                <RatioTargetRow key={ratio.id} ratio={ratio} />
+              ))}
+            </div>
+          </div>
           <RatioTrendChart entries={body.ratioHistory} className="mt-3" />
           <div className="mt-3 flex flex-col gap-2">
             {body.history.slice(-6).reverse().map((entry) => (
@@ -288,6 +301,16 @@ interface RatioHistoryEntry {
   label: string;
   shoulderCm: number;
   ratio: number;
+}
+
+interface BodyRatioTarget {
+  id: string;
+  label: string;
+  value: string;
+  target: string;
+  gap: string;
+  percent: number;
+  tone: string;
 }
 
 function BodyMetricInput({
@@ -358,6 +381,26 @@ function BodyHistoryRow({ entry }: { entry: BodyHistoryEntry }) {
   );
 }
 
+function RatioTargetRow({ ratio }: { ratio: BodyRatioTarget }) {
+  return (
+    <div className="rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-fluid-label font-mono font-black uppercase text-white/60">{ratio.label}</p>
+          <p className="mt-0.5 truncate text-[10px] font-mono uppercase text-white/25">Target {ratio.target}</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className={`text-fluid-label font-mono font-black tabular-nums uppercase ${ratio.tone}`}>{ratio.value}</p>
+          <p className="text-[10px] font-mono uppercase text-white/30">{ratio.gap}</p>
+        </div>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
+        <div className={`h-full rounded-full ${ratio.percent >= 100 ? 'bg-green-300' : 'bg-sky-300'}`} style={{ width: `${Math.max(4, Math.min(100, ratio.percent))}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const heightCm = getMeasurementValue('height') ?? 172;
   const weightKg = getMeasurementValue('weight') ?? CURRENT_WEIGHT_KG;
@@ -395,6 +438,21 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const shoulderWaist = shoulderCm / waistCm;
   const adonisGap = ADONIS_INDEX_TARGET - shoulderWaist;
   const chestWaist = chestCm / waistCm;
+  const ratios = getBodyRatioTargets({
+    heightCm,
+    weightKg,
+    waistCm,
+    shoulderCm,
+    chestCm,
+    hipCm,
+    neckCm,
+    quadCm,
+    calfCm,
+    forearmCm,
+    wristCm,
+    ankleCm,
+    bicepsCm,
+  });
   const weightTargetGap = targetWeightKg - weightKg;
   const proteinTarget = profile.proteinTargetGrams ?? [140, 160];
   const surplusTarget = profile.calorieSurplusTarget ?? [200, 300];
@@ -459,6 +517,8 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     adonisGapTone: adonisGap <= 0 ? 'text-green-300' : 'text-amber-300',
     shoulderWaistRatio: shoulderWaist.toFixed(2),
     chestWaistRatio: chestWaist.toFixed(2),
+    ratios,
+    ratiosAtTarget: ratios.filter((ratio) => ratio.percent >= 100).length,
     frameLabel: 'Body metrics',
     frameSummary: `Shoulder ${formatNumber(shoulderCm, 1)}cm, waist ${formatNumber(waistCm, 1)}cm, chest ${formatNumber(chestCm, 1)}cm.`,
     frameTone: 'text-white',
@@ -482,6 +542,76 @@ function parseMeasurement(value: string): number | null {
 
 function roundMeasurement(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+function getBodyRatioTargets(values: BodyMeasurementFallbacks): BodyRatioTarget[] {
+  return [
+    createMinimumRatio('shoulder-waist', 'Shoulder / waist', values.shoulderCm / values.waistCm, ADONIS_INDEX_TARGET),
+    createMinimumRatio('chest-waist', 'Chest / waist', values.chestCm / values.waistCm, 1.30),
+    createMaximumRatio('waist-height', 'Waist / height', values.waistCm / values.heightCm, 0.50),
+    createMinimumRatio('shoulder-hip', 'Shoulder / hip', values.shoulderCm / values.hipCm, 1.30),
+    createMinimumRatio('chest-hip', 'Chest / hip', values.chestCm / values.hipCm, 1.05),
+    createRangeRatio('neck-wrist', 'Neck / wrist', values.neckCm / values.wristCm, 2.20, 2.40),
+    createRangeRatio('biceps-wrist', 'Biceps / wrist', values.bicepsCm / values.wristCm, 1.80, 2.10),
+    createRangeRatio('forearm-wrist', 'Forearm / wrist', values.forearmCm / values.wristCm, 1.55, 1.75),
+    createRangeRatio('quad-calf', 'Quad / calf', values.quadCm / values.calfCm, 1.35, 1.55),
+    createRangeRatio('calf-ankle', 'Calf / ankle', values.calfCm / values.ankleCm, 1.55, 1.75),
+  ];
+}
+
+function createMinimumRatio(id: string, label: string, value: number, target: number): BodyRatioTarget {
+  const gap = target - value;
+  const percent = value >= target ? 100 : (value / target) * 100;
+
+  return {
+    id,
+    label,
+    value: formatRatioValue(value),
+    target: `${formatRatioValue(target)}+`,
+    gap: gap <= 0 ? 'Met' : `${formatRatioValue(gap)} short`,
+    percent,
+    tone: percent >= 100 ? 'text-green-300' : 'text-white/75',
+  };
+}
+
+function createMaximumRatio(id: string, label: string, value: number, target: number): BodyRatioTarget {
+  const gap = value - target;
+  const percent = value <= target ? 100 : (target / value) * 100;
+
+  return {
+    id,
+    label,
+    value: formatRatioValue(value),
+    target: `${formatRatioValue(target)} max`,
+    gap: gap <= 0 ? 'Met' : `${formatRatioValue(gap)} over`,
+    percent,
+    tone: percent >= 100 ? 'text-green-300' : 'text-amber-300',
+  };
+}
+
+function createRangeRatio(id: string, label: string, value: number, min: number, max: number): BodyRatioTarget {
+  const inRange = value >= min && value <= max;
+  const percent = inRange
+    ? 100
+    : value < min
+      ? (value / min) * 100
+      : (max / value) * 100;
+
+  return {
+    id,
+    label,
+    value: formatRatioValue(value),
+    target: `${formatRatioValue(min)}-${formatRatioValue(max)}`,
+    gap: getRangeGap(value, min, max),
+    percent,
+    tone: inRange ? 'text-green-300' : 'text-white/75',
+  };
+}
+
+function getRangeGap(value: number, min: number, max: number): string {
+  if (value >= min && value <= max) return 'Met';
+  if (value < min) return `${formatRatioValue(min - value)} short`;
+  return `${formatRatioValue(value - max)} over`;
 }
 
 function formatRatioGap(value: number): string {
@@ -747,6 +877,10 @@ function formatMeasurement(value: number | null, unit: 'kg' | 'cm'): string | nu
 
 function formatRatioChange(value: number): string {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
+}
+
+function formatRatioValue(value: number): string {
+  return value.toFixed(2);
 }
 
 function formatHistoryDate(dateKey: string): string {
