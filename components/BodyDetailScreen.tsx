@@ -46,6 +46,7 @@ export function BodyDetailScreen() {
     quadCm: '',
     calfCm: '',
     forearmCm: '',
+    wristCm: '',
     bicepsCm: '',
     targetWeightKg: '',
     heightCm: '',
@@ -76,6 +77,7 @@ export function BodyDetailScreen() {
       quadCm: formatNumber(body.quadCmValue, 1),
       calfCm: formatNumber(body.calfCmValue, 1),
       forearmCm: formatNumber(body.forearmCmValue, 1),
+      wristCm: formatNumber(body.wristCmValue, 1),
       bicepsCm: formatNumber(body.bicepsCmValue, 1),
       targetWeightKg: formatNumber(body.targetWeightKgValue, 1),
       heightCm: String(body.heightCm),
@@ -93,10 +95,11 @@ export function BodyDetailScreen() {
     const quadCm = parseMeasurement(draft.quadCm);
     const calfCm = parseMeasurement(draft.calfCm);
     const forearmCm = parseMeasurement(draft.forearmCm);
+    const wristCm = parseMeasurement(draft.wristCm);
     const bicepsCm = parseMeasurement(draft.bicepsCm);
     const targetWeightKg = parseMeasurement(draft.targetWeightKg);
     const heightCm = parseMeasurement(draft.heightCm);
-    if (weightKg === null || waistCm === null || shoulderCm === null || chestCm === null || hipCm === null || neckCm === null || quadCm === null || calfCm === null || forearmCm === null || bicepsCm === null || targetWeightKg === null || heightCm === null) return;
+    if (weightKg === null || waistCm === null || shoulderCm === null || chestCm === null || hipCm === null || neckCm === null || quadCm === null || calfCm === null || forearmCm === null || wristCm === null || bicepsCm === null || targetWeightKg === null || heightCm === null) return;
 
     const dateKey = formatDateKey(new Date());
     saveDailyLog(dateKey, {
@@ -111,6 +114,7 @@ export function BodyDetailScreen() {
       quadCm: roundMeasurement(quadCm),
       calfCm: roundMeasurement(calfCm),
       forearmCm: roundMeasurement(forearmCm),
+      wristCm: roundMeasurement(wristCm),
       bicepsCm: roundMeasurement(bicepsCm),
     });
     setBodyProfileFallbacks({
@@ -124,6 +128,7 @@ export function BodyDetailScreen() {
       quadCircumferenceCm: roundMeasurement(quadCm),
       calfCircumferenceCm: roundMeasurement(calfCm),
       forearmCircumferenceCm: roundMeasurement(forearmCm),
+      wristCircumferenceCm: roundMeasurement(wristCm),
       bicepsCircumferenceCm: roundMeasurement(bicepsCm),
       targetWeightKg: roundMeasurement(targetWeightKg),
     });
@@ -179,6 +184,7 @@ export function BodyDetailScreen() {
                 <BodyMetricInput label="Quad" unit="cm" value={draft.quadCm} onChange={(quadCm) => setDraft((current) => ({ ...current, quadCm }))} />
                 <BodyMetricInput label="Calf" unit="cm" value={draft.calfCm} onChange={(calfCm) => setDraft((current) => ({ ...current, calfCm }))} />
                 <BodyMetricInput label="Forearm" unit="cm" value={draft.forearmCm} onChange={(forearmCm) => setDraft((current) => ({ ...current, forearmCm }))} />
+                <BodyMetricInput label="Wrist" unit="cm" value={draft.wristCm} onChange={(wristCm) => setDraft((current) => ({ ...current, wristCm }))} />
                 <BodyMetricInput label="Biceps" unit="cm" value={draft.bicepsCm} onChange={(bicepsCm) => setDraft((current) => ({ ...current, bicepsCm }))} />
                 <BodyMetricInput label="Ideal weight" unit="kg" value={draft.targetWeightKg} onChange={(targetWeightKg) => setDraft((current) => ({ ...current, targetWeightKg }))} />
                 <BodyMetricInput label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => setDraft((current) => ({ ...current, heightCm }))} />
@@ -263,6 +269,7 @@ interface BodyHistoryEntry {
   quadCm: number | null;
   calfCm: number | null;
   forearmCm: number | null;
+  wristCm: number | null;
   bicepsCm: number | null;
 }
 
@@ -314,6 +321,7 @@ function BodyHistoryRow({ entry }: { entry: BodyHistoryEntry }) {
     { label: 'Quad', value: formatMeasurement(entry.quadCm, 'cm') },
     { label: 'Calf', value: formatMeasurement(entry.calfCm, 'cm') },
     { label: 'Fore', value: formatMeasurement(entry.forearmCm, 'cm') },
+    { label: 'Wrist', value: formatMeasurement(entry.wristCm, 'cm') },
     { label: 'Bi', value: formatMeasurement(entry.bicepsCm, 'cm') },
   ].filter((metric) => metric.value !== null);
 
@@ -350,6 +358,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const quadCm = getMeasurementValue('quad') ?? 50;
   const calfCm = getMeasurementValue('calf') ?? 35;
   const forearmCm = getMeasurementValue('forearm') ?? 25.5;
+  const wristCm = getMeasurementValue('wrist') ?? 16.5;
   const bicepsCm = getMeasurementValue('biceps') ?? 28;
   const targetWeightKg = getMeasurementValue('target-weight') ?? 72;
   const bmi = weightKg / ((heightCm / 100) ** 2);
@@ -365,6 +374,7 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     quadCm,
     calfCm,
     forearmCm,
+    wristCm,
     bicepsCm,
   }, bodyBaseline);
   const ratioHistory = getRatioHistory(history, shoulderCm, waistCm);
@@ -420,6 +430,8 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     calfCmValue: calfCm,
     forearmCm: `${formatNumber(forearmCm, 1)}cm`,
     forearmCmValue: forearmCm,
+    wristCm: `${formatNumber(wristCm, 1)}cm`,
+    wristCmValue: wristCm,
     bicepsCm: `${formatNumber(bicepsCm, 1)}cm`,
     bicepsCmValue: bicepsCm,
     targetWeightKg: `${formatNumber(targetWeightKg, 1)}kg`,
@@ -473,6 +485,7 @@ interface BodyMeasurementFallbacks {
   quadCm: number;
   calfCm: number;
   forearmCm: number;
+  wristCm: number;
   bicepsCm: number;
 }
 
@@ -559,6 +572,7 @@ function getBodyHistory(
       quadCm: typeof log.quadCm === 'number' ? log.quadCm : null,
       calfCm: typeof log.calfCm === 'number' ? log.calfCm : null,
       forearmCm: typeof log.forearmCm === 'number' ? log.forearmCm : null,
+      wristCm: typeof log.wristCm === 'number' ? log.wristCm : null,
       bicepsCm: typeof log.bicepsCm === 'number' ? log.bicepsCm : null,
     }));
 
@@ -581,6 +595,7 @@ function getBodyHistory(
       quadCm: first.quadCm ?? baseline.quadCm ?? fallbacks.quadCm,
       calfCm: first.calfCm ?? baseline.calfCm ?? fallbacks.calfCm,
       forearmCm: first.forearmCm ?? baseline.forearmCm ?? fallbacks.forearmCm,
+      wristCm: first.wristCm ?? baseline.wristCm ?? fallbacks.wristCm,
       bicepsCm: first.bicepsCm ?? baseline.bicepsCm ?? fallbacks.bicepsCm,
     }, ...rest];
   }
@@ -600,6 +615,7 @@ function getBodyHistory(
     quadCm: baseline.quadCm ?? fallbacks.quadCm,
     calfCm: baseline.calfCm ?? fallbacks.calfCm,
     forearmCm: baseline.forearmCm ?? fallbacks.forearmCm,
+    wristCm: baseline.wristCm ?? fallbacks.wristCm,
     bicepsCm: baseline.bicepsCm ?? fallbacks.bicepsCm,
   }];
 }
@@ -624,6 +640,7 @@ function getBaselineHistoryEntry(
     quadCm: typeof baseline.quadCm === 'number' ? baseline.quadCm : null,
     calfCm: typeof baseline.calfCm === 'number' ? baseline.calfCm : null,
     forearmCm: typeof baseline.forearmCm === 'number' ? baseline.forearmCm : null,
+    wristCm: typeof baseline.wristCm === 'number' ? baseline.wristCm : null,
     bicepsCm: typeof baseline.bicepsCm === 'number' ? baseline.bicepsCm : null,
   };
 }
@@ -641,6 +658,7 @@ function getBodyBaseline(profile: UserProfile): BodyBaseline {
     quadCm: profile.quadCircumferenceCm,
     calfCm: profile.calfCircumferenceCm,
     forearmCm: profile.forearmCircumferenceCm,
+    wristCm: profile.wristCircumferenceCm,
     bicepsCm: profile.bicepsCircumferenceCm,
   };
 }
@@ -656,6 +674,7 @@ function hasBodyMeasurement(log: DailyLog): boolean {
     || typeof log.quadCm === 'number'
     || typeof log.calfCm === 'number'
     || typeof log.forearmCm === 'number'
+    || typeof log.wristCm === 'number'
     || typeof log.bicepsCm === 'number';
 }
 
@@ -670,6 +689,7 @@ function hasBaselineMeasurement(baseline: BodyBaseline): boolean {
     || typeof baseline.quadCm === 'number'
     || typeof baseline.calfCm === 'number'
     || typeof baseline.forearmCm === 'number'
+    || typeof baseline.wristCm === 'number'
     || typeof baseline.bicepsCm === 'number';
 }
 

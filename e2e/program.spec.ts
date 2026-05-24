@@ -675,6 +675,7 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await page.getByRole('spinbutton', { name: /quad cm/i }).fill('50');
   await page.getByRole('spinbutton', { name: /calf cm/i }).fill('35');
   await page.getByRole('spinbutton', { name: /forearm cm/i }).fill('25.5');
+  await page.getByRole('spinbutton', { name: /wrist cm/i }).fill('16.7');
   await page.getByRole('spinbutton', { name: /biceps cm/i }).fill('28');
   await page.getByRole('spinbutton', { name: /ideal weight kg/i }).fill('72');
   await page.getByRole('spinbutton', { name: /height cm/i }).fill('180');
@@ -690,15 +691,16 @@ test('body detail editor saves today body logs and profile height fallback', asy
   await expect(page.locator('body')).toContainText('50cm');
   await expect(page.locator('body')).toContainText('35cm');
   await expect(page.locator('body')).toContainText('25.5cm');
+  await expect(page.locator('body')).toContainText('16.7cm');
   await expect(page.locator('body')).toContainText('28cm');
   await expect(page.locator('body')).toContainText('72kg');
   await expect(page.locator('body')).toContainText('1.46');
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; heightCm?: number; waistCm?: number; shoulderCm?: number; chestCm?: number; hipCm?: number; neckCm?: number; quadCm?: number; calfCm?: number; forearmCm?: number; bicepsCm?: number }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; heightCm?: number; waistCm?: number; shoulderCm?: number; chestCm?: number; hipCm?: number; neckCm?: number; quadCm?: number; calfCm?: number; forearmCm?: number; wristCm?: number; bicepsCm?: number }>;
     return logs['2026-05-11'];
-  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, heightCm: 180, waistCm: 77.3, shoulderCm: 113.2, chestCm: 91.4, hipCm: 86.5, neckCm: 37.8, quadCm: 50, calfCm: 35, forearmCm: 25.5, bicepsCm: 28 });
+  })).toEqual({ dateKey: '2026-05-11', morningWeightKg: 70.2, heightCm: 180, waistCm: 77.3, shoulderCm: 113.2, chestCm: 91.4, hipCm: 86.5, neckCm: 37.8, quadCm: 50, calfCm: 35, forearmCm: 25.5, wristCm: 16.7, bicepsCm: 28 });
   await expect.poll(() => page.evaluate(() => {
-    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number; chestCircumferenceCm?: number; hipCircumferenceCm?: number; neckCircumferenceCm?: number; quadCircumferenceCm?: number; calfCircumferenceCm?: number; forearmCircumferenceCm?: number; bicepsCircumferenceCm?: number; targetWeightKg?: number };
+    const profile = JSON.parse(localStorage.getItem('liftday_user_profile') ?? '{}') as { heightCm?: number; weightKg?: number; waistCircumferenceCm?: number; shoulderCircumferenceCm?: number; chestCircumferenceCm?: number; hipCircumferenceCm?: number; neckCircumferenceCm?: number; quadCircumferenceCm?: number; calfCircumferenceCm?: number; forearmCircumferenceCm?: number; wristCircumferenceCm?: number; bicepsCircumferenceCm?: number; targetWeightKg?: number };
     return {
       heightCm: profile.heightCm,
       weightKg: profile.weightKg,
@@ -710,10 +712,11 @@ test('body detail editor saves today body logs and profile height fallback', asy
       quadCircumferenceCm: profile.quadCircumferenceCm,
       calfCircumferenceCm: profile.calfCircumferenceCm,
       forearmCircumferenceCm: profile.forearmCircumferenceCm,
+      wristCircumferenceCm: profile.wristCircumferenceCm,
       bicepsCircumferenceCm: profile.bicepsCircumferenceCm,
       targetWeightKg: profile.targetWeightKg,
     };
-  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3, shoulderCircumferenceCm: 113.2, chestCircumferenceCm: 91.4, hipCircumferenceCm: 86.5, neckCircumferenceCm: 37.8, quadCircumferenceCm: 50, calfCircumferenceCm: 35, forearmCircumferenceCm: 25.5, bicepsCircumferenceCm: 28, targetWeightKg: 72 });
+  })).toEqual({ heightCm: 180, weightKg: 70.2, waistCircumferenceCm: 77.3, shoulderCircumferenceCm: 113.2, chestCircumferenceCm: 91.4, hipCircumferenceCm: 86.5, neckCircumferenceCm: 37.8, quadCircumferenceCm: 50, calfCircumferenceCm: 35, forearmCircumferenceCm: 25.5, wristCircumferenceCm: 16.7, bicepsCircumferenceCm: 28, targetWeightKg: 72 });
 });
 
 test('exercise detail copies the exercise name instead of opening a tutorial', async ({ page }) => {

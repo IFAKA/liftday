@@ -10,12 +10,13 @@ export type BodyMeasurementId =
   | 'quad'
   | 'calf'
   | 'forearm'
+  | 'wrist'
   | 'biceps'
   | 'height'
   | 'target-weight';
 
-type BodyLogKey = keyof Pick<DailyLog, 'morningWeightKg' | 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'bicepsCm' | 'heightCm'>;
-type BodyProfileKey = keyof Pick<UserProfile, 'weightKg' | 'waistCircumferenceCm' | 'shoulderCircumferenceCm' | 'chestCircumferenceCm' | 'hipCircumferenceCm' | 'neckCircumferenceCm' | 'quadCircumferenceCm' | 'calfCircumferenceCm' | 'forearmCircumferenceCm' | 'bicepsCircumferenceCm' | 'heightCm' | 'targetWeightKg'>;
+type BodyLogKey = keyof Pick<DailyLog, 'morningWeightKg' | 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'wristCm' | 'bicepsCm' | 'heightCm'>;
+type BodyProfileKey = keyof Pick<UserProfile, 'weightKg' | 'waistCircumferenceCm' | 'shoulderCircumferenceCm' | 'chestCircumferenceCm' | 'hipCircumferenceCm' | 'neckCircumferenceCm' | 'quadCircumferenceCm' | 'calfCircumferenceCm' | 'forearmCircumferenceCm' | 'wristCircumferenceCm' | 'bicepsCircumferenceCm' | 'heightCm' | 'targetWeightKg'>;
 
 export interface BodyMeasurementDefinition {
   id: BodyMeasurementId;
@@ -51,6 +52,7 @@ export const BODY_MEASUREMENT_DEFINITIONS: BodyMeasurementDefinition[] = [
   { id: 'quad', label: 'Quad', shortLabel: 'Quad', unit: 'cm', logKey: 'quadCm', profileKey: 'quadCircumferenceCm', fallback: 50 },
   { id: 'calf', label: 'Calf', shortLabel: 'Calf', unit: 'cm', logKey: 'calfCm', profileKey: 'calfCircumferenceCm', fallback: 35 },
   { id: 'forearm', label: 'Forearm', shortLabel: 'Forearm', unit: 'cm', logKey: 'forearmCm', profileKey: 'forearmCircumferenceCm', fallback: 25.5 },
+  { id: 'wrist', label: 'Wrist', shortLabel: 'Wrist', unit: 'cm', logKey: 'wristCm', profileKey: 'wristCircumferenceCm', fallback: 16.5 },
   { id: 'biceps', label: 'Biceps', shortLabel: 'Biceps', unit: 'cm', logKey: 'bicepsCm', profileKey: 'bicepsCircumferenceCm', fallback: 28 },
   { id: 'height', label: 'Height', shortLabel: 'Height', unit: 'cm', logKey: 'heightCm', profileKey: 'heightCm', fallback: 172 },
   { id: 'target-weight', label: 'Ideal weight', shortLabel: 'Ideal', unit: 'kg', profileKey: 'targetWeightKg', fallback: 72 },
