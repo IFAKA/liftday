@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { showRestCompleteNotification } from '@/lib/rest-notifications';
 
 interface RestTimerProps {

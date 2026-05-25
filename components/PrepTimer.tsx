@@ -3,7 +3,7 @@
 import { RotateCcw, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 interface PrepTimerProps {
   mode: 'warmup' | 'stretch';

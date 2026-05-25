@@ -8,7 +8,7 @@ import type { AdaptiveRecommendation, Exercise, ExerciseKey, SMVExercisePrescrip
 import { cn } from '@/lib/utils';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { TopBar } from './TopBar';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion, type AutoAdjustTone } from '@/lib/workout-auto-adjust';
 import type { CoachingReference } from '@/hooks/useWorkout';

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Activity, BarChart3, CheckCircle2, ChevronLeft, History, X } from 'lucide-react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
 

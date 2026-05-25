@@ -8,7 +8,7 @@ import { Progress } from './ui/progress';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { MobilityExercise } from '@/lib/types';
 import { ExerciseDemo } from './ExerciseDemo';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { traceLiftDay } from '@/lib/debug-trace';
 
 interface MobilityFlowProps {
