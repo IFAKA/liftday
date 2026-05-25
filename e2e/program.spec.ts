@@ -829,7 +829,7 @@ test('shows set 1 coaching reference from the previous workout', async ({ page }
   const logSet = page.getByRole('button', { name: /log set/i });
   await expect(previousRow).toBeVisible();
   await expect(logSet).toBeVisible();
-  await expect(page.getByText('Hold')).toBeVisible();
+  await expect(page.getByText('Keep', { exact: true })).toBeVisible();
 
   const previousBox = await previousRow.boundingBox();
   const logBox = await logSet.boundingBox();

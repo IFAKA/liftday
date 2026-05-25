@@ -243,7 +243,7 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
   })).toMatchObject({
     weight: 42.5,
     reps: 8,
-    status: 'Small jump next',
+    status: 'Add weight',
   });
 
   expect(getNextSetAutoAdjust({
@@ -267,7 +267,7 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
     },
   })).toMatchObject({
     weight: 37.5,
-    status: 'Reduce load',
+    status: 'Deload',
     programContext: 'Program says Deload First: Fatigue is hiding output.',
   });
 
@@ -293,7 +293,7 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
     },
   })).toMatchObject({
     weight: 40,
-    status: 'Hold',
+    status: 'Keep',
     programContext: 'Program says Hold Chest: Keep load steady today.',
   });
 

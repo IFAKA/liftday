@@ -5,9 +5,10 @@ import { getNextHigherLoad, getNextLowerLoad, snapLoadTarget } from './load-targ
 
 export type AutoAdjustStatus =
   | 'Add reps'
-  | 'Hold'
+  | 'Keep'
+  | 'Deload'
   | 'Reduce load'
-  | 'Small jump next'
+  | 'Add weight'
   | 'Add rest';
 
 export type AutoAdjustTone = 'neutral' | 'good' | 'warning' | 'danger';
@@ -74,7 +75,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
       weight: reduceWeight(input.exerciseKey, logged.weight),
       reps: Math.max(minReps, Math.min(logged.reps, maxReps - 1)),
       rir: targetRirMax,
-      status: 'Reduce load',
+      status: 'Deload',
       reason: 'Program says Deload First, so reduce effort before chasing reps.',
       tone: 'danger',
       programContext: guardrail.context,
@@ -107,7 +108,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
       weight: canJumpNow ? addSmallLoadJump(input.exerciseKey, logged.weight) : logged.weight,
       reps: canJumpNow ? minReps : maxReps,
       rir: targetRirMax,
-      status: canJumpNow ? 'Small jump next' : 'Hold',
+      status: canJumpNow ? 'Add weight' : 'Keep',
       reason: canJumpNow
         ? 'All sets were strong at top reps, so take the smallest load jump.'
         : 'Top reps were easy; hold this load until all sets prove it.',
@@ -119,7 +120,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
       ...logged,
       reps: Math.max(minReps, input.loggedSet.reps),
       rir: targetRirMax,
-      status: 'Hold',
+      status: 'Keep',
       reason: 'Reps dipped, so stop chasing reps and stabilize the next set.',
       tone: 'warning',
       programContext: guardrail.context,
@@ -130,7 +131,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
       ...logged,
       reps: canNudge ? Math.min(maxReps, input.loggedSet.reps + 1) : input.loggedSet.reps,
       rir: targetRirMax,
-      status: canNudge ? 'Add reps' : 'Hold',
+      status: canNudge ? 'Add reps' : 'Keep',
       reason: canNudge
         ? 'Effort landed in range, so nudge reps while staying in the rep range.'
         : 'Program guardrails say to keep this set steady today.',
@@ -141,7 +142,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
     suggestion = makeSuggestion({
       ...logged,
       rir: targetRirMax,
-      status: 'Hold',
+      status: 'Keep',
       reason: 'Performance is in range; repeat the target and keep reps clean.',
       tone: 'neutral',
       programContext: guardrail.context,
@@ -153,7 +154,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
       ...suggestion,
       weight: logged.weight,
       reps: Math.min(maxReps, Math.max(suggestion.reps, logged.reps)),
-      status: suggestion.status === 'Small jump next' ? 'Hold' : suggestion.status,
+      status: suggestion.status === 'Add weight' ? 'Keep' : suggestion.status,
       reason: `${guardrail.shortReason} Reps can move before load.`,
       tone: suggestion.tone === 'good' ? 'neutral' : suggestion.tone,
     };
