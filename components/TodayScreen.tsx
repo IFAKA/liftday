@@ -17,6 +17,7 @@ import { WatchListItem, WatchPanel } from './WatchSurface';
 import { DailyLog, UserProfile } from '@/lib/types';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog, setBodyProfileFallbacks } from '@/lib/storage';
 import { getStorageIssues } from '@/lib/browser-storage';
+import { REST_DURATION } from '@/lib/constants';
 
 type PreWorkoutGate = 'measurements' | 'weight' | null;
 type WeeklyMeasurementKey = keyof Pick<DailyLog, 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'wristCm' | 'ankleCm' | 'bicepsCm'>;
@@ -132,11 +133,13 @@ function TodayContent({ date }: { date: Date }) {
       <PrepTimer
         mode="warmup"
         seconds={workout.timer}
+        totalSeconds={workout.warmupDuration}
         isRunning={!workout.timerPaused}
         onCancel={workout.quitWorkout}
         onPrimary={workout.beginWorkoutAfterWarmup}
         onStartTimer={workout.startWarmupTimer}
         onPreset={workout.setWarmupDuration}
+        onRepeat={workout.repeatWarmupTimer}
       />
     );
   }
@@ -185,6 +188,7 @@ function TodayContent({ date }: { date: Date }) {
     return (
       <RestTimer
         seconds={workout.timer}
+        totalSeconds={workout.currentPrescription?.restSeconds ?? REST_DURATION}
         isPaused={workout.timerPaused}
         onSkip={workout.skipTimer}
         onQuit={workout.quitWorkout}

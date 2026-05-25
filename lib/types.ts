@@ -262,6 +262,7 @@ export interface ActiveWorkoutDraft {
   workoutType: Exclude<WorkoutType, 'rest'>;
   savedAt: string;
   timer: number;
+  warmupDuration?: 30 | 60;
   timerEndAt: number | null;
   timerPaused: boolean;
   nextExerciseName: string;

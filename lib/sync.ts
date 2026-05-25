@@ -425,6 +425,7 @@ function isActiveWorkoutDraft(value: unknown): value is ActiveWorkoutDraft {
     ['push', 'pull', 'legs', 'push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'].includes(value.workoutType as string) &&
     typeof value.savedAt === 'string' &&
     typeof value.timer === 'number' &&
+    (value.warmupDuration === undefined || value.warmupDuration === 30 || value.warmupDuration === 60) &&
     (value.timerEndAt === null || typeof value.timerEndAt === 'number') &&
     typeof value.timerPaused === 'boolean' &&
     typeof value.nextExerciseName === 'string' &&

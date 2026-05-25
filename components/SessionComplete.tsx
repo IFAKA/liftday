@@ -41,6 +41,7 @@ export function SessionComplete(props: SessionCompleteProps) {
       <PrepTimer
         mode="stretch"
         seconds={stretchSeconds}
+        totalSeconds={STRETCH_DURATION_SECONDS}
         isRunning={stretchRunning}
         onStartTimer={() => setStretchRunning(true)}
         onRepeat={() => {

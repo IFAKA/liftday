@@ -37,6 +37,7 @@ export interface UseWorkoutReturn {
   currentSet: number;
   setsPerExercise: number;
   timer: number;
+  warmupDuration: 30 | 60;
   currentExercise: Exercise | undefined;
   currentTarget: number;
   currentWeightTarget: number;
@@ -69,6 +70,7 @@ export interface UseWorkoutReturn {
   persistenceError: string | null;
   startWorkout: () => Promise<void>;
   startWarmupTimer: () => void;
+  repeatWarmupTimer: () => void;
   beginWorkoutAfterWarmup: () => void;
   setWarmupDuration: (seconds: 30 | 60) => void;
   logSet: (reps: number, weight?: number, rir?: number) => void;
@@ -95,6 +97,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(0);
   const [timer, setTimer] = useState(REST_DURATION);
+  const [warmupDuration, setWarmupDurationSeconds] = useState<30 | 60>(WARMUP_DURATION_SECONDS);
   const [sessionReps, setSessionReps] = useState<Record<string, SetEntry[]>>({});
   const [data, setData] = useState<WorkoutData>({});
   const [flashColor, setFlashColor] = useState<'green' | 'red' | null>(null);
@@ -312,6 +315,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setSessionReps(draft.sessionReps);
     setNextExerciseName(draft.nextExerciseName);
     setTimerPaused(draft.timerPaused);
+    setWarmupDurationSeconds(draft.warmupDuration ?? WARMUP_DURATION_SECONDS);
 
     if (draft.state === 'warming-up' && !draft.timerPaused && draft.timerEndAt !== null) {
       const remaining = Math.max(0, Math.ceil((draft.timerEndAt - Date.now()) / 1000));
@@ -361,6 +365,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       workoutType,
       savedAt: new Date().toISOString(),
       timer,
+      warmupDuration,
       timerEndAt: timerEndRef.current,
       timerPaused,
       nextExerciseName,
@@ -382,6 +387,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     selectedSubstitutions,
     skippedChainIndices,
     timer,
+    warmupDuration,
     timerPaused,
     unavailableEquipment,
     workoutType,
@@ -616,6 +622,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setCurrentSet(0);
     setSessionReps({});
     setAutoAdjustSuggestions({});
+    setWarmupDurationSeconds(WARMUP_DURATION_SECONDS);
     setTimer(WARMUP_DURATION_SECONDS);
     timerEndRef.current = null;
     setTimerPaused(true);
@@ -639,6 +646,17 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setTimerPaused(false);
   }, [timer]);
 
+  const repeatWarmupTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    unlockAudio();
+    playStart();
+    setTimer(warmupDuration);
+    timerEndRef.current = Date.now() + warmupDuration * 1000;
+    timerPauseStartRef.current = null;
+    countdownPlayedRef.current = new Set();
+    setTimerPaused(false);
+  }, [warmupDuration]);
+
   const beginWorkoutAfterWarmup = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     timerEndRef.current = null;
@@ -652,6 +670,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const setWarmupDuration = useCallback((seconds: 30 | 60) => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     countdownPlayedRef.current = new Set();
+    setWarmupDurationSeconds(seconds);
     timerEndRef.current = timerPaused ? null : Date.now() + seconds * 1000;
     setTimer(seconds);
   }, [timerPaused]);
@@ -950,7 +969,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [dateKey, exercises.length, hydrated, restorationChecked, workoutType]);
 
   return {
-    state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, currentExercise, currentTarget,
+    state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, warmupDuration, currentExercise, currentTarget,
     currentWeightTarget, currentWeightStep: currentExercise ? getExerciseLoadStep(currentExercise.key) : 2.5, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName,
@@ -959,7 +978,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     isStorageHydrated: hydrated,
     isRestoringActiveWorkout,
     persistenceError,
-    startWorkout, startWarmupTimer, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
+    startWorkout, startWarmupTimer, repeatWarmupTimer, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
     retryWorkoutSave: () => { void saveAndComplete(); },
