@@ -243,14 +243,7 @@ input[type="number"] {
 }
 
 [data-route-transition] {
-  animation: route-slide-in 0.18s var(--ease-drawer-ui) both;
   contain: layout paint;
-  will-change: transform;
-}
-
-@keyframes route-slide-in {
-  from { transform: translateX(18px); }
-  to { transform: translateX(0); }
 }
 
 /* Respect reduced motion preference */

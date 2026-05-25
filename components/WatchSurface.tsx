@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { Check, ChevronRight, Copy } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { ComponentProps, ReactNode } from 'react';
+import { motion } from 'motion/react';
+import type { HTMLMotionProps } from 'motion/react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +29,7 @@ export function WatchSection({ title, children, className }: WatchSectionProps) 
   );
 }
 
-interface WatchPanelProps extends ComponentProps<'div'> {
+interface WatchPanelProps extends HTMLMotionProps<'div'> {
   children: ReactNode;
   active?: boolean;
   subtle?: boolean;
@@ -36,9 +37,10 @@ interface WatchPanelProps extends ComponentProps<'div'> {
 
 export function WatchPanel({ children, className, active = false, subtle = false, ...props }: WatchPanelProps) {
   return (
-    <Card
+    <motion.div
+      data-slot="card"
       className={cn(
-        'w-full gap-0 rounded-xl border px-4 py-4 shadow-none',
+        'flex w-full flex-col gap-0 rounded-xl border px-4 py-4 text-card-foreground shadow-none',
         active
           ? 'border-white/25 bg-white/15 ring-2 ring-white/15'
           : subtle
@@ -49,7 +51,7 @@ export function WatchPanel({ children, className, active = false, subtle = false
       {...props}
     >
       {children}
-    </Card>
+    </motion.div>
   );
 }
 
@@ -83,7 +85,7 @@ export function WatchMetricGrid({ children, columns = 3, className }: WatchMetri
   );
 }
 
-interface WatchSignalPanelProps {
+interface WatchSignalPanelProps extends Pick<HTMLMotionProps<'div'>, 'layout' | 'layoutId' | 'transition'> {
   label: ReactNode;
   title: ReactNode;
   summary?: ReactNode;
@@ -109,9 +111,19 @@ export function WatchSignalPanel({
   subtle = false,
   children,
   className,
+  layout,
+  layoutId,
+  transition,
 }: WatchSignalPanelProps) {
   return (
-    <WatchPanel active={active} subtle={subtle} className={className}>
+    <WatchPanel
+      active={active}
+      subtle={subtle}
+      className={className}
+      layout={layout}
+      layoutId={layoutId}
+      transition={transition}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className={cn('text-fluid-label font-mono uppercase', tone)}>{label}</p>
@@ -207,7 +219,7 @@ export function WatchCopyButton({ copied, onClick, label, copiedLabel = 'Copied'
   );
 }
 
-interface WatchListItemProps {
+interface WatchListItemProps extends Pick<HTMLMotionProps<'div'>, 'layout' | 'layoutId' | 'transition'> {
   label?: string;
   title: ReactNode;
   subtitle?: ReactNode;
@@ -233,6 +245,9 @@ export function WatchListItem({
   active = false,
   subtle = false,
   className,
+  layout,
+  layoutId,
+  transition,
 }: WatchListItemProps) {
   const content = (
     <>
@@ -259,18 +274,22 @@ export function WatchListItem({
 
   if (href) {
     return (
-      <Button asChild variant="ghost" className={classes}>
-        <Link href={href} className="flex items-center gap-4">
-          {content}
-        </Link>
-      </Button>
+      <motion.div layout={layout} layoutId={layoutId} transition={transition}>
+        <Button asChild variant="ghost" className={classes}>
+          <Link href={href} className="flex items-center gap-4">
+            {content}
+          </Link>
+        </Button>
+      </motion.div>
     );
   }
 
   return (
-    <Button type="button" variant="ghost" onClick={onClick} className={cn(classes, 'flex items-center gap-4')}>
-      {content}
-    </Button>
+    <motion.div layout={layout} layoutId={layoutId} transition={transition}>
+      <Button type="button" variant="ghost" onClick={onClick} className={cn(classes, 'flex items-center gap-4')}>
+        {content}
+      </Button>
+    </motion.div>
   );
 }
 
