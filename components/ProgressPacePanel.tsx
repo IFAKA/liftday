@@ -3,16 +3,26 @@
 import { ProgressFrontier } from '@/lib/progress-insights';
 import { WatchPanel } from './WatchSurface';
 
-export function ProgressPacePanel({ frontier, active = false }: { frontier: ProgressFrontier; active?: boolean }) {
-  const state = getPaceState(frontier);
+export function ProgressPacePanel({
+  frontier,
+  active = false,
+  mixed = false,
+  embedded = false,
+}: {
+  frontier: ProgressFrontier;
+  active?: boolean;
+  mixed?: boolean;
+  embedded?: boolean;
+}) {
+  const state = getPaceState(frontier, mixed);
   const progressScore = frontier.current === null ? '--' : Math.round(frontier.current).toString();
   const actualPace = formatSignedPoints(frontier.weeklyTrend);
   const idealPace = frontier.current === null || frontier.frontier === null
     ? '--'
     : formatSignedPoints((frontier.frontier - frontier.current) / 4);
 
-  return (
-    <WatchPanel active={active} className="py-3">
+  const content = (
+    <>
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -33,6 +43,16 @@ export function ProgressPacePanel({ frontier, active = false }: { frontier: Prog
         <PaceBar label="This week" value={actualPace} percent={state.actualPercent} tone={state.actualTone} />
         <PaceBar label="Plan" value={idealPace} percent={state.idealPercent} tone="bg-white/45" />
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="mt-3">{content}</div>;
+  }
+
+  return (
+    <WatchPanel active={active} className="py-3">
+      {content}
     </WatchPanel>
   );
 }
@@ -61,7 +81,7 @@ function PaceBar({
   );
 }
 
-function getPaceState(frontier: ProgressFrontier): {
+function getPaceState(frontier: ProgressFrontier, mixed: boolean): {
   label: string;
   summary: string;
   action: string;
@@ -89,6 +109,18 @@ function getPaceState(frontier: ProgressFrontier): {
   const idealPercent = clampPercent((Math.max(0, idealPace) / denominator) * 100);
   const gap = idealPace - actualPace;
   const summary = `Your progress score ${formatWeeklyChange(actualPace)} this week. The plan expected ${formatSignedPoints(idealPace)}.`;
+
+  if (mixed && gap < -1) {
+    return {
+      label: 'Score up, lifts down',
+      summary: 'Weekly score rose, but recent priority lifts dropped.',
+      action: 'Keep jumps small and improve recovery.',
+      tone: 'text-yellow-400',
+      actualTone: 'bg-yellow-400',
+      actualPercent,
+      idealPercent,
+    };
+  }
 
   if (gap > 1) {
     return {

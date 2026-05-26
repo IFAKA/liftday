@@ -83,7 +83,7 @@ function AdaptiveProgressPanel({
         tone={diagnosis.tone}
       >
         <p className="text-fluid-label font-mono uppercase text-white/35">
-          Score {adaptation.objectiveScore.toFixed(1)} · recovery {Math.round(adaptation.recovery.systemic * 100)}% · load {Math.round(adaptation.fatigue.systemicFatigue * 100)}%
+          Program score {adaptation.objectiveScore.toFixed(1)} · recovery {Math.round(adaptation.recovery.systemic * 100)}% · load change {Math.round(adaptation.fatigue.systemicFatigue * 100)}%
         </p>
         <p className="mt-2 text-fluid-label font-mono uppercase text-white/35">
           {formatTrend(trend?.trend)} {trend?.velocity ? `${trend.velocity > 0 ? '+' : ''}${trend.velocity.toFixed(1)}%` : ''}

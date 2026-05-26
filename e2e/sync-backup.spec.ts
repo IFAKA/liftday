@@ -144,10 +144,10 @@ test('exports and restores a full v2 local backup', async ({ page }, testInfo) =
 
   await page.goto('/history');
   await expect(page.locator('body')).toContainText('Progress');
-  await expect(page.locator('body')).toContainText('Changed');
+  await expect(page.locator('body')).toContainText('Command');
 
   await page.goto('/program');
-  await expect(page.locator('body')).toContainText('Do now');
+  await expect(page.locator('body')).toContainText('Command');
 
   await page.goto('/muscles');
   await page.getByRole('button', { name: '7 days' }).click();
@@ -234,5 +234,5 @@ test('imports a v1 sync file without losing current session compatibility', asyn
   await page.goto('/history');
   await expect(page.locator('body')).toContainText('Progress');
   await page.goto('/program');
-  await expect(page.locator('body')).toContainText('Do now');
+  await expect(page.locator('body')).toContainText('Command');
 });

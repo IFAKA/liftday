@@ -181,6 +181,69 @@ test('settings body row opens the canonical body screen', async ({ page }) => {
   await expect(page).toHaveURL(/\/history\/body$/);
 });
 
+test('program shows one deload command with routine context as support', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.setItem('traindaily_sessions', JSON.stringify({
+      '2026-05-19': {
+        logged_at: '2026-05-19T10:00:00.000Z',
+        week_number: 1,
+        workout_type: 'push_a',
+        cable_lateral_raise: [
+          { reps: 20, weight: 10, rir: 1 },
+          { reps: 19, weight: 10, rir: 1 },
+        ],
+        db_incline_press: [
+          { reps: 10, weight: 30, rir: 1 },
+          { reps: 9, weight: 30, rir: 1 },
+        ],
+        lat_pulldown: [
+          { reps: 12, weight: 40, rir: 1 },
+          { reps: 11, weight: 40, rir: 1 },
+        ],
+      },
+      '2026-05-25': {
+        logged_at: '2026-05-25T10:00:00.000Z',
+        week_number: 2,
+        workout_type: 'push_a',
+        cable_lateral_raise: [
+          { reps: 12, weight: 10, rir: 1 },
+          { reps: 11, weight: 10, rir: 1 },
+        ],
+        db_incline_press: [
+          { reps: 6, weight: 30, rir: 1 },
+          { reps: 5, weight: 30, rir: 1 },
+        ],
+        lat_pulldown: [
+          { reps: 7, weight: 40, rir: 1 },
+          { reps: 6, weight: 40, rir: 1 },
+        ],
+      },
+    }));
+    localStorage.setItem('liftday_daily_logs', JSON.stringify({
+      '2026-05-26': {
+        dateKey: '2026-05-26',
+        sleepHours: 4,
+        fatigue: 5,
+        jointPain: true,
+      },
+    }));
+  });
+
+  await page.goto('/program');
+
+  await expect(page.locator('body')).toContainText('Deload today');
+  await expect(page.locator('body')).toContainText('Recent output is down and risk is elevated. Train lighter before pushing again.');
+  await expect(page.locator('body')).toContainText('Same exercises. Reduce load or effort. No PR attempts. No added volume.');
+  await expect(page.locator('body')).toContainText('Keep routine');
+  await expect(page.locator('body')).toContainText('Routine is fine. Make today easier, don\'t redesign the plan.');
+  await expect(page.locator('body')).toContainText('Program score');
+  await expect(page.locator('body')).toContainText('Load change');
+  await expect(page.locator('body')).not.toContainText('Do now');
+  await expect(page.locator('body')).not.toContainText('Watch');
+  await expect(page.locator('body')).not.toContainText('Hold structure');
+});
+
 test('saturday start opens weekly measurements, gym weight check, then warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
   await installRequiredNotificationStack(page);
@@ -452,19 +515,37 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
         logged_at: '2026-05-04T10:00:00.000Z',
         week_number: 1,
         workout_type: 'push_a',
-        db_incline_press: [
-          { reps: 10, weight: 10, rir: 2 },
-          { reps: 9, weight: 10, rir: 2 },
-        ],
+        cable_lateral_raise: [{ reps: 10, weight: 10, rir: 2 }],
+        db_incline_press: [{ reps: 10, weight: 10, rir: 2 }],
+        lat_pulldown: [{ reps: 10, weight: 10, rir: 2 }],
+        hack_squat: [{ reps: 10, weight: 10, rir: 2 }],
+        romanian_deadlift: [{ reps: 10, weight: 10, rir: 2 }],
+        leg_press: [{ reps: 10, weight: 10, rir: 2 }],
+        leg_curl_machine: [{ reps: 10, weight: 10, rir: 2 }],
       },
       '2026-05-11': {
         logged_at: '2026-05-11T10:00:00.000Z',
         week_number: 2,
         workout_type: 'push_a',
-        db_incline_press: [
-          { reps: 11, weight: 10, rir: 2 },
-          { reps: 10, weight: 10, rir: 2 },
-        ],
+        cable_lateral_raise: [{ reps: 20, weight: 10, rir: 2 }],
+        db_incline_press: [{ reps: 20, weight: 10, rir: 2 }],
+        lat_pulldown: [{ reps: 20, weight: 10, rir: 2 }],
+        hack_squat: [{ reps: 10, weight: 10, rir: 2 }],
+        romanian_deadlift: [{ reps: 10, weight: 10, rir: 2 }],
+        leg_press: [{ reps: 10, weight: 10, rir: 2 }],
+        leg_curl_machine: [{ reps: 10, weight: 10, rir: 2 }],
+      },
+      '2026-05-18': {
+        logged_at: '2026-05-18T10:00:00.000Z',
+        week_number: 3,
+        workout_type: 'push_a',
+        cable_lateral_raise: [{ reps: 18, weight: 10, rir: 2 }],
+        db_incline_press: [{ reps: 18, weight: 10, rir: 2 }],
+        lat_pulldown: [{ reps: 18, weight: 10, rir: 2 }],
+        hack_squat: [{ reps: 30, weight: 10, rir: 2 }],
+        romanian_deadlift: [{ reps: 30, weight: 10, rir: 2 }],
+        leg_press: [{ reps: 30, weight: 10, rir: 2 }],
+        leg_curl_machine: [{ reps: 30, weight: 10, rir: 2 }],
       },
     }));
   });
@@ -472,9 +553,12 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await page.goto('/history');
 
   await expect(page.locator('body')).toContainText('Progress');
-  await expect(page.locator('body')).toContainText('Changed');
+  await expect(page.locator('body')).toContainText('Command');
+  await expect(page.locator('body')).toContainText('Score up, lifts down');
+  await expect(page.locator('body')).toContainText('Your weekly score rose, but recent priority lifts dropped.');
+  await expect(page.locator('body')).toContainText('Hold routine. Keep jumps small and improve recovery.');
   await expect(page.locator('body')).toContainText('Pace');
-  await expect(page.locator('body')).toContainText(/Behind this week|On track|Ahead of plan|Need logs/);
+  await expect(page.locator('body')).not.toContainText('Ahead of plan');
   await expect(page.locator('body')).toContainText('Progress score');
   await expect(page.locator('body')).toContainText('This week');
   await expect(page.locator('body')).toContainText('Plan');

@@ -4,12 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Activity, Scale } from 'lucide-react';
 import { WorkoutData } from '@/lib/types';
-import { ProgressPacePanel } from '@/components/ProgressPacePanel';
+import { getProgressStatusCommand } from '@/components/status-command';
 import { TopBar } from './TopBar';
 import { getBodyTrendSummary, getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { loadDailyLogs } from '@/lib/storage';
-import { WatchBackButton, WatchListItem, WatchSignalPanel } from './WatchSurface';
+import { WatchBackButton, WatchDetailsPanel, WatchListItem, WatchMetricCell, WatchMetricGrid, WatchSignalPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -55,8 +55,12 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto px-3 pb-8 no-scrollbar mt-1 flex flex-col gap-3">
-          <ProgressSummary signal={progress.signal} diagnosis={progress.diagnosis} totalSessions={totalSessions} />
-          <ProgressPacePanel frontier={progress.frontier} active />
+          <ProgressSummary
+            signal={progress.signal}
+            diagnosis={progress.diagnosis}
+            frontier={progress.frontier}
+            totalSessions={totalSessions}
+          />
           <RoutineDecisionSummary decision={progress.routineDecision} />
 
           <div className="flex flex-col gap-2">
@@ -107,7 +111,7 @@ function RoutineDecisionSummary({
   return (
     <WatchSignalPanel
       label="Attention"
-      title={decision.label}
+      title={decision.label === 'Hold structure' ? 'Keep routine' : decision.label}
       summary={decision.summary}
       action={decision.nextAction}
       tone={decision.tone}
@@ -120,29 +124,59 @@ function RoutineDecisionSummary({
 function ProgressSummary({
   signal,
   diagnosis,
+  frontier,
   totalSessions,
 }: {
   signal: ReturnType<typeof getProgressSignal>;
   diagnosis: ReturnType<typeof getProgressDiagnosis>;
+  frontier: ReturnType<typeof loadProgramSummaryForData>['frontier'];
   totalSessions: number;
 }) {
+  const command = getProgressStatusCommand(signal, diagnosis, frontier);
   const changeLabel = diagnosis.averageChangePct === null
     ? '--'
     : `${diagnosis.averageChangePct > 0 ? '+' : ''}${diagnosis.averageChangePct.toFixed(1)}%`;
 
   return (
     <WatchSignalPanel
-      label="Changed"
-      title={signal.summary}
-      action={signal.nextAction}
-      metric={<span className={diagnosis.averageChangePct === null ? 'text-white/35' : diagnosis.tone}>{changeLabel}</span>}
+      label={command.label}
+      title={command.title}
+      summary={command.summary}
+      action={command.action}
+      metric={<span className={diagnosis.averageChangePct === null ? 'text-white/35' : command.tone}>{changeLabel}</span>}
       metricLabel={`${totalSessions} sessions`}
-      tone={signal.tone}
+      tone={command.tone}
       active
     >
-      <p className="mt-3 text-fluid-label font-mono uppercase text-white/30">
-        {diagnosis.improvingCount} up · {diagnosis.flatCount} flat · {diagnosis.decliningCount} down
-      </p>
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-fluid-label font-mono uppercase text-white/30">Pace</p>
+          <p className="text-fluid-label font-mono uppercase text-white/35">
+            Progress score <span className="text-white/55">{frontier.current === null ? '--' : Math.round(frontier.current)}</span>
+          </p>
+        </div>
+        <WatchMetricGrid columns={2}>
+          <WatchMetricCell label="This week" value={formatSignedPoints(frontier.weeklyTrend)} tone={command.mixedPace ? command.tone : 'text-white/55'} />
+          <WatchMetricCell label="Plan" value={formatPlanPace(frontier)} tone="text-white/55" />
+        </WatchMetricGrid>
+      </div>
+      <WatchDetailsPanel summary="Details">
+        <WatchMetricGrid columns={3}>
+          <WatchMetricCell label="Up" value={diagnosis.improvingCount} tone="text-white/55" />
+          <WatchMetricCell label="Flat" value={diagnosis.flatCount} tone="text-white/55" />
+          <WatchMetricCell label="Down" value={diagnosis.decliningCount} tone={diagnosis.decliningCount > 0 ? command.tone : 'text-white/55'} />
+        </WatchMetricGrid>
+      </WatchDetailsPanel>
     </WatchSignalPanel>
   );
+}
+
+function formatPlanPace(frontier: ReturnType<typeof loadProgramSummaryForData>['frontier']): string {
+  if (frontier.current === null || frontier.frontier === null) return '--';
+  return formatSignedPoints((frontier.frontier - frontier.current) / 4);
+}
+
+function formatSignedPoints(value: number): string {
+  const rounded = Math.round(value);
+  return `${rounded > 0 ? '+' : ''}${rounded} pts`;
 }

@@ -6,8 +6,10 @@ import { OptimizationContext, RoutineConfig } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { loadProgramSummary } from '@/lib/program-summary';
+import { getProgramStatusCommand } from '@/components/status-command';
 import {
   WatchBackButton,
+  WatchDetailsPanel,
   WatchListItem,
   WatchMetricCell,
   WatchMetricGrid,
@@ -41,11 +43,7 @@ export default function ProgramPage() {
 
       <div className="flex-1 overflow-y-auto px-3 pb-8 pt-1 no-scrollbar select-text flex flex-col gap-3">
         {adaptation && (
-          <AdaptiveRecommendationPanel adaptation={adaptation} />
-        )}
-
-        {routineDecision && (
-          <RoutineDecisionPanel decision={routineDecision} />
+          <ProgramGuidancePanel adaptation={adaptation} routineDecision={routineDecision} />
         )}
 
         <WatchSection title="Plan">
@@ -66,49 +64,52 @@ export default function ProgramPage() {
   );
 }
 
-function AdaptiveRecommendationPanel({ adaptation }: { adaptation: OptimizationContext }) {
+function ProgramGuidancePanel({
+  adaptation,
+  routineDecision,
+}: {
+  adaptation: OptimizationContext;
+  routineDecision: RoutineAdjustmentDecision | null;
+}) {
   const recommendation = adaptation.recommendations[0];
+  const command = getProgramStatusCommand(adaptation, routineDecision);
   const bottleneck = adaptation.recovery.bottleneck;
   const guardrail = adaptation.targetDateGuardrail.warning;
+  const detailReason = guardrail
+    ?? recommendation.blockedConstraints[0]
+    ?? recommendation.reason
+    ?? (bottleneck ? `Bottleneck: ${bottleneck.muscle.replace('_', ' ')}` : null);
+  const loadChange = recommendation.fatigueCost > 0
+    ? `+${recommendation.fatigueCost}`
+    : recommendation.fatigueCost.toString();
 
   return (
     <WatchSignalPanel
-      label="Do now"
-      title={recommendation.title}
-      summary={recommendation.summary}
-      metric={adaptation.objectiveScore.toFixed(1)}
-      metricLabel="Score"
-      tone="text-green-400"
+      label={command.label}
+      title={command.title}
+      summary={command.summary}
+      action={command.action}
+      tone={command.tone}
       active
     >
-      <WatchMetricGrid columns={2}>
-        <WatchMetricCell label="Recovery" value={`${Math.round(recommendation.recoveryState * 100)}%`} />
-        <WatchMetricCell label="Load" value={recommendation.fatigueCost > 0 ? `+${recommendation.fatigueCost}` : recommendation.fatigueCost.toString()} />
-      </WatchMetricGrid>
-      {(bottleneck || guardrail) && (
-        <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
-          {guardrail ?? recommendation.blockedConstraints[0] ?? recommendation.reason ?? `Bottleneck: ${bottleneck!.muscle.replace('_', ' ')}`}
-        </p>
-      )}
-      {!bottleneck && !guardrail && (recommendation.reason || recommendation.blockedConstraints[0]) && (
-        <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
-          {recommendation.blockedConstraints[0] ?? recommendation.reason}
-        </p>
-      )}
+      <div className="rounded-lg border border-white/5 bg-black/25 px-3 py-2">
+        <p className="text-fluid-label font-mono uppercase text-white/30">{command.routineTitle}</p>
+        <p className="mt-1 text-fluid-label font-mono uppercase leading-relaxed text-white/55">{command.routineSummary}</p>
+        <p className="mt-2 text-fluid-label font-mono uppercase leading-relaxed text-white/35">{command.routineAction}</p>
+      </div>
+      <WatchDetailsPanel summary="Details" className="mt-3">
+        <WatchMetricGrid columns={2}>
+          <WatchMetricCell label="Program score" value={adaptation.objectiveScore.toFixed(1)} />
+          <WatchMetricCell label="Recovery" value={`${Math.round(recommendation.recoveryState * 100)}%`} />
+          <WatchMetricCell label="Load change" value={loadChange} tone={recommendation.fatigueCost < 0 ? command.tone : 'text-white/75'} />
+          <WatchMetricCell label="Risk" value={`${Math.round(adaptation.fatigue.jointRisk * 100)}%`} />
+        </WatchMetricGrid>
+        {detailReason && (
+          <p className="mt-3 text-fluid-label font-mono uppercase leading-relaxed text-white/35">
+            {detailReason}
+          </p>
+        )}
+      </WatchDetailsPanel>
     </WatchSignalPanel>
-  );
-}
-
-function RoutineDecisionPanel({ decision }: { decision: RoutineAdjustmentDecision }) {
-  return (
-    <WatchSignalPanel
-      label="Watch"
-      title={decision.label}
-      summary={decision.summary}
-      action={decision.nextAction}
-      tone={decision.tone}
-      subtle
-      className="py-3"
-    />
   );
 }
