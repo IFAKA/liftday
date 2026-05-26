@@ -17,13 +17,12 @@ import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
 import {
   WatchBackButton,
+  WatchAlertPanel,
   WatchDetailsPanel,
-  WatchMetricCell,
-  WatchMetricGrid,
   WatchPanel,
   WatchSegmentedControl,
-  WatchStatusPill,
 } from '@/components/WatchSurface';
+import { StatusPill, SyncMetricGrid } from '@/components/sync/SyncMetrics';
 import {
   createSyncSnapshot,
   getLocalSyncSummary,
@@ -483,9 +482,9 @@ function ManualImportFallback({ onImported, compact = false }: { onImported: () 
         Import
       </Button>
       {importError && (
-        <p className="mt-2 rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-xs font-black uppercase leading-snug text-red-100">
+        <WatchAlertPanel tone="danger" className="mt-2">
           {importError}
-        </p>
+        </WatchAlertPanel>
       )}
     </details>
   );
@@ -528,25 +527,6 @@ function BackupExportFallback({ source, compact = false }: { source: 'phone' | '
       </Button>
     </div>
   );
-}
-
-function SyncMetricGrid({ summary }: { summary: ReturnType<typeof getLocalSyncSummary> }) {
-  return (
-    <WatchMetricGrid columns={3}>
-      <WatchMetricCell label="Sessions" value={summary.sessionCount.toString()} />
-      <WatchMetricCell label="First" value={summary.firstSessionDate ?? '-'} />
-      <WatchMetricCell label="Latest" value={summary.latestSessionDate ?? '-'} />
-    </WatchMetricGrid>
-  );
-}
-
-function StatusPill({ state }: { state: TransferState }) {
-  const isDone = state === 'done';
-  const isError = state === 'error';
-  const label = isDone ? 'Done' : isError ? 'Retry' : 'Live';
-  const tone = isDone ? 'success' : isError ? 'danger' : 'neutral';
-
-  return <WatchStatusPill tone={tone}>{label}</WatchStatusPill>;
 }
 
 function getBarcodeDetector(): BarcodeDetectorConstructor | null {

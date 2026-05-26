@@ -19,14 +19,15 @@ import {
 import {
   WatchBackButton,
   WatchListItem,
-  WatchMeasurementInput,
   WatchMetricCell,
   WatchMetricGrid,
   WatchPanel,
   WatchProgressRow,
   WatchSignalPanel,
+  WatchTrendChart,
 } from './WatchSurface';
 import { parseBodyMeasurement, roundBodyMeasurement } from '@/lib/body-measurements';
+import { BodyEditorForm, type BodyEditorDraft } from './body/BodyEditorForm';
 
 const CURRENT_WEIGHT_KG = 68.6;
 const CURRENT_WAIST_CM = 76.5;
@@ -43,7 +44,7 @@ export function BodyDetailScreen() {
     logs: {},
   }));
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState({
+  const [draft, setDraft] = useState<BodyEditorDraft>({
     weightKg: '',
     waistCm: '',
     shoulderCm: '',
@@ -198,41 +199,12 @@ export function BodyDetailScreen() {
             </Button>
           </div>
           {isEditing && (
-            <div className="mb-3 rounded-lg border border-white/10 bg-black/30 p-3">
-              <div className="grid grid-cols-2 gap-2">
-                <BodyEditorMeasurementInput label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => setDraft((current) => ({ ...current, weightKg }))} />
-                <BodyEditorMeasurementInput label="Waist" unit="cm" value={draft.waistCm} onChange={(waistCm) => setDraft((current) => ({ ...current, waistCm }))} />
-                <BodyEditorMeasurementInput label="Shoulder" unit="cm" value={draft.shoulderCm} onChange={(shoulderCm) => setDraft((current) => ({ ...current, shoulderCm }))} />
-                <BodyEditorMeasurementInput label="Chest" unit="cm" value={draft.chestCm} onChange={(chestCm) => setDraft((current) => ({ ...current, chestCm }))} />
-                <BodyEditorMeasurementInput label="Hip" unit="cm" value={draft.hipCm} onChange={(hipCm) => setDraft((current) => ({ ...current, hipCm }))} />
-                <BodyEditorMeasurementInput label="Neck" unit="cm" value={draft.neckCm} onChange={(neckCm) => setDraft((current) => ({ ...current, neckCm }))} />
-                <BodyEditorMeasurementInput label="Quad" unit="cm" value={draft.quadCm} onChange={(quadCm) => setDraft((current) => ({ ...current, quadCm }))} />
-                <BodyEditorMeasurementInput label="Calf" unit="cm" value={draft.calfCm} onChange={(calfCm) => setDraft((current) => ({ ...current, calfCm }))} />
-                <BodyEditorMeasurementInput label="Forearm" unit="cm" value={draft.forearmCm} onChange={(forearmCm) => setDraft((current) => ({ ...current, forearmCm }))} />
-                <BodyEditorMeasurementInput label="Wrist" unit="cm" value={draft.wristCm} onChange={(wristCm) => setDraft((current) => ({ ...current, wristCm }))} />
-                <BodyEditorMeasurementInput label="Ankle" unit="cm" value={draft.ankleCm} onChange={(ankleCm) => setDraft((current) => ({ ...current, ankleCm }))} />
-                <BodyEditorMeasurementInput label="Biceps" unit="cm" value={draft.bicepsCm} onChange={(bicepsCm) => setDraft((current) => ({ ...current, bicepsCm }))} />
-                <BodyEditorMeasurementInput label="Ideal weight" unit="kg" value={draft.targetWeightKg} onChange={(targetWeightKg) => setDraft((current) => ({ ...current, targetWeightKg }))} />
-                <BodyEditorMeasurementInput label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => setDraft((current) => ({ ...current, heightCm }))} />
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsEditing(false)}
-                  className="h-10 rounded-lg border border-white/10 bg-white/5 text-fluid-label font-mono font-black uppercase text-white/55 hover:bg-white/10 hover:text-white"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={saveBodyMeasurements}
-                  className="h-10 rounded-lg bg-white text-fluid-label font-mono font-black uppercase text-black hover:bg-white/90"
-                >
-                  Save
-                </Button>
-              </div>
-            </div>
+            <BodyEditorForm
+              draft={draft}
+              onDraftChange={setDraft}
+              onCancel={() => setIsEditing(false)}
+              onSave={saveBodyMeasurements}
+            />
           )}
           <div className="flex flex-col gap-2">
             {body.measurements.map((measurement) => (
@@ -331,28 +303,6 @@ interface BodyRatioTarget {
   gap: string;
   percent: number;
   tone: string;
-}
-
-function BodyEditorMeasurementInput({
-  label,
-  unit,
-  value,
-  onChange,
-}: {
-  label: string;
-  unit: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <WatchMeasurementInput
-      label={label}
-      unit={unit}
-      ariaUnit={unit}
-      value={value}
-      onChange={onChange}
-    />
-  );
 }
 
 function BodyHistoryRow({ entry }: { entry: BodyHistoryEntry }) {
@@ -648,12 +598,17 @@ function RatioTrendChart({ entries, className = '' }: { entries: RatioHistoryEnt
 
   return (
     <div className={`rounded-lg border border-white/5 bg-black/30 px-2 py-3 ${className}`}>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Body ratio progress chart" className="h-28 w-full overflow-visible">
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-        <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-        {ratioPoints.path && <path d={ratioPoints.path} fill="none" stroke="rgb(74,222,128)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
-        {ratioPoints.points.map((point) => <circle key={`${point.x}-${point.y}`} cx={point.x} cy={point.y} r="3" fill="rgb(74,222,128)" />)}
-      </svg>
+      <WatchTrendChart
+        points={ratioPoints.points}
+        ariaLabel="Body ratio progress chart"
+        width={width}
+        height={height}
+        padding={padding}
+        stroke="rgb(74,222,128)"
+        strokeWidth="2.5"
+        pointFill="rgb(74,222,128)"
+        showAxes
+      />
       <div className="mt-2 flex items-center gap-4 px-1">
         <ChartLegend tone="bg-green-400" label="Body ratio" />
       </div>
