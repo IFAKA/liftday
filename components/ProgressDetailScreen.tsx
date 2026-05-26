@@ -1,22 +1,20 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ProgressPacePanel } from '@/components/ProgressPacePanel';
 import { TopBar } from '@/components/TopBar';
+import { copyText } from '@/lib/clipboard';
 import { ProgressDiagnosis } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { OptimizationContext, WorkoutData } from '@/lib/types';
 import {
+  WatchBackButton,
   WatchCopyButton,
   WatchPanel,
   WatchSignalPanel,
 } from './WatchSurface';
 
 export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
-  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -45,11 +43,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
-        leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/history')} className="-ml-2 size-11 text-white/50 hover:text-white hover:bg-transparent active:text-white">
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-        }
+        leftAction={<WatchBackButton fallbackHref="/history" />}
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Progress Detail</span>}
       />
 
@@ -121,25 +115,4 @@ function AdaptiveProgressPanel({
 
 function formatTrend(trend: string | undefined): string {
   return (trend ?? 'insufficient_data').replace('_', ' ');
-}
-
-async function copyText(text: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return;
-    } catch {
-      // Fall back for browsers that expose the API but reject without a secure context.
-    }
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  textarea.remove();
 }

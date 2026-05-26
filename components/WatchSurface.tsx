@@ -1,13 +1,147 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, ChevronRight, Copy } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+
+interface WatchScreenProps {
+  top?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  className?: string;
+  bodyClassName?: string;
+}
+
+export function WatchScreen({ top, children, footer, className, bodyClassName }: WatchScreenProps) {
+  return (
+    <div className={cn('flex h-full flex-col overflow-hidden bg-black text-white', className)}>
+      {top}
+      <main className={cn('min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-1 no-scrollbar', bodyClassName)}>
+        {children}
+      </main>
+      {footer}
+    </div>
+  );
+}
+
+interface WatchBackButtonProps {
+  href?: string;
+  fallbackHref?: string;
+  onClick?: () => void;
+  ariaLabel?: string;
+  className?: string;
+}
+
+export function WatchBackButton({
+  href,
+  fallbackHref,
+  onClick,
+  ariaLabel = 'Back',
+  className,
+}: WatchBackButtonProps) {
+  const router = useRouter();
+  const classes = cn(
+    '-ml-2 size-11 rounded-full text-white/55 hover:bg-transparent hover:text-white active:bg-white/10 active:text-white',
+    className
+  );
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+      return;
+    }
+    if (fallbackHref) {
+      router.push(fallbackHref);
+      return;
+    }
+    router.back();
+  };
+
+  if (href) {
+    return (
+      <Button asChild variant="ghost" size="icon" aria-label={ariaLabel} className={classes}>
+        <Link href={href}>
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <Button type="button" variant="ghost" size="icon" aria-label={ariaLabel} onClick={handleClick} className={classes}>
+      <ChevronLeft className="h-5 w-5" />
+    </Button>
+  );
+}
+
+type WatchActionTone = 'primary' | 'secondary' | 'danger';
+
+interface WatchActionProps extends ComponentProps<typeof Button> {
+  tone?: WatchActionTone;
+}
+
+function getWatchActionClassName(tone: WatchActionTone): string {
+  if (tone === 'primary') {
+    return 'bg-white text-black hover:bg-white/90';
+  }
+  if (tone === 'danger') {
+    return 'border-red-400/25 bg-red-400/10 text-red-100 hover:bg-red-400/15';
+  }
+  return 'border-white/15 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white';
+}
+
+export function WatchPrimaryAction({ className, tone = 'primary', ...props }: WatchActionProps) {
+  return (
+    <Button
+      className={cn(
+        'w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
+        getWatchActionClassName(tone),
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function WatchSecondaryAction({ className, tone = 'secondary', variant = 'outline', ...props }: WatchActionProps) {
+  return (
+    <Button
+      variant={variant}
+      className={cn(
+        'btn-mobile-secondary rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
+        getWatchActionClassName(tone),
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+interface WatchEmptyStateProps {
+  icon?: LucideIcon;
+  title: ReactNode;
+  message?: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}
+
+export function WatchEmptyState({ icon: Icon, title, message, action, className }: WatchEmptyStateProps) {
+  return (
+    <div className={cn('flex min-h-48 flex-col items-center justify-center px-4 text-center', className)}>
+      {Icon && <Icon className="mb-4 h-12 w-12 text-white/30" />}
+      <h1 className="text-fluid-title font-black uppercase leading-none text-white">{title}</h1>
+      {message && <p className="mt-3 max-w-xs text-fluid-label font-mono uppercase leading-relaxed text-white/45">{message}</p>}
+      {action && <div className="mt-5 w-full">{action}</div>}
+    </div>
+  );
+}
 
 interface WatchSectionProps {
   title?: string;
@@ -175,6 +309,156 @@ export function WatchBarRow({
         </span>
       )}
     </div>
+  );
+}
+
+export const WatchProgressRow = WatchBarRow;
+
+interface WatchKeyValueRowProps {
+  label: ReactNode;
+  value: ReactNode;
+  meta?: ReactNode;
+  className?: string;
+}
+
+export function WatchKeyValueRow({ label, value, meta, className }: WatchKeyValueRowProps) {
+  return (
+    <div className={cn('flex min-h-10 items-center justify-between gap-3 rounded-lg border border-white/5 bg-black/20 px-3 py-2', className)}>
+      <div className="min-w-0">
+        <p className="truncate text-fluid-label font-mono uppercase text-white/35">{label}</p>
+        {meta && <p className="mt-0.5 truncate text-[10px] font-mono uppercase text-white/25">{meta}</p>}
+      </div>
+      <p className="shrink-0 text-right text-fluid-label font-mono font-black tabular-nums uppercase text-white/65">{value}</p>
+    </div>
+  );
+}
+
+export function WatchSegmentedControl<T extends string>({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  className,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+  ariaLabel: string;
+  className?: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className={cn('flex min-h-11 rounded-full border border-white/10 bg-black/35 p-1', className)}
+    >
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => onChange(option.value)}
+          aria-pressed={option.value === value}
+          className={cn(
+            'min-h-9 flex-1 rounded-full px-2 text-fluid-label font-black uppercase text-white/45 transition-colors',
+            option.value === value && 'bg-white text-black'
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+interface WatchStatusPillProps {
+  children: ReactNode;
+  tone?: 'neutral' | 'success' | 'warning' | 'danger';
+  className?: string;
+}
+
+export function WatchStatusPill({ children, tone = 'neutral', className }: WatchStatusPillProps) {
+  const toneClassName = {
+    neutral: 'border-white/10 bg-white/10 text-white/55',
+    success: 'border-green-400/25 bg-green-400/10 text-green-300',
+    warning: 'border-orange-400/25 bg-orange-400/10 text-orange-300',
+    danger: 'border-red-400/25 bg-red-400/10 text-red-300',
+  }[tone];
+
+  return (
+    <span className={cn('shrink-0 rounded-full border px-3 py-1 text-fluid-label font-black uppercase', toneClassName, className)}>
+      {children}
+    </span>
+  );
+}
+
+interface WatchDetailsPanelProps {
+  summary: ReactNode;
+  children: ReactNode;
+  className?: string;
+}
+
+export function WatchDetailsPanel({ summary, children, className }: WatchDetailsPanelProps) {
+  return (
+    <details className={cn('rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3', className)}>
+      <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
+        {summary}
+      </summary>
+      <div className="mt-3">{children}</div>
+    </details>
+  );
+}
+
+interface WatchMeasurementInputProps {
+  label: string;
+  unit?: string;
+  ariaUnit?: string;
+  value: string;
+  onChange: (value: string) => void;
+  min?: number;
+  max?: number;
+  step?: string;
+  onEnter?: () => void;
+  compact?: boolean;
+}
+
+export function WatchMeasurementInput({
+  label,
+  unit = 'cm',
+  ariaUnit,
+  value,
+  onChange,
+  min,
+  max,
+  step = '0.1',
+  onEnter,
+  compact = false,
+}: WatchMeasurementInputProps) {
+  const spokenUnit = ariaUnit ?? (unit === 'cm' ? 'centimeters' : unit === 'kg' ? 'kilograms' : unit);
+
+  return (
+    <label className="min-w-0">
+      {!compact && <span className="block truncate text-fluid-label font-mono uppercase text-white/35">{label}</span>}
+      <div className={cn('flex min-w-0 items-center gap-1.5 border border-white/10 bg-black/40 px-2', compact ? 'rounded-full' : 'mt-1 rounded-lg')}>
+        <Input
+          type="number"
+          inputMode="decimal"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          aria-label={compact ? label : `${label} ${spokenUnit}`}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') onEnter?.();
+          }}
+          className={cn(
+            'border-0 bg-transparent px-0 font-black tabular-nums text-white shadow-none focus-visible:ring-0',
+            compact ? 'h-11 text-center font-mono text-fluid-label' : 'h-10 text-fluid-label'
+          )}
+        />
+        {!compact && <span className="shrink-0 text-[10px] font-mono uppercase text-white/30">{unit}</span>}
+      </div>
+    </label>
   );
 }
 

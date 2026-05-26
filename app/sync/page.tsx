@@ -2,23 +2,28 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 import {
-  ArrowLeft,
   Check,
   Download,
   FileUp,
-  Laptop,
   LoaderCircle,
   QrCode,
   RotateCcw,
   ScanLine,
-  Smartphone,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
+import {
+  WatchBackButton,
+  WatchDetailsPanel,
+  WatchMetricCell,
+  WatchMetricGrid,
+  WatchPanel,
+  WatchSegmentedControl,
+  WatchStatusPill,
+} from '@/components/WatchSurface';
 import {
   createSyncSnapshot,
   getLocalSyncSummary,
@@ -39,7 +44,6 @@ interface BarcodeDetectorConstructor {
 }
 
 export default function SyncPage() {
-  const router = useRouter();
   const [pairToken] = useState(() => {
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get('pair');
@@ -49,17 +53,7 @@ export default function SyncPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-black text-white">
       <TopBar
-        leftAction={
-          <Button
-            variant="ghost"
-            size="icon-lg"
-            aria-label="Back"
-            onClick={() => router.push('/settings')}
-            className="rounded-full text-white/60 hover:bg-white/10 hover:text-white"
-          >
-            <ArrowLeft />
-          </Button>
-        }
+        leftAction={<WatchBackButton fallbackHref="/settings" />}
         center={<span className="text-fluid-ui font-black uppercase tracking-tight">Sync</span>}
       />
 
@@ -74,27 +68,9 @@ export default function SyncPage() {
         </section>
 
         {!pairToken && (
-          <details className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-            <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
-              Direction
-            </summary>
-            <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/40 p-1.5">
-              <ModeButton
-                active={mode === 'laptop'}
-                icon={<Laptop />}
-                label="Receive"
-                sublabel="Show QR"
-                onClick={() => setMode('laptop')}
-              />
-              <ModeButton
-                active={mode === 'phone'}
-                icon={<Smartphone />}
-                label="Send"
-                sublabel="Scan QR"
-                onClick={() => setMode('phone')}
-              />
-            </div>
-          </details>
+          <WatchDetailsPanel summary="Direction" className="mb-4">
+            <SyncModeSelector mode={mode} onModeChange={setMode} />
+          </WatchDetailsPanel>
         )}
 
         {mode === 'laptop' ? (
@@ -104,6 +80,20 @@ export default function SyncPage() {
         )}
       </main>
     </div>
+  );
+}
+
+function SyncModeSelector({ mode, onModeChange }: { mode: SyncMode; onModeChange: (mode: SyncMode) => void }) {
+  return (
+    <WatchSegmentedControl
+      value={mode}
+      options={[
+        { value: 'laptop', label: 'Receive' },
+        { value: 'phone', label: 'Send' },
+      ]}
+      onChange={onModeChange}
+      ariaLabel="Sync direction"
+    />
   );
 }
 
@@ -212,7 +202,7 @@ function LaptopSyncPanel() {
 
   return (
     <section>
-      <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4">
+      <WatchPanel className="rounded-[28px] p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase tracking-widest text-white/35">Receive</p>
@@ -249,17 +239,10 @@ function LaptopSyncPanel() {
           <RotateCcw />
           New QR
         </Button>
-      </div>
+      </WatchPanel>
 
-      <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-        <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
-          Details
-        </summary>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          <Metric label="Sessions" value={summary.sessionCount.toString()} />
-          <Metric label="First" value={summary.firstSessionDate ?? '-'} />
-          <Metric label="Latest" value={summary.latestSessionDate ?? '-'} />
-        </div>
+      <WatchDetailsPanel summary="Details" className="mt-4">
+        <SyncMetricGrid summary={summary} />
         {isLocalPairUrl(pairUrl) && (
           <p className="mt-3 text-xs leading-relaxed text-amber-200/80">
             This QR uses localhost, which phones cannot reach. Open the Mac on its network address.
@@ -271,7 +254,7 @@ function LaptopSyncPanel() {
           setState('done');
           setMessage('Manual import complete. Phone unchanged.');
         }} compact />
-      </details>
+      </WatchDetailsPanel>
     </section>
   );
 }
@@ -320,7 +303,7 @@ function AutoSendPanel({ pairToken }: { pairToken: string }) {
   }, [pairToken]);
 
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.04] px-5 py-8 text-center">
+    <WatchPanel className="rounded-[28px] px-5 py-8 text-center">
       <div className="mx-auto grid size-20 place-items-center rounded-full bg-white text-black">
         {state === 'done' ? (
           <Check className="size-9" />
@@ -334,7 +317,7 @@ function AutoSendPanel({ pairToken }: { pairToken: string }) {
         {state === 'done' ? 'Backup sent' : state === 'error' ? 'Could not sync' : 'Sending'}
       </p>
       <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/55">{message}</p>
-    </section>
+    </WatchPanel>
   );
 }
 
@@ -416,7 +399,7 @@ function ScannerPanel() {
 
   return (
     <section>
-      <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4">
+      <WatchPanel className="rounded-[28px] p-4">
         <div className="flex items-center gap-3">
           <div className="grid size-11 place-items-center rounded-full bg-white text-black">
             <ScanLine className="size-5" />
@@ -448,14 +431,11 @@ function ScannerPanel() {
           <ScanLine />
           Scan QR
         </Button>
-      </div>
+      </WatchPanel>
 
-      <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-        <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-white/35">
-          Details
-        </summary>
+      <WatchDetailsPanel summary="Details" className="mt-4">
         <PhoneExportFallback compact />
-      </details>
+      </WatchDetailsPanel>
     </section>
   );
 }
@@ -550,42 +530,13 @@ function BackupExportFallback({ source, compact = false }: { source: 'phone' | '
   );
 }
 
-function ModeButton({
-  active,
-  icon,
-  label,
-  sublabel,
-  onClick,
-}: {
-  active: boolean;
-  icon: React.ReactNode;
-  label: string;
-  sublabel: string;
-  onClick: () => void;
-}) {
+function SyncMetricGrid({ summary }: { summary: ReturnType<typeof getLocalSyncSummary> }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition active:scale-[0.98] ${
-        active ? 'bg-white text-black' : 'text-white/45'
-      }`}
-    >
-      <span className="[&_svg]:size-5">{icon}</span>
-      <span className="min-w-0">
-        <span className="block text-sm font-black uppercase tracking-tight">{label}</span>
-        <span className={`block truncate text-xs ${active ? 'text-black/55' : 'text-white/30'}`}>{sublabel}</span>
-      </span>
-    </button>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
-      <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{label}</p>
-      <p className="mt-1 truncate text-sm font-black uppercase tracking-tight text-white">{value}</p>
-    </div>
+    <WatchMetricGrid columns={3}>
+      <WatchMetricCell label="Sessions" value={summary.sessionCount.toString()} />
+      <WatchMetricCell label="First" value={summary.firstSessionDate ?? '-'} />
+      <WatchMetricCell label="Latest" value={summary.latestSessionDate ?? '-'} />
+    </WatchMetricGrid>
   );
 }
 
@@ -593,17 +544,9 @@ function StatusPill({ state }: { state: TransferState }) {
   const isDone = state === 'done';
   const isError = state === 'error';
   const label = isDone ? 'Done' : isError ? 'Retry' : 'Live';
-  const className = isDone
-    ? 'bg-emerald-300 text-black'
-    : isError
-      ? 'bg-red-400 text-black'
-      : 'bg-white/10 text-white/55';
+  const tone = isDone ? 'success' : isError ? 'danger' : 'neutral';
 
-  return (
-    <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black uppercase tracking-widest ${className}`}>
-      {label}
-    </span>
-  );
+  return <WatchStatusPill tone={tone}>{label}</WatchStatusPill>;
 }
 
 function getBarcodeDetector(): BarcodeDetectorConstructor | null {

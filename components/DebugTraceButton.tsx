@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { copyText } from '@/lib/clipboard';
 import { cn } from '@/lib/utils';
 import {
   DEBUG_TRACE_CHANGE_EVENT,
@@ -10,23 +11,6 @@ import {
   getLiftDayTraceText,
   isDebugTraceEnabled,
 } from '@/lib/debug-trace';
-
-async function copyText(text: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-}
 
 export function DebugTraceButton() {
   const enabled = useSyncExternalStore(subscribeToDebugTrace, isDebugTraceEnabled, () => false);

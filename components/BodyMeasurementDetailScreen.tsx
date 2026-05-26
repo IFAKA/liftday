@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
-import { WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSignalPanel } from '@/components/WatchSurface';
+import { WatchBackButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSignalPanel } from '@/components/WatchSurface';
 import {
   formatBodyChange,
   formatBodyMeasurement,
@@ -67,11 +67,7 @@ export function BodyMeasurementDetailScreen() {
     return (
       <div className="flex h-full flex-col overflow-hidden bg-black pb-safe">
         <TopBar
-          leftAction={
-            <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/history/body')} className="-ml-2 size-11 text-white/50 hover:bg-transparent hover:text-white active:text-white">
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          }
+          leftAction={<WatchBackButton fallbackHref="/history/body" />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Not Found</span>}
         />
         <div className="mt-2 flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-8 no-scrollbar">
@@ -96,11 +92,7 @@ export function BodyMeasurementDetailScreen() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-black pb-safe">
       <TopBar
-        leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/history/body')} className="-ml-2 size-11 text-white/50 hover:bg-transparent hover:text-white active:text-white">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        }
+        leftAction={<WatchBackButton fallbackHref="/history/body" />}
         center={<span className="max-w-48 truncate text-fluid-ui font-black uppercase tracking-tight text-white">{definition.label}</span>}
       />
 

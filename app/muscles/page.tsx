@@ -1,11 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
 import { MuscleBodyChart, ViewSide } from '@/components/MuscleBodyChart';
 import { TopBar } from '@/components/TopBar';
-import { WatchCopyButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSection } from '@/components/WatchSurface';
+import {
+  WatchBackButton,
+  WatchCopyButton,
+  WatchMetricCell,
+  WatchMetricGrid,
+  WatchPanel,
+  WatchProgressRow,
+  WatchSection,
+  WatchSegmentedControl,
+  WatchStatusPill,
+} from '@/components/WatchSurface';
 import {
   getLoggedEffectiveVolume,
   getLoggedWorkoutEffectiveVolume,
@@ -23,7 +31,7 @@ import {
 import { loadProgramSummary, type ProgramSummary } from '@/lib/program-summary';
 import { formatWorkoutType, getWorkoutType } from '@/lib/schedule';
 import type { MuscleGroup } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { copyText } from '@/lib/clipboard';
 
 type MuscleLens = 'routine' | 'today' | 'week';
 
@@ -106,15 +114,7 @@ export default function MusclesPage() {
     <div className="flex h-full flex-col overflow-hidden bg-black">
       <TopBar
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Muscles</span>}
-        leftAction={
-          <Link
-            href="/"
-            aria-label="Back"
-            className="-ml-2 flex size-11 items-center justify-center rounded-full text-white/55 active:bg-white/10 active:text-white"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-        }
+        leftAction={<WatchBackButton href="/" />}
       />
 
       <div className="flex-1 overflow-y-auto px-3 pb-8 pt-1 no-scrollbar select-text">
@@ -137,7 +137,7 @@ export default function MusclesPage() {
               </div>
             </div>
 
-            <SegmentedControl
+            <WatchSegmentedControl
               value={lens}
               options={(['routine', 'today', 'week'] as MuscleLens[]).map((value) => ({
                 value,
@@ -150,7 +150,7 @@ export default function MusclesPage() {
             <WatchCopyButton
               copied={copied}
               onClick={() => {
-                navigator.clipboard.writeText(reportText).then(() => {
+                copyText(reportText).then(() => {
                   setCopied(true);
                   window.setTimeout(() => setCopied(false), 1800);
                 });
@@ -163,7 +163,7 @@ export default function MusclesPage() {
 
           <WatchSection title="Map">
             <WatchPanel className="py-3">
-              <SegmentedControl
+              <WatchSegmentedControl
                 value={view}
                 options={[
                   { value: ViewSide.FRONT, label: 'Front' },
@@ -226,7 +226,7 @@ export default function MusclesPage() {
                       {formatMuscleName(selectedEntry.muscle)}
                     </h2>
                   </div>
-                  <StatusPill status={selectedEntry.status} />
+                  <MuscleStatusPill status={selectedEntry.status} />
                 </div>
                 <WatchMetricGrid columns={3} className="mt-4">
                   <WatchMetricCell label="Eff sets" value={selectedEntry.sets.toFixed(1)} />
@@ -252,7 +252,6 @@ export default function MusclesPage() {
 
 function MuscleVolumeRow({ entry }: { entry: MuscleMapEntry }) {
   const percent = Math.round(entry.percentOfTarget * 100);
-  const width = Math.max(4, Math.min(100, percent));
   const tone = entry.status === 'low'
     ? 'bg-orange-400'
     : entry.status === 'high'
@@ -261,79 +260,25 @@ function MuscleVolumeRow({ entry }: { entry: MuscleMapEntry }) {
 
   return (
     <div className="rounded-lg border border-white/5 bg-black/20 px-3 py-2">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-fluid-label font-black uppercase text-white/80">
-            {entry.label}
-          </p>
-          <p className="mt-0.5 text-fluid-label font-mono uppercase text-white/35">
-            {entry.sets.toFixed(1)} effective sets
-          </p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-fluid-label font-black tabular-nums text-white/70">
-            {percent}%
-          </p>
-          <p className="text-fluid-label font-mono uppercase text-white/30">
-            of {entry.target}
-          </p>
-        </div>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5" aria-hidden="true">
-        <div className={cn('h-full rounded-full', tone)} style={{ width: `${width}%` }} />
-      </div>
+      <WatchProgressRow
+        label={entry.label}
+        value={`${percent}%`}
+        meta={`of ${entry.target}`}
+        percent={percent}
+        tone={tone}
+      />
+      <p className="mt-1 truncate text-fluid-label font-mono uppercase text-white/35">
+        {entry.sets.toFixed(1)} effective sets
+      </p>
     </div>
   );
 }
 
-function SegmentedControl<T extends string>({
-  value,
-  options,
-  onChange,
-  ariaLabel,
-}: {
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (value: T) => void;
-  ariaLabel: string;
-}) {
-  return (
-    <div
-      role="group"
-      aria-label={ariaLabel}
-      className="flex min-h-11 rounded-full border border-white/10 bg-black/35 p-1"
-    >
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          onClick={() => onChange(option.value)}
-          aria-pressed={option.value === value}
-          className={cn(
-            'min-h-9 flex-1 rounded-full px-2 text-fluid-label font-black uppercase text-white/45 transition-colors',
-            option.value === value && 'bg-white text-black'
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function StatusPill({ status }: { status: MuscleMapEntry['status'] }) {
+function MuscleStatusPill({ status }: { status: MuscleMapEntry['status'] }) {
   const label = status === 'productive' ? 'On target' : status;
-  const className = status === 'low'
-    ? 'border-orange-400/25 bg-orange-400/10 text-orange-300'
-    : status === 'high'
-      ? 'border-red-400/25 bg-red-400/10 text-red-300'
-      : 'border-green-400/25 bg-green-400/10 text-green-300';
+  const tone = status === 'low' ? 'warning' : status === 'high' ? 'danger' : 'success';
 
-  return (
-    <span className={cn('shrink-0 rounded-full border px-3 py-1 text-fluid-label font-black uppercase', className)}>
-      {label}
-    </span>
-  );
+  return <WatchStatusPill tone={tone}>{label}</WatchStatusPill>;
 }
 
 function formatMuscleReport({

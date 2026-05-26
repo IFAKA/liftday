@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { loadUserProfile, setActiveRoutine } from '@/lib/storage';
 import { ROUTINES } from '@/lib/routines';
 import { TopBar } from '@/components/TopBar';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Dumbbell, PersonStanding } from 'lucide-react';
-import { WatchListItem } from '@/components/WatchSurface';
+import { Dumbbell, PersonStanding } from 'lucide-react';
+import { WatchBackButton, WatchListItem } from '@/components/WatchSurface';
 
 const ICONS = {
   dumbbell: Dumbbell,
@@ -30,11 +29,7 @@ export default function RoutineSettingPage() {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
       <TopBar
-        leftAction={
-          <Button variant="ghost" size="icon-xl" onClick={() => router.back()} className="-ml-2 text-white/60 hover:text-white hover:bg-transparent active:text-white">
-            <ArrowLeft className="icon-lg" />
-          </Button>
-        }
+        leftAction={<WatchBackButton />}
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Routine</span>}
       />
 

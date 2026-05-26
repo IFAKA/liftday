@@ -5,14 +5,21 @@ import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Activity, CalendarDays, ChartBar, Check, Moon, Play, Ruler, Settings } from 'lucide-react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { MobilityFlow } from './MobilityFlow';
 import { MobilityErrorBoundary } from './MobilityErrorBoundary';
 import { SessionComplete } from './SessionComplete';
 import { DailyLog, MobilityExercise } from '@/lib/types';
-import { WatchListItem, WatchPanel } from './WatchSurface';
+import { WatchListItem, WatchMeasurementInput, WatchPanel, WatchPrimaryAction } from './WatchSurface';
 import { formatDateKey } from '@/lib/workout-utils';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog } from '@/lib/storage';
+import {
+  formatBodyMeasurementInput,
+  formatCm,
+  getLastKnownBodyMeasurement,
+  getValidBodyMeasurement,
+  parseBodyMeasurement,
+  roundBodyMeasurement,
+} from '@/lib/body-measurements';
 
 export interface MobilityHookState {
   exercise: MobilityExercise;
@@ -143,13 +150,13 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
           />
         )}
         <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
-          <Button
+          <WatchPrimaryAction
             onClick={mobility.startMobility}
-            className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black hover:bg-white/90 active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)] shadow-xl"
+            className="shadow-xl"
           >
             <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
             5 MIN MOBILITY
-          </Button>
+          </WatchPrimaryAction>
         </RestDayActionRow>
       </div>
     </div>
@@ -188,15 +195,15 @@ function WaistMeasurementPanel({
   onLogsChange: (logs: Record<string, DailyLog>) => void;
 }) {
   const dateKey = formatDateKey(date);
-  const todayWaist = getValidMeasurement(logs[dateKey]?.waistCm);
-  const todayShoulder = getValidMeasurement(logs[dateKey]?.shoulderCm);
-  const profileWaist = getValidMeasurement(loadUserProfile()?.waistCircumferenceCm) ?? getValidMeasurement(getDefaultProfile().waistCircumferenceCm);
-  const profileShoulder = getValidMeasurement(loadUserProfile()?.shoulderCircumferenceCm) ?? getValidMeasurement(getDefaultProfile().shoulderCircumferenceCm);
-  const lastWaist = getLastKnownMeasurement(logs, dateKey, 'waistCm') ?? profileWaist;
-  const lastShoulder = getLastKnownMeasurement(logs, dateKey, 'shoulderCm') ?? profileShoulder;
+  const todayWaist = getValidBodyMeasurement(logs[dateKey]?.waistCm);
+  const todayShoulder = getValidBodyMeasurement(logs[dateKey]?.shoulderCm);
+  const profileWaist = getValidBodyMeasurement(loadUserProfile()?.waistCircumferenceCm) ?? getValidBodyMeasurement(getDefaultProfile().waistCircumferenceCm);
+  const profileShoulder = getValidBodyMeasurement(loadUserProfile()?.shoulderCircumferenceCm) ?? getValidBodyMeasurement(getDefaultProfile().shoulderCircumferenceCm);
+  const lastWaist = getLastKnownBodyMeasurement(logs, dateKey, 'waistCm') ?? profileWaist;
+  const lastShoulder = getLastKnownBodyMeasurement(logs, dateKey, 'shoulderCm') ?? profileShoulder;
   const [saveState, setSaveState] = useState<MeasurementSaveState>(todayWaist === null || todayShoulder === null ? 'editing' : 'dismissed');
-  const [waistInput, setWaistInput] = useState(() => formatCmInput(todayWaist ?? lastWaist));
-  const [shoulderInput, setShoulderInput] = useState(() => formatCmInput(todayShoulder ?? lastShoulder));
+  const [waistInput, setWaistInput] = useState(() => formatBodyMeasurementInput(todayWaist ?? lastWaist));
+  const [shoulderInput, setShoulderInput] = useState(() => formatBodyMeasurementInput(todayShoulder ?? lastShoulder));
   const [savedMeasurements, setSavedMeasurements] = useState<{ waist: number; shoulder: number } | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
   const shouldReduceMotion = useReducedMotion();
@@ -214,19 +221,19 @@ function WaistMeasurementPanel({
   }, [saveState]);
 
   const saveMeasurements = () => {
-    const nextWaist = Number.parseFloat(waistInput);
-    const nextShoulder = Number.parseFloat(shoulderInput);
-    if (!Number.isFinite(nextWaist) || nextWaist < 40 || nextWaist > 180) {
+    const nextWaist = parseBodyMeasurement(waistInput);
+    const nextShoulder = parseBodyMeasurement(shoulderInput);
+    if (nextWaist === null || nextWaist < 40 || nextWaist > 180) {
       setInputError('Enter waist');
       return;
     }
-    if (!Number.isFinite(nextShoulder) || nextShoulder < 60 || nextShoulder > 180) {
+    if (nextShoulder === null || nextShoulder < 60 || nextShoulder > 180) {
       setInputError('Enter shoulder');
       return;
     }
 
-    const roundedWaist = roundMeasurement(nextWaist);
-    const roundedShoulder = roundMeasurement(nextShoulder);
+    const roundedWaist = roundBodyMeasurement(nextWaist);
+    const roundedShoulder = roundBodyMeasurement(nextShoulder);
 
     saveDailyLog(dateKey, {
       dateKey,
@@ -276,7 +283,7 @@ function WaistMeasurementPanel({
             {saveState === 'editing' ? (
               <div className="mt-3 flex items-start gap-2">
                 <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
-                  <MeasurementInput
+                  <WatchMeasurementInput
                     label="Waist circumference in centimeters"
                     min={40}
                     max={180}
@@ -286,8 +293,9 @@ function WaistMeasurementPanel({
                       setInputError(null);
                     }}
                     onEnter={saveMeasurements}
+                    compact
                   />
-                  <MeasurementInput
+                  <WatchMeasurementInput
                     label="Shoulder circumference in centimeters"
                     min={60}
                     max={180}
@@ -297,6 +305,7 @@ function WaistMeasurementPanel({
                       setInputError(null);
                     }}
                     onEnter={saveMeasurements}
+                    compact
                   />
                   {inputError ? (
                     <p className="col-span-2 mt-1 text-fluid-label font-mono uppercase text-red-300">{inputError}</p>
@@ -320,61 +329,4 @@ function WaistMeasurementPanel({
       )}
     </AnimatePresence>
   );
-}
-
-function MeasurementInput({
-  label,
-  min,
-  max,
-  value,
-  onChange,
-  onEnter,
-}: {
-  label: string;
-  min: number;
-  max: number;
-  value: string;
-  onChange: (value: string) => void;
-  onEnter: () => void;
-}) {
-  return (
-    <Input
-      aria-label={label}
-      inputMode="decimal"
-      type="number"
-      min={min}
-      max={max}
-      step="0.1"
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') onEnter();
-      }}
-      className="h-11 rounded-full border-white/10 bg-black/30 px-2 text-center font-mono text-fluid-label font-black tabular-nums text-white"
-    />
-  );
-}
-
-function getLastKnownMeasurement(logs: Record<string, DailyLog>, beforeDateKey: string, key: 'waistCm' | 'shoulderCm'): number | null {
-  const latest = Object.values(logs)
-    .filter((log) => log.dateKey < beforeDateKey && getValidMeasurement(log[key]) !== null)
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
-
-  return getValidMeasurement(latest?.[key]);
-}
-
-function getValidMeasurement(value: number | undefined): number | null {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
-}
-
-function formatCm(value: number): string {
-  return `${formatCmInput(value)}cm`;
-}
-
-function formatCmInput(value: number | null | undefined): string {
-  return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(1) : '';
-}
-
-function roundMeasurement(value: number): number {
-  return Math.round(value * 10) / 10;
 }

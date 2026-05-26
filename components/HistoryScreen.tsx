@@ -2,15 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, ChevronLeft, Scale } from 'lucide-react';
+import { Activity, Scale } from 'lucide-react';
 import { WorkoutData } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 import { ProgressPacePanel } from '@/components/ProgressPacePanel';
 import { TopBar } from './TopBar';
 import { getBodyTrendSummary, getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { loadDailyLogs } from '@/lib/storage';
-import { WatchListItem, WatchSignalPanel } from './WatchSurface';
+import { WatchBackButton, WatchListItem, WatchSignalPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -46,11 +45,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
-        leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={onBack ?? (() => router.push('/'))} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-        }
+        leftAction={<WatchBackButton onClick={onBack ?? (() => router.push('/'))} />}
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Progress</span>}
       />
 

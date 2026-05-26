@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, Pencil, Ruler, Scale, TrendingUp, Utensils } from 'lucide-react';
+import { Pencil, Ruler, Scale, TrendingUp, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { TopBar } from '@/components/TopBar';
 import { DailyLog, UserProfile } from '@/lib/types';
 import { formatDateKey } from '@/lib/workout-utils';
@@ -18,7 +16,17 @@ import {
   getMeasurementHistory,
   roundBodyValue,
 } from '@/lib/body-progress';
-import { WatchListItem, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSignalPanel } from './WatchSurface';
+import {
+  WatchBackButton,
+  WatchListItem,
+  WatchMeasurementInput,
+  WatchMetricCell,
+  WatchMetricGrid,
+  WatchPanel,
+  WatchProgressRow,
+  WatchSignalPanel,
+} from './WatchSurface';
+import { parseBodyMeasurement, roundBodyMeasurement } from '@/lib/body-measurements';
 
 const CURRENT_WEIGHT_KG = 68.6;
 const CURRENT_WAIST_CM = 76.5;
@@ -30,7 +38,6 @@ interface BodySnapshot {
 }
 
 export function BodyDetailScreen() {
-  const router = useRouter();
   const [snapshot, setSnapshot] = useState<BodySnapshot>(() => ({
     profile: getDefaultProfile(),
     logs: {},
@@ -88,54 +95,69 @@ export function BodyDetailScreen() {
   }
 
   function saveBodyMeasurements() {
-    const weightKg = parseMeasurement(draft.weightKg);
-    const waistCm = parseMeasurement(draft.waistCm);
-    const shoulderCm = parseMeasurement(draft.shoulderCm);
-    const chestCm = parseMeasurement(draft.chestCm);
-    const hipCm = parseMeasurement(draft.hipCm);
-    const neckCm = parseMeasurement(draft.neckCm);
-    const quadCm = parseMeasurement(draft.quadCm);
-    const calfCm = parseMeasurement(draft.calfCm);
-    const forearmCm = parseMeasurement(draft.forearmCm);
-    const wristCm = parseMeasurement(draft.wristCm);
-    const ankleCm = parseMeasurement(draft.ankleCm);
-    const bicepsCm = parseMeasurement(draft.bicepsCm);
-    const targetWeightKg = parseMeasurement(draft.targetWeightKg);
-    const heightCm = parseMeasurement(draft.heightCm);
-    if (weightKg === null || waistCm === null || shoulderCm === null || chestCm === null || hipCm === null || neckCm === null || quadCm === null || calfCm === null || forearmCm === null || wristCm === null || ankleCm === null || bicepsCm === null || targetWeightKg === null || heightCm === null) return;
+    const weightKg = parseBodyMeasurement(draft.weightKg);
+    const waistCm = parseBodyMeasurement(draft.waistCm);
+    const shoulderCm = parseBodyMeasurement(draft.shoulderCm);
+    const chestCm = parseBodyMeasurement(draft.chestCm);
+    const hipCm = parseBodyMeasurement(draft.hipCm);
+    const neckCm = parseBodyMeasurement(draft.neckCm);
+    const quadCm = parseBodyMeasurement(draft.quadCm);
+    const calfCm = parseBodyMeasurement(draft.calfCm);
+    const forearmCm = parseBodyMeasurement(draft.forearmCm);
+    const wristCm = parseBodyMeasurement(draft.wristCm);
+    const ankleCm = parseBodyMeasurement(draft.ankleCm);
+    const bicepsCm = parseBodyMeasurement(draft.bicepsCm);
+    const targetWeightKg = parseBodyMeasurement(draft.targetWeightKg);
+    const heightCm = parseBodyMeasurement(draft.heightCm);
+    if (
+      weightKg === null || weightKg <= 0
+      || waistCm === null || waistCm <= 0
+      || shoulderCm === null || shoulderCm <= 0
+      || chestCm === null || chestCm <= 0
+      || hipCm === null || hipCm <= 0
+      || neckCm === null || neckCm <= 0
+      || quadCm === null || quadCm <= 0
+      || calfCm === null || calfCm <= 0
+      || forearmCm === null || forearmCm <= 0
+      || wristCm === null || wristCm <= 0
+      || ankleCm === null || ankleCm <= 0
+      || bicepsCm === null || bicepsCm <= 0
+      || targetWeightKg === null || targetWeightKg <= 0
+      || heightCm === null || heightCm <= 0
+    ) return;
 
     const dateKey = formatDateKey(new Date());
     saveDailyLog(dateKey, {
       dateKey,
-      morningWeightKg: roundMeasurement(weightKg),
-      heightCm: roundMeasurement(heightCm),
-      waistCm: roundMeasurement(waistCm),
-      shoulderCm: roundMeasurement(shoulderCm),
-      chestCm: roundMeasurement(chestCm),
-      hipCm: roundMeasurement(hipCm),
-      neckCm: roundMeasurement(neckCm),
-      quadCm: roundMeasurement(quadCm),
-      calfCm: roundMeasurement(calfCm),
-      forearmCm: roundMeasurement(forearmCm),
-      wristCm: roundMeasurement(wristCm),
-      ankleCm: roundMeasurement(ankleCm),
-      bicepsCm: roundMeasurement(bicepsCm),
+      morningWeightKg: roundBodyMeasurement(weightKg),
+      heightCm: roundBodyMeasurement(heightCm),
+      waistCm: roundBodyMeasurement(waistCm),
+      shoulderCm: roundBodyMeasurement(shoulderCm),
+      chestCm: roundBodyMeasurement(chestCm),
+      hipCm: roundBodyMeasurement(hipCm),
+      neckCm: roundBodyMeasurement(neckCm),
+      quadCm: roundBodyMeasurement(quadCm),
+      calfCm: roundBodyMeasurement(calfCm),
+      forearmCm: roundBodyMeasurement(forearmCm),
+      wristCm: roundBodyMeasurement(wristCm),
+      ankleCm: roundBodyMeasurement(ankleCm),
+      bicepsCm: roundBodyMeasurement(bicepsCm),
     });
     setBodyProfileFallbacks({
-      heightCm: roundMeasurement(heightCm),
-      weightKg: roundMeasurement(weightKg),
-      waistCircumferenceCm: roundMeasurement(waistCm),
-      shoulderCircumferenceCm: roundMeasurement(shoulderCm),
-      chestCircumferenceCm: roundMeasurement(chestCm),
-      hipCircumferenceCm: roundMeasurement(hipCm),
-      neckCircumferenceCm: roundMeasurement(neckCm),
-      quadCircumferenceCm: roundMeasurement(quadCm),
-      calfCircumferenceCm: roundMeasurement(calfCm),
-      forearmCircumferenceCm: roundMeasurement(forearmCm),
-      wristCircumferenceCm: roundMeasurement(wristCm),
-      ankleCircumferenceCm: roundMeasurement(ankleCm),
-      bicepsCircumferenceCm: roundMeasurement(bicepsCm),
-      targetWeightKg: roundMeasurement(targetWeightKg),
+      heightCm: roundBodyMeasurement(heightCm),
+      weightKg: roundBodyMeasurement(weightKg),
+      waistCircumferenceCm: roundBodyMeasurement(waistCm),
+      shoulderCircumferenceCm: roundBodyMeasurement(shoulderCm),
+      chestCircumferenceCm: roundBodyMeasurement(chestCm),
+      hipCircumferenceCm: roundBodyMeasurement(hipCm),
+      neckCircumferenceCm: roundBodyMeasurement(neckCm),
+      quadCircumferenceCm: roundBodyMeasurement(quadCm),
+      calfCircumferenceCm: roundBodyMeasurement(calfCm),
+      forearmCircumferenceCm: roundBodyMeasurement(forearmCm),
+      wristCircumferenceCm: roundBodyMeasurement(wristCm),
+      ankleCircumferenceCm: roundBodyMeasurement(ankleCm),
+      bicepsCircumferenceCm: roundBodyMeasurement(bicepsCm),
+      targetWeightKg: roundBodyMeasurement(targetWeightKg),
     });
     reloadSnapshot();
     setIsEditing(false);
@@ -145,9 +167,7 @@ export function BodyDetailScreen() {
     <div className="flex h-full flex-col overflow-hidden bg-black pb-safe">
       <TopBar
         leftAction={
-          <Button variant="ghost" size="icon" aria-label="Back" onClick={() => router.push('/history')} className="-ml-2 size-11 text-white/50 hover:bg-transparent hover:text-white active:text-white">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+          <WatchBackButton fallbackHref="/history" />
         }
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Body</span>}
       />
@@ -180,20 +200,20 @@ export function BodyDetailScreen() {
           {isEditing && (
             <div className="mb-3 rounded-lg border border-white/10 bg-black/30 p-3">
               <div className="grid grid-cols-2 gap-2">
-                <BodyMetricInput label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => setDraft((current) => ({ ...current, weightKg }))} />
-                <BodyMetricInput label="Waist" unit="cm" value={draft.waistCm} onChange={(waistCm) => setDraft((current) => ({ ...current, waistCm }))} />
-                <BodyMetricInput label="Shoulder" unit="cm" value={draft.shoulderCm} onChange={(shoulderCm) => setDraft((current) => ({ ...current, shoulderCm }))} />
-                <BodyMetricInput label="Chest" unit="cm" value={draft.chestCm} onChange={(chestCm) => setDraft((current) => ({ ...current, chestCm }))} />
-                <BodyMetricInput label="Hip" unit="cm" value={draft.hipCm} onChange={(hipCm) => setDraft((current) => ({ ...current, hipCm }))} />
-                <BodyMetricInput label="Neck" unit="cm" value={draft.neckCm} onChange={(neckCm) => setDraft((current) => ({ ...current, neckCm }))} />
-                <BodyMetricInput label="Quad" unit="cm" value={draft.quadCm} onChange={(quadCm) => setDraft((current) => ({ ...current, quadCm }))} />
-                <BodyMetricInput label="Calf" unit="cm" value={draft.calfCm} onChange={(calfCm) => setDraft((current) => ({ ...current, calfCm }))} />
-                <BodyMetricInput label="Forearm" unit="cm" value={draft.forearmCm} onChange={(forearmCm) => setDraft((current) => ({ ...current, forearmCm }))} />
-                <BodyMetricInput label="Wrist" unit="cm" value={draft.wristCm} onChange={(wristCm) => setDraft((current) => ({ ...current, wristCm }))} />
-                <BodyMetricInput label="Ankle" unit="cm" value={draft.ankleCm} onChange={(ankleCm) => setDraft((current) => ({ ...current, ankleCm }))} />
-                <BodyMetricInput label="Biceps" unit="cm" value={draft.bicepsCm} onChange={(bicepsCm) => setDraft((current) => ({ ...current, bicepsCm }))} />
-                <BodyMetricInput label="Ideal weight" unit="kg" value={draft.targetWeightKg} onChange={(targetWeightKg) => setDraft((current) => ({ ...current, targetWeightKg }))} />
-                <BodyMetricInput label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => setDraft((current) => ({ ...current, heightCm }))} />
+                <BodyEditorMeasurementInput label="Weight" unit="kg" value={draft.weightKg} onChange={(weightKg) => setDraft((current) => ({ ...current, weightKg }))} />
+                <BodyEditorMeasurementInput label="Waist" unit="cm" value={draft.waistCm} onChange={(waistCm) => setDraft((current) => ({ ...current, waistCm }))} />
+                <BodyEditorMeasurementInput label="Shoulder" unit="cm" value={draft.shoulderCm} onChange={(shoulderCm) => setDraft((current) => ({ ...current, shoulderCm }))} />
+                <BodyEditorMeasurementInput label="Chest" unit="cm" value={draft.chestCm} onChange={(chestCm) => setDraft((current) => ({ ...current, chestCm }))} />
+                <BodyEditorMeasurementInput label="Hip" unit="cm" value={draft.hipCm} onChange={(hipCm) => setDraft((current) => ({ ...current, hipCm }))} />
+                <BodyEditorMeasurementInput label="Neck" unit="cm" value={draft.neckCm} onChange={(neckCm) => setDraft((current) => ({ ...current, neckCm }))} />
+                <BodyEditorMeasurementInput label="Quad" unit="cm" value={draft.quadCm} onChange={(quadCm) => setDraft((current) => ({ ...current, quadCm }))} />
+                <BodyEditorMeasurementInput label="Calf" unit="cm" value={draft.calfCm} onChange={(calfCm) => setDraft((current) => ({ ...current, calfCm }))} />
+                <BodyEditorMeasurementInput label="Forearm" unit="cm" value={draft.forearmCm} onChange={(forearmCm) => setDraft((current) => ({ ...current, forearmCm }))} />
+                <BodyEditorMeasurementInput label="Wrist" unit="cm" value={draft.wristCm} onChange={(wristCm) => setDraft((current) => ({ ...current, wristCm }))} />
+                <BodyEditorMeasurementInput label="Ankle" unit="cm" value={draft.ankleCm} onChange={(ankleCm) => setDraft((current) => ({ ...current, ankleCm }))} />
+                <BodyEditorMeasurementInput label="Biceps" unit="cm" value={draft.bicepsCm} onChange={(bicepsCm) => setDraft((current) => ({ ...current, bicepsCm }))} />
+                <BodyEditorMeasurementInput label="Ideal weight" unit="kg" value={draft.targetWeightKg} onChange={(targetWeightKg) => setDraft((current) => ({ ...current, targetWeightKg }))} />
+                <BodyEditorMeasurementInput label="Height" unit="cm" value={draft.heightCm} onChange={(heightCm) => setDraft((current) => ({ ...current, heightCm }))} />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button
@@ -313,7 +333,7 @@ interface BodyRatioTarget {
   tone: string;
 }
 
-function BodyMetricInput({
+function BodyEditorMeasurementInput({
   label,
   unit,
   value,
@@ -325,21 +345,13 @@ function BodyMetricInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="min-w-0">
-      <span className="block truncate text-fluid-label font-mono uppercase text-white/30">{label}</span>
-      <div className="mt-1 flex min-w-0 items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-2">
-        <Input
-          type="number"
-          inputMode="decimal"
-          step="0.1"
-          value={value}
-          aria-label={`${label} ${unit}`}
-          onChange={(event) => onChange(event.target.value)}
-          className="h-10 border-0 bg-transparent px-0 text-fluid-label font-black tabular-nums text-white shadow-none focus-visible:ring-0"
-        />
-        <span className="shrink-0 text-[10px] font-mono uppercase text-white/30">{unit}</span>
-      </div>
-    </label>
+    <WatchMeasurementInput
+      label={label}
+      unit={unit}
+      ariaUnit={unit}
+      value={value}
+      onChange={onChange}
+    />
   );
 }
 
@@ -382,6 +394,8 @@ function BodyHistoryRow({ entry }: { entry: BodyHistoryEntry }) {
 }
 
 function RatioTargetRow({ ratio }: { ratio: BodyRatioTarget }) {
+  const tone = ratio.percent >= 100 ? 'bg-green-300' : 'bg-sky-300';
+
   return (
     <div className="rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2">
       <div className="flex items-start justify-between gap-3">
@@ -394,9 +408,7 @@ function RatioTargetRow({ ratio }: { ratio: BodyRatioTarget }) {
           <p className="text-[10px] font-mono uppercase text-white/30">{ratio.gap}</p>
         </div>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
-        <div className={`h-full rounded-full ${ratio.percent >= 100 ? 'bg-green-300' : 'bg-sky-300'}`} style={{ width: `${Math.max(4, Math.min(100, ratio.percent))}%` }} />
-      </div>
+      <WatchProgressRow label="" value="" percent={ratio.percent} tone={tone} className="mt-2 gap-0 [&>span]:hidden" />
     </div>
   );
 }
@@ -533,15 +545,6 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
     profileLine: `${profile.age ?? 26}y ${profile.sex ?? 'male'} · ${formatBodyComposition(profile.bodyComposition)} · ${profile.injuryStatus ?? 'No injuries or pain'}`,
     contextLine: `${profile.trainingBackground ?? 'Rugby background'} · ${profile.maxWorkoutMinutes ?? 105} min cap · commercial gym`,
   };
-}
-
-function parseMeasurement(value: string): number | null {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
-
-function roundMeasurement(value: number): number {
-  return Math.round(value * 10) / 10;
 }
 
 function getBodyRatioTargets(values: BodyMeasurementFallbacks): BodyRatioTarget[] {

@@ -10,6 +10,7 @@ import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { TopBar } from './TopBar';
+import { copyText } from '@/lib/clipboard';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion, type AutoAdjustTone } from '@/lib/workout-auto-adjust';
 import type { CoachingReference } from '@/hooks/useWorkout';
 import { formatLoadTarget } from '@/lib/load-targets';
@@ -391,27 +392,6 @@ export function ExerciseScreen({
       </AnimatePresence>
     </div>
   );
-}
-
-async function copyText(text: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return;
-    } catch {
-      // Fall back for browsers that expose the API but reject without a secure context.
-    }
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  textarea.remove();
 }
 
 function getCoachingToneClass(tone: AutoAdjustTone): string {

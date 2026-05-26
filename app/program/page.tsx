@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeft, Dumbbell } from 'lucide-react';
+import { Dumbbell } from 'lucide-react';
 import { OptimizationContext, RoutineConfig } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { loadProgramSummary } from '@/lib/program-summary';
 import {
+  WatchBackButton,
   WatchListItem,
   WatchMetricCell,
   WatchMetricGrid,
@@ -36,15 +36,7 @@ export default function ProgramPage() {
     <div className="flex flex-col h-full bg-black overflow-hidden">
       <TopBar
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program</span>}
-        leftAction={
-          <Link
-            href="/"
-            aria-label="Back"
-            className="-ml-2 flex size-11 items-center justify-center rounded-full text-white/55 active:bg-white/10 active:text-white"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-        }
+        leftAction={<WatchBackButton href="/" />}
       />
 
       <div className="flex-1 overflow-y-auto px-3 pb-8 pt-1 no-scrollbar select-text flex flex-col gap-3">

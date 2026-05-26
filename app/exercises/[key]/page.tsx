@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Check, ChevronLeft, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useParams } from 'next/navigation';
+import { Check, Copy } from 'lucide-react';
 import { TopBar } from '@/components/TopBar';
+import { WatchBackButton } from '@/components/WatchSurface';
+import { copyText } from '@/lib/clipboard';
 import { EXERCISES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { formatWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 
 export default function ExerciseDetailPage() {
-  const router = useRouter();
   const { key } = useParams<{ key: string }>();
   const [copied, setCopied] = useState(false);
   const ex = EXERCISES.find((e) => e.key === key);
@@ -34,17 +34,7 @@ export default function ExerciseDetailPage() {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
-        leftAction={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Back"
-            onClick={() => router.back()}
-            className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-        }
+        leftAction={<WatchBackButton />}
         center={
           <div className="flex flex-col items-center">
             <button
@@ -91,25 +81,4 @@ export default function ExerciseDetailPage() {
       </div>
     </div>
   );
-}
-
-async function copyText(text: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return;
-    } catch {
-      // Fall back for browsers that expose the API but reject without a secure context.
-    }
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  textarea.remove();
 }

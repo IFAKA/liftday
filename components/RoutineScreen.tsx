@@ -1,12 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Exercise, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 import { TopBar } from './TopBar';
-import { WatchListItem } from './WatchSurface';
+import { WatchBackButton, WatchListItem } from './WatchSurface';
 
 interface RoutineScreenProps {
   exercises: Exercise[];
@@ -26,17 +24,7 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       {!hideTopBar && (
         <TopBar
-          leftAction={
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Back"
-              onClick={() => router.back()}
-              className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          }
+          leftAction={<WatchBackButton />}
           center={
             <div className="flex flex-col items-center">
               <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', titleColor ?? 'text-white')}>
