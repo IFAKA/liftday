@@ -54,7 +54,7 @@ export function WatchBackButton({
       return;
     }
     if (fallbackHref) {
-      router.push(fallbackHref);
+      router.replace(fallbackHref);
       return;
     }
     router.back();
@@ -63,7 +63,7 @@ export function WatchBackButton({
   if (href) {
     return (
       <Button asChild variant="ghost" size="icon" aria-label={ariaLabel} className={classes}>
-        <Link href={href}>
+        <Link href={href} replace>
           <ChevronLeft className="h-5 w-5" />
         </Link>
       </Button>

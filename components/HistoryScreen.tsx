@@ -45,7 +45,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
       <TopBar
-        leftAction={<WatchBackButton onClick={onBack ?? (() => router.push('/'))} />}
+        leftAction={<WatchBackButton onClick={onBack} fallbackHref="/" />}
         center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Progress</span>}
       />
 
