@@ -133,7 +133,7 @@ export function CountdownTimerScreen({
             variant="outline"
             onClick={repeatAction!.onClick}
             disabled={repeatAction!.disabled}
-            className="mt-3 h-12 rounded-full border-white/15 bg-white/10 px-5 text-fluid-label font-black uppercase tracking-widest text-white/80 active:scale-95 active:bg-white/20"
+            className="mt-3 w-full max-w-xs min-h-[44px] btn-mobile-secondary rounded-full border-white/15 bg-white/10 text-fluid-label font-black uppercase tracking-widest text-white/80 active:scale-95 active:bg-white/20"
           >
             <RotateCcw className="h-4 w-4" />
             {repeatAction!.label}
