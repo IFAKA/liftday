@@ -9,7 +9,7 @@ import { TopBar } from './TopBar';
 import { getBodyTrendSummary, getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { loadDailyLogs } from '@/lib/storage';
-import { WatchBackButton, WatchDetailsPanel, WatchListItem, WatchMetricCell, WatchMetricGrid, WatchSignalPanel } from './WatchSurface';
+import { WatchBackButton, WatchDetailsPanel, WatchListItem, WatchMetricCell, WatchMetricGrid, WatchScreen, WatchSignalPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -43,18 +43,19 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
   );
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
-      <TopBar
-        leftAction={<WatchBackButton onClick={onBack} fallbackHref="/" />}
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Progress</span>}
-      />
-
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton onClick={onBack} fallbackHref="/" />}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Progress</span>}
+        />
+      )}
+      bodyClassName={totalSessions === 0 ? 'flex flex-col items-center justify-center px-4 text-center' : 'px-3 pt-1 flex flex-col gap-3'}
+    >
       {totalSessions === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
-          <p className="text-white/40 text-fluid-ui uppercase tracking-widest font-bold">No sessions yet.</p>
-        </div>
+        <p className="text-white/40 text-fluid-ui uppercase tracking-widest font-bold">No sessions yet.</p>
       ) : (
-        <div className="flex-1 overflow-y-auto px-3 pb-8 no-scrollbar mt-1 flex flex-col gap-3">
+        <>
           <ProgressSummary
             signal={progress.signal}
             diagnosis={progress.diagnosis}
@@ -75,9 +76,9 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 
             <BodyTrendRow trend={progress.bodyTrend} />
           </div>
-        </div>
+        </>
       )}
-    </div>
+    </WatchScreen>
   );
 }
 

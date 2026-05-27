@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
-import { WatchBackButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchSignalPanel } from '@/components/WatchSurface';
+import { WatchBackButton, WatchMetricCell, WatchMetricGrid, WatchPanel, WatchScreen, WatchSignalPanel } from '@/components/WatchSurface';
 import {
   formatBodyChange,
   formatBodyMeasurement,
@@ -65,46 +65,50 @@ export function BodyMeasurementDetailScreen() {
 
   if (!definition || !model) {
     return (
-      <div className="flex h-full flex-col overflow-hidden bg-black pb-safe">
-        <TopBar
-          leftAction={<WatchBackButton fallbackHref="/history/body" />}
-          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Not Found</span>}
-        />
-        <div className="mt-2 flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-8 no-scrollbar">
-          <WatchSignalPanel
-            label="Body"
-            title="Not Found"
-            summary="That measurement is not tracked."
-            active
+      <WatchScreen
+        top={(
+          <TopBar
+            leftAction={<WatchBackButton fallbackHref="/history/body" />}
+            center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Not Found</span>}
           />
-          <Button
-            type="button"
-            onClick={() => router.push('/history/body')}
-            className="min-h-12 w-full rounded-xl bg-white text-fluid-label font-mono font-black uppercase text-black hover:bg-white/90"
-          >
-            Back
-          </Button>
-        </div>
-      </div>
+        )}
+        bodyClassName="pt-2 flex flex-col gap-3"
+      >
+        <WatchSignalPanel
+          label="Body"
+          title="Not Found"
+          summary="That measurement is not tracked."
+          active
+        />
+        <Button
+          type="button"
+          onClick={() => router.push('/history/body')}
+          className="min-h-12 w-full rounded-xl bg-white text-fluid-label font-mono font-black uppercase text-black hover:bg-white/90"
+        >
+          Back
+        </Button>
+      </WatchScreen>
     );
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-black pb-safe">
-      <TopBar
-        leftAction={<WatchBackButton fallbackHref="/history/body" />}
-        center={<span className="max-w-48 truncate text-fluid-ui font-black uppercase tracking-tight text-white">{definition.label}</span>}
-      />
-
-      <div className="mt-2 flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-8 no-scrollbar">
-        <WatchSignalPanel
-          label="Weekly"
-          title={`${definition.label} progress`}
-          summary={model.weekly.length > 0 ? `${model.weekly.length} weekly ${model.weekly.length === 1 ? 'point' : 'points'} from logged values.` : 'No weekly logs yet.'}
-          metric={formatBodyMeasurement(model.latestValue, definition.unit)}
-          metricLabel="Latest"
-          active
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton fallbackHref="/history/body" />}
+          center={<span className="max-w-48 truncate text-fluid-ui font-black uppercase tracking-tight text-white">{definition.label}</span>}
         />
+      )}
+      bodyClassName="pt-2 flex flex-col gap-3"
+    >
+      <WatchSignalPanel
+        label="Weekly"
+        title={`${definition.label} progress`}
+        summary={model.weekly.length > 0 ? `${model.weekly.length} weekly ${model.weekly.length === 1 ? 'point' : 'points'} from logged values.` : 'No weekly logs yet.'}
+        metric={formatBodyMeasurement(model.latestValue, definition.unit)}
+        metricLabel="Latest"
+        active
+      />
 
         <WatchPanel subtle className="py-3">
           <WatchMetricGrid columns={3}>
@@ -135,16 +139,15 @@ export function BodyMeasurementDetailScreen() {
           )}
         </WatchPanel>
 
-        <WatchPanel subtle className="py-3">
-          <p className="mb-3 text-fluid-label font-mono font-black uppercase text-white/35">History</p>
-          <div className="flex flex-col gap-2">
-            {model.history.slice().reverse().map((entry) => (
-              <HistoryMeasurementRow key={`${entry.dateKey}-${entry.source}`} entry={entry} unit={definition.unit} />
-            ))}
-          </div>
-        </WatchPanel>
-      </div>
-    </div>
+      <WatchPanel subtle className="py-3">
+        <p className="mb-3 text-fluid-label font-mono font-black uppercase text-white/35">History</p>
+        <div className="flex flex-col gap-2">
+          {model.history.slice().reverse().map((entry) => (
+            <HistoryMeasurementRow key={`${entry.dateKey}-${entry.source}`} entry={entry} unit={definition.unit} />
+          ))}
+        </div>
+      </WatchPanel>
+    </WatchScreen>
   );
 }
 

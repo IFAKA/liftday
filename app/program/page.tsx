@@ -13,6 +13,7 @@ import {
   WatchListItem,
   WatchMetricCell,
   WatchMetricGrid,
+  WatchScreen,
   WatchSection,
   WatchSignalPanel,
 } from '@/components/WatchSurface';
@@ -35,32 +36,33 @@ export default function ProgramPage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden">
-      <TopBar
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program</span>}
-        leftAction={<WatchBackButton href="/" />}
-      />
+    <WatchScreen
+      top={(
+        <TopBar
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Program</span>}
+          leftAction={<WatchBackButton href="/" />}
+        />
+      )}
+      bodyClassName="px-3 select-text flex flex-col gap-3"
+    >
+      {adaptation && (
+        <ProgramGuidancePanel adaptation={adaptation} routineDecision={routineDecision} />
+      )}
 
-      <div className="flex-1 overflow-y-auto px-3 pb-8 pt-1 no-scrollbar select-text flex flex-col gap-3">
-        {adaptation && (
-          <ProgramGuidancePanel adaptation={adaptation} routineDecision={routineDecision} />
-        )}
-
-        <WatchSection title="Plan">
-          <div className="flex flex-col gap-2">
-            {routine && (
-              <WatchListItem
-                href="/program/detail"
-                icon={Dumbbell}
-                title="Routine"
-                subtitle={routine.name}
-                className="py-3"
-              />
-            )}
-          </div>
-        </WatchSection>
-      </div>
-    </div>
+      <WatchSection title="Plan">
+        <div className="flex flex-col gap-2">
+          {routine && (
+            <WatchListItem
+              href="/program/detail"
+              icon={Dumbbell}
+              title="Routine"
+              subtitle={routine.name}
+              className="py-3"
+            />
+          )}
+        </div>
+      </WatchSection>
+    </WatchScreen>
   );
 }
 

@@ -8,6 +8,7 @@ import { PrepTimer } from './PrepTimer';
 import { EXERCISES } from '@/lib/constants';
 import { STRETCH_DURATION_SECONDS } from '@/lib/constants';
 import { WorkoutData, SetEntry, setEntryReps } from '@/lib/types';
+import { WatchScreen } from './WatchSurface';
 
 type SessionCompleteProps =
   | {
@@ -65,8 +66,19 @@ export function SessionComplete(props: SessionCompleteProps) {
     : 0;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full h-full bg-black px-safe pt-safe pb-safe overflow-hidden relative">
-      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 py-8">
+    <WatchScreen
+      scrollable={false}
+      bodyClassName="flex flex-col items-center justify-center py-8"
+      footer={(
+        <Button
+          onClick={props.onDone}
+          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
+        >
+          DONE
+        </Button>
+      )}
+      footerClassName="mb-4 z-10"
+    >
         <CheckCircle2
           className="w-24 h-24 sm:w-28 sm:h-28 text-green-500 mb-4"
           style={{ animation: 'bounce-in 240ms var(--ease-out-ui) backwards' }}
@@ -88,16 +100,6 @@ export function SessionComplete(props: SessionCompleteProps) {
             ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
           </Badge>
         )}
-      </div>
-
-      <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10 flex flex-col gap-3">
-        <Button
-          onClick={props.onDone}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
-        >
-          DONE
-        </Button>
-      </div>
-    </div>
+    </WatchScreen>
   );
 }

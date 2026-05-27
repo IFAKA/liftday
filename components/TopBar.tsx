@@ -12,21 +12,21 @@ interface TopBarProps {
 
 export function TopBar({ leftAction, center, rightAction, className }: TopBarProps) {
   return (
-    <div className={cn(
-      "w-full h-14 sm:h-16 md:h-14 shrink-0 flex items-center justify-between px-3 sm:px-4 pt-safe relative z-50",
+    <header className={cn(
+      'grid h-14 w-full shrink-0 grid-cols-[1fr_minmax(0,4fr)_1fr] items-center px-3 pt-safe sm:h-16 sm:px-4 md:h-14 relative z-50',
       className
     )}>
-      <div className="flex-1 flex justify-start scale-110">
+      <div className="flex justify-start scale-110">
         {leftAction}
       </div>
-      
-      <div className="flex-[4] flex flex-col items-center justify-center min-w-0 text-fluid-ui font-black uppercase text-white">
+
+      <div className="min-w-0 justify-self-center text-center text-fluid-ui font-black uppercase text-white">
         {center}
       </div>
 
-      <div className="flex-1 flex justify-end scale-110">
+      <div className="flex justify-end scale-110">
         {rightAction}
       </div>
-    </div>
+    </header>
   );
 }

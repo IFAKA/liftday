@@ -1,7 +1,6 @@
 'use client';
 
 import type { ComponentProps, ReactNode } from 'react';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface WatchPanelProps extends ComponentProps<'div'> {
@@ -12,7 +11,7 @@ interface WatchPanelProps extends ComponentProps<'div'> {
 
 export function WatchPanel({ children, className, active = false, subtle = false, ...props }: WatchPanelProps) {
   return (
-    <Card
+    <div
       className={cn(
         'w-full gap-0 rounded-xl border px-4 py-4 shadow-none',
         active
@@ -25,7 +24,7 @@ export function WatchPanel({ children, className, active = false, subtle = false
       {...props}
     >
       {children}
-    </Card>
+    </div>
   );
 }
 

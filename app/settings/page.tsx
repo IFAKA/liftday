@@ -6,7 +6,7 @@ import { Bug } from 'lucide-react';
 import { loadUserProfile } from '@/lib/storage';
 import { getRoutine } from '@/lib/routines';
 import { TopBar } from '@/components/TopBar';
-import { WatchBackButton, WatchListItem, WatchSwitchItem } from '@/components/WatchSurface';
+import { WatchBackButton, WatchListItem, WatchScreen, WatchSwitchItem } from '@/components/WatchSurface';
 import { isDebugTraceEnabled, setDebugTraceEnabled } from '@/lib/debug-trace';
 
 export default function SettingsPage() {
@@ -30,41 +30,42 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden">
-      <TopBar
-        leftAction={<WatchBackButton fallbackHref="/" />}
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Options</span>}
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton fallbackHref="/" />}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Options</span>}
+        />
+      )}
+      bodyClassName="pt-2 flex flex-col gap-2"
+    >
+      <WatchListItem
+        onClick={() => router.push('/settings/routine')}
+        label="Routine"
+        title={routineName}
       />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-2">
-        <WatchListItem
-          onClick={() => router.push('/settings/routine')}
-          label="Routine"
-          title={routineName}
-        />
+      <WatchListItem
+        onClick={() => router.push('/history/body')}
+        title="Body"
+        subtitle="Weight, measurements"
+      />
 
-        <WatchListItem
-          onClick={() => router.push('/history/body')}
-          title="Body"
-          subtitle="Weight, measurements"
-        />
+      <WatchListItem
+        onClick={() => router.push('/sync')}
+        label="Backup"
+        title="Sync & export"
+      />
 
-        <WatchListItem
-          onClick={() => router.push('/sync')}
-          label="Backup"
-          title="Sync & export"
-        />
-
-        <WatchSwitchItem
-          id="debug-trace-mode"
-          icon={Bug}
-          checked={debugEnabled}
-          onCheckedChange={setDebugMode}
-          label="Debug"
-          title="Trace mode"
-          subtitle="Show a small copy button for user-flow traces."
-        />
-      </div>
-    </div>
+      <WatchSwitchItem
+        id="debug-trace-mode"
+        icon={Bug}
+        checked={debugEnabled}
+        onCheckedChange={setDebugMode}
+        label="Debug"
+        title="Trace mode"
+        subtitle="Show a small copy button for user-flow traces."
+      />
+    </WatchScreen>
   );
 }

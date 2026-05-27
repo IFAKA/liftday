@@ -20,6 +20,7 @@ import {
   WatchAlertPanel,
   WatchDetailsPanel,
   WatchPanel,
+  WatchScreen,
   WatchSegmentedControl,
 } from '@/components/WatchSurface';
 import { StatusPill, SyncMetricGrid } from '@/components/sync/SyncMetrics';
@@ -50,35 +51,35 @@ export default function SyncPage() {
   const [mode, setMode] = useState<SyncMode>(() => pairToken ? 'phone' : getInitialSyncMode());
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-black text-white">
-      <TopBar
-        leftAction={<WatchBackButton fallbackHref="/settings" />}
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight">Sync</span>}
-      />
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton fallbackHref="/settings" />}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight">Sync</span>}
+        />
+      )}
+    >
+      <section className="px-1 pb-4 text-center">
+        <p className="text-fluid-ui font-black leading-none tracking-tight text-white">
+          {mode === 'laptop' ? 'Receive from phone' : 'Send to laptop'}
+        </p>
+        <p className="mt-2 text-fluid-label leading-snug text-white/40">
+          {mode === 'laptop' ? 'Scan with the phone.' : 'Scan the laptop QR.'}
+        </p>
+      </section>
 
-      <main className="flex-1 overflow-y-auto px-4 pb-8 pt-1 no-scrollbar">
-        <section className="px-1 pb-4 text-center">
-          <p className="text-fluid-ui font-black leading-none tracking-tight text-white">
-            {mode === 'laptop' ? 'Receive from phone' : 'Send to laptop'}
-          </p>
-          <p className="mt-2 text-fluid-label leading-snug text-white/40">
-            {mode === 'laptop' ? 'Scan with the phone.' : 'Scan the laptop QR.'}
-          </p>
-        </section>
+      {!pairToken && (
+        <WatchDetailsPanel summary="Direction" className="mb-4">
+          <SyncModeSelector mode={mode} onModeChange={setMode} />
+        </WatchDetailsPanel>
+      )}
 
-        {!pairToken && (
-          <WatchDetailsPanel summary="Direction" className="mb-4">
-            <SyncModeSelector mode={mode} onModeChange={setMode} />
-          </WatchDetailsPanel>
-        )}
-
-        {mode === 'laptop' ? (
-          <LaptopSyncPanel />
-        ) : (
-          <PhoneSyncPanel pairToken={pairToken} />
-        )}
-      </main>
-    </div>
+      {mode === 'laptop' ? (
+        <LaptopSyncPanel />
+      ) : (
+        <PhoneSyncPanel pairToken={pairToken} />
+      )}
+    </WatchScreen>
   );
 }
 

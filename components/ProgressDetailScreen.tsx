@@ -11,6 +11,7 @@ import {
   WatchBackButton,
   WatchCopyButton,
   WatchPanel,
+  WatchScreen,
   WatchSignalPanel,
 } from './WatchSurface';
 
@@ -41,18 +42,19 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
-      <TopBar
-        leftAction={<WatchBackButton fallbackHref="/history" />}
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Progress Detail</span>}
-      />
-
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-3">
-        <ProgressPacePanel frontier={progress.frontier} />
-        <AdaptiveProgressPanel adaptation={progress.adaptation} diagnosis={progress.diagnosis} />
-        <WatchCopyButton copied={copied} onClick={handleCopyProgress} label="Copy Progress" />
-      </div>
-    </div>
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton fallbackHref="/history" />}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Progress Detail</span>}
+        />
+      )}
+      bodyClassName="pt-2 flex flex-col gap-3"
+    >
+      <ProgressPacePanel frontier={progress.frontier} />
+      <AdaptiveProgressPanel adaptation={progress.adaptation} diagnosis={progress.diagnosis} />
+      <WatchCopyButton copied={copied} onClick={handleCopyProgress} label="Copy Progress" />
+    </WatchScreen>
   );
 }
 

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Exercise, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
 import { TopBar } from './TopBar';
-import { WatchBackButton, WatchListItem } from './WatchSurface';
+import { WatchBackButton, WatchListItem, WatchScreen } from './WatchSurface';
 
 interface RoutineScreenProps {
   exercises: Exercise[];
@@ -21,8 +21,8 @@ interface RoutineScreenProps {
 export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedReps, hideTopBar, emptyMessage }: RoutineScreenProps) {
   const router = useRouter();
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden relative pb-safe">
-      {!hideTopBar && (
+    <WatchScreen
+      top={!hideTopBar && (
         <TopBar
           leftAction={<WatchBackButton />}
           center={
@@ -37,48 +37,47 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
           }
         />
       )}
+      bodyClassName="pt-2"
+    >
+      {hideTopBar && (
+        <header className="flex flex-col items-start mb-4">
+          <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', titleColor ?? 'text-white')}>
+            {title}
+          </span>
+          {subtitle && (
+            <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{subtitle}</span>
+          )}
+        </header>
+      )}
+      {exercises.length === 0 ? (
+        <div className="flex min-h-32 items-center justify-center px-4 text-center">
+          <p className="text-fluid-label font-mono uppercase text-white/35">
+            {emptyMessage ?? 'No exercises logged.'}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {exercises.map((ex, i) => {
+            const reps = loggedReps?.[ex.key];
+            const setSummary = reps && reps.length > 0
+              ? reps.map((e) => {
+                const w = setEntryWeight(e);
+                return w !== null ? `${w}×${setEntryReps(e)}` : setEntryReps(e);
+              }).join(' / ')
+              : undefined;
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2">
-        {hideTopBar && (
-          <div className="flex flex-col items-start mb-4">
-            <span className={cn('text-fluid-ui font-black uppercase tracking-tight leading-none', titleColor ?? 'text-white')}>
-              {title}
-            </span>
-            {subtitle && (
-              <span className="text-fluid-label text-white/40 font-mono tracking-widest mt-0.5">{subtitle}</span>
-            )}
-          </div>
-        )}
-        {exercises.length === 0 ? (
-          <div className="flex min-h-32 items-center justify-center px-4 text-center">
-            <p className="text-fluid-label font-mono uppercase text-white/35">
-              {emptyMessage ?? 'No exercises logged.'}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {exercises.map((ex, i) => {
-              const reps = loggedReps?.[ex.key];
-              const setSummary = reps && reps.length > 0
-                ? reps.map((e) => {
-                  const w = setEntryWeight(e);
-                  return w !== null ? `${w}×${setEntryReps(e)}` : setEntryReps(e);
-                }).join(' / ')
-                : undefined;
-
-              return (
-                <WatchListItem
-                  key={ex.key}
-                  onClick={() => router.push(`/exercises/${ex.key}`)}
-                  label={`${i + 1}`}
-                  title={ex.name}
-                  subtitle={setSummary}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+            return (
+              <WatchListItem
+                key={ex.key}
+                onClick={() => router.push(`/exercises/${ex.key}`)}
+                label={`${i + 1}`}
+                title={ex.name}
+                subtitle={setSummary}
+              />
+            );
+          })}
+        </div>
+      )}
+    </WatchScreen>
   );
 }

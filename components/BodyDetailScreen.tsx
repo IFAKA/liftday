@@ -23,6 +23,7 @@ import {
   WatchMetricGrid,
   WatchPanel,
   WatchProgressRow,
+  WatchScreen,
   WatchSignalPanel,
   WatchTrendChart,
 } from './WatchSurface';
@@ -165,24 +166,24 @@ export function BodyDetailScreen() {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-black pb-safe">
-      <TopBar
-        leftAction={
-          <WatchBackButton fallbackHref="/history" />
-        }
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Body</span>}
-      />
-
-      <div className="mt-2 flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-8 no-scrollbar">
-        <WatchSignalPanel
-          label="Measure"
-          title="Body progress"
-          summary={body.progressSummary}
-          metric={body.progressMetric}
-          metricLabel="Changed"
-          tone="text-white/45"
-          active
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton fallbackHref="/history" />}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Body</span>}
         />
+      )}
+      bodyClassName="pt-2 flex flex-col gap-3"
+    >
+      <WatchSignalPanel
+        label="Measure"
+        title="Body progress"
+        summary={body.progressSummary}
+        metric={body.progressMetric}
+        metricLabel="Changed"
+        tone="text-white/45"
+        active
+      />
 
         <WatchPanel subtle className="py-3">
           <div className="mb-3 flex items-center justify-between gap-3">
@@ -260,13 +261,12 @@ export function BodyDetailScreen() {
           </div>
         </WatchPanel>
 
-        <div className="flex flex-col gap-2">
-          <WatchListItem icon={Utensils} title="Nutrition" subtitle={body.nutrition} trailing={null} subtle className="py-3" />
-          <WatchListItem icon={Scale} title="Profile" subtitle={body.profileLine} trailing={null} subtle className="py-3" />
-          <WatchListItem icon={Ruler} title="Context" subtitle={body.contextLine} trailing={null} subtle className="py-3" />
-        </div>
+      <div className="flex flex-col gap-2">
+        <WatchListItem icon={Utensils} title="Nutrition" subtitle={body.nutrition} trailing={null} subtle className="py-3" />
+        <WatchListItem icon={Scale} title="Profile" subtitle={body.profileLine} trailing={null} subtle className="py-3" />
+        <WatchListItem icon={Ruler} title="Context" subtitle={body.contextLine} trailing={null} subtle className="py-3" />
       </div>
-    </div>
+    </WatchScreen>
   );
 }
 

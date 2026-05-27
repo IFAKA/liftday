@@ -82,7 +82,7 @@ export function CountdownTimerScreen({
         center={<span className="text-fluid-label font-black uppercase tracking-[0.2em] text-white/80">{title}</span>}
       />
 
-      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4">
+      <main className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4">
         <div
           className="relative flex items-center justify-center"
           style={{ width: 'min(75vw, 45dvh)', height: 'min(75vw, 45dvh)' }}
@@ -139,11 +139,11 @@ export function CountdownTimerScreen({
             {repeatAction!.label}
           </Button>
         )}
-      </div>
+      </main>
 
       {footerContext}
 
-      <div className="z-20 mb-4 flex w-full shrink-0 flex-col gap-4 px-4 pb-safe">
+      <footer className="z-20 mb-4 flex w-full shrink-0 flex-col gap-4 px-4 pb-safe">
         <Button
           onClick={primaryAction.onClick}
           disabled={primaryAction.disabled}
@@ -163,7 +163,7 @@ export function CountdownTimerScreen({
             {action.label}
           </Button>
         ))}
-      </div>
+      </footer>
     </motion.div>
   );
 }

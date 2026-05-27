@@ -13,16 +13,34 @@ interface WatchScreenProps {
   footer?: ReactNode;
   className?: string;
   bodyClassName?: string;
+  footerClassName?: string;
+  scrollable?: boolean;
 }
 
-export function WatchScreen({ top, children, footer, className, bodyClassName }: WatchScreenProps) {
+export function WatchScreen({
+  top,
+  children,
+  footer,
+  className,
+  bodyClassName,
+  footerClassName,
+  scrollable = true,
+}: WatchScreenProps) {
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden bg-black text-white', className)}>
+    <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-black text-white', className)}>
       {top}
-      <main className={cn('min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-1 no-scrollbar', bodyClassName)}>
+      <main className={cn(
+        'min-h-0 flex-1 px-4 pt-1 no-scrollbar',
+        scrollable ? 'overflow-y-auto pb-8' : 'overflow-hidden',
+        bodyClassName
+      )}>
         {children}
       </main>
-      {footer}
+      {footer && (
+        <footer className={cn('w-full shrink-0 px-4 pb-safe', footerClassName)}>
+          {footer}
+        </footer>
+      )}
     </div>
   );
 }

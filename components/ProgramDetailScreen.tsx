@@ -15,6 +15,7 @@ import {
   WatchBackButton,
   WatchCopyButton,
   WatchPanel,
+  WatchScreen,
   WatchSection,
 } from './WatchSurface';
 import { formatWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
@@ -44,22 +45,23 @@ export function ProgramDetailScreen() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden">
-      <TopBar
-        leftAction={<WatchBackButton fallbackHref="/program" />}
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Routine</span>}
-      />
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton fallbackHref="/program" />}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Routine</span>}
+        />
+      )}
+      bodyClassName="pt-2 select-text flex flex-col gap-5"
+    >
+      {routine && (
+        <WatchSection title="Exercises">
+          <RoutineSlots routine={routine} profile={profile} fallbackSets={setsPerExercise} />
+        </WatchSection>
+      )}
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 no-scrollbar select-text flex flex-col gap-5">
-        {routine && (
-          <WatchSection title="Exercises">
-            <RoutineSlots routine={routine} profile={profile} fallbackSets={setsPerExercise} />
-          </WatchSection>
-        )}
-
-        <WatchCopyButton copied={copied} onClick={handleCopyRoutine} label="Copy Routine" />
-      </div>
-    </div>
+      <WatchCopyButton copied={copied} onClick={handleCopyRoutine} label="Copy Routine" />
+    </WatchScreen>
   );
 }
 

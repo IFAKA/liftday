@@ -6,7 +6,7 @@ import { loadUserProfile, setActiveRoutine } from '@/lib/storage';
 import { ROUTINES } from '@/lib/routines';
 import { TopBar } from '@/components/TopBar';
 import { Dumbbell, PersonStanding } from 'lucide-react';
-import { WatchBackButton, WatchListItem } from '@/components/WatchSurface';
+import { WatchBackButton, WatchListItem, WatchScreen } from '@/components/WatchSurface';
 
 const ICONS = {
   dumbbell: Dumbbell,
@@ -27,40 +27,41 @@ export default function RoutineSettingPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden">
-      <TopBar
-        leftAction={<WatchBackButton />}
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Routine</span>}
+    <WatchScreen
+      top={(
+        <TopBar
+          leftAction={<WatchBackButton />}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Routine</span>}
+        />
+      )}
+      bodyClassName="pt-2 flex flex-col gap-3"
+    >
+      <WatchListItem
+        href="/program/detail"
+        label="Active plan"
+        title="View routine"
+        subtitle="Exercises, set counts, weekly summary, copy"
       />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 no-scrollbar mt-2 flex flex-col gap-3">
-        <WatchListItem
-          href="/program/detail"
-          label="Active plan"
-          title="View routine"
-          subtitle="Exercises, set counts, weekly summary, copy"
-        />
+      {ROUTINES.map(({ id, name, description, icon }) => {
+        const isActive = activeRoutineId === id;
+        const Icon = ICONS[icon];
+        return (
+          <WatchListItem
+            key={id}
+            onClick={() => handleSelect(id)}
+            icon={Icon}
+            title={name}
+            subtitle={description}
+            active={isActive}
+            trailing={isActive ? <div className="h-2 w-2 shrink-0 rounded-full bg-white" /> : undefined}
+          />
+        );
+      })}
 
-        {ROUTINES.map(({ id, name, description, icon }) => {
-          const isActive = activeRoutineId === id;
-          const Icon = ICONS[icon];
-          return (
-            <WatchListItem
-              key={id}
-              onClick={() => handleSelect(id)}
-              icon={Icon}
-              title={name}
-              subtitle={description}
-              active={isActive}
-              trailing={isActive ? <div className="h-2 w-2 shrink-0 rounded-full bg-white" /> : undefined}
-            />
-          );
-        })}
-
-        <p className="text-fluid-label text-white/20 font-mono mt-4 leading-relaxed px-1">
-          Switching routines preserves all progress. Tiers are tracked independently per routine.
-        </p>
-      </div>
-    </div>
+      <p className="text-fluid-label text-white/20 font-mono mt-4 leading-relaxed px-1">
+        Switching routines preserves all progress. Tiers are tracked independently per routine.
+      </p>
+    </WatchScreen>
   );
 }

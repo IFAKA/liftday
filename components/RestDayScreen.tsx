@@ -7,7 +7,7 @@ import { MobilityFlow } from './MobilityFlow';
 import { MobilityErrorBoundary } from './MobilityErrorBoundary';
 import { SessionComplete } from './SessionComplete';
 import { DailyLog, MobilityExercise } from '@/lib/types';
-import { WatchListItem, WatchPrimaryAction } from './WatchSurface';
+import { WatchListItem, WatchPrimaryAction, WatchScreen } from './WatchSurface';
 import { loadDailyLogs } from '@/lib/storage';
 import { RestDayActionRow, WaistMeasurementPanel } from './rest-day/RestDayPanels';
 
@@ -78,8 +78,73 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
   }
 
   return (
-    <div className="flex h-full flex-col items-center overflow-hidden bg-black px-safe pt-safe pb-safe">
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-end w-full px-4 py-3">
+    <WatchScreen
+      scrollable={false}
+      bodyClassName="flex flex-col items-center justify-end pt-safe py-3"
+      footer={(
+        <>
+          <nav aria-label="Main sections" className="flex flex-col gap-2">
+            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+              <WatchListItem
+                href="/muscles"
+                icon={Activity}
+                title="Muscles"
+                subtitle="What is working"
+                subtle
+                className="py-3"
+              />
+            </RestDayActionRow>
+            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+              <WatchListItem
+                href="/program"
+                icon={CalendarDays}
+                title="Program"
+                subtitle="Routine"
+                subtle
+                className="py-3"
+              />
+            </RestDayActionRow>
+            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+              <WatchListItem
+                href="/history"
+                icon={ChartBar}
+                title="Progress"
+                subtitle="Changes and attention"
+                subtle
+                className="py-3"
+              />
+            </RestDayActionRow>
+            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+              <WatchListItem
+                href="/settings"
+                icon={Settings}
+                title="Options"
+                subtitle="Routine, body, sync"
+                subtle
+                className="py-3"
+              />
+            </RestDayActionRow>
+          </nav>
+          {isSunday && (
+            <WaistMeasurementPanel
+              date={date}
+              logs={dailyLogs}
+              onLogsChange={setDailyLogs}
+            />
+          )}
+          <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
+            <WatchPrimaryAction
+              onClick={mobility.startMobility}
+              className="shadow-xl"
+            >
+              <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
+              5 MIN MOBILITY
+            </WatchPrimaryAction>
+          </RestDayActionRow>
+        </>
+      )}
+      footerClassName="mb-4 flex flex-col gap-2 sm:mb-6"
+    >
         <Moon className="w-12 h-12 sm:w-16 sm:h-16 text-white/30 mb-3 sm:mb-4" />
         <h1 className="text-fluid-title font-black uppercase text-white leading-none mb-2 text-center">
           REST
@@ -89,66 +154,6 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
             NEXT: {nextTraining}
           </p>
         )}
-      </div>
-
-      <div className="w-full shrink-0 px-4 pb-4 sm:pb-6 flex flex-col">
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
-          <WatchListItem
-            href="/muscles"
-            icon={Activity}
-            title="Muscles"
-            subtitle="What is working"
-            subtle
-            className="py-3"
-          />
-        </RestDayActionRow>
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
-          <WatchListItem
-            href="/program"
-            icon={CalendarDays}
-            title="Program"
-            subtitle="Routine"
-            subtle
-            className="py-3"
-          />
-        </RestDayActionRow>
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
-          <WatchListItem
-            href="/history"
-            icon={ChartBar}
-            title="Progress"
-            subtitle="Changes and attention"
-            subtle
-            className="py-3"
-          />
-        </RestDayActionRow>
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion} className="mb-2">
-          <WatchListItem
-            href="/settings"
-            icon={Settings}
-            title="Options"
-            subtitle="Routine, body, sync"
-            subtle
-            className="py-3"
-          />
-        </RestDayActionRow>
-        {isSunday && (
-          <WaistMeasurementPanel
-            date={date}
-            logs={dailyLogs}
-            onLogsChange={setDailyLogs}
-          />
-        )}
-        <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
-          <WatchPrimaryAction
-            onClick={mobility.startMobility}
-            className="shadow-xl"
-          >
-            <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
-            5 MIN MOBILITY
-          </WatchPrimaryAction>
-        </RestDayActionRow>
-      </div>
-    </div>
+    </WatchScreen>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ViewSide } from '@/components/MuscleBodyChart';
 import { TopBar } from '@/components/TopBar';
-import { WatchBackButton } from '@/components/WatchSurface';
+import { WatchBackButton, WatchScreen } from '@/components/WatchSurface';
 import {
   getLoggedEffectiveVolume,
   getLoggedWorkoutEffectiveVolume,
@@ -93,44 +93,43 @@ export default function MusclesPage() {
   }), [contextLabel, entries, lens, totalSets]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-black">
-      <TopBar
-        center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Muscles</span>}
-        leftAction={<WatchBackButton href="/" />}
+    <WatchScreen
+      top={(
+        <TopBar
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Muscles</span>}
+          leftAction={<WatchBackButton href="/" />}
+        />
+      )}
+      bodyClassName="px-3 select-text flex flex-col gap-3"
+    >
+      <MuscleLensSummaryPanel
+        lens={lens}
+        contextLabel={contextLabel}
+        totalSets={totalSets}
+        totalTarget={totalTarget}
+        copied={copied}
+        onLensChange={setLens}
+        onCopyReport={() => {
+          copyText(reportText).then(() => {
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1800);
+          });
+        }}
       />
 
-      <div className="flex-1 overflow-y-auto px-3 pb-8 pt-1 no-scrollbar select-text">
-        <div className="flex flex-col gap-3">
-          <MuscleLensSummaryPanel
-            lens={lens}
-            contextLabel={contextLabel}
-            totalSets={totalSets}
-            totalTarget={totalTarget}
-            copied={copied}
-            onLensChange={setLens}
-            onCopyReport={() => {
-              copyText(reportText).then(() => {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 1800);
-              });
-            }}
-          />
+      <MuscleMapPanel
+        view={view}
+        bodyState={bodyState}
+        onViewChange={setView}
+        onSelectedMuscleChange={setSelectedMuscle}
+      />
 
-          <MuscleMapPanel
-            view={view}
-            bodyState={bodyState}
-            onViewChange={setView}
-            onSelectedMuscleChange={setSelectedMuscle}
-          />
+      <MuscleVolumeList lens={lens} entries={workedEntries} />
 
-          <MuscleVolumeList lens={lens} entries={workedEntries} />
-
-          {selectedEntry && (
-            <SelectedMusclePanel lens={lens} selectedEntry={selectedEntry} lowCount={lowCount} />
-          )}
-        </div>
-      </div>
-    </div>
+      {selectedEntry && (
+        <SelectedMusclePanel lens={lens} selectedEntry={selectedEntry} lowCount={lowCount} />
+      )}
+    </WatchScreen>
   );
 }
 

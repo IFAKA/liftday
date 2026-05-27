@@ -8,6 +8,7 @@ import {
   WatchMeasurementGrid,
   WatchMeasurementInput,
   WatchPrimaryAction,
+  WatchScreen,
   WatchSecondaryAction,
 } from '@/components/WatchSurface';
 import type { DailyLog } from '@/lib/types';
@@ -94,16 +95,68 @@ export function WeightCheckScreen({
   const previousLabel = lastWeight !== null ? `Last ${formatKg(lastWeight)}` : 'No recent weight';
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-black px-safe pt-safe pb-safe">
-      <TopBar
-        center={
-          <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
-            {formatDisplayDate(date)}
-          </span>
-        }
-      />
+    <WatchScreen
+      scrollable={false}
+      top={(
+        <TopBar
+          center={
+            <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
+              {formatDisplayDate(date)}
+            </span>
+          }
+        />
+      )}
+      bodyClassName="flex flex-col items-center justify-center"
+      footer={(
+        <>
+          <WatchFormPanel
+            hint="kg before warm-up"
+            error={inputError}
+            action={
+              <Button
+                type="button"
+                size="icon"
+                aria-label="Save weight"
+                onClick={saveWeight}
+                className="size-12 rounded-full bg-white text-black active:scale-95"
+              >
+                <Check className="h-5 w-5" />
+              </Button>
+            }
+          >
+            <WatchMeasurementInput
+              label="Bodyweight in kilograms"
+              unit="kg"
+              min={25}
+              max={250}
+              value={weightInput}
+              onChange={(value) => {
+                setWeightInput(value);
+                setInputError(null);
+              }}
+              onEnter={saveWeight}
+              compact
+            />
+          </WatchFormPanel>
 
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4">
+          <div className="grid grid-cols-2 gap-2">
+            <WatchSecondaryAction
+              type="button"
+              onClick={onCancel}
+            >
+              Cancel
+            </WatchSecondaryAction>
+            <WatchSecondaryAction
+              type="button"
+              onClick={skipWeight}
+            >
+              No scale
+            </WatchSecondaryAction>
+          </div>
+        </>
+      )}
+      footerClassName="mb-4 flex flex-col gap-3"
+    >
         <Scale className="mb-5 h-14 w-14 text-white/35" />
         <h1 className="text-fluid-title font-black uppercase leading-none text-white text-center">
           WEIGHT
@@ -111,55 +164,7 @@ export function WeightCheckScreen({
         <p className="mt-3 text-fluid-label font-mono font-black uppercase text-white/45">
           {previousLabel}
         </p>
-      </div>
-
-      <div className="w-full px-4 pb-safe mb-4 shrink-0">
-        <WatchFormPanel
-          hint="kg before warm-up"
-          error={inputError}
-          action={
-            <Button
-              type="button"
-              size="icon"
-              aria-label="Save weight"
-              onClick={saveWeight}
-              className="size-12 rounded-full bg-white text-black active:scale-95"
-            >
-              <Check className="h-5 w-5" />
-            </Button>
-          }
-        >
-          <WatchMeasurementInput
-            label="Bodyweight in kilograms"
-            unit="kg"
-            min={25}
-            max={250}
-            value={weightInput}
-            onChange={(value) => {
-              setWeightInput(value);
-              setInputError(null);
-            }}
-            onEnter={saveWeight}
-            compact
-          />
-        </WatchFormPanel>
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <WatchSecondaryAction
-            type="button"
-            onClick={onCancel}
-          >
-            Cancel
-          </WatchSecondaryAction>
-          <WatchSecondaryAction
-            type="button"
-            onClick={skipWeight}
-          >
-            No scale
-          </WatchSecondaryAction>
-        </div>
-      </div>
-    </div>
+    </WatchScreen>
   );
 }
 
@@ -220,17 +225,37 @@ export function WeeklyMeasurementScreen({
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-black px-safe pt-safe pb-safe">
-      <TopBar
-        center={
-          <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
-            {formatDisplayDate(date)}
-          </span>
-        }
-      />
-
-      <div className="flex min-h-0 flex-1 flex-col px-4">
-        <div className="flex shrink-0 items-center gap-3 py-4">
+    <WatchScreen
+      scrollable={false}
+      top={(
+        <TopBar
+          center={
+            <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
+              {formatDisplayDate(date)}
+            </span>
+          }
+        />
+      )}
+      bodyClassName="flex flex-col"
+      footer={(
+        <div className="grid grid-cols-2 gap-2">
+          <WatchSecondaryAction
+            type="button"
+            onClick={onCancel}
+          >
+            Cancel
+          </WatchSecondaryAction>
+          <WatchPrimaryAction
+            type="button"
+            onClick={saveMeasurements}
+          >
+            Save
+          </WatchPrimaryAction>
+        </div>
+      )}
+      footerClassName="mb-4"
+    >
+        <header className="flex shrink-0 items-center gap-3 py-4">
           <Ruler className="h-10 w-10 shrink-0 text-white/35" />
           <div className="min-w-0">
             <h1 className="text-fluid-ui font-black uppercase leading-none text-white">
@@ -240,7 +265,7 @@ export function WeeklyMeasurementScreen({
               Tape check before gym
             </p>
           </div>
-        </div>
+        </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
           <WatchFormPanel error={inputError} className="py-3">
@@ -259,25 +284,7 @@ export function WeeklyMeasurementScreen({
             </WatchMeasurementGrid>
           </WatchFormPanel>
         </div>
-      </div>
-
-      <div className="w-full px-4 pb-safe mb-4 shrink-0">
-        <div className="grid grid-cols-2 gap-2">
-          <WatchSecondaryAction
-            type="button"
-            onClick={onCancel}
-          >
-            Cancel
-          </WatchSecondaryAction>
-          <WatchPrimaryAction
-            type="button"
-            onClick={saveMeasurements}
-          >
-            Save
-          </WatchPrimaryAction>
-        </div>
-      </div>
-    </div>
+    </WatchScreen>
   );
 }
 

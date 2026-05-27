@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
@@ -63,12 +62,12 @@ export function WatchListItem({
         {subtitle && <p className="mt-1 line-clamp-2 text-fluid-label text-white/40">{subtitle}</p>}
       </div>
       {metric && <div className="shrink-0 text-fluid-label font-mono tabular-nums text-white/40">{metric}</div>}
-      {trailing ?? <ChevronRight className="h-5 w-5 shrink-0 text-white/30" />}
+      {trailing !== undefined ? trailing : <ChevronRight className="h-5 w-5 shrink-0 text-white/30" />}
     </>
   );
 
   const classes = cn(
-    'h-auto w-full justify-start whitespace-normal rounded-xl border px-4 py-4 text-left font-normal transition-[background-color,border-color,box-shadow,color,transform] duration-150 ease-[var(--ease-out-ui)]',
+    'flex h-auto w-full items-center justify-start gap-4 whitespace-normal rounded-xl border px-4 py-4 text-left font-normal outline-none transition-[background-color,border-color,box-shadow,color,transform] duration-150 ease-[var(--ease-out-ui)] focus-visible:ring-3 focus-visible:ring-white/40',
     active
       ? 'border-white/25 bg-white/15 ring-2 ring-white/15'
       : subtle
@@ -79,18 +78,16 @@ export function WatchListItem({
 
   if (href) {
     return (
-      <Button asChild variant="ghost" className={classes}>
-        <Link href={href} className="flex items-center gap-4">
-          {content}
-        </Link>
-      </Button>
+      <Link href={href} className={classes}>
+        {content}
+      </Link>
     );
   }
 
   return (
-    <Button type="button" variant="ghost" onClick={onClick} className={cn(classes, 'flex items-center gap-4')}>
+    <button type="button" onClick={onClick} className={classes}>
       {content}
-    </Button>
+    </button>
   );
 }
 
