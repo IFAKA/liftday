@@ -175,10 +175,10 @@ export const gymRoutine: RoutineConfig = {
       workoutType: 'legs_maintenance',
       fixed: true,
       priority: 'support',
-      selectedExercise: 'romanian_deadlift',
+      selectedExercise: 'cable_pull_through',
       alternatives: ['glute_machine', 'leg_curl_machine'],
-      exercises: ['romanian_deadlift'],
-      prescription: prescription(2, 6, 10, '3 min', 'Hamstring stretch. Low back quiet.', '2 RIR'),
+      exercises: ['cable_pull_through'],
+      prescription: prescription(2, 10, 15, '2 min', 'Hips back, slight knee bend. Stretch glutes and hamstrings, then drive hips forward. Controlled eccentric; do not squat it or hyperextend the lower back.', '1-2 RIR'),
     },
     {
       slotId: 'legs_leg_press',

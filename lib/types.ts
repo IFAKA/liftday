@@ -90,6 +90,7 @@ export type GymLegsExerciseKey =
   | 'leg_press'
   | 'front_squat'
   | 'romanian_deadlift'
+  | 'cable_pull_through'
   | 'barbell_deadlift'
   | 'sumo_deadlift'
   | 'leg_curl_machine'

@@ -74,6 +74,26 @@ test('opens the program screen', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
+test('routine detail uses cable pull-through for the leg-day hinge slot', async ({ page }) => {
+  await page.goto('/program/detail');
+
+  await expect(page.locator('body')).toContainText('LEGS');
+  const bodyText = await page.locator('body').innerText();
+  const legExercises = [
+    'HACK SQUAT',
+    'CABLE PULL-THROUGH',
+    'LEG PRESS',
+    'LEG CURL',
+    'LEG EXTENSION',
+    'STANDING CALF RAISE',
+  ];
+  const indices = legExercises.map((name) => bodyText.indexOf(name));
+
+  expect(indices.every((index) => index >= 0)).toBe(true);
+  expect(indices).toEqual([...indices].sort((a, b) => a - b));
+  expect(bodyText).not.toContain('ROMANIAN DEADLIFT');
+});
+
 test('today is the watch-style hub for app sections', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {

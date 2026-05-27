@@ -138,6 +138,7 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   barbell_squat: ['barbell', 'squat_rack'],
   barbell_deadlift: ['barbell'],
   romanian_deadlift: ['barbell'],
+  cable_pull_through: ['cable_machine'],
   front_squat: ['barbell', 'squat_rack'],
   sumo_deadlift: ['barbell'],
   barbell_curl: ['barbell'],

@@ -143,6 +143,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   front_squat: { quads: 1, glutes: 0.35, upper_back: 0.25 },
   leg_press: { quads: 1, glutes: 0.35 },
   romanian_deadlift: { hamstrings: 1, glutes: 0.6 },
+  cable_pull_through: { glutes: 0.85, hamstrings: 0.65 },
   barbell_deadlift: { hamstrings: 0.85, glutes: 0.65, upper_back: 0.3 },
   sumo_deadlift: { hamstrings: 0.75, glutes: 0.75, quads: 0.25 },
   leg_curl_machine: { hamstrings: 1 },

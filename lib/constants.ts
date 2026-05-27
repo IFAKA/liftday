@@ -651,6 +651,14 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
     workoutType: 'legs',
   },
   {
+    key: 'cable_pull_through',
+    name: 'CABLE PULL-THROUGH',
+    unit: 'weighted',
+    primaryMuscle: 'glutes',
+    instruction: 'Cable set low, rope between legs. Hips back with a slight knee bend, stretch glutes and hamstrings, then drive hips forward. Use a controlled eccentric. Do not turn it into a squat, and do not hyperextend the lower back.',
+    workoutType: 'legs',
+  },
+  {
     key: 'barbell_deadlift',
     name: 'BARBELL DEADLIFT',
     unit: 'weighted',
