@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { QuitConfirmDialog } from './QuitConfirmDialog';
 import { CountdownTimerScreen } from './CountdownTimerScreen';
+import { copyText } from '@/lib/clipboard';
 import { showRestCompleteNotification } from '@/lib/rest-notifications';
+import { cn } from '@/lib/utils';
 
 interface RestTimerProps {
   seconds: number;
@@ -33,7 +36,9 @@ function cancelRestNotification() {
 
 export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName }: RestTimerProps) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [copiedExerciseName, setCopiedExerciseName] = useState<string | null>(null);
   const showQuitConfirmRef = useRef(false);
+  const copiedName = copiedExerciseName === nextExerciseName;
 
   useEffect(() => {
     showQuitConfirmRef.current = showQuitConfirm;
@@ -68,6 +73,17 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
     };
   }, [seconds, isPaused, nextExerciseName]);
 
+  async function handleCopyNextExerciseName() {
+    if (!nextExerciseName) return;
+    await copyText(nextExerciseName);
+    setCopiedExerciseName(nextExerciseName);
+    window.setTimeout(() => {
+      setCopiedExerciseName((currentName) => (
+        currentName === nextExerciseName ? null : currentName
+      ));
+    }, 1400);
+  }
+
   return (
     <>
       <CountdownTimerScreen
@@ -81,7 +97,23 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
         footerContext={nextExerciseName ? (
           <div className="mb-2 flex w-full shrink-0 flex-col items-center gap-1 px-4">
             <span className="font-mono text-fluid-label uppercase tracking-widest text-white/30">Next exercise</span>
-            <span className="text-center text-fluid-ui font-black uppercase tracking-tight text-white/80">{nextExerciseName}</span>
+            <button
+              type="button"
+              onClick={handleCopyNextExerciseName}
+              className="group flex max-w-full flex-col items-center rounded-xl px-3 py-1 text-center active:bg-white/10"
+              aria-label={`Copy ${nextExerciseName}`}
+            >
+              <span className="text-fluid-ui font-black uppercase tracking-tight text-white/80">
+                {nextExerciseName}
+              </span>
+              <span className={cn(
+                'mt-1 inline-flex items-center gap-1.5 text-xs font-mono font-black uppercase tracking-widest',
+                copiedName ? 'text-green-300' : 'text-white/35'
+              )}>
+                {copiedName ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                {copiedName ? 'Copied' : 'Tap name to copy'}
+              </span>
+            </button>
           </div>
         ) : undefined}
       />

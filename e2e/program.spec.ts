@@ -62,6 +62,12 @@ async function logFirstSetAndSkipRest(page: Page, rir: number) {
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
 }
 
+async function logSetAndWaitForRest(page: Page, rir: number) {
+  await page.getByRole('button', { name: `${rir} RIR` }).click();
+  await page.getByRole('button', { name: /log set/i }).click();
+  await expect(page.getByText(/resting/i)).toBeVisible();
+}
+
 test('opens the program screen', async ({ page }) => {
   await page.goto('/program');
 
@@ -407,6 +413,25 @@ test('today start opens warm-up before the first exercise', async ({ page }) => 
   await expect(page.getByText(/ready/i)).toBeVisible();
   await page.getByRole('button', { name: /^start workout$/i }).click();
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
+});
+
+test('rest timer next exercise name copies to clipboard', async ({ page }) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await prepareTodayWorkout(page, null);
+
+  for (let setIndex = 0; setIndex < 4; setIndex += 1) {
+    await logSetAndWaitForRest(page, 2);
+    await page.getByRole('button', { name: /skip rest/i }).click();
+    await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
+  }
+
+  await logSetAndWaitForRest(page, 2);
+  const nextExerciseName = 'INCLINE DUMBBELL PRESS';
+  await expect(page.getByRole('button', { name: `Copy ${nextExerciseName}` })).toBeVisible();
+  await page.getByRole('button', { name: `Copy ${nextExerciseName}` }).click();
+
+  await expect(page.locator('body')).toContainText('Copied');
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(nextExerciseName);
 });
 
 test('warm-up cancel returns to Today without logging the workout', async ({ page }) => {
