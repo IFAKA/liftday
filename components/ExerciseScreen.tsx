@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import type { AdaptiveRecommendation, Exercise, ExerciseKey, SMVExercisePrescription, SetEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { QuitConfirmDialog } from './QuitConfirmDialog';
+import { QuitConfirmScreen } from './QuitConfirmScreen';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { TopBar } from './TopBar';
@@ -272,7 +272,7 @@ export function ExerciseScreen({
         </motion.div>
       </AnimatePresence>
 
-      <QuitConfirmDialog
+      <QuitConfirmScreen
         open={showQuitConfirm}
         onOpenChange={setShowQuitConfirm}
         onConfirm={onQuit}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Check, Copy } from 'lucide-react';
-import { QuitConfirmDialog } from './QuitConfirmDialog';
+import { QuitConfirmScreen } from './QuitConfirmScreen';
 import { CountdownTimerScreen } from './CountdownTimerScreen';
 import { copyText } from '@/lib/clipboard';
 import { showRestCompleteNotification } from '@/lib/rest-notifications';
@@ -117,7 +117,7 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
           </div>
         ) : undefined}
       />
-      <QuitConfirmDialog
+      <QuitConfirmScreen
         open={showQuitConfirm}
         onOpenChange={setShowQuitConfirm}
         onConfirm={onQuit}

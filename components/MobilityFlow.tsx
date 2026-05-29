@@ -5,7 +5,7 @@ import { X, ChevronLeft, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
 import { Progress } from './ui/progress';
-import { QuitConfirmDialog } from './QuitConfirmDialog';
+import { QuitConfirmScreen } from './QuitConfirmScreen';
 import { MobilityExercise } from '@/lib/types';
 import { ExerciseDemo } from './ExerciseDemo';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
@@ -213,7 +213,7 @@ export function MobilityFlow({
         )}
       </AnimatePresence>
 
-      <QuitConfirmDialog
+      <QuitConfirmScreen
         open={showQuitConfirm}
         onOpenChange={setShowQuitConfirm}
         onConfirm={onQuit}
