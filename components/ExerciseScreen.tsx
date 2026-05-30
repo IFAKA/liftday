@@ -185,33 +185,35 @@ export function ExerciseScreen({
             }
           />
 
-          <div className="w-full px-6 pt-4 shrink-0">
+          <div className="w-full px-5 pt-3 shrink-0">
             <ExerciseCopyTitle exerciseName={exercise.name} copied={copiedName} onCopy={handleCopyExerciseName} />
-            {onMachineOccupied && currentSet === 0 && (
-              <MachineOccupiedControl
-                onClick={() => {
-                  if (canDeferMachineOccupied) {
-                    onMachineOccupied();
-                  } else if (swapAlternatives.length > 0 && onSelectAlternative) {
-                    setShowSwapPicker(true);
-                  } else {
-                    onMachineOccupied();
-                  }
-                }}
-              />
-            )}
-            {prescription && (
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-fluid-label font-mono uppercase text-white/40">
-                <span>{prescription.minReps}-{prescription.maxReps} reps</span>
-                <span className="text-white/15">/</span>
-                <span>{currentSet + 1 === setsPerExercise && prescription.finalSetRir ? prescription.finalSetRir : prescription.targetRir}</span>
-                <span className="text-white/15">/</span>
-                <span>{prescription.restLabel}</span>
-              </div>
-            )}
+            <div className="mt-2 flex min-h-8 flex-wrap items-center justify-center gap-2 sm:justify-start">
+              {prescription && (
+                <div className="flex flex-wrap items-center gap-2 text-fluid-label font-mono uppercase text-white/40">
+                  <span>{prescription.minReps}-{prescription.maxReps} reps</span>
+                  <span className="text-white/15">/</span>
+                  <span>{currentSet + 1 === setsPerExercise && prescription.finalSetRir ? prescription.finalSetRir : prescription.targetRir}</span>
+                  <span className="text-white/15">/</span>
+                  <span>{prescription.restLabel}</span>
+                </div>
+              )}
+              {onMachineOccupied && currentSet === 0 && (
+                <MachineOccupiedControl
+                  onClick={() => {
+                    if (canDeferMachineOccupied) {
+                      onMachineOccupied();
+                    } else if (swapAlternatives.length > 0 && onSelectAlternative) {
+                      setShowSwapPicker(true);
+                    } else {
+                      onMachineOccupied();
+                    }
+                  }}
+                />
+              )}
+            </div>
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
+          <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0 px-1 pt-1">
             {isSeconds ? (
               <NumberInput
                 key={`${exercise.key}-${currentSet}-${defaultVal}`}
@@ -222,40 +224,44 @@ export function ExerciseScreen({
               />
             ) : (
               <div className="flex-1 flex flex-col w-full min-h-0">
-                <NumberInput
-                  key={`${exercise.key}-${currentSet}-weight-${defaultWeight}`}
-                  defaultValue={defaultWeight}
-                  min={0}
-                  max={500}
-                  step={currentWeightStep}
-                  label="KG"
-                  compact
-                  onChange={setWeight}
-                />
-                <NumberInput
-                  key={`${exercise.key}-${currentSet}-reps-${defaultVal}`}
-                  defaultValue={defaultVal}
-                  min={1}
-                  max={40}
-                  label="REPS"
-                  compact
-                  onChange={setVal}
-                />
-                <CoachingPanel
-                  referenceLabel={referenceLabel}
-                  status={coaching.status}
-                  statusClassName={coachingToneClass}
-                  reason={coaching.reason}
-                  programContext={coaching.programContext}
-                  warning={coaching.warning}
-                  persistenceError={persistenceError}
-                />
-                <RirPicker value={rir} onChange={setRir} />
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <NumberInput
+                    key={`${exercise.key}-${currentSet}-weight-${defaultWeight}`}
+                    defaultValue={defaultWeight}
+                    min={0}
+                    max={500}
+                    step={currentWeightStep}
+                    label="KG"
+                    compact
+                    onChange={setWeight}
+                  />
+                  <NumberInput
+                    key={`${exercise.key}-${currentSet}-reps-${defaultVal}`}
+                    defaultValue={defaultVal}
+                    min={1}
+                    max={40}
+                    label="REPS"
+                    compact
+                    onChange={setVal}
+                  />
+                </div>
+                <div className="shrink-0 px-3">
+                  <CoachingPanel
+                    referenceLabel={referenceLabel}
+                    status={coaching.status}
+                    statusClassName={coachingToneClass}
+                    reason={coaching.reason}
+                    programContext={coaching.programContext}
+                    warning={coaching.warning}
+                    persistenceError={persistenceError}
+                  />
+                  <RirPicker value={rir} onChange={setRir} />
+                </div>
               </div>
             )}
           </div>
 
-          <div className="w-full px-4 pb-safe mb-4 shrink-0 z-10">
+          <div className="w-full px-4 pb-safe mb-3 shrink-0 z-10">
             <Button
               onClick={() => {
                 if (persistenceError && onRetryComplete) {

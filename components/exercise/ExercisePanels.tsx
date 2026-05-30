@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, Check, ChevronLeft, Copy } from 'lucide-react';
+import { AlertCircle, Check, ChevronLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
@@ -26,13 +26,12 @@ export function ExerciseCopyTitle({
       <span className="text-fluid-exercise font-black uppercase tracking-tighter text-white leading-tight">
         {exerciseName}
       </span>
-      <span className={cn(
-        'mt-1 inline-flex items-center gap-1.5 text-xs font-mono font-black uppercase tracking-widest',
-        copied ? 'text-green-300' : 'text-white/35'
-      )}>
-        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-        {copied ? 'Copied' : 'Tap name to copy'}
-      </span>
+      {copied && (
+        <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-mono font-black uppercase tracking-widest text-green-300">
+          <Check className="size-3.5" />
+          Copied
+        </span>
+      )}
     </button>
   );
 }
@@ -40,8 +39,9 @@ export function ExerciseCopyTitle({
 export function MachineOccupiedControl({ onClick }: { onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 text-xs font-medium text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 active:scale-95 transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out-ui)]"
+      className="flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[11px] font-black uppercase text-white/45 transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out-ui)] hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95"
     >
       <AlertCircle className="size-3.5 shrink-0" />
       Machine occupied
@@ -68,7 +68,7 @@ export function CoachingPanel({
 }) {
   return (
     <>
-      <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+      <div className="mx-auto mb-1.5 flex w-full max-w-xs items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
         <span className="min-w-0 truncate text-xs font-black uppercase text-white/65">
           {referenceLabel}
         </span>
@@ -76,10 +76,10 @@ export function CoachingPanel({
           {status}
         </span>
       </div>
-      <div className="mx-auto -mt-1 mb-2 flex w-full max-w-xs flex-col gap-1 text-center text-xs font-medium leading-snug">
-        <p className="line-clamp-2 text-white/55">{reason}</p>
+      <div className="mx-auto mb-1.5 flex w-full max-w-xs flex-col gap-1 text-center text-xs font-medium leading-snug">
+        <p className="line-clamp-1 text-white/55">{reason}</p>
         {programContext && (
-          <p className="line-clamp-1 font-mono uppercase text-white/35">{programContext}</p>
+          <p className="line-clamp-1 font-mono text-[11px] uppercase text-white/28">{programContext}</p>
         )}
         {warning && (
           <p className="line-clamp-2 text-amber-200/80">{warning}</p>
@@ -96,21 +96,26 @@ export function CoachingPanel({
 
 export function RirPicker({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return (
-    <div className="mx-auto mb-2 flex w-full max-w-xs items-center justify-between gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1">
-      {[0, 1, 2, 3, 4].map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => onChange(option)}
-          className={cn(
-            'flex h-10 flex-1 items-center justify-center rounded-full text-sm font-black tabular-nums transition',
-            value === option ? 'bg-white text-black' : 'text-white/45 active:bg-white/10'
-          )}
-          aria-label={`${option} RIR`}
-        >
-          {option}
-        </button>
-      ))}
+    <div className="mx-auto mb-1.5 flex w-full max-w-xs items-center gap-2">
+      <span className="shrink-0 pl-1 text-[11px] font-mono font-black uppercase tracking-widest text-white/40">
+        RIR
+      </span>
+      <div className="flex min-h-11 flex-1 items-center justify-between gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+        {[0, 1, 2, 3, 4].map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onChange(option)}
+            className={cn(
+              'flex h-9 flex-1 items-center justify-center rounded-full text-sm font-black tabular-nums transition',
+              value === option ? 'bg-white text-black' : 'text-white/45 active:bg-white/10'
+            )}
+            aria-label={`${option} RIR`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
