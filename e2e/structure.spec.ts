@@ -55,3 +55,15 @@ test('mobile footer actions stay inside the viewport', async ({ page }) => {
   await page.goto('/sync');
   await expect(page.locator('summary').filter({ hasText: 'Direction' })).toBeInViewport();
 });
+
+test('today actions remain reachable in a compressed mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 430, height: 560 });
+  await prepareApp(page);
+
+  await page.goto('/');
+
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeInViewport();
+  const optionsLink = page.getByRole('link', { name: /options/i });
+  await optionsLink.scrollIntoViewIfNeeded();
+  await expect(optionsLink).toBeInViewport();
+});

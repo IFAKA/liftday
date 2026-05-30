@@ -51,15 +51,9 @@ export function TodayHub({
           }
         />
       )}
-      bodyClassName="flex flex-col justify-center items-center px-4 sm:px-8"
+      bodyClassName="flex flex-col px-4 pb-4 sm:px-8"
       footer={(
         <>
-          {storageReady && !isDone && nextExerciseName && nextPrescription && (
-            <WorkoutStartPanel exerciseName={nextExerciseName} prescription={nextPrescription} />
-          )}
-
-          <TodayNavList />
-
           {storageReady && !isDone && (
             <>
               {storageIssueMessage && (
@@ -77,13 +71,14 @@ export function TodayHub({
       )}
       footerClassName="mb-4 flex flex-col gap-3"
     >
+      <div className="flex min-h-[min(42dvh,22rem)] shrink-0 flex-col items-center justify-center">
         {isDone ? (
-          <div className="flex flex-col items-center">
+          <>
             <CheckCircle className="w-16 h-16 text-green-500 mb-5" />
             <h1 className="text-fluid-title font-black uppercase text-white leading-none">
               DONE
             </h1>
-          </div>
+          </>
         ) : (
           <>
             <h1 className="text-fluid-title font-black uppercase text-white leading-none text-center">
@@ -97,6 +92,13 @@ export function TodayHub({
             )}
           </>
         )}
+      </div>
+
+      {storageReady && !isDone && nextExerciseName && nextPrescription && (
+        <WorkoutStartPanel exerciseName={nextExerciseName} prescription={nextPrescription} />
+      )}
+
+      <TodayNavList />
     </WatchScreen>
   );
 }
