@@ -51,7 +51,7 @@ export function getFatigueState(input: {
   const normalizedConnective = normalizeRecord(connectiveTissueFatigue, 8);
   const normalizedAxial = roundTwo(clamp01(axialFatigue / 16));
   const logFatigue = latestLog?.fatigue ? (latestLog.fatigue - 1) / 4 : 0;
-  const normalizedSystemic = roundTwo(clamp01(systemicFatigue / 22 + logFatigue * 0.35 + (1 - input.recovery.systemic) * 0.35));
+  const normalizedSystemic = roundTwo(clamp01(systemicFatigue / 34 + logFatigue * 0.35 + (1 - input.recovery.systemic) * 0.35));
   const jointRisk = roundTwo(Math.max(0, ...Object.values(normalizedConnective)));
 
   return {

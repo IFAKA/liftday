@@ -207,7 +207,7 @@ test('settings body row opens the canonical body screen', async ({ page }) => {
   await expect(page).toHaveURL(/\/history\/body$/);
 });
 
-test('program shows one deload command with routine context as support', async ({ page }) => {
+test('program avoids joint-risk-only deload when progression needs reps', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({
@@ -258,11 +258,11 @@ test('program shows one deload command with routine context as support', async (
 
   await page.goto('/program');
 
-  await expect(page.locator('body')).toContainText('Deload today');
-  await expect(page.locator('body')).toContainText('Recent output is down and risk is elevated. Train lighter before pushing again.');
-  await expect(page.locator('body')).toContainText('Same exercises. Reduce load or effort. No PR attempts. No added volume.');
-  await expect(page.locator('body')).toContainText('Keep routine');
-  await expect(page.locator('body')).toContainText('Routine is fine. Make today easier, don\'t redesign the plan.');
+  await expect(page.locator('body')).toContainText('Build Side delts Reps');
+  await expect(page.locator('body')).toContainText('Repeat or reduce load.');
+  await expect(page.locator('body')).toContainText('Load moved ahead of the 12-20 rep target; repeat or reduce load before adding volume.');
+  await expect(page.locator('body')).toContainText('Build baseline');
+  await expect(page.locator('body')).toContainText('Repeat the same slots until two full weeks are logged.');
   await expect(page.locator('body')).toContainText('Program score');
   await expect(page.locator('body')).toContainText('Load change');
   await expect(page.locator('body')).not.toContainText('Do now');

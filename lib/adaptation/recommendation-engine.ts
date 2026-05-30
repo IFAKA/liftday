@@ -53,7 +53,10 @@ function buildRecommendations(input: {
   effectiveVolume: EffectiveVolumeEntry[];
 }): AdaptiveRecommendation[] {
   const primary: AdaptiveRecommendation[] = [];
-  const systemicBlocked = input.recovery.systemic < 0.55 || input.fatigue.systemicFatigue > 0.72 || input.fatigue.jointRisk > 0.72;
+  const systemicBlocked = input.recovery.systemic < 0.55 || (
+    input.fatigue.systemicFatigue > 0.72 &&
+    input.fatigue.jointRisk > 0.72
+  );
   const negativeTrend = input.progression.find((entry) => (
     entry.trend === 'fatigue_masked' ||
     entry.trend === 'recovery_bottleneck' ||
