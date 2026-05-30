@@ -50,7 +50,7 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
   const previousWeight = previousSet ? setEntryWeight(previousSet) : input.previousSessionReference?.weight ?? null;
   const previousRir = previousSet ? setEntryRir(previousSet) : input.previousSessionReference?.rir ?? null;
   const logged = clampTarget(input.loggedSet, input.exerciseKey, input.unit, minReps, maxReps, targetRirMin, targetRirMax);
-  const guardrail = getProgramGuardrail(input.topRecommendation);
+  const guardrail = getProgramGuardrail(input.topRecommendation, input.exerciseKey);
   const missedMinReps = input.loggedSet.reps < minReps;
   const tooEasy = input.loggedSet.rir > targetRirMax;
   const tooHard = input.loggedSet.rir < targetRirMin;
@@ -208,7 +208,10 @@ function getHardSetReason(input: {
   return 'Hard but still in range: hold load and add rest.';
 }
 
-function getProgramGuardrail(recommendation: AdaptiveRecommendation | null | undefined): {
+function getProgramGuardrail(
+  recommendation: AdaptiveRecommendation | null | undefined,
+  exerciseKey: ExerciseKey | undefined
+): {
   kind: 'deload' | 'hold' | 'build_reps' | 'lower_axial' | 'none';
   allowsLoadJump: boolean;
   blocksLoadJump: boolean;
@@ -216,7 +219,7 @@ function getProgramGuardrail(recommendation: AdaptiveRecommendation | null | und
   context?: string;
   shortReason: string;
 } {
-  if (!recommendation) {
+  if (!recommendation || !recommendation.exerciseKey || recommendation.exerciseKey !== exerciseKey) {
     return {
       kind: 'none',
       allowsLoadJump: true,

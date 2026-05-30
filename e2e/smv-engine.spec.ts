@@ -139,7 +139,7 @@ test('generated frontier routine does not optimize normal sessions down to minim
   }
 });
 
-test('requires top reps at target RIR before increasing load', () => {
+test('allows the smallest load jump when average reps are near the top at target RIR', () => {
   const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_a_incline_db');
   expect(chain).toBeTruthy();
   const prescription = getPrescriptionForChain(chain!, 'db_incline_press', 3);
@@ -154,7 +154,7 @@ test('requires top reps at target RIR before increasing load', () => {
     { reps: 10, weight: 50, rir: 2 },
     { reps: 9, weight: 50, rir: 1 },
     { reps: 10, weight: 50, rir: 2 },
-  ], prescription).increaseLoad).toBe(false);
+  ], prescription).increaseLoad).toBe(true);
 });
 
 test('coaches sets with RIR-normalized performance, not raw load only', () => {
@@ -233,6 +233,7 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
   });
 
   expect(getNextSetAutoAdjust({
+    exerciseKey: 'db_incline_press',
     unit: 'weighted',
     loggedSet: { reps: 10, weight: 40, rir: 4 },
     prescription: testPrescription,
@@ -266,12 +267,13 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
       confidence: 0.8,
     },
   })).toMatchObject({
-    weight: 37.5,
-    status: 'Deload',
-    programContext: 'Program says Deload First: Fatigue is hiding output.',
+    weight: 42.5,
+    status: 'Add weight',
+    programContext: undefined,
   });
 
   expect(getNextSetAutoAdjust({
+    exerciseKey: 'db_incline_press',
     unit: 'weighted',
     loggedSet: { reps: 10, weight: 40, rir: 4 },
     prescription: testPrescription,
@@ -282,6 +284,7 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
     topRecommendation: {
       action: 'hold_progression',
       muscle: 'chest',
+      exerciseKey: 'db_incline_press',
       title: 'Hold Chest',
       summary: 'Keep load steady today.',
       reason: 'local recovery is below the add-volume threshold',

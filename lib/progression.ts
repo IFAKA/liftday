@@ -8,9 +8,10 @@ const MIN_REPS = 6;
 const MAX_REPS = 20;
 const START_REPS = 8;
 
-/** Returns true for every 4th week (deload: weeks 4, 8, 12, …). */
-export function isDeloadWeek(weekNumber: number): boolean {
-  return weekNumber > 0 && weekNumber % 4 === 0;
+/** Calendar deloads are disabled; deloads should be evidence-based. */
+export function isDeloadWeek(_weekNumber: number): boolean {
+  void _weekNumber;
+  return false;
 }
 
 export function getTargets(
@@ -29,10 +30,6 @@ export function getTargets(
 
   const prevReps = prevSets.map(setEntryReps);
   const avg = Math.floor(prevReps.reduce((sum, r) => sum + r, 0) / prevReps.length);
-
-  if (isDeloadWeek(weekNumber)) {
-    return Array(sets).fill(Math.max(MIN_REPS, Math.floor(avg * 0.8)));
-  }
 
   return Array(sets).fill(Math.min(MAX_REPS, Math.max(MIN_REPS, avg + 1)));
 }
@@ -73,10 +70,10 @@ export function evaluateTierProgress(
   sessionReps: SetEntry[],
   profile: UserProfile,
   chain: TierChain,
-  weekNumber: number
+  _weekNumber: number
 ): UserProfile {
+  void _weekNumber;
   if (chain.fixed) return profile;
-  if (isDeloadWeek(weekNumber)) return profile;
 
   const sessionsToAdvance = getSessionsToAdvance(chain.priority);
   const currentTier = profile.tiers[slotId] ?? 0;

@@ -362,21 +362,34 @@ export interface DoubleProgressionDecision {
 
 export function evaluateDoubleProgression(
   sets: SetEntry[],
-  prescription: Pick<SMVExercisePrescription, 'maxReps' | 'targetRirMin' | 'targetRirMax'>
+  prescription: Pick<SMVExercisePrescription, 'minReps' | 'maxReps' | 'targetRirMin' | 'targetRirMax'>
 ): DoubleProgressionDecision {
   if (sets.length === 0) {
     return { increaseLoad: false, reason: 'No sets logged.' };
   }
 
+  const normalized = sets.map((set) => {
+    if (typeof set === 'number') return { reps: set, rir: prescription.targetRirMax };
+    return { reps: set.reps, rir: set.rir ?? prescription.targetRirMax };
+  });
   const allAtTop = sets.every((set) => {
     if (typeof set === 'number') return set >= prescription.maxReps;
     const rir = set.rir ?? prescription.targetRirMax;
     return set.reps >= prescription.maxReps && rir >= prescription.targetRirMin && rir <= prescription.targetRirMax;
   });
+  const allInRange = normalized.every((set) => set.reps >= prescription.minReps);
+  const topSetHit = normalized.some((set) => set.reps >= prescription.maxReps);
+  const averageReps = normalized.reduce((sum, set) => sum + set.reps, 0) / normalized.length;
+  const averageRir = normalized.reduce((sum, set) => sum + set.rir, 0) / normalized.length;
+  const readyForSmallJump = allInRange &&
+    topSetHit &&
+    averageReps >= prescription.maxReps - 1 &&
+    averageRir >= prescription.targetRirMin &&
+    averageRir <= prescription.targetRirMax + 1;
 
-  return allAtTop
-    ? { increaseLoad: true, reason: 'All sets hit top reps at target RIR.' }
-    : { increaseLoad: false, reason: 'Repeat load until every set reaches the top of the range at target RIR.' };
+  if (allAtTop) return { increaseLoad: true, reason: 'All sets hit top reps at target RIR.' };
+  if (readyForSmallJump) return { increaseLoad: true, reason: 'Average set quality supports the smallest load jump.' };
+  return { increaseLoad: false, reason: 'Repeat load until reps average near the top of the range at target RIR.' };
 }
 
 export function shouldDeload(input: {
