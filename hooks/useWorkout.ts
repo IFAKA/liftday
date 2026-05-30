@@ -610,7 +610,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const startWorkout = useCallback(async () => {
     setPersistenceError(null);
     unlockAudio();
-    await requireRestNotificationPermission();
     playStart();
     clearActiveWorkoutDraft();
     startedAtRef.current = new Date().toISOString();
@@ -628,6 +627,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setTimerPaused(true);
     countdownPlayedRef.current = new Set();
     setState('warming-up');
+    void requireRestNotificationPermission().catch((error: unknown) => {
+      traceLiftDay('rest.notification_permission_unavailable', {
+        message: error instanceof Error ? error.message : 'Rest notification permission unavailable.',
+      });
+    });
     traceLiftDay('workout.start', {
       dateKey,
       workoutType,

@@ -415,6 +415,36 @@ test('today start opens warm-up before the first exercise', async ({ page }) => 
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
 });
 
+test('today start is not blocked by pending notification permission', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
+  await page.addInitScript(() => {
+    class PendingNotification {
+      static permission: NotificationPermission = 'default';
+      static requestPermission = async () => new Promise<NotificationPermission>(() => {});
+    }
+
+    Object.defineProperty(window, 'Notification', {
+      configurable: true,
+      value: PendingNotification,
+    });
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: new Promise(() => {}),
+      },
+    });
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.removeItem('liftday_active_workout_draft');
+    localStorage.removeItem('traindaily_sessions');
+    localStorage.removeItem('traindaily_first_session');
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /^start$/i }).click();
+  await expect(page.getByText(/warm up/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
+});
+
 test('rest timer next exercise name copies to clipboard', async ({ page }) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await prepareTodayWorkout(page, null);
