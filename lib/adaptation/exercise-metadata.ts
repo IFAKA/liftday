@@ -152,8 +152,8 @@ function getShortenedBias(key: ExerciseKey): number {
 
 function getJointStress(key: ExerciseKey, axialFatigue: number): Partial<Record<JointArea, number>> {
   const stress: Partial<Record<JointArea, number>> = {};
-  if (hasAny(key, ['press', 'pushup', 'dip', 'fly', 'lateral_raise', 'upright_row'])) stress.shoulder = 0.45;
-  if (hasAny(key, ['tricep', 'dip', 'pushup', 'curl'])) stress.elbow = 0.45;
+  if (key !== 'leg_press' && hasAny(key, ['press', 'pushup', 'dip', 'fly', 'lateral_raise', 'upright_row'])) stress.shoulder = 0.45;
+  if (key !== 'leg_curl_machine' && hasAny(key, ['tricep', 'dip', 'pushup', 'curl'])) stress.elbow = 0.45;
   if (hasAny(key, ['squat', 'leg_press', 'leg_extension', 'pistol', 'bulgarian'])) stress.knee = 0.45;
   if (hasAny(key, ['deadlift', 'row', 'squat'])) stress.spine = Math.max(0.4, axialFatigue);
   if (hasAny(key, ['calf_raise'])) stress.ankle = 0.35;

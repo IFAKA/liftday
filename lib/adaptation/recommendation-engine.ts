@@ -57,8 +57,7 @@ function buildRecommendations(input: {
   const negativeTrend = input.progression.find((entry) => (
     entry.trend === 'fatigue_masked' ||
     entry.trend === 'recovery_bottleneck' ||
-    entry.trend === 'junk_volume' ||
-    entry.trend === 'build_reps'
+    entry.trend === 'junk_volume'
   ));
 
   if (systemicBlocked && negativeTrend) {
