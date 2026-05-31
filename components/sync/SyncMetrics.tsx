@@ -6,12 +6,14 @@ interface SyncSummary {
   sessionCount: number;
   firstSessionDate: string | null;
   latestSessionDate: string | null;
+  photoCount: number;
 }
 
 export function SyncMetricGrid({ summary }: { summary: SyncSummary }) {
   return (
-    <WatchMetricGrid columns={3}>
+    <WatchMetricGrid columns={2}>
       <WatchMetricCell label="Sessions" value={summary.sessionCount.toString()} />
+      <WatchMetricCell label="Photos" value={summary.photoCount.toString()} />
       <WatchMetricCell label="First" value={summary.firstSessionDate ?? '-'} />
       <WatchMetricCell label="Latest" value={summary.latestSessionDate ?? '-'} />
     </WatchMetricGrid>

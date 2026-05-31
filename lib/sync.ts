@@ -3,14 +3,16 @@ import {
   DAILY_LOGS_KEY,
   FIRST_SESSION_KEY,
   MOBILITY_DONE_KEY,
+  PROGRESS_PHOTOS_KEY,
   STORAGE_KEY,
   USER_PROFILE_KEY,
 } from './constants';
 import { readBooleanFlag, readJsonStorageResult, readStorageValue, readStorageValueResult, removeStorageValue, writeStorageValue } from './browser-storage';
+import { migrateProgressPhotos } from './progress-photos';
 import { migrateDailyLogs, migrateUserProfile, migrateWorkoutData } from './storage';
-import { ActiveWorkoutDraft, DailyLog, UserProfile, WorkoutData, WorkoutSession } from './types';
+import { ActiveWorkoutDraft, DailyLog, ProgressPhoto, UserProfile, WorkoutData, WorkoutSession } from './types';
 
-const SYNC_SCHEMA_VERSION = 2;
+const SYNC_SCHEMA_VERSION = 3;
 const BACKUP_PREFIX = 'liftday_sync_backup_';
 const LAST_IMPORT_KEY = 'liftday_sync_last_import';
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
@@ -43,7 +45,12 @@ export interface SyncSnapshotV2 {
   onboardingCompleted?: boolean;
 }
 
-export type SyncSnapshot = SyncSnapshotV1 | SyncSnapshotV2;
+export interface SyncSnapshotV3 extends Omit<SyncSnapshotV2, 'schemaVersion'> {
+  schemaVersion: 3;
+  progressPhotos: ProgressPhoto[];
+}
+
+export type SyncSnapshot = SyncSnapshotV1 | SyncSnapshotV2 | SyncSnapshotV3;
 
 export interface ImportResult {
   importedSessions: number;
@@ -53,6 +60,8 @@ export interface ImportResult {
   importedDailyLogs: number;
   addedDailyLogs: number;
   updatedDailyLogs: number;
+  importedProgressPhotos: number;
+  addedProgressPhotos: number;
   profileImported: boolean;
   activeWorkoutDraftImported: boolean;
   firstSessionDateImported: boolean;
@@ -62,7 +71,7 @@ export interface ImportResult {
   exportedAt: string;
 }
 
-export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshotV2 {
+export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshotV3 {
   return {
     app: 'liftday',
     schemaVersion: SYNC_SCHEMA_VERSION,
@@ -70,6 +79,7 @@ export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshot
     source,
     sessions: readWorkoutData(),
     dailyLogs: readDailyLogs(),
+    progressPhotos: readProgressPhotos(),
     profile: readProfile(),
     activeWorkoutDraft: readActiveWorkoutDraft(),
     firstSessionDate: readStorageValue(FIRST_SESSION_KEY),
@@ -153,6 +163,26 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     writes.set(DAILY_LOGS_KEY, JSON.stringify(mergedDailyLogs));
   }
 
+  const incomingProgressPhotos = getSnapshotProgressPhotos(snapshot);
+  const mergedProgressPhotos = new Map(current.progressPhotos.map((photo) => [photo.id, photo]));
+  let addedProgressPhotos = 0;
+  for (const incomingPhoto of incomingProgressPhotos) {
+    if (!mergedProgressPhotos.has(incomingPhoto.id)) {
+      addedProgressPhotos += 1;
+      mergedProgressPhotos.set(incomingPhoto.id, incomingPhoto);
+      continue;
+    }
+
+    const existingPhoto = mergedProgressPhotos.get(incomingPhoto.id)!;
+    if (incomingPhoto.createdAt >= existingPhoto.createdAt) {
+      mergedProgressPhotos.set(incomingPhoto.id, incomingPhoto);
+    }
+  }
+
+  if (incomingProgressPhotos.length > 0) {
+    writes.set(PROGRESS_PHOTOS_KEY, JSON.stringify([...mergedProgressPhotos.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt))));
+  }
+
   let profileImported = false;
   if (snapshot.profile) {
     writes.set(USER_PROFILE_KEY, JSON.stringify(migrateUserProfile(snapshot.profile)));
@@ -189,6 +219,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     source: snapshot.source,
     sessions: Object.keys(incomingSessions).length,
     dailyLogs: Object.keys(incomingDailyLogs).length,
+    progressPhotos: incomingProgressPhotos.length,
     profileImported,
     activeWorkoutDraftImported,
     mobilityDoneDateImported,
@@ -206,6 +237,8 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     importedDailyLogs: Object.keys(incomingDailyLogs).length,
     addedDailyLogs,
     updatedDailyLogs,
+    importedProgressPhotos: incomingProgressPhotos.length,
+    addedProgressPhotos,
     profileImported,
     activeWorkoutDraftImported,
     firstSessionDateImported,
@@ -216,15 +249,16 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
   };
 }
 
-function createImportBaseSnapshot(): SyncSnapshotV2 {
+function createImportBaseSnapshot(): SyncSnapshotV3 {
   const sessions = readWorkoutDataResult();
   const dailyLogs = readDailyLogsResult();
+  const progressPhotos = readProgressPhotosResult();
   const profile = readProfileResult();
   const draft = readActiveWorkoutDraftResult();
   const firstSessionDate = readStorageValueResult(FIRST_SESSION_KEY);
   const mobilityDoneDate = readStorageValueResult(MOBILITY_DONE_KEY);
 
-  const failed = [sessions, dailyLogs, profile, draft, firstSessionDate, mobilityDoneDate]
+  const failed = [sessions, dailyLogs, progressPhotos, profile, draft, firstSessionDate, mobilityDoneDate]
     .find((entry) => !entry.success);
   if (failed && !failed.success) {
     throw new Error(`Cannot import backup until current storage is recoverable: ${failed.reason}`);
@@ -237,6 +271,7 @@ function createImportBaseSnapshot(): SyncSnapshotV2 {
     source: 'laptop',
     sessions: sessions.value,
     dailyLogs: dailyLogs.value,
+    progressPhotos: progressPhotos.value,
     profile: profile.value,
     activeWorkoutDraft: draft.value,
     firstSessionDate: firstSessionDate.value,
@@ -286,6 +321,7 @@ export function getLocalSyncSummary() {
     sessionCount: dates.length,
     firstSessionDate: readStorageValue(FIRST_SESSION_KEY) ?? dates[0] ?? null,
     latestSessionDate: dates.at(-1) ?? null,
+    photoCount: readProgressPhotos().length,
     lastImport: readStorageValue(LAST_IMPORT_KEY),
   };
 }
@@ -304,6 +340,14 @@ function readDailyLogs(): Record<string, DailyLog> {
 
 function readDailyLogsResult() {
   return readJsonStorageResult(DAILY_LOGS_KEY, {}, (value) => isDailyLogs(value) ? migrateDailyLogs(value) : null);
+}
+
+function readProgressPhotos(): ProgressPhoto[] {
+  return readProgressPhotosResult().value;
+}
+
+function readProgressPhotosResult() {
+  return readJsonStorageResult(PROGRESS_PHOTOS_KEY, [], (value) => migrateProgressPhotos(value));
 }
 
 function readProfile(): UserProfile | null {
@@ -337,7 +381,7 @@ function earliestDate(a: string | null, b: string | null): string | null {
 }
 
 function isSyncSnapshot(value: unknown): value is SyncSnapshot {
-  return isSyncSnapshotV1(value) || isSyncSnapshotV2(value);
+  return isSyncSnapshotV1(value) || isSyncSnapshotV2(value) || isSyncSnapshotV3(value);
 }
 
 function isSyncSnapshotV1(value: unknown): value is SyncSnapshotV1 {
@@ -363,6 +407,24 @@ function isSyncSnapshotV2(value: unknown): value is SyncSnapshotV2 {
     isSyncSource(value.source) &&
     isWorkoutData(value.sessions) &&
     isDailyLogs(value.dailyLogs) &&
+    (value.profile === null || isUserProfile(value.profile)) &&
+    (value.activeWorkoutDraft === null || isActiveWorkoutDraft(value.activeWorkoutDraft)) &&
+    (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
+    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string') &&
+    (value.onboardingCompleted === undefined || typeof value.onboardingCompleted === 'boolean')
+  );
+}
+
+function isSyncSnapshotV3(value: unknown): value is SyncSnapshotV3 {
+  if (!isRecord(value)) return false;
+  return (
+    value.app === 'liftday' &&
+    value.schemaVersion === 3 &&
+    typeof value.exportedAt === 'string' &&
+    isSyncSource(value.source) &&
+    isWorkoutData(value.sessions) &&
+    isDailyLogs(value.dailyLogs) &&
+    isProgressPhotos(value.progressPhotos) &&
     (value.profile === null || isUserProfile(value.profile)) &&
     (value.activeWorkoutDraft === null || isActiveWorkoutDraft(value.activeWorkoutDraft)) &&
     (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
@@ -401,6 +463,10 @@ function isDailyLog(value: unknown): value is DailyLog {
     if (Array.isArray(fieldValue)) return false;
     return ['string', 'number', 'boolean', 'object'].includes(typeof fieldValue);
   });
+}
+
+function isProgressPhotos(value: unknown): value is ProgressPhoto[] {
+  return Array.isArray(value) && migrateProgressPhotos(value) !== null;
 }
 
 function isUserProfile(value: unknown): value is UserProfile {
@@ -443,12 +509,16 @@ function getSnapshotDailyLogs(snapshot: SyncSnapshot): Record<string, DailyLog> 
   return snapshot.schemaVersion === 1 ? {} : migrateDailyLogs(snapshot.dailyLogs);
 }
 
+function getSnapshotProgressPhotos(snapshot: SyncSnapshot): ProgressPhoto[] {
+  return snapshot.schemaVersion === 3 ? migrateProgressPhotos(snapshot.progressPhotos) ?? [] : [];
+}
+
 function getSnapshotActiveWorkoutDraft(snapshot: SyncSnapshot): ActiveWorkoutDraft | null {
   return snapshot.schemaVersion === 1 ? null : snapshot.activeWorkoutDraft;
 }
 
 function getSnapshotOnboardingCompleted(snapshot: SyncSnapshot, incomingSessions: WorkoutData): boolean {
-  if (snapshot.schemaVersion === 2 && typeof snapshot.onboardingCompleted === 'boolean') {
+  if (snapshot.schemaVersion !== 1 && typeof snapshot.onboardingCompleted === 'boolean') {
     return snapshot.onboardingCompleted;
   }
   return Boolean(snapshot.profile || Object.keys(incomingSessions).length > 0);

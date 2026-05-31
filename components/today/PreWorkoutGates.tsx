@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Ruler, Scale } from 'lucide-react';
+import { Camera, Check, Ruler, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   WatchFormPanel,
@@ -30,32 +30,21 @@ import {
   parseBodyMeasurement,
   roundBodyMeasurement,
 } from '@/lib/body-measurements';
+import type { DueMeasurementKey, MeasurementFieldDefinition } from '@/lib/measurement-schedule';
+import { compressProgressPhotoFile, saveProgressPhoto } from '@/lib/progress-photos';
 import { TopBar } from '../TopBar';
 
-type WeeklyMeasurementKey = keyof Pick<DailyLog, 'waistCm' | 'shoulderCm' | 'chestCm' | 'hipCm' | 'neckCm' | 'quadCm' | 'calfCm' | 'forearmCm' | 'wristCm' | 'ankleCm' | 'bicepsCm'>;
-type WeeklyMeasurements = Record<WeeklyMeasurementKey, number>;
-
-const WEEKLY_MEASUREMENT_FIELDS = [
-  { key: 'waistCm', label: 'Waist' },
-  { key: 'shoulderCm', label: 'Shoulder' },
-  { key: 'chestCm', label: 'Chest' },
-  { key: 'hipCm', label: 'Hip' },
-  { key: 'neckCm', label: 'Neck' },
-  { key: 'quadCm', label: 'Quad' },
-  { key: 'calfCm', label: 'Calf' },
-  { key: 'forearmCm', label: 'Forearm' },
-  { key: 'wristCm', label: 'Wrist' },
-  { key: 'ankleCm', label: 'Ankle' },
-  { key: 'bicepsCm', label: 'Biceps' },
-] as const satisfies readonly { key: WeeklyMeasurementKey; label: string }[];
+type DueMeasurements = Partial<Record<DueMeasurementKey, number>>;
 
 export function WeightCheckScreen({
   date,
+  dueDateKeys,
   logs,
   onCancel,
   onComplete,
 }: {
   date: Date;
+  dueDateKeys: string[];
   logs: Record<string, DailyLog>;
   onCancel: () => void;
   onComplete: (logs: Record<string, DailyLog>) => void;
@@ -84,9 +73,11 @@ export function WeightCheckScreen({
   };
 
   const skipWeight = () => {
+    const skipped = new Set([...(todayLog?.weightCheckSkippedDateKeys ?? []), ...dueDateKeys]);
     saveDailyLog(dateKey, {
       dateKey,
       weightCheckSkipped: true,
+      weightCheckSkippedDateKeys: [...skipped],
     });
     setInputError(null);
     onComplete(loadDailyLogs());
@@ -170,11 +161,15 @@ export function WeightCheckScreen({
 
 export function WeeklyMeasurementScreen({
   date,
+  dueDateKeys,
+  fields,
   logs,
   onCancel,
   onComplete,
 }: {
   date: Date;
+  dueDateKeys: string[];
+  fields: MeasurementFieldDefinition[];
   logs: Record<string, DailyLog>;
   onCancel: () => void;
   onComplete: (logs: Record<string, DailyLog>) => void;
@@ -183,24 +178,24 @@ export function WeeklyMeasurementScreen({
   const todayLog = logs[dateKey];
   const profile = loadUserProfile() ?? getDefaultProfile();
   const [draft, setDraft] = useState(() => {
-    return Object.fromEntries(WEEKLY_MEASUREMENT_FIELDS.map(({ key }) => [
+    return Object.fromEntries(fields.map(({ key }) => [
       key,
       formatBodyMeasurementInput(getValidBodyMeasurement(todayLog?.[key]) ?? getLastKnownBodyMeasurement(logs, dateKey, key) ?? getProfileBodyMeasurement(profile, key)),
-    ])) as Record<(typeof WEEKLY_MEASUREMENT_FIELDS)[number]['key'], string>;
+    ])) as Record<DueMeasurementKey, string>;
   });
   const [inputError, setInputError] = useState<string | null>(null);
 
   const saveMeasurements = () => {
-    const values = WEEKLY_MEASUREMENT_FIELDS.map(({ key }) => [key, parseBodyMeasurement(draft[key])] as const);
+    const values = fields.map(({ key }) => [key, parseBodyMeasurement(draft[key])] as const);
     if (values.some(([, value]) => value === null || value < 10 || value > 250)) {
       setInputError('Check cm');
       return;
     }
 
-    const measurementLog = values.reduce<WeeklyMeasurements>((nextLog, [key, value]) => {
+    const measurementLog = values.reduce<DueMeasurements>((nextLog, [key, value]) => {
       nextLog[key] = roundBodyMeasurement(value!);
       return nextLog;
-    }, {} as WeeklyMeasurements);
+    }, {});
     const defaultProfile = getDefaultProfile();
     saveDailyLog(dateKey, {
       dateKey,
@@ -209,7 +204,7 @@ export function WeeklyMeasurementScreen({
     setBodyProfileFallbacks({
       heightCm: getValidBodyMeasurement(todayLog?.heightCm) ?? getValidBodyMeasurement(profile.heightCm) ?? defaultProfile.heightCm ?? 172,
       weightKg: getValidBodyMeasurement(todayLog?.morningWeightKg) ?? getValidBodyMeasurement(profile.weightKg) ?? defaultProfile.weightKg ?? 68.6,
-      waistCircumferenceCm: measurementLog.waistCm,
+      waistCircumferenceCm: measurementLog.waistCm ?? getValidBodyMeasurement(profile.waistCircumferenceCm) ?? defaultProfile.waistCircumferenceCm ?? 76.5,
       shoulderCircumferenceCm: measurementLog.shoulderCm,
       chestCircumferenceCm: measurementLog.chestCm,
       hipCircumferenceCm: measurementLog.hipCm,
@@ -217,10 +212,18 @@ export function WeeklyMeasurementScreen({
       quadCircumferenceCm: measurementLog.quadCm,
       calfCircumferenceCm: measurementLog.calfCm,
       forearmCircumferenceCm: measurementLog.forearmCm,
-      wristCircumferenceCm: measurementLog.wristCm,
-      ankleCircumferenceCm: measurementLog.ankleCm,
       bicepsCircumferenceCm: measurementLog.bicepsCm,
     });
+    onComplete(loadDailyLogs());
+  };
+
+  const skipMeasurements = () => {
+    const skipped = new Set([...(todayLog?.measurementCheckSkippedDateKeys ?? []), ...dueDateKeys]);
+    saveDailyLog(dateKey, {
+      dateKey,
+      measurementCheckSkippedDateKeys: [...skipped],
+    });
+    setInputError(null);
     onComplete(loadDailyLogs());
   };
 
@@ -251,6 +254,13 @@ export function WeeklyMeasurementScreen({
           >
             Save
           </WatchPrimaryAction>
+          <WatchSecondaryAction
+            type="button"
+            onClick={skipMeasurements}
+            className="col-span-2"
+          >
+            Skip
+          </WatchSecondaryAction>
         </div>
       )}
       footerClassName="mb-4"
@@ -262,7 +272,7 @@ export function WeeklyMeasurementScreen({
               Measurements
             </h1>
             <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
-              Tape check before gym
+              {fields.length} due before gym
             </p>
           </div>
         </header>
@@ -270,7 +280,7 @@ export function WeeklyMeasurementScreen({
         <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
           <WatchFormPanel error={inputError} className="py-3">
             <WatchMeasurementGrid>
-              {WEEKLY_MEASUREMENT_FIELDS.map(({ key, label }) => (
+              {fields.map(({ key, label }) => (
                 <WatchMeasurementInput
                   key={key}
                   label={label}
@@ -288,6 +298,116 @@ export function WeeklyMeasurementScreen({
   );
 }
 
-export function hasWeeklyMeasurements(log: DailyLog | undefined): boolean {
-  return WEEKLY_MEASUREMENT_FIELDS.every(({ key }) => getValidBodyMeasurement(log?.[key]) !== null);
+export function ProgressPhotoCheckScreen({
+  date,
+  dueDateKeys,
+  logs,
+  onCancel,
+  onComplete,
+}: {
+  date: Date;
+  dueDateKeys: string[];
+  logs: Record<string, DailyLog>;
+  onCancel: () => void;
+  onComplete: (logs: Record<string, DailyLog>) => void;
+}) {
+  const dateKey = formatDateKey(date);
+  const todayLog = logs[dateKey];
+  const [preview, setPreview] = useState<string | null>(null);
+  const [imageData, setImageData] = useState<string | null>(null);
+  const [inputError, setInputError] = useState<string | null>(null);
+
+  async function readPhoto(file: File | undefined) {
+    if (!file) return;
+    try {
+      setInputError(null);
+      const compressed = await compressProgressPhotoFile(file);
+      setImageData(compressed);
+      setPreview(compressed);
+    } catch (error) {
+      setInputError(error instanceof Error ? error.message : 'Photo failed');
+    }
+  }
+
+  function savePhoto() {
+    if (!imageData) {
+      setInputError('Choose photo');
+      return;
+    }
+    const result = saveProgressPhoto({ date, imageData, pose: 'front' });
+    if (!result.success) {
+      setInputError(result.reason);
+      return;
+    }
+    onComplete(loadDailyLogs());
+  }
+
+  function skipPhoto() {
+    const skipped = new Set([...(todayLog?.photoCheckSkippedDateKeys ?? []), ...dueDateKeys]);
+    saveDailyLog(dateKey, {
+      dateKey,
+      photoCheckSkippedDateKeys: [...skipped],
+    });
+    onComplete(loadDailyLogs());
+  }
+
+  return (
+    <WatchScreen
+      scrollable={false}
+      top={(
+        <TopBar
+          center={
+            <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
+              {formatDisplayDate(date)}
+            </span>
+          }
+        />
+      )}
+      bodyClassName="flex flex-col items-center justify-center px-5 text-center"
+      footer={(
+        <div className="mb-4 flex flex-col gap-3">
+          <label className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 text-fluid-label font-black uppercase text-white active:scale-95">
+            <Camera className="h-4 w-4" />
+            Choose photo
+            <input
+              type="file"
+              accept="image/*"
+              capture="user"
+              onChange={(event) => readPhoto(event.target.files?.[0])}
+              className="sr-only"
+            />
+          </label>
+          {inputError && (
+            <p className="rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-center text-xs text-red-100">
+              {inputError}
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <WatchSecondaryAction type="button" onClick={onCancel}>
+              Cancel
+            </WatchSecondaryAction>
+            <WatchPrimaryAction type="button" onClick={savePhoto}>
+              Save
+            </WatchPrimaryAction>
+            <WatchSecondaryAction type="button" onClick={skipPhoto} className="col-span-2">
+              Skip
+            </WatchSecondaryAction>
+          </div>
+        </div>
+      )}
+    >
+      {preview ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={preview} alt="Selected progress photo" className="mb-5 aspect-[3/4] max-h-[42dvh] w-auto rounded-2xl border border-white/10 object-cover" />
+      ) : (
+        <Camera className="mb-5 h-14 w-14 text-white/35" />
+      )}
+      <h1 className="text-fluid-title font-black uppercase leading-none text-white">
+        Photo
+      </h1>
+      <p className="mt-3 max-w-64 text-fluid-label font-mono uppercase leading-snug text-white/45">
+        Monthly progress check
+      </p>
+    </WatchScreen>
+  );
 }

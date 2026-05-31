@@ -44,14 +44,22 @@ async function prepareTodayWorkout(page: Page, sessions: Record<string, unknown>
 
 async function startWarmupAndWorkout(page: Page) {
   await page.getByRole('button', { name: /^start$/i }).click();
-  const noScale = page.getByRole('button', { name: /^no scale$/i });
-  if (await noScale.isVisible().catch(() => false)) {
-    await noScale.click();
-  }
+  await skipPreWorkoutGates(page);
   await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
   await page.getByRole('button', { name: /^start timer$/i }).click();
   await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await page.getByRole('button', { name: /^start workout$/i }).click();
+}
+
+async function skipPreWorkoutGates(page: Page) {
+  const skip = page.getByRole('button', { name: /^skip$/i });
+  if (await skip.isVisible().catch(() => false)) {
+    await skip.click();
+  }
+  const noScale = page.getByRole('button', { name: /^no scale$/i });
+  if (await noScale.isVisible().catch(() => false)) {
+    await noScale.click();
+  }
 }
 
 async function logFirstSetAndSkipRest(page: Page, rir: number) {
@@ -270,7 +278,7 @@ test('program avoids joint-risk-only deload when progression needs reps', async 
   await expect(page.locator('body')).not.toContainText('Hold structure');
 });
 
-test('saturday start opens weekly measurements, gym weight check, then warm-up', async ({ page }) => {
+test('missed Monday start opens due measurements, gym weight check, then warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
@@ -314,8 +322,11 @@ test('saturday start opens weekly measurements, gym weight check, then warm-up',
   await expect(page.getByRole('spinbutton', { name: /waist centimeters/i })).toBeVisible();
   await page.getByRole('spinbutton', { name: /waist centimeters/i }).fill('77.6');
   await page.getByRole('spinbutton', { name: /shoulder centimeters/i }).fill('113.7');
-  await page.getByRole('spinbutton', { name: /wrist centimeters/i }).fill('16.7');
-  await page.getByRole('spinbutton', { name: /ankle centimeters/i }).fill('22.8');
+  await page.getByRole('spinbutton', { name: /chest centimeters/i }).fill('92.4');
+  await page.getByRole('spinbutton', { name: /biceps centimeters/i }).fill('29.1');
+  await page.getByRole('spinbutton', { name: /forearm centimeters/i }).fill('26.2');
+  await expect(page.getByRole('spinbutton', { name: /wrist centimeters/i })).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: /ankle centimeters/i })).toHaveCount(0);
   await page.getByRole('button', { name: /^save$/i }).click();
 
   await expect(page.locator('body')).toContainText('WEIGHT');
@@ -328,9 +339,9 @@ test('saturday start opens weekly measurements, gym weight check, then warm-up',
   await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
 
   await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number; wristCm?: number; ankleCm?: number }>;
+    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number; chestCm?: number; bicepsCm?: number; forearmCm?: number }>;
     return logs['2026-05-16'];
-  })).toMatchObject({ dateKey: '2026-05-16', waistCm: 77.6, shoulderCm: 113.7, wristCm: 16.7, ankleCm: 22.8, morningWeightKg: 66.8, weightCheckSkipped: false });
+  })).toMatchObject({ dateKey: '2026-05-16', waistCm: 77.6, shoulderCm: 113.7, chestCm: 92.4, bicepsCm: 29.1, forearmCm: 26.2, morningWeightKg: 66.8, weightCheckSkipped: false });
 
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('66.8kg');
@@ -363,7 +374,7 @@ test('saturday weight check can record no scale and continue to warm-up', async 
   })).toMatchObject({ dateKey: '2026-05-16', weightCheckSkipped: true, waistCm: 76.5, shoulderCm: 111.8 });
 });
 
-test('weekday start skips weight check and opens warm-up', async ({ page }) => {
+test('Monday start can skip due checks and open warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
@@ -373,10 +384,11 @@ test('weekday start skips weight check and opens warm-up', async ({ page }) => {
 
   await page.goto('/');
   await page.getByRole('button', { name: /^start$/i }).click();
+  await page.getByRole('button', { name: /^skip$/i }).click();
+  await page.getByRole('button', { name: /^no scale$/i }).click();
 
   await expect(page.getByText(/warm up/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
-  await expect(page.locator('body')).not.toContainText('WEIGHT');
 });
 
 test('today start opens warm-up before the first exercise', async ({ page }) => {
@@ -392,6 +404,7 @@ test('today start opens warm-up before the first exercise', async ({ page }) => 
 
   await page.goto('/');
   await page.getByRole('button', { name: /^start$/i }).click();
+  await skipPreWorkoutGates(page);
 
   await expect(page.getByText(/warm up/i)).toBeVisible();
   await expect(page.getByText('01:00')).toBeVisible();
@@ -441,6 +454,7 @@ test('today start is not blocked by pending notification permission', async ({ p
 
   await page.goto('/');
   await page.getByRole('button', { name: /^start$/i }).click();
+  await skipPreWorkoutGates(page);
   await expect(page.getByText(/warm up/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
 });
@@ -476,6 +490,7 @@ test('warm-up cancel returns to Today without logging the workout', async ({ pag
 
   await page.goto('/');
   await page.getByRole('button', { name: /^start$/i }).click();
+  await skipPreWorkoutGates(page);
   await page.getByRole('button', { name: /cancel warm-up/i }).click();
 
   await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
@@ -959,6 +974,7 @@ test('restores an active workout after reload', async ({ page }) => {
   await page.reload();
 
   await page.getByRole('button', { name: /^start$/i }).click();
+  await skipPreWorkoutGates(page);
   await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
   await page.reload();
   await expect(page.getByText(/warm up/i)).toBeVisible();

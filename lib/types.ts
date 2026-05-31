@@ -191,6 +191,7 @@ export interface BodyTrendLog {
   dateKey: string;
   morningWeightKg?: number;
   weightCheckSkipped?: boolean;
+  weightCheckSkippedDateKeys?: string[];
   heightCm?: number;
   waistCm?: number;
   shoulderCm?: number;
@@ -203,6 +204,8 @@ export interface BodyTrendLog {
   wristCm?: number;
   ankleCm?: number;
   bicepsCm?: number;
+  measurementCheckSkippedDateKeys?: string[];
+  photoCheckSkippedDateKeys?: string[];
   calories?: number;
   proteinGrams?: number;
 }
@@ -218,6 +221,17 @@ export interface RecoverySignal {
 }
 
 export interface DailyLog extends BodyTrendLog, RecoverySignal {}
+
+export type ProgressPhotoPose = 'front' | 'side' | 'back' | 'other';
+
+export interface ProgressPhoto {
+  id: string;
+  dateKey: string;
+  createdAt: string;
+  pose: ProgressPhotoPose;
+  imageData: string;
+  note?: string;
+}
 
 export interface WorkoutData {
   [dateKey: string]: WorkoutSession;

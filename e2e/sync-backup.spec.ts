@@ -77,6 +77,13 @@ async function seedFullLocalState(page: Page) {
         note: 'Backup fixture',
       },
     }));
+    localStorage.setItem('liftday_progress_photos', JSON.stringify([{
+      id: 'photo-2026-05-11',
+      dateKey: '2026-05-11',
+      createdAt: '2026-05-11T08:00:00.000Z',
+      pose: 'front',
+      imageData: 'data:image/webp;base64,AAAA',
+    }]));
     localStorage.setItem('liftday_active_workout_draft', JSON.stringify(draft));
     localStorage.setItem('traindaily_first_session', '2026-05-01');
     localStorage.setItem('traindaily_mobility_done', '2026-05-10');
@@ -103,7 +110,7 @@ async function openFileDetails(page: Page, text: string) {
   return details;
 }
 
-test('exports and restores a full v2 local backup', async ({ page }, testInfo) => {
+test('exports and restores a full v3 local backup', async ({ page }, testInfo) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:15:00'));
   await seedFullLocalState(page);
 
@@ -121,12 +128,14 @@ test('exports and restores a full v2 local backup', async ({ page }, testInfo) =
     schemaVersion: number;
     sessions: Record<string, unknown>;
     dailyLogs: Record<string, unknown>;
+    progressPhotos: unknown[];
     activeWorkoutDraft: unknown;
     onboardingCompleted: boolean;
   };
-  expect(exported.schemaVersion).toBe(2);
+  expect(exported.schemaVersion).toBe(3);
   expect(Object.keys(exported.sessions)).toContain('2026-05-11');
   expect(Object.keys(exported.dailyLogs)).toContain('2026-05-11');
+  expect(exported.progressPhotos).toHaveLength(1);
   expect(exported.activeWorkoutDraft).not.toBeNull();
   expect(exported.onboardingCompleted).toBe(true);
 
@@ -139,6 +148,7 @@ test('exports and restores a full v2 local backup', async ({ page }, testInfo) =
 
   await expect.poll(() => page.evaluate(() => localStorage.getItem('traindaily_sessions'))).toContain('cable_lateral_raise');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_daily_logs'))).toContain('Backup fixture');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_progress_photos'))).toContain('photo-2026-05-11');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_active_workout_draft'))).toContain('2026-05-11T10:05:00.000Z');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_onboarding_completed'))).toBe('true');
 
@@ -175,11 +185,13 @@ test('exports a backup from the desktop receive view', async ({ page }, testInfo
     schemaVersion: number;
     source: string;
     sessions: Record<string, unknown>;
+    progressPhotos: unknown[];
     onboardingCompleted: boolean;
   };
-  expect(exported.schemaVersion).toBe(2);
+  expect(exported.schemaVersion).toBe(3);
   expect(exported.source).toBe('laptop');
   expect(Object.keys(exported.sessions)).toContain('2026-05-11');
+  expect(exported.progressPhotos).toHaveLength(1);
   expect(exported.onboardingCompleted).toBe(true);
 });
 

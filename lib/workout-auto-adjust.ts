@@ -5,6 +5,7 @@ import { getNextHigherLoad, getNextLowerLoad, snapLoadTarget } from './load-targ
 
 export type AutoAdjustStatus =
   | 'Add reps'
+  | 'Build reps'
   | 'Keep'
   | 'Deload'
   | 'Reduce load'
@@ -160,6 +161,16 @@ export function getNextSetAutoAdjust(input: AutoAdjustInput): AutoAdjustSuggesti
     };
   }
 
+  const manualLoadJump = isManualLoadJumpBelowTop(input.currentSuggestion, input.loggedSet, maxReps);
+  if (manualLoadJump && suggestion.status === 'Add reps') {
+    suggestion = {
+      ...suggestion,
+      status: 'Build reps',
+      reason: 'Load was raised before top reps; build reps at this load before adding more.',
+      tone: 'warning',
+    };
+  }
+
   const warning = getManualEditWarning(input.currentSuggestion, input.loggedSet);
   return warning ? { ...suggestion, warning } : suggestion;
 }
@@ -295,6 +306,20 @@ function getManualEditWarning(
   const changedRir = suggestion.rir !== loggedSet.rir;
   if (!changedWeight && !changedReps && !changedRir) return undefined;
   return 'You changed the target; use the next set to verify, then hold or reduce if reps slip.';
+}
+
+function isManualLoadJumpBelowTop(
+  suggestion: AutoAdjustSetTarget | null | undefined,
+  loggedSet: AutoAdjustSetTarget,
+  maxReps: number
+): boolean {
+  return (
+    suggestion?.weight !== null &&
+    suggestion?.weight !== undefined &&
+    loggedSet.weight !== null &&
+    loggedSet.weight > suggestion.weight &&
+    loggedSet.reps < maxReps
+  );
 }
 
 function makeSuggestion(suggestion: AutoAdjustSuggestion): AutoAdjustSuggestion {

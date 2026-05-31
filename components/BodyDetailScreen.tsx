@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Pencil, Ruler, Scale, TrendingUp, Utensils } from 'lucide-react';
+import { Camera, Pencil, Ruler, Scale, TrendingUp, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
-import { DailyLog, UserProfile } from '@/lib/types';
+import { DailyLog, ProgressPhoto, UserProfile } from '@/lib/types';
 import { formatDateKey } from '@/lib/workout-utils';
 import { getDefaultProfile, loadDailyLogs, loadUserProfile, saveDailyLog, setBodyProfileFallbacks } from '@/lib/storage';
 import {
@@ -29,6 +29,7 @@ import {
 } from './WatchSurface';
 import { parseBodyMeasurement, roundBodyMeasurement } from '@/lib/body-measurements';
 import { BodyEditorForm, type BodyEditorDraft } from './body/BodyEditorForm';
+import { compressProgressPhotoFile, listProgressPhotos, saveProgressPhoto } from '@/lib/progress-photos';
 
 const CURRENT_WEIGHT_KG = 68.6;
 const CURRENT_WAIST_CM = 76.5;
@@ -37,12 +38,14 @@ const ADONIS_INDEX_TARGET = 1.62;
 interface BodySnapshot {
   profile: UserProfile;
   logs: Record<string, DailyLog>;
+  photos: ProgressPhoto[];
 }
 
 export function BodyDetailScreen() {
   const [snapshot, setSnapshot] = useState<BodySnapshot>(() => ({
     profile: getDefaultProfile(),
     logs: {},
+    photos: [],
   }));
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<BodyEditorDraft>({
@@ -66,6 +69,7 @@ export function BodyDetailScreen() {
     setSnapshot({
       profile: loadUserProfile() ?? getDefaultProfile(),
       logs: loadDailyLogs(),
+      photos: listProgressPhotos(),
     });
   }
 
@@ -165,6 +169,13 @@ export function BodyDetailScreen() {
     setIsEditing(false);
   }
 
+  async function saveBodyPhoto(file: File | undefined) {
+    if (!file) return;
+    const imageData = await compressProgressPhotoFile(file);
+    const result = saveProgressPhoto({ imageData, pose: 'front' });
+    if (result.success) reloadSnapshot();
+  }
+
   return (
     <WatchScreen
       top={(
@@ -222,6 +233,8 @@ export function BodyDetailScreen() {
           </div>
         </WatchPanel>
 
+        <ProgressPhotoTimeline photos={snapshot.photos} onPhotoSelected={saveBodyPhoto} />
+
         <WatchPanel subtle className="py-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
@@ -267,6 +280,69 @@ export function BodyDetailScreen() {
         <WatchListItem icon={Ruler} title="Context" subtitle={body.contextLine} trailing={null} subtle className="py-3" />
       </div>
     </WatchScreen>
+  );
+}
+
+function ProgressPhotoTimeline({
+  photos,
+  onPhotoSelected,
+}: {
+  photos: ProgressPhoto[];
+  onPhotoSelected: (file: File | undefined) => void;
+}) {
+  const latest = photos[0] ?? null;
+  const previous = photos.slice(1, 4);
+
+  return (
+    <WatchPanel subtle className="py-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Camera className="h-4 w-4 shrink-0 text-white/35" />
+          <p className="truncate text-fluid-label font-mono font-black uppercase text-white/35">Photos</p>
+        </div>
+        <label className="flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 text-[10px] font-mono font-black uppercase tracking-widest text-white/60 active:scale-95">
+          <Camera className="h-3.5 w-3.5" />
+          Add
+          <input
+            type="file"
+            accept="image/*"
+            capture="user"
+            onChange={(event) => onPhotoSelected(event.target.files?.[0])}
+            className="sr-only"
+          />
+        </label>
+      </div>
+
+      {latest ? (
+        <div className="flex gap-3">
+          <div className="w-28 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={latest.imageData} alt="Latest progress photo" className="aspect-[3/4] w-full object-cover" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-fluid-ui font-black uppercase text-white">Latest</p>
+            <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">{latest.dateKey}</p>
+            <p className="mt-2 text-fluid-label leading-snug text-white/45">
+              {photos.length} saved. Compare against earlier monthly checks.
+            </p>
+            {previous.length > 0 && (
+              <div className="mt-3 flex gap-2">
+                {previous.map((photo) => (
+                  <div key={photo.id} className="w-11 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo.imageData} alt={`Progress photo ${photo.dateKey}`} className="aspect-[3/4] w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-4 text-center">
+          <p className="text-fluid-label font-mono uppercase text-white/40">No photos yet</p>
+        </div>
+      )}
+    </WatchPanel>
   );
 }
 

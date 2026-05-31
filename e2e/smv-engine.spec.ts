@@ -306,6 +306,29 @@ test('auto-adjusts next workout set from RIR, reps, prior sets, and program guar
     prescription: testPrescription,
     currentSuggestion: { reps: 10, weight: 40, rir: 2 },
   }).warning).toMatch(/changed the target/i);
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 8, weight: 42.5, rir: 2 },
+    prescription: testPrescription,
+    currentSuggestion: { reps: 8, weight: 40, rir: 2 },
+  })).toMatchObject({
+    status: 'Build reps',
+    weight: 42.5,
+    reps: 9,
+    warning: expect.stringMatching(/changed the target/i),
+  });
+
+  expect(getNextSetAutoAdjust({
+    unit: 'weighted',
+    loggedSet: { reps: 7, weight: 42.5, rir: 1 },
+    prescription: testPrescription,
+    previousSessionReference: { reps: 10, weight: 40, rir: 2 },
+    currentSuggestion: { reps: 10, weight: 40, rir: 2 },
+  })).toMatchObject({
+    status: 'Reduce load',
+    warning: expect.stringMatching(/changed the target/i),
+  });
 });
 
 test('snaps recommendation loads to valid exercise increments', () => {

@@ -58,6 +58,7 @@ test('mobile footer actions stay inside the viewport', async ({ page }) => {
 
 test('today actions remain reachable in a compressed mobile viewport', async ({ page }) => {
   await page.setViewportSize({ width: 430, height: 560 });
+  await page.clock.setFixedTime(new Date('2026-05-12T10:00:00'));
   await prepareApp(page);
 
   await page.goto('/');

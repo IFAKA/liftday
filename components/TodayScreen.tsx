@@ -7,17 +7,17 @@ import { Dumbbell } from 'lucide-react';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
-import { formatDateKey } from '@/lib/workout-utils';
 import { formatWorkoutType, getWorkoutType, getTrainingStreak } from '@/lib/schedule';
 import { DailyLog } from '@/lib/types';
 import { loadDailyLogs } from '@/lib/storage';
 import { getStorageIssues } from '@/lib/browser-storage';
 import { REST_DURATION } from '@/lib/constants';
-import { getValidBodyMeasurement } from '@/lib/body-measurements';
+import { getMeasurementCheckDue } from '@/lib/measurement-schedule';
+import { loadProgressPhotos } from '@/lib/progress-photos';
 import { TodayHub } from './today/TodayHub';
-import { hasWeeklyMeasurements, WeeklyMeasurementScreen, WeightCheckScreen } from './today/PreWorkoutGates';
+import { ProgressPhotoCheckScreen, WeeklyMeasurementScreen, WeightCheckScreen } from './today/PreWorkoutGates';
 
-type PreWorkoutGate = 'measurements' | 'weight' | null;
+type PreWorkoutGate = 'measurements' | 'weight' | 'photo' | null;
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 const ScreenFallback = () => <LoadingScreen />;
 
@@ -71,6 +71,7 @@ function LoadingScreen() {
 function TodayContent({ date }: { date: Date }) {
   const [startError, setStartError] = useState<string | null>(null);
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
+  const [photoDateKeys, setPhotoDateKeys] = useState<string[]>([]);
   const [storageIssue, setStorageIssue] = useState<string | null>(null);
   const [preWorkoutGate, setPreWorkoutGate] = useState<PreWorkoutGate>(null);
   const workout = useWorkout(date);
@@ -82,6 +83,7 @@ function TodayContent({ date }: { date: Date }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDailyLogs(loadDailyLogs());
+    setPhotoDateKeys(loadProgressPhotos().map((photo) => photo.dateKey));
     const latestIssue = getStorageIssues().at(-1);
     if (latestIssue) {
       setStorageIssue(`${latestIssue.reason} Recovery: ${latestIssue.recoveryKey ?? 'not available'}.`);
@@ -194,11 +196,7 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
   // Idle — ready to start (or already done today)
   const isDone = storageReady && schedule.isDone;
-  const dateKey = formatDateKey(date);
-  const todayLog = dailyLogs[dateKey];
-  const isWeightCheckDay = date.getDay() === 6;
-  const hasHandledMeasurements = hasWeeklyMeasurements(todayLog);
-  const hasHandledWeight = getValidBodyMeasurement(todayLog?.morningWeightKg) !== null || todayLog?.weightCheckSkipped === true;
+  const dueCheck = getMeasurementCheckDue(date, dailyLogs, photoDateKeys);
 
   const startWarmup = () => {
     setStartError(null);
@@ -211,9 +209,14 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
   const continueAfterMeasurements = (nextLogs: Record<string, DailyLog>) => {
     setDailyLogs(nextLogs);
-    const nextTodayLog = nextLogs[dateKey];
-    if (isWeightCheckDay && getValidBodyMeasurement(nextTodayLog?.morningWeightKg) === null && nextTodayLog?.weightCheckSkipped !== true) {
+    const nextDue = getMeasurementCheckDue(date, nextLogs, photoDateKeys);
+    if (nextDue.weightDue) {
       setPreWorkoutGate('weight');
+      return;
+    }
+
+    if (nextDue.photoDue) {
+      setPreWorkoutGate('photo');
       return;
     }
 
@@ -222,18 +225,34 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
   const continueAfterWeight = (nextLogs: Record<string, DailyLog>) => {
     setDailyLogs(nextLogs);
+    const nextDue = getMeasurementCheckDue(date, nextLogs, photoDateKeys);
+    if (nextDue.photoDue) {
+      setPreWorkoutGate('photo');
+      return;
+    }
+    startWarmup();
+  };
+
+  const continueAfterPhoto = (nextLogs: Record<string, DailyLog>) => {
+    setDailyLogs(nextLogs);
+    setPhotoDateKeys(loadProgressPhotos().map((photo) => photo.dateKey));
     startWarmup();
   };
 
   const handleStart = () => {
     setStartError(null);
-    if (isWeightCheckDay && !hasHandledMeasurements) {
+    if (dueCheck.measurementFields.length > 0) {
       setPreWorkoutGate('measurements');
       return;
     }
 
-    if (isWeightCheckDay && !hasHandledWeight) {
+    if (dueCheck.weightDue) {
       setPreWorkoutGate('weight');
+      return;
+    }
+
+    if (dueCheck.photoDue) {
+      setPreWorkoutGate('photo');
       return;
     }
 
@@ -244,6 +263,8 @@ nextExerciseName={workout.nextExerciseAfterRestName}
     return (
       <WeeklyMeasurementScreen
         date={date}
+        dueDateKeys={dueCheck.dueDateKeys}
+        fields={dueCheck.measurementFields}
         logs={dailyLogs}
         onCancel={() => setPreWorkoutGate(null)}
         onComplete={continueAfterMeasurements}
@@ -255,9 +276,22 @@ nextExerciseName={workout.nextExerciseAfterRestName}
     return (
       <WeightCheckScreen
         date={date}
+        dueDateKeys={dueCheck.dueDateKeys}
         logs={dailyLogs}
         onCancel={() => setPreWorkoutGate(null)}
         onComplete={continueAfterWeight}
+      />
+    );
+  }
+
+  if (!isDone && preWorkoutGate === 'photo') {
+    return (
+      <ProgressPhotoCheckScreen
+        date={date}
+        dueDateKeys={dueCheck.dueDateKeys}
+        logs={dailyLogs}
+        onCancel={() => setPreWorkoutGate(null)}
+        onComplete={continueAfterPhoto}
       />
     );
   }
