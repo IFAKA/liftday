@@ -10,6 +10,7 @@ import { DailyLog, MobilityExercise } from '@/lib/types';
 import { WatchListItem, WatchPrimaryAction, WatchScreen } from './WatchSurface';
 import { loadDailyLogs } from '@/lib/storage';
 import { RestDayActionRow, WaistMeasurementPanel } from './rest-day/RestDayPanels';
+import { getMeasurementCheckDue } from '@/lib/measurement-schedule';
 
 export interface MobilityHookState {
   exercise: MobilityExercise;
@@ -39,6 +40,8 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>(() => loadDailyLogs());
   const isSunday = date.getDay() === 0;
   const shouldReduceMotion = useReducedMotion();
+  const dueCheck = getMeasurementCheckDue(date, dailyLogs);
+  const restDayMeasurementFields = dueCheck.measurementFields.filter((field) => field.key === 'waistCm' || field.key === 'shoulderCm');
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -125,9 +128,10 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
               />
             </RestDayActionRow>
           </nav>
-          {isSunday && (
+          {isSunday && restDayMeasurementFields.length > 0 && (
             <WaistMeasurementPanel
               date={date}
+              fields={restDayMeasurementFields}
               logs={dailyLogs}
               onLogsChange={setDailyLogs}
             />

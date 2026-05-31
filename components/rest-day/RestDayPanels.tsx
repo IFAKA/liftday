@@ -22,6 +22,7 @@ import {
   parseBodyMeasurement,
   roundBodyMeasurement,
 } from '@/lib/body-measurements';
+import type { MeasurementFieldDefinition } from '@/lib/measurement-schedule';
 
 export function RestDayActionRow({
   children,
@@ -47,21 +48,27 @@ type MeasurementSaveState = 'editing' | 'saved' | 'dismissed';
 
 export function WaistMeasurementPanel({
   date,
+  fields,
   logs,
   onLogsChange,
 }: {
   date: Date;
+  fields: MeasurementFieldDefinition[];
   logs: Record<string, DailyLog>;
   onLogsChange: (logs: Record<string, DailyLog>) => void;
 }) {
   const dateKey = formatDateKey(date);
+  const needsWaist = fields.some((field) => field.key === 'waistCm');
+  const needsShoulder = fields.some((field) => field.key === 'shoulderCm');
   const todayWaist = getValidBodyMeasurement(logs[dateKey]?.waistCm);
   const todayShoulder = getValidBodyMeasurement(logs[dateKey]?.shoulderCm);
   const profileWaist = getValidBodyMeasurement(loadUserProfile()?.waistCircumferenceCm) ?? getValidBodyMeasurement(getDefaultProfile().waistCircumferenceCm);
   const profileShoulder = getValidBodyMeasurement(loadUserProfile()?.shoulderCircumferenceCm) ?? getValidBodyMeasurement(getDefaultProfile().shoulderCircumferenceCm);
   const lastWaist = getLastKnownBodyMeasurement(logs, dateKey, 'waistCm') ?? profileWaist;
   const lastShoulder = getLastKnownBodyMeasurement(logs, dateKey, 'shoulderCm') ?? profileShoulder;
-  const [saveState, setSaveState] = useState<MeasurementSaveState>(todayWaist === null || todayShoulder === null ? 'editing' : 'dismissed');
+  const [saveState, setSaveState] = useState<MeasurementSaveState>(
+    (needsWaist && todayWaist === null) || (needsShoulder && todayShoulder === null) ? 'editing' : 'dismissed'
+  );
   const [waistInput, setWaistInput] = useState(() => formatBodyMeasurementInput(todayWaist ?? lastWaist));
   const [shoulderInput, setShoulderInput] = useState(() => formatBodyMeasurementInput(todayShoulder ?? lastShoulder));
   const [savedMeasurements, setSavedMeasurements] = useState<{ waist: number; shoulder: number } | null>(null);
@@ -69,6 +76,9 @@ export function WaistMeasurementPanel({
   const shouldReduceMotion = useReducedMotion();
   const displayedWaist = savedMeasurements?.waist ?? todayWaist;
   const displayedShoulder = savedMeasurements?.shoulder ?? todayShoulder;
+  const title = needsWaist && needsShoulder ? 'Waist + shoulders' : needsShoulder ? 'Shoulders' : 'Waist';
+  const measured = (!needsWaist || todayWaist !== null) && (!needsShoulder || todayShoulder !== null);
+  const saveLabel = needsWaist && needsShoulder ? 'Save waist and shoulders' : needsShoulder ? 'Save shoulders' : 'Save waist';
 
   useEffect(() => {
     if (saveState !== 'saved') return undefined;
@@ -83,25 +93,25 @@ export function WaistMeasurementPanel({
   const saveMeasurements = () => {
     const nextWaist = parseBodyMeasurement(waistInput);
     const nextShoulder = parseBodyMeasurement(shoulderInput);
-    if (nextWaist === null || nextWaist < 40 || nextWaist > 180) {
+    if (needsWaist && (nextWaist === null || nextWaist < 40 || nextWaist > 180)) {
       setInputError('Enter waist');
       return;
     }
-    if (nextShoulder === null || nextShoulder < 60 || nextShoulder > 180) {
+    if (needsShoulder && (nextShoulder === null || nextShoulder < 60 || nextShoulder > 180)) {
       setInputError('Enter shoulder');
       return;
     }
 
-    const roundedWaist = roundBodyMeasurement(nextWaist);
-    const roundedShoulder = roundBodyMeasurement(nextShoulder);
+    const roundedWaist = nextWaist === null ? null : roundBodyMeasurement(nextWaist);
+    const roundedShoulder = nextShoulder === null ? null : roundBodyMeasurement(nextShoulder);
 
     saveDailyLog(dateKey, {
       dateKey,
-      waistCm: roundedWaist,
-      shoulderCm: roundedShoulder,
+      ...(needsWaist && roundedWaist !== null ? { waistCm: roundedWaist } : {}),
+      ...(needsShoulder && roundedShoulder !== null ? { shoulderCm: roundedShoulder } : {}),
     });
     onLogsChange(loadDailyLogs());
-    setSavedMeasurements({ waist: roundedWaist, shoulder: roundedShoulder });
+    setSavedMeasurements({ waist: roundedWaist ?? displayedWaist ?? lastWaist ?? 0, shoulder: roundedShoulder ?? displayedShoulder ?? lastShoulder ?? 0 });
     setSaveState('saved');
     setInputError(null);
   };
@@ -128,14 +138,17 @@ export function WaistMeasurementPanel({
                 <Ruler className="h-4 w-4 shrink-0 text-white/45" />
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-fluid-label font-mono uppercase text-white/35">Waist + shoulders</p>
+                <p className="text-fluid-label font-mono uppercase text-white/35">{title}</p>
                 <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
-                  {todayWaist !== null && todayShoulder !== null ? 'Measured today' : 'Same conditions'}
+                  {measured ? 'Measured today' : 'Same conditions'}
                 </p>
               </div>
-              {saveState !== 'editing' && displayedWaist !== null && displayedShoulder !== null && (
+              {saveState !== 'editing' && (displayedWaist !== null || displayedShoulder !== null) && (
                 <p className="shrink-0 text-fluid-label font-mono font-black tabular-nums uppercase text-white/55">
-                  {formatCm(displayedWaist)} / {formatCm(displayedShoulder)}
+                  {[
+                    needsWaist && displayedWaist !== null ? formatCm(displayedWaist) : null,
+                    needsShoulder && displayedShoulder !== null ? formatCm(displayedShoulder) : null,
+                  ].filter(Boolean).join(' / ')}
                 </p>
               )}
             </div>
@@ -149,36 +162,40 @@ export function WaistMeasurementPanel({
                   hint="Same morning, relaxed"
                 >
                   <WatchMeasurementGrid>
-                    <WatchMeasurementInput
-                      label="Waist circumference in centimeters"
-                      min={40}
-                      max={180}
-                      value={waistInput}
-                      onChange={(value) => {
-                        setWaistInput(value);
-                        setInputError(null);
-                      }}
-                      onEnter={saveMeasurements}
-                      compact
-                    />
-                    <WatchMeasurementInput
-                      label="Shoulder circumference in centimeters"
-                      min={60}
-                      max={180}
-                      value={shoulderInput}
-                      onChange={(value) => {
-                        setShoulderInput(value);
-                        setInputError(null);
-                      }}
-                      onEnter={saveMeasurements}
-                      compact
-                    />
+                    {needsWaist && (
+                      <WatchMeasurementInput
+                        label="Waist circumference in centimeters"
+                        min={40}
+                        max={180}
+                        value={waistInput}
+                        onChange={(value) => {
+                          setWaistInput(value);
+                          setInputError(null);
+                        }}
+                        onEnter={saveMeasurements}
+                        compact
+                      />
+                    )}
+                    {needsShoulder && (
+                      <WatchMeasurementInput
+                        label="Shoulder circumference in centimeters"
+                        min={60}
+                        max={180}
+                        value={shoulderInput}
+                        onChange={(value) => {
+                          setShoulderInput(value);
+                          setInputError(null);
+                        }}
+                        onEnter={saveMeasurements}
+                        compact
+                      />
+                    )}
                   </WatchMeasurementGrid>
                 </WatchFormPanel>
                 <Button
                   type="button"
                   size="icon"
-                  aria-label="Save waist and shoulders"
+                  aria-label={saveLabel}
                   onClick={saveMeasurements}
                   className="size-11 rounded-full bg-white text-black active:scale-95"
                 >
