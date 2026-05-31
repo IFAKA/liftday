@@ -62,15 +62,22 @@ function buildRecommendations(input: {
     entry.trend === 'recovery_bottleneck' ||
     entry.trend === 'junk_volume'
   ));
+  const severeSystemicBlocked = input.recovery.systemic < 0.45 && input.fatigue.systemicFatigue > 0.78;
+  const loadProgressionBlockedBySevereFatigue = input.progression.find((entry) => (
+    entry.trend === 'build_reps' &&
+    entry.velocity < 0 &&
+    severeSystemicBlocked
+  ));
 
-  if (systemicBlocked && negativeTrend) {
+  if (systemicBlocked && (negativeTrend || loadProgressionBlockedBySevereFatigue)) {
+    const deloadTrend = negativeTrend ?? loadProgressionBlockedBySevereFatigue!;
     primary.push({
       action: 'deload',
-      muscle: negativeTrend.muscle,
-      exerciseKey: negativeTrend.exerciseKey,
+      muscle: deloadTrend.muscle,
+      exerciseKey: deloadTrend.exerciseKey,
       title: 'Deload First',
       summary: 'Fatigue is hiding output.',
-      reason: input.fatigue.bottlenecks[0] ?? negativeTrend.reasons[0] ?? 'Recovery and performance are both constrained.',
+      reason: input.fatigue.bottlenecks[0] ?? deloadTrend.reasons[0] ?? 'Recovery and performance are both constrained.',
       stimulusGain: 0,
       fatigueCost: -28,
       recoveryState: input.recovery.systemic,

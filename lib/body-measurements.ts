@@ -65,11 +65,11 @@ export function getProfileBodyMeasurement(profile: UserProfile, key: BodyMeasure
   const defaultProfile = getDefaultProfile();
   switch (key) {
     case 'waistCm':
-      return profile.waistCircumferenceCm ?? defaultProfile.waistCircumferenceCm ?? 76.5;
+      return profile.waistCircumferenceCm ?? defaultProfile.waistCircumferenceCm ?? 74.5;
     case 'shoulderCm':
-      return profile.shoulderCircumferenceCm ?? defaultProfile.shoulderCircumferenceCm ?? 111.76;
+      return profile.shoulderCircumferenceCm ?? defaultProfile.shoulderCircumferenceCm ?? 113;
     case 'chestCm':
-      return profile.chestCircumferenceCm ?? defaultProfile.chestCircumferenceCm ?? 89.5;
+      return profile.chestCircumferenceCm ?? defaultProfile.chestCircumferenceCm ?? 91.5;
     case 'hipCm':
       return profile.hipCircumferenceCm ?? defaultProfile.hipCircumferenceCm ?? 85;
     case 'neckCm':
@@ -79,7 +79,7 @@ export function getProfileBodyMeasurement(profile: UserProfile, key: BodyMeasure
     case 'calfCm':
       return profile.calfCircumferenceCm ?? defaultProfile.calfCircumferenceCm ?? 35;
     case 'forearmCm':
-      return profile.forearmCircumferenceCm ?? defaultProfile.forearmCircumferenceCm ?? 25.5;
+      return profile.forearmCircumferenceCm ?? defaultProfile.forearmCircumferenceCm ?? 26;
     case 'wristCm':
       return profile.wristCircumferenceCm ?? defaultProfile.wristCircumferenceCm ?? 16.5;
     case 'ankleCm':

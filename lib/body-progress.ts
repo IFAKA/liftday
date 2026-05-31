@@ -44,15 +44,15 @@ export interface BodyWeeklyPoint {
 }
 
 export const BODY_MEASUREMENT_DEFINITIONS: BodyMeasurementDefinition[] = [
-  { id: 'weight', label: 'Weight', shortLabel: 'Wt', unit: 'kg', logKey: 'morningWeightKg', profileKey: 'weightKg', fallback: 68.6 },
-  { id: 'waist', label: 'Waist', shortLabel: 'Waist', unit: 'cm', logKey: 'waistCm', profileKey: 'waistCircumferenceCm', fallback: 76.5 },
-  { id: 'shoulder', label: 'Shoulder', shortLabel: 'Shoulder', unit: 'cm', logKey: 'shoulderCm', profileKey: 'shoulderCircumferenceCm', fallback: 111.76 },
-  { id: 'chest', label: 'Chest', shortLabel: 'Chest', unit: 'cm', logKey: 'chestCm', profileKey: 'chestCircumferenceCm', fallback: 89.5 },
+  { id: 'weight', label: 'Weight', shortLabel: 'Wt', unit: 'kg', logKey: 'morningWeightKg', profileKey: 'weightKg', fallback: 67.7 },
+  { id: 'waist', label: 'Waist', shortLabel: 'Waist', unit: 'cm', logKey: 'waistCm', profileKey: 'waistCircumferenceCm', fallback: 74.5 },
+  { id: 'shoulder', label: 'Shoulder', shortLabel: 'Shoulder', unit: 'cm', logKey: 'shoulderCm', profileKey: 'shoulderCircumferenceCm', fallback: 113 },
+  { id: 'chest', label: 'Chest', shortLabel: 'Chest', unit: 'cm', logKey: 'chestCm', profileKey: 'chestCircumferenceCm', fallback: 91.5 },
   { id: 'hip', label: 'Hip', shortLabel: 'Hip', unit: 'cm', logKey: 'hipCm', profileKey: 'hipCircumferenceCm', fallback: 85 },
   { id: 'neck', label: 'Neck', shortLabel: 'Neck', unit: 'cm', logKey: 'neckCm', profileKey: 'neckCircumferenceCm', fallback: 37 },
   { id: 'quad', label: 'Quad', shortLabel: 'Quad', unit: 'cm', logKey: 'quadCm', profileKey: 'quadCircumferenceCm', fallback: 50 },
   { id: 'calf', label: 'Calf', shortLabel: 'Calf', unit: 'cm', logKey: 'calfCm', profileKey: 'calfCircumferenceCm', fallback: 35 },
-  { id: 'forearm', label: 'Forearm', shortLabel: 'Forearm', unit: 'cm', logKey: 'forearmCm', profileKey: 'forearmCircumferenceCm', fallback: 25.5 },
+  { id: 'forearm', label: 'Forearm', shortLabel: 'Forearm', unit: 'cm', logKey: 'forearmCm', profileKey: 'forearmCircumferenceCm', fallback: 26 },
   { id: 'wrist', label: 'Wrist', shortLabel: 'Wrist', unit: 'cm', logKey: 'wristCm', profileKey: 'wristCircumferenceCm', fallback: 16.5 },
   { id: 'ankle', label: 'Ankle', shortLabel: 'Ankle', unit: 'cm', logKey: 'ankleCm', profileKey: 'ankleCircumferenceCm', fallback: 22.5 },
   { id: 'biceps', label: 'Biceps', shortLabel: 'Biceps', unit: 'cm', logKey: 'bicepsCm', profileKey: 'bicepsCircumferenceCm', fallback: 28 },

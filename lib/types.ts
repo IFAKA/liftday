@@ -79,7 +79,8 @@ export type GymPullExerciseKey =
   | 'straight_arm_pulldown_cable'
   | 'cable_curl'
   | 'hammer_curl'
-  | 'db_reverse_curl';
+  | 'db_reverse_curl'
+  | 'db_wrist_extension';
 
 // Gym legs exercises
 export type GymLegsExerciseKey =

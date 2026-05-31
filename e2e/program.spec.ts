@@ -108,6 +108,22 @@ test('routine detail uses cable pull-through for the leg-day hinge slot', async 
   expect(bodyText).not.toContain('ROMANIAN DEADLIFT');
 });
 
+test('routine detail shows v5 Saturday delt-arm cap and neutral copy', async ({ page }) => {
+  await page.goto('/program/detail');
+
+  const bodyText = await page.locator('body').innerText();
+  await expect(page.getByRole('link', { name: /CABLE LATERAL RAISE 3x10-20 - 1-2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /CABLE Y RAISE 2x12-20 - 1-2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /CABLE REAR-DELT FLY 2x12-20 - 1-2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /DUMBBELL SHRUG 2x10-15 - 1-2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /OVERHEAD TRICEP EXTENSION 2x10-15 - 1-2 RIR/i }).last()).toBeVisible();
+  await expect(page.getByRole('link', { name: /NECK ISO .* 2x20-30 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /DUMBBELL REVERSE CURL 2x12-20 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /DUMBBELL WRIST EXTENSION 2x12-20 - 2 RIR/i })).toBeVisible();
+  expect(bodyText).not.toMatch(/CABLE LATERAL RAISE[\s\S]{0,80}5x/i);
+  expect(bodyText).not.toMatch(/highest-SMV|dominance|formidability|clothed-SMV/i);
+});
+
 test('today is the watch-style hub for app sections', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
@@ -268,7 +284,7 @@ test('program avoids joint-risk-only deload when progression needs reps', async 
 
   await expect(page.locator('body')).toContainText('Build Side delts Reps');
   await expect(page.locator('body')).toContainText('Repeat or reduce load.');
-  await expect(page.locator('body')).toContainText('Load moved ahead of the 12-20 rep target; repeat or reduce load before adding volume.');
+  await expect(page.locator('body')).toContainText('Load moved ahead of the 10-20 rep target; repeat or reduce load before adding volume.');
   await expect(page.locator('body')).toContainText('Build baseline');
   await expect(page.locator('body')).toContainText('Repeat the same slots until two full weeks are logged.');
   await expect(page.locator('body')).toContainText('Program score');
@@ -321,10 +337,10 @@ test('missed Monday start opens due measurements, gym weight check, then warm-up
   await expect(page.locator('body')).toContainText('Measurements');
   await expect(page.getByRole('spinbutton', { name: /waist centimeters/i })).toBeVisible();
   await page.getByRole('spinbutton', { name: /waist centimeters/i }).fill('77.6');
-  await page.getByRole('spinbutton', { name: /shoulder centimeters/i }).fill('113.7');
-  await page.getByRole('spinbutton', { name: /chest centimeters/i }).fill('92.4');
-  await page.getByRole('spinbutton', { name: /biceps centimeters/i }).fill('29.1');
-  await page.getByRole('spinbutton', { name: /forearm centimeters/i }).fill('26.2');
+  await expect(page.getByRole('spinbutton', { name: /shoulder centimeters/i })).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: /chest centimeters/i })).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: /biceps centimeters/i })).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: /forearm centimeters/i })).toHaveCount(0);
   await expect(page.getByRole('spinbutton', { name: /wrist centimeters/i })).toHaveCount(0);
   await expect(page.getByRole('spinbutton', { name: /ankle centimeters/i })).toHaveCount(0);
   await page.getByRole('button', { name: /^save$/i }).click();
@@ -341,7 +357,7 @@ test('missed Monday start opens due measurements, gym weight check, then warm-up
   await expect.poll(() => page.evaluate(() => {
     const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number; chestCm?: number; bicepsCm?: number; forearmCm?: number }>;
     return logs['2026-05-16'];
-  })).toMatchObject({ dateKey: '2026-05-16', waistCm: 77.6, shoulderCm: 113.7, chestCm: 92.4, bicepsCm: 29.1, forearmCm: 26.2, morningWeightKg: 66.8, weightCheckSkipped: false });
+  })).toMatchObject({ dateKey: '2026-05-16', waistCm: 77.6, morningWeightKg: 66.8, weightCheckSkipped: false });
 
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('66.8kg');
@@ -371,7 +387,7 @@ test('saturday weight check can record no scale and continue to warm-up', async 
   await expect.poll(() => page.evaluate(() => {
     const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number }>;
     return logs['2026-05-16'];
-  })).toMatchObject({ dateKey: '2026-05-16', weightCheckSkipped: true, waistCm: 76.5, shoulderCm: 111.8 });
+  })).toMatchObject({ dateKey: '2026-05-16', weightCheckSkipped: true, waistCm: 74.5 });
 });
 
 test('Monday start can skip due checks and open warm-up', async ({ page }) => {
@@ -463,7 +479,7 @@ test('rest timer next exercise name copies to clipboard', async ({ page }) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await prepareTodayWorkout(page, null);
 
-  for (let setIndex = 0; setIndex < 4; setIndex += 1) {
+  for (let setIndex = 0; setIndex < 3; setIndex += 1) {
     await logSetAndWaitForRest(page, 2);
     await page.getByRole('button', { name: /skip rest/i }).click();
     await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
@@ -645,9 +661,9 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Body progress');
   await expect(page.locator('body')).toContainText('Current');
   await expect(page.locator('body')).toContainText('Weight');
-  await expect(page.locator('body')).toContainText('68.6kg');
+  await expect(page.locator('body')).toContainText('67.7kg');
   await expect(page.locator('body')).toContainText('Waist');
-  await expect(page.locator('body')).toContainText('76.5cm');
+  await expect(page.locator('body')).toContainText('74.5cm');
   await expect(page.locator('body')).toContainText('Ratio progress');
   await expect(page.locator('body')).toContainText('Ratio targets');
   await expect(page.locator('body')).toContainText('Shoulder/waist');
@@ -662,7 +678,7 @@ test('progress opens as summary and drill-down rows, not a tab section', async (
   await expect(page.locator('body')).toContainText('Shoulder');
   await expect(page.locator('body')).toContainText('Chest');
   await expect(page.locator('body')).toContainText('Hip');
-  await expect(page.locator('body')).toContainText('85cm');
+  await expect(page.locator('body')).toContainText('86cm');
   await page.locator('a[href="/history/body/weight"]').click();
   await expect(page).toHaveURL(/\/history\/body\/weight$/);
   await expect(page.locator('body')).toContainText('Weight progress');
@@ -826,7 +842,7 @@ test('body detail uses profile fallback when logs are empty', async ({ page }) =
   await expect(page.locator('body')).toContainText('88.2cm');
   await expect(page.locator('body')).toContainText('May 1');
   await expect(page.locator('body')).toContainText('Current');
-  await expect(page.locator('body')).not.toContainText('68.6kg');
+  await expect(page.locator('body')).not.toContainText('67.7kg');
 });
 
 test('body detail editor saves today body logs and profile height fallback', async ({ page }) => {
@@ -1020,11 +1036,11 @@ test('auto-fills adjusted next set while allowing manual edits', async ({ page }
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
 
   await expect(page.getByText('Add reps')).toBeVisible();
-  await expect(page.locator('body')).toContainText(/14\s*REPS/);
+  await expect(page.locator('body')).toContainText(/12\s*REPS/);
   await expect(page.getByText(/nudge reps while staying in the rep range/i)).toBeVisible();
 
   await page.getByRole('button', { name: 'Decrease' }).nth(1).click();
-  await expect(page.locator('body')).toContainText(/13\s*REPS/);
+  await expect(page.locator('body')).toContainText(/11\s*REPS/);
   await expect(page.getByText(/changed the target/i)).toBeVisible();
 });
 

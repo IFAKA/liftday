@@ -11,7 +11,9 @@ export type DueMeasurementKey =
   | 'neckCm'
   | 'hipCm'
   | 'quadCm'
-  | 'calfCm';
+  | 'calfCm'
+  | 'wristCm'
+  | 'ankleCm';
 
 export interface MeasurementFieldDefinition {
   key: DueMeasurementKey;
@@ -38,6 +40,8 @@ export const MEASUREMENT_FIELD_DEFINITIONS: readonly MeasurementFieldDefinition[
   { key: 'hipCm', label: 'Hip' },
   { key: 'quadCm', label: 'Quad' },
   { key: 'calfCm', label: 'Calf' },
+  { key: 'wristCm', label: 'Wrist' },
+  { key: 'ankleCm', label: 'Ankle' },
 ] as const;
 
 const FIELD_ORDER = new Map(MEASUREMENT_FIELD_DEFINITIONS.map((field, index) => [field.key, index]));
@@ -53,15 +57,22 @@ export function getMeasurementCheckDue(
   let weightDue = false;
   let photoDue = false;
 
-  for (const scheduled of getScheduledMondaysThrough(date)) {
+  for (const scheduled of getScheduledWeightDaysThrough(date)) {
     const scheduledDateKey = formatDateKey(scheduled.date);
-    const dueForCycle = getCycleDueFields(scheduled.weekIndex);
     let cycleHasDue = false;
 
     if (!hasWeightHandled(logs, scheduledDateKey, currentDateKey)) {
       weightDue = true;
       cycleHasDue = true;
     }
+
+    if (cycleHasDue) dueDateKeys.add(scheduledDateKey);
+  }
+
+  for (const scheduled of getScheduledMondaysThrough(date)) {
+    const scheduledDateKey = formatDateKey(scheduled.date);
+    const dueForCycle = getCycleDueFields(scheduled.weekIndex);
+    let cycleHasDue = false;
 
     for (const field of dueForCycle.measurements) {
       if (hasMeasurementHandled(logs, scheduledDateKey, currentDateKey, field.key)) continue;
@@ -107,21 +118,18 @@ function getCycleDueFields(weekIndex: number): {
     MEASUREMENT_FIELD_DEFINITIONS[0],
   ];
 
-  if (weekIndex % 2 === 0) {
+  if (weekIndex % 4 === 0) {
     measurements.push(
       MEASUREMENT_FIELD_DEFINITIONS[1],
       MEASUREMENT_FIELD_DEFINITIONS[2],
       MEASUREMENT_FIELD_DEFINITIONS[3],
-      MEASUREMENT_FIELD_DEFINITIONS[4]
-    );
-  }
-
-  if (weekIndex % 4 === 0) {
-    measurements.push(
+      MEASUREMENT_FIELD_DEFINITIONS[4],
       MEASUREMENT_FIELD_DEFINITIONS[5],
       MEASUREMENT_FIELD_DEFINITIONS[6],
       MEASUREMENT_FIELD_DEFINITIONS[7],
-      MEASUREMENT_FIELD_DEFINITIONS[8]
+      MEASUREMENT_FIELD_DEFINITIONS[8],
+      MEASUREMENT_FIELD_DEFINITIONS[9],
+      MEASUREMENT_FIELD_DEFINITIONS[10]
     );
   }
 
@@ -129,6 +137,19 @@ function getCycleDueFields(weekIndex: number): {
     measurements,
     photos: weekIndex % 4 === 0,
   };
+}
+
+function getScheduledWeightDaysThrough(date: Date): { date: Date; weekIndex: number }[] {
+  const current = startOfLocalDay(date);
+  const monday = getMondayOnOrBefore(current);
+  return [0, 2, 4, 5]
+    .map((dayOffset) => {
+      const scheduledDate = new Date(monday);
+      scheduledDate.setDate(monday.getDate() + dayOffset);
+      return scheduledDate;
+    })
+    .filter((scheduledDate) => scheduledDate <= current)
+    .map((scheduledDate) => ({ date: scheduledDate, weekIndex: getWeeksSinceAnchor(monday) }));
 }
 
 function hasWeightHandled(logs: Record<string, DailyLog>, scheduledDateKey: string, currentDateKey: string): boolean {

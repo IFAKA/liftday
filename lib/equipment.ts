@@ -153,6 +153,7 @@ export const EXERCISE_EQUIPMENT: Record<ExerciseKey, EquipmentKey[]> = {
   db_curl: ['dumbbells'],
   db_incline_curl: ['dumbbells', 'bench'],
   db_reverse_curl: ['dumbbells'],
+  db_wrist_extension: ['dumbbells'],
   goblet_squat: ['dumbbells'],
   // Gym — cable
   cable_tricep_pushdown: ['cable_machine'],

@@ -341,7 +341,7 @@ function buildRoutineFromPlan(
   const base = baseRoutine ?? {
     id: 'gym',
     name: 'Gym',
-    description: 'Deterministic SMV frontier gym routine.',
+    description: 'Deterministic hypertrophy gym routine.',
     icon: 'dumbbell' as const,
     schedule: ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'] as Exclude<WorkoutType, 'rest'>[],
     tierChains: [],
@@ -553,8 +553,8 @@ function getCanonicalRoutineReasons(
   const sessions = Object.values(data).filter((session) => session.logged_at).length;
 
   return [
-    `Using the canonical clothed-SMV routine from the supplied context: ${routine.tierChains.length} slots, ${score.cost.totalSets} weekly sets, and ${longestSession}-minute longest estimated session.`,
-    `Side delts ${sideDelt?.sets ?? 0}/${sideDelt?.target ?? 0}, lats ${lats?.sets ?? 0}/${lats?.target ?? 0}, and rear delts ${rearDelt?.sets ?? 0}/${rearDelt?.target ?? 0} lead because shoulder width, V-taper, and posture carry the highest clothed silhouette ROI.`,
+    `Using the canonical hypertrophy routine from the supplied context: ${routine.tierChains.length} slots, ${score.cost.totalSets} weekly sets, and ${longestSession}-minute longest estimated session.`,
+    `Side delts ${sideDelt?.sets ?? 0}/${sideDelt?.target ?? 0}, lats ${lats?.sets ?? 0}/${lats?.target ?? 0}, and rear delts ${rearDelt?.sets ?? 0}/${rearDelt?.target ?? 0} lead because shoulder width, V-taper, and posture are the top program priorities.`,
     'Legs are maintenance-support, not a growth focus; heavy lower-body work is capped so recoverability stays available for upper-body visual change.',
     'Default exercise choices avoid unavailable Smith incline, machine shoulder press, and machine lateral raise while preserving cable, dumbbell, pulldown, row, hack squat, and leg press work.',
     `Indirect-set-aware scoring is active with ${fallbackSets} fallback sets; ${sessions} logged sessions can still influence progression, fatigue, and recommendation logic.`,

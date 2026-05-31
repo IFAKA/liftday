@@ -31,8 +31,8 @@ import { parseBodyMeasurement, roundBodyMeasurement } from '@/lib/body-measureme
 import { BodyEditorForm, type BodyEditorDraft } from './body/BodyEditorForm';
 import { compressProgressPhotoFile, listProgressPhotos, saveProgressPhoto } from '@/lib/progress-photos';
 
-const CURRENT_WEIGHT_KG = 68.6;
-const CURRENT_WAIST_CM = 76.5;
+const CURRENT_WEIGHT_KG = 67.7;
+const CURRENT_WAIST_CM = 74.5;
 const ADONIS_INDEX_TARGET = 1.62;
 
 interface BodySnapshot {
@@ -443,13 +443,13 @@ function getBodyModel(profile: UserProfile, logs: Record<string, DailyLog>) {
   const heightCm = getMeasurementValue('height') ?? 172;
   const weightKg = getMeasurementValue('weight') ?? CURRENT_WEIGHT_KG;
   const waistCm = getMeasurementValue('waist') ?? CURRENT_WAIST_CM;
-  const shoulderCm = getMeasurementValue('shoulder') ?? 111.76;
-  const chestCm = getMeasurementValue('chest') ?? 89.5;
+  const shoulderCm = getMeasurementValue('shoulder') ?? 113;
+  const chestCm = getMeasurementValue('chest') ?? 91.5;
   const hipCm = getMeasurementValue('hip') ?? 85;
   const neckCm = getMeasurementValue('neck') ?? 37;
   const quadCm = getMeasurementValue('quad') ?? 50;
   const calfCm = getMeasurementValue('calf') ?? 35;
-  const forearmCm = getMeasurementValue('forearm') ?? 25.5;
+  const forearmCm = getMeasurementValue('forearm') ?? 26;
   const wristCm = getMeasurementValue('wrist') ?? 16.5;
   const ankleCm = getMeasurementValue('ankle') ?? 22.5;
   const bicepsCm = getMeasurementValue('biceps') ?? 28;
@@ -928,5 +928,6 @@ function roundChartPoint(value: number): number {
 }
 
 function formatBodyComposition(value: UserProfile['bodyComposition']): string {
-  return (value ?? 'skinny_fat').replace('_', ' ');
+  if (!value || value === 'skinny_fat') return 'baseline';
+  return value.replace('_', ' ');
 }

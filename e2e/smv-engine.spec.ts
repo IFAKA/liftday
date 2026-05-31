@@ -145,15 +145,15 @@ test('allows the smallest load jump when average reps are near the top at target
   const prescription = getPrescriptionForChain(chain!, 'db_incline_press', 3);
 
   expect(evaluateDoubleProgression([
-    { reps: 10, weight: 50, rir: 2 },
-    { reps: 10, weight: 50, rir: 1 },
-    { reps: 10, weight: 50, rir: 2 },
+    { reps: 12, weight: 50, rir: 2 },
+    { reps: 12, weight: 50, rir: 1 },
+    { reps: 12, weight: 50, rir: 2 },
   ], prescription).increaseLoad).toBe(true);
 
   expect(evaluateDoubleProgression([
-    { reps: 10, weight: 50, rir: 2 },
-    { reps: 9, weight: 50, rir: 1 },
-    { reps: 10, weight: 50, rir: 2 },
+    { reps: 12, weight: 50, rir: 2 },
+    { reps: 11, weight: 50, rir: 1 },
+    { reps: 12, weight: 50, rir: 2 },
   ], prescription).increaseLoad).toBe(true);
 });
 
@@ -520,6 +520,7 @@ test('heavier load below target reps becomes build-reps guidance', () => {
     data: migrateWorkoutData({
       '2026-05-08': session('push_b', { db_incline_press: [{ reps: 6, weight: 60, rir: 1 }] }),
       '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
+      '2026-04-24': session('push_b', { db_incline_press: [{ reps: 12, weight: 50, rir: 2 }] }),
     }),
     recovery,
     fatigue,

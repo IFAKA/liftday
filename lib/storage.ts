@@ -116,14 +116,14 @@ export function migrateUserProfile(profile: UserProfile): UserProfile {
   if (!migrated.age) migrated.age = 26;
   if (!migrated.sex) migrated.sex = 'male';
   if (!migrated.bodyComposition) migrated.bodyComposition = 'skinny_fat';
-  if (!migrated.shoulderCircumferenceCm) migrated.shoulderCircumferenceCm = 111.76;
-  if (!migrated.chestCircumferenceCm) migrated.chestCircumferenceCm = 89.5;
-  if (!migrated.waistCircumferenceCm) migrated.waistCircumferenceCm = 76.5;
-  if (!migrated.hipCircumferenceCm) migrated.hipCircumferenceCm = 85;
+  if (!migrated.shoulderCircumferenceCm) migrated.shoulderCircumferenceCm = 113;
+  if (!migrated.chestCircumferenceCm) migrated.chestCircumferenceCm = 91.5;
+  if (!migrated.waistCircumferenceCm) migrated.waistCircumferenceCm = 74.5;
+  if (!migrated.hipCircumferenceCm) migrated.hipCircumferenceCm = 86;
   if (!migrated.neckCircumferenceCm) migrated.neckCircumferenceCm = 37;
   if (!migrated.quadCircumferenceCm) migrated.quadCircumferenceCm = 50;
   if (!migrated.calfCircumferenceCm) migrated.calfCircumferenceCm = 35;
-  if (!migrated.forearmCircumferenceCm) migrated.forearmCircumferenceCm = 25.5;
+  if (!migrated.forearmCircumferenceCm) migrated.forearmCircumferenceCm = 26;
   if (!migrated.wristCircumferenceCm) migrated.wristCircumferenceCm = 16.5;
   if (!migrated.ankleCircumferenceCm) migrated.ankleCircumferenceCm = 22.5;
   if (!migrated.bicepsCircumferenceCm) migrated.bicepsCircumferenceCm = 28;
@@ -132,7 +132,7 @@ export function migrateUserProfile(profile: UserProfile): UserProfile {
   if (migrated.gymAccess === undefined) migrated.gymAccess = true;
   if (!migrated.injuryStatus) migrated.injuryStatus = 'No injuries or pain';
   if (!migrated.maxWorkoutMinutes) migrated.maxWorkoutMinutes = 105;
-  if (!migrated.goal) migrated.goal = 'Maximize SMV efficient frontier as fast as recoverable';
+  if (!migrated.goal) migrated.goal = 'Build a balanced, recoverable hypertrophy routine';
   if (!migrated.targetDate) migrated.targetDate = SMV_PROFILE_DEFAULTS.targetDate;
   if (!migrated.proteinTargetGrams) migrated.proteinTargetGrams = SMV_PROFILE_DEFAULTS.proteinTargetGrams;
   if (!migrated.calorieSurplusTarget) migrated.calorieSurplusTarget = SMV_PROFILE_DEFAULTS.calorieSurplusTarget;
@@ -241,14 +241,14 @@ export function getDefaultProfile(): UserProfile {
     age: 26,
     sex: 'male',
     bodyComposition: 'skinny_fat',
-    shoulderCircumferenceCm: 111.76,
-    chestCircumferenceCm: 89.5,
-    waistCircumferenceCm: 76.5,
-    hipCircumferenceCm: 85,
+    shoulderCircumferenceCm: 113,
+    chestCircumferenceCm: 91.5,
+    waistCircumferenceCm: 74.5,
+    hipCircumferenceCm: 86,
     neckCircumferenceCm: 37,
     quadCircumferenceCm: 50,
     calfCircumferenceCm: 35,
-    forearmCircumferenceCm: 25.5,
+    forearmCircumferenceCm: 26,
     wristCircumferenceCm: 16.5,
     ankleCircumferenceCm: 22.5,
     bicepsCircumferenceCm: 28,
@@ -257,7 +257,7 @@ export function getDefaultProfile(): UserProfile {
     gymAccess: true,
     injuryStatus: 'No injuries or pain',
     maxWorkoutMinutes: 105,
-    goal: 'Maximize SMV efficient frontier as fast as recoverable',
+    goal: 'Build a balanced, recoverable hypertrophy routine',
     targetDate: SMV_PROFILE_DEFAULTS.targetDate,
     proteinTargetGrams: SMV_PROFILE_DEFAULTS.proteinTargetGrams,
     calorieSurplusTarget: SMV_PROFILE_DEFAULTS.calorieSurplusTarget,

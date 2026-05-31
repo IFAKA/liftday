@@ -203,8 +203,8 @@ export function WeeklyMeasurementScreen({
     });
     setBodyProfileFallbacks({
       heightCm: getValidBodyMeasurement(todayLog?.heightCm) ?? getValidBodyMeasurement(profile.heightCm) ?? defaultProfile.heightCm ?? 172,
-      weightKg: getValidBodyMeasurement(todayLog?.morningWeightKg) ?? getValidBodyMeasurement(profile.weightKg) ?? defaultProfile.weightKg ?? 68.6,
-      waistCircumferenceCm: measurementLog.waistCm ?? getValidBodyMeasurement(profile.waistCircumferenceCm) ?? defaultProfile.waistCircumferenceCm ?? 76.5,
+      weightKg: getValidBodyMeasurement(todayLog?.morningWeightKg) ?? getValidBodyMeasurement(profile.weightKg) ?? defaultProfile.weightKg ?? 67.7,
+      waistCircumferenceCm: measurementLog.waistCm ?? getValidBodyMeasurement(profile.waistCircumferenceCm) ?? defaultProfile.waistCircumferenceCm ?? 74.5,
       shoulderCircumferenceCm: measurementLog.shoulderCm,
       chestCircumferenceCm: measurementLog.chestCm,
       hipCircumferenceCm: measurementLog.hipCm,
@@ -212,6 +212,8 @@ export function WeeklyMeasurementScreen({
       quadCircumferenceCm: measurementLog.quadCm,
       calfCircumferenceCm: measurementLog.calfCm,
       forearmCircumferenceCm: measurementLog.forearmCm,
+      wristCircumferenceCm: measurementLog.wristCm,
+      ankleCircumferenceCm: measurementLog.ankleCm,
       bicepsCircumferenceCm: measurementLog.bicepsCm,
     });
     onComplete(loadDailyLogs());

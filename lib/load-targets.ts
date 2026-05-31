@@ -20,6 +20,7 @@ const DEFAULT_LOAD_BY_EXERCISE: Partial<Record<ExerciseKey, number>> = {
   db_curl: 10,
   db_incline_curl: 10,
   db_reverse_curl: 7.5,
+  db_wrist_extension: 5,
 };
 
 const FIVE_KG_STACK_EXERCISES = new Set<ExerciseKey>([

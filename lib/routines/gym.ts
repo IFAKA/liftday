@@ -57,7 +57,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_lateral_raise',
       alternatives: ['db_lateral_raise'],
       exercises: ['cable_lateral_raise'],
-      prescription: prescription(5, 12, 20, '90 sec', 'Side delts first. Lead with elbow, no trap heave.', '1-2 RIR', '0-1 RIR only if reps stay clean'),
+      prescription: prescription(4, 10, 20, '60-120 sec', 'Side delts first. Lead with elbow, no trap heave.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'push_a_incline_db',
@@ -67,7 +67,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'db_incline_press',
       alternatives: ['high_incline_machine_press', 'barbell_bench_press'],
       exercises: ['db_incline_press'],
-      prescription: prescription(4, 6, 10, '3 min', 'Upper chest after side delts. Deep controlled reps, no grind.'),
+      prescription: prescription(4, 8, 12, '2.5-3.5 min', 'Upper chest after side delts. Deep controlled reps, no grind.'),
     },
     {
       slotId: 'push_a_low_high_fly',
@@ -77,7 +77,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_fly',
       alternatives: ['pec_deck'],
       exercises: ['cable_fly'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Low-to-high arc. Squeeze without shoulder roll.', '1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Low-to-high arc. Squeeze without shoulder roll.'),
     },
     {
       slotId: 'push_a_overhead_triceps',
@@ -87,7 +87,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'overhead_tricep_ext',
       alternatives: ['cable_tricep_pushdown'],
       exercises: ['overhead_tricep_ext'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Long-head stretch. Elbows fixed.', '0-1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Long-head stretch. Elbows fixed.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'push_a_pressdown',
@@ -97,7 +97,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_tricep_pushdown',
       alternatives: ['overhead_tricep_ext'],
       exercises: ['cable_tricep_pushdown'],
-      prescription: prescription(3, 10, 15, '90 sec', 'Hard lockout, shoulders still.', '0-1 RIR'),
+      prescription: prescription(3, 10, 15, '60-120 sec', 'Hard lockout, shoulders still.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
 
     {
@@ -108,7 +108,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'lat_pulldown',
       alternatives: ['neutral_grip_pulldown', 'pullup'],
       exercises: ['lat_pulldown'],
-      prescription: prescription(4, 8, 12, '2.5 min', 'Elbows to ribs. Full stretch.'),
+      prescription: prescription(4, 8, 12, '2-3 min', 'Elbows to ribs. Full stretch.'),
     },
     {
       slotId: 'pull_a_chest_supported_row',
@@ -118,7 +118,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'chest_supported_row',
       alternatives: ['cable_row', 'braced_cable_row'],
       exercises: ['chest_supported_row'],
-      prescription: prescription(3, 8, 12, '2.5 min', 'Torso fixed. Pull through elbows.'),
+      prescription: prescription(3, 8, 12, '2-3 min', 'Torso fixed. Pull through elbows.'),
     },
     {
       slotId: 'pull_a_straight_arm',
@@ -127,7 +127,7 @@ export const gymRoutine: RoutineConfig = {
       priority: 'high',
       selectedExercise: 'straight_arm_pulldown_cable',
       exercises: ['straight_arm_pulldown_cable'],
-      prescription: prescription(2, 12, 15, '90 sec', 'Arms long. Drive hands to hips.', '1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Arms long. Drive hands to hips.'),
     },
     {
       slotId: 'pull_a_rear_delt',
@@ -137,7 +137,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_rear_delt_fly',
       alternatives: ['reverse_pec_deck', 'cable_face_pull'],
       exercises: ['cable_rear_delt_fly'],
-      prescription: prescription(3, 15, 25, '90 sec', 'Wide sweep. Rear delts only.', '0-1 RIR'),
+      prescription: prescription(3, 12, 20, '60-120 sec', 'Wide sweep. Rear delts only.'),
     },
     {
       slotId: 'pull_a_cable_curl',
@@ -147,7 +147,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_curl',
       alternatives: ['db_curl'],
       exercises: ['cable_curl'],
-      prescription: prescription(2, 8, 15, '90 sec', 'Elbows pinned. Full stretch.', '0-1 RIR'),
+      prescription: prescription(2, 8, 12, '60-120 sec', 'Elbows pinned. Full stretch.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'pull_a_hammer_curl',
@@ -157,7 +157,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'hammer_curl',
       alternatives: ['db_curl', 'cable_curl'],
       exercises: ['hammer_curl'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Neutral grip. Control the eccentric.', '0-1 RIR'),
+      prescription: prescription(2, 8, 12, '60-120 sec', 'Neutral grip. Control the eccentric.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
 
     {
@@ -168,7 +168,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'hack_squat',
       alternatives: ['barbell_squat', 'leg_press'],
       exercises: ['hack_squat'],
-      prescription: prescription(2, 6, 10, '3 min', 'Controlled quad work. Leave lower-body fatigue contained.', '2 RIR'),
+      prescription: prescription(3, 8, 12, '2.5-3.5 min', 'Controlled quad work. Leave lower-body fatigue contained.'),
     },
     {
       slotId: 'legs_rdl',
@@ -178,7 +178,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_pull_through',
       alternatives: ['glute_machine', 'leg_curl_machine'],
       exercises: ['cable_pull_through'],
-      prescription: prescription(2, 10, 15, '2 min', 'Hips back, slight knee bend. Stretch glutes and hamstrings, then drive hips forward. Controlled eccentric; do not squat it or hyperextend the lower back.', '1-2 RIR'),
+      prescription: prescription(3, 10, 15, '2-3 min', 'Hips back, slight knee bend. Stretch glutes and hamstrings, then drive hips forward. Controlled eccentric; do not squat it or hyperextend the lower back.'),
     },
     {
       slotId: 'legs_leg_press',
@@ -197,7 +197,7 @@ export const gymRoutine: RoutineConfig = {
       priority: 'support',
       selectedExercise: 'leg_curl_machine',
       exercises: ['leg_curl_machine'],
-      prescription: prescription(2, 8, 12, '90 sec', 'Curl hard. Slow return.', '1 RIR'),
+      prescription: prescription(3, 8, 15, '60-120 sec', 'Curl hard. Slow return.'),
     },
     {
       slotId: 'legs_extension',
@@ -206,7 +206,7 @@ export const gymRoutine: RoutineConfig = {
       priority: 'support',
       selectedExercise: 'leg_extension_machine',
       exercises: ['leg_extension_machine'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Smooth knee extension. No joint pain reps.', '1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Smooth knee extension. No joint pain reps.'),
     },
     {
       slotId: 'legs_calf',
@@ -216,7 +216,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'standing_calf_raise_machine',
       alternatives: ['calf_raise'],
       exercises: ['standing_calf_raise_machine'],
-      prescription: prescription(3, 8, 15, '90 sec', 'Full stretch, full peak.', '1 RIR'),
+      prescription: prescription(3, 8, 15, '60-120 sec', 'Full stretch, full peak.'),
     },
 
     {
@@ -227,7 +227,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_lateral_raise',
       alternatives: ['db_lateral_raise'],
       exercises: ['cable_lateral_raise'],
-      prescription: prescription(4, 12, 20, '90 sec', 'Side delts first. Quality over load.', '1-2 RIR', '0-1 RIR only if reps stay clean'),
+      prescription: prescription(4, 10, 20, '60-120 sec', 'Side delts first. Quality over load.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'push_b_incline_db',
@@ -237,7 +237,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'db_incline_press',
       alternatives: ['high_incline_machine_press'],
       exercises: ['db_incline_press'],
-      prescription: prescription(3, 8, 12, '2.5 min', 'Upper chest. Match sides.'),
+      prescription: prescription(3, 8, 12, '2.5-3.5 min', 'Upper chest. Match sides.'),
     },
     {
       slotId: 'push_b_bench',
@@ -247,7 +247,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'barbell_bench_press',
       alternatives: ['db_incline_press'],
       exercises: ['barbell_bench_press'],
-      prescription: prescription(2, 6, 10, '3 min', 'Stable press top-up. Do not chase failure.'),
+      prescription: prescription(2, 6, 10, '2.5-3.5 min', 'Stable press top-up. Do not chase failure.'),
     },
     {
       slotId: 'push_b_fly',
@@ -257,7 +257,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_fly',
       alternatives: ['pec_deck'],
       exercises: ['cable_fly'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Pec-deck/cable fly stimulus without extra pressing.', '1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Pec-deck/cable fly stimulus without extra pressing.'),
     },
     {
       slotId: 'push_b_pressdown',
@@ -267,7 +267,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_tricep_pushdown',
       alternatives: ['overhead_tricep_ext'],
       exercises: ['cable_tricep_pushdown'],
-      prescription: prescription(2, 8, 15, '90 sec', 'Hard triceps, quiet shoulders.', '0-1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Hard triceps, quiet shoulders.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'push_b_overhead_triceps',
@@ -277,7 +277,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'overhead_tricep_ext',
       alternatives: ['cable_tricep_pushdown'],
       exercises: ['overhead_tricep_ext'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Long-head top-up only if elbows feel clean.', '0-1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Long-head top-up only if elbows feel clean.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
 
     {
@@ -288,7 +288,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'lat_pulldown',
       alternatives: ['neutral_grip_pulldown', 'pullup'],
       exercises: ['lat_pulldown'],
-      prescription: prescription(4, 6, 10, '2.5 min', 'Pulldown or pull-up progression. Elbows down.'),
+      prescription: prescription(4, 8, 12, '2-3 min', 'Pulldown or pull-up progression. Elbows down.'),
     },
     {
       slotId: 'pull_b_cable_row',
@@ -298,7 +298,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'chest_supported_row',
       alternatives: ['cable_row', 'braced_cable_row'],
       exercises: ['chest_supported_row'],
-      prescription: prescription(2, 8, 12, '2.5 min', 'Torso fixed. Pull through elbows.'),
+      prescription: prescription(3, 8, 12, '2-3 min', 'Torso fixed. Pull through elbows.'),
     },
     {
       slotId: 'pull_b_one_arm_lat_row',
@@ -308,7 +308,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'one_arm_cable_lat_row',
       alternatives: ['straight_arm_pulldown_cable', 'cable_row'],
       exercises: ['one_arm_cable_lat_row'],
-      prescription: prescription(3, 10, 15, '90 sec', 'Drive elbow to hip. Bias lat, not twist.', '1 RIR'),
+      prescription: prescription(3, 8, 12, '2-3 min', 'Drive elbow to hip. Bias lat, not twist.'),
     },
     {
       slotId: 'pull_b_face_pull',
@@ -318,7 +318,16 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_face_pull',
       alternatives: ['cable_rear_delt_fly', 'reverse_pec_deck'],
       exercises: ['cable_face_pull'],
-      prescription: prescription(4, 15, 25, '90 sec', 'Posture and rear delt work. Smooth external rotation.', '1 RIR'),
+      prescription: prescription(3, 12, 20, '60-120 sec', 'Posture and rear delt work. Smooth external rotation.'),
+    },
+    {
+      slotId: 'pull_b_straight_arm',
+      workoutType: 'pull_b',
+      fixed: true,
+      priority: 'support',
+      selectedExercise: 'straight_arm_pulldown_cable',
+      exercises: ['straight_arm_pulldown_cable'],
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Optional lat isolation. Cut first if session time or fatigue is high.'),
     },
     {
       slotId: 'pull_b_hammer_curl',
@@ -328,7 +337,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'hammer_curl',
       alternatives: ['cable_curl', 'db_curl'],
       exercises: ['hammer_curl'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Brachialis and forearm sleeve thickness without another lat-fatigue slot.', '0-1 RIR'),
+      prescription: prescription(2, 8, 12, '60-120 sec', 'Optional arm support. Cut first if elbows or biceps feel beat up.'),
     },
 
     {
@@ -339,7 +348,17 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_lateral_raise',
       alternatives: ['db_lateral_raise'],
       exercises: ['cable_lateral_raise'],
-      prescription: prescription(5, 15, 25, '90 sec', 'Pure side-delt volume. Stop when traps take over.', '0-1 RIR'),
+      prescription: prescription(3, 10, 20, '60-120 sec', 'Pure side-delt volume. Stop when traps take over.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
+    },
+    {
+      slotId: 'delts_arms_y_raise',
+      workoutType: 'delts_arms',
+      fixed: true,
+      priority: 'high',
+      selectedExercise: 'cable_y_raise',
+      alternatives: ['db_lateral_raise'],
+      exercises: ['cable_y_raise'],
+      prescription: prescription(2, 12, 20, '60-120 sec', 'Light Y raise in the scapular plane. Stop before shrugging.'),
     },
     {
       slotId: 'delts_arms_rear_delt',
@@ -349,7 +368,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_rear_delt_fly',
       alternatives: ['reverse_pec_deck', 'cable_face_pull'],
       exercises: ['cable_rear_delt_fly'],
-      prescription: prescription(4, 15, 25, '75 sec', 'Posture top-up. Rear delts only, traps quiet.', '0-1 RIR'),
+      prescription: prescription(2, 12, 20, '60-120 sec', 'Posture top-up. Rear delts only, traps quiet.'),
     },
     {
       slotId: 'delts_arms_shrug',
@@ -358,7 +377,7 @@ export const gymRoutine: RoutineConfig = {
       priority: 'aesthetic',
       selectedExercise: 'db_shrug',
       exercises: ['db_shrug'],
-      prescription: prescription(2, 10, 15, '2 min', 'Neck-to-shoulder thickness. No rolling.'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Neck-to-shoulder trap work. No rolling.'),
     },
     {
       slotId: 'delts_arms_cable_curl',
@@ -368,7 +387,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_curl',
       alternatives: ['db_curl'],
       exercises: ['cable_curl'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Cable tension. Elbows pinned.', '0-1 RIR'),
+      prescription: prescription(2, 8, 12, '60-120 sec', 'Cable tension. Elbows pinned.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'delts_arms_hammer_curl',
@@ -378,17 +397,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'hammer_curl',
       alternatives: ['db_reverse_curl', 'db_curl', 'cable_curl'],
       exercises: ['hammer_curl'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Hammer or reverse curl for brachialis and forearm thickness.', '0-1 RIR'),
-    },
-    {
-      slotId: 'delts_arms_reverse_curl',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'aesthetic',
-      selectedExercise: 'db_reverse_curl',
-      alternatives: ['hammer_curl'],
-      exercises: ['db_reverse_curl'],
-      prescription: prescription(2, 12, 18, '75 sec', 'Low-dose forearm top-up. Stop before wrist or elbow irritation.', '1-2 RIR'),
+      prescription: prescription(2, 8, 12, '60-120 sec', 'Hammer curl for brachialis and forearm support.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'delts_arms_overhead_triceps',
@@ -398,7 +407,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'overhead_tricep_ext',
       alternatives: ['cable_tricep_pushdown'],
       exercises: ['overhead_tricep_ext'],
-      prescription: prescription(2, 10, 15, '90 sec', 'Long-head stretch. Stop for elbow irritation.', '0-1 RIR'),
+      prescription: prescription(2, 10, 15, '60-120 sec', 'Long-head stretch. Stop for elbow irritation.', '1-2 RIR', '0-1 RIR only on the final set if recovery is stable'),
     },
     {
       slotId: 'delts_arms_neck_iso',
@@ -408,7 +417,26 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'neck_iso_ext',
       alternatives: ['neck_iso_flex'],
       exercises: ['neck_iso_ext'],
-      prescription: prescription(2, 20, 30, '60 sec', 'Easy neck isometrics. Gentle pressure only.', '2 RIR'),
+      prescription: prescription(2, 20, 30, '60-120 sec', 'Easy neck isometrics. Gentle pressure only.', '2 RIR'),
+    },
+    {
+      slotId: 'delts_arms_reverse_curl',
+      workoutType: 'delts_arms',
+      fixed: true,
+      priority: 'aesthetic',
+      selectedExercise: 'db_reverse_curl',
+      alternatives: ['hammer_curl'],
+      exercises: ['db_reverse_curl'],
+      prescription: prescription(2, 12, 20, '60-120 sec', 'Optional low-dose forearm top-up. Stop before wrist or elbow irritation.', '2 RIR'),
+    },
+    {
+      slotId: 'delts_arms_wrist_extension',
+      workoutType: 'delts_arms',
+      fixed: true,
+      priority: 'aesthetic',
+      selectedExercise: 'db_wrist_extension',
+      exercises: ['db_wrist_extension'],
+      prescription: prescription(2, 12, 20, '60-120 sec', 'Optional wrist extensor work. Keep it light and stop before irritation.', '2 RIR'),
     },
   ],
 };

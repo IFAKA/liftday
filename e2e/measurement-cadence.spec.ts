@@ -29,7 +29,7 @@ async function installRequiredNotificationStack(page: Page) {
   });
 }
 
-test('measurement cadence follows Monday weekly, biweekly, and monthly groups', () => {
+test('measurement cadence follows weekly waist, monthly full checks, and 3-4x weekly weight', () => {
   const emptyLogs: Record<string, DailyLog> = {};
 
   expect(getMeasurementCheckDue(new Date('2026-05-04T08:00:00'), emptyLogs)).toMatchObject({
@@ -38,11 +38,16 @@ test('measurement cadence follows Monday weekly, biweekly, and monthly groups', 
     measurementFields: [{ key: 'waistCm', label: 'Waist' }],
   });
 
+  expect(getMeasurementCheckDue(new Date('2026-05-06T08:00:00'), emptyLogs)).toMatchObject({
+    weightDue: true,
+    photoDue: false,
+  });
+
   expect(getMeasurementCheckDue(new Date('2026-05-11T08:00:00'), emptyLogs).measurementFields.map((field) => field.key))
-    .toEqual(['waistCm', 'shoulderCm', 'chestCm', 'bicepsCm', 'forearmCm']);
+    .toEqual(['waistCm']);
 
   expect(getMeasurementCheckDue(new Date('2026-05-25T08:00:00'), emptyLogs).measurementFields.map((field) => field.key))
-    .toEqual(['waistCm', 'shoulderCm', 'chestCm', 'bicepsCm', 'forearmCm', 'neckCm', 'hipCm', 'quadCm', 'calfCm']);
+    .toEqual(['waistCm', 'shoulderCm', 'chestCm', 'bicepsCm', 'forearmCm', 'neckCm', 'hipCm', 'quadCm', 'calfCm', 'wristCm', 'ankleCm']);
   expect(getMeasurementCheckDue(new Date('2026-05-25T08:00:00'), emptyLogs).photoDue).toBe(true);
 });
 
@@ -57,10 +62,6 @@ test('missed Monday remains due until completed or skipped', () => {
       dateKey: '2026-05-12',
       morningWeightKg: 68.2,
       waistCm: 77.1,
-      shoulderCm: 112,
-      chestCm: 91,
-      bicepsCm: 29,
-      forearmCm: 26,
     },
   })).toMatchObject({
     weightDue: false,
@@ -80,27 +81,31 @@ test('missed Monday remains due until completed or skipped', () => {
   });
 });
 
-test('saturday is not a new scheduled check day', () => {
+test('saturday can be a weight check without extra measurements', () => {
   const logs = {
     '2026-05-11': {
       dateKey: '2026-05-11',
       morningWeightKg: 68.2,
       waistCm: 77.1,
-      shoulderCm: 112,
-      chestCm: 91,
-      bicepsCm: 29,
-      forearmCm: 26,
+    },
+    '2026-05-13': {
+      dateKey: '2026-05-13',
+      morningWeightKg: 68.3,
+    },
+    '2026-05-15': {
+      dateKey: '2026-05-15',
+      morningWeightKg: 68.4,
     },
   };
 
   expect(getMeasurementCheckDue(new Date('2026-05-16T08:00:00'), logs)).toMatchObject({
-    weightDue: false,
+    weightDue: true,
     photoDue: false,
     measurementFields: [],
   });
 });
 
-test('Monday workout gate only renders due fields and saves body fallbacks', async ({ page }) => {
+test('weekly workout gate only renders due waist and saves body fallbacks', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
@@ -117,18 +122,14 @@ test('Monday workout gate only renders due fields and saves body fallbacks', asy
 
   await expect(page.locator('body')).toContainText('Measurements');
   await expect(page.getByRole('spinbutton', { name: /waist centimeters/i })).toBeVisible();
-  await expect(page.getByRole('spinbutton', { name: /shoulder centimeters/i })).toBeVisible();
-  await expect(page.getByRole('spinbutton', { name: /chest centimeters/i })).toBeVisible();
-  await expect(page.getByRole('spinbutton', { name: /biceps centimeters/i })).toBeVisible();
-  await expect(page.getByRole('spinbutton', { name: /forearm centimeters/i })).toBeVisible();
+  await expect(page.getByRole('spinbutton', { name: /shoulder centimeters/i })).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: /chest centimeters/i })).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: /biceps centimeters/i })).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: /forearm centimeters/i })).toHaveCount(0);
   await expect(page.getByRole('spinbutton', { name: /wrist centimeters/i })).toHaveCount(0);
   await expect(page.getByRole('spinbutton', { name: /ankle centimeters/i })).toHaveCount(0);
 
   await page.getByRole('spinbutton', { name: /waist centimeters/i }).fill('77.6');
-  await page.getByRole('spinbutton', { name: /shoulder centimeters/i }).fill('113.7');
-  await page.getByRole('spinbutton', { name: /chest centimeters/i }).fill('92.4');
-  await page.getByRole('spinbutton', { name: /biceps centimeters/i }).fill('29.1');
-  await page.getByRole('spinbutton', { name: /forearm centimeters/i }).fill('26.2');
   await page.getByRole('button', { name: /^save$/i }).click();
 
   await expect(page.locator('body')).toContainText('WEIGHT');
@@ -145,10 +146,6 @@ test('Monday workout gate only renders due fields and saves body fallbacks', asy
       dateKey: '2026-05-11',
       morningWeightKg: 68.4,
       waistCm: 77.6,
-      shoulderCm: 113.7,
-      chestCm: 92.4,
-      bicepsCm: 29.1,
-      forearmCm: 26.2,
     },
     waistFallback: 77.6,
   });
@@ -175,6 +172,8 @@ test('monthly photo check accepts an upload and displays it in body progress', a
         hipCm: 86,
         quadCm: 50.5,
         calfCm: 35.5,
+        wristCm: 16.5,
+        ankleCm: 22.5,
       },
     }));
     localStorage.removeItem('liftday_progress_photos');

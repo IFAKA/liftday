@@ -30,7 +30,7 @@ export function getProgressionQuality(input: {
   const qualities = Object.entries(byExercise).map(([exerciseKey, scores]) => {
     const latest = scores[0];
     const previous = scores[1];
-    const beforePrevious = scores[2];
+  const beforePrevious = scores[2];
     const metadata = getExerciseAdaptationMetadata(exerciseKey as ExerciseKey);
     const muscle = metadata?.primaryMuscles[0];
 
@@ -41,7 +41,7 @@ export function getProgressionQuality(input: {
         confidence: 0.2,
         exerciseKey: exerciseKey as ExerciseKey,
         muscle,
-        reasons: ['Need at least two logged sessions for this lift.'],
+        reasons: ['Need at least three logged sessions for this lift before changing volume.'],
       } satisfies ProgressionQuality;
     }
 
@@ -67,7 +67,7 @@ export function getProgressionQuality(input: {
     );
 
     const execution = prescription
-      ? classifyPrescribedExecution({ latest, previous, prescription, recovery, localFatigue, systemicFatigue: input.fatigue.systemicFatigue })
+      ? classifyPrescribedExecution({ latest, previous, beforePrevious, prescription, recovery, localFatigue, systemicFatigue: input.fatigue.systemicFatigue })
       : null;
 
     if (execution?.trend === 'productive_progress') {
@@ -162,6 +162,7 @@ function getExerciseSessionScores(data: WorkoutData): Partial<Record<ExerciseKey
 function classifyPrescribedExecution(input: {
   latest: ExerciseSessionScore;
   previous: ExerciseSessionScore;
+  beforePrevious?: ExerciseSessionScore;
   prescription: SMVExercisePrescription;
   recovery: number;
   localFatigue: number;
@@ -175,13 +176,18 @@ function classifyPrescribedExecution(input: {
   const loadIncreased = input.latest.avgWeight > input.previous.avgWeight * 1.02;
   const loadSameOrUp = input.latest.avgWeight >= input.previous.avgWeight * 0.98;
   const outputDropped = outputChange < 0.98;
+  const consecutiveOutputDropped = Boolean(
+    input.beforePrevious &&
+    input.latest.score < input.previous.score * 0.96 &&
+    input.previous.score < input.beforePrevious.score * 0.96
+  );
   const outputImproved = outputChange >= 1.02 || (loadSameOrUp && repsChange > 0.4);
   const fatigueLimited = input.recovery < 0.55 || input.localFatigue > 0.65 || input.systemicFatigue > 0.65;
 
-  if (outputDropped && fatigueLimited) {
+  if (consecutiveOutputDropped && fatigueLimited) {
     return {
       trend: 'fatigue_masked',
-      reason: 'Performance fell while recovery or fatigue is limiting output.',
+      reason: 'Performance fell for two consecutive exposures while recovery or fatigue is limiting output.',
     };
   }
 

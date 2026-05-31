@@ -135,6 +135,7 @@ export const EXERCISE_MUSCLE_CONTRIBUTIONS: Partial<Record<ExerciseKey, MuscleCo
   cable_curl: { biceps: 1, forearms: 0.12 },
   hammer_curl: { biceps: 0.75, forearms: 0.6 },
   db_reverse_curl: { forearms: 1, biceps: 0.35 },
+  db_wrist_extension: { forearms: 0.7 },
 
   goblet_squat: { quads: 1, glutes: 0.4, hamstrings: 0.15 },
   barbell_squat: { quads: 1, glutes: 0.5, hamstrings: 0.2 },
@@ -172,7 +173,7 @@ export const SMV_PROFILE_DEFAULTS = {
   age: 26,
   sex: 'male' as const,
   heightCm: 172,
-  weightKg: 68.6,
+  weightKg: 67.7,
   bodyComposition: 'skinny_fat' as const,
   maxWorkoutMinutes: 105,
   targetDate: '2026-10-31',
