@@ -498,7 +498,7 @@ test('warm-up cancel returns to Today without logging the workout', async ({ pag
   await expect.poll(() => page.evaluate(() => localStorage.getItem('traindaily_sessions'))).toBeNull();
 });
 
-test('rest-day today uses measurement cadence for quick checks', async ({ page }) => {
+test('rest-day today exposes supporting drill-down rows without measurement prompts', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-10T10:00:00'));
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');
@@ -507,71 +507,25 @@ test('rest-day today uses measurement cadence for quick checks', async ({ page }
   await page.goto('/');
 
   await expect(page.locator('body')).toContainText('REST');
-  await expect(page.locator('body')).toContainText('Waist');
   await expect(page.locator('body')).not.toContainText('Waist + shoulders');
-  await expect(page.locator('body')).toContainText('Same conditions');
+  await expect(page.locator('body')).not.toContainText('Same conditions');
+  await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
   await expect(page.getByRole('spinbutton', { name: /shoulder circumference/i })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
-
-  await page.getByRole('spinbutton', { name: /waist circumference/i }).fill('76.4');
-  await page.getByRole('button', { name: /save waist/i }).click();
-  await expect(page.locator('body')).not.toContainText('Same conditions', { timeout: 3000 });
-  await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
-  await expect.poll(() => page.evaluate(() => {
-    const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { waistCm?: number; shoulderCm?: number }>;
-    return logs['2026-05-10'];
-  })).toEqual({ dateKey: '2026-05-10', waistCm: 76.4 });
-  await expect(page.locator('body')).not.toContainText('Waist', { timeout: 3000 });
-  await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /mobility/i })).toBeVisible();
-
-  await page.goto('/history/body');
-  await expect(page.locator('body')).toContainText('76.4cm');
 
   await page.goto('/program');
   await page.goto('/');
   await expect(page.locator('body')).toContainText('REST');
-  await expect(page.locator('body')).not.toContainText('Waist');
-  await expect(page.locator('body')).not.toContainText('Measured today');
-  await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /mobility/i })).toBeVisible();
-});
-
-test('rest-day quick measurement hides after scheduled check is already handled', async ({ page }) => {
-  await page.clock.setFixedTime(new Date('2026-05-31T10:00:00'));
-  await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
-    localStorage.setItem('liftday_daily_logs', JSON.stringify({
-      '2026-05-25': {
-        dateKey: '2026-05-25',
-        morningWeightKg: 68.4,
-        waistCm: 76.5,
-        shoulderCm: 111.8,
-        chestCm: 92.2,
-        bicepsCm: 29.4,
-        forearmCm: 26.1,
-        neckCm: 36.5,
-        hipCm: 85.2,
-        quadCm: 50.1,
-        calfCm: 35.2,
-      },
-    }));
-  });
-
-  await page.goto('/');
-
-  await expect(page.locator('body')).toContainText('REST');
   await expect(page.locator('body')).not.toContainText('Waist + shoulders');
   await expect(page.locator('body')).not.toContainText('Same conditions');
   await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /mobility/i })).toBeVisible();
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {

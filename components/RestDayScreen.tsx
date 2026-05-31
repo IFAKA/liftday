@@ -1,16 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { Activity, CalendarDays, ChartBar, Moon, Play, Settings } from 'lucide-react';
 import { MobilityFlow } from './MobilityFlow';
 import { MobilityErrorBoundary } from './MobilityErrorBoundary';
 import { SessionComplete } from './SessionComplete';
-import { DailyLog, MobilityExercise } from '@/lib/types';
+import { MobilityExercise } from '@/lib/types';
 import { WatchListItem, WatchPrimaryAction, WatchScreen } from './WatchSurface';
-import { loadDailyLogs } from '@/lib/storage';
-import { RestDayActionRow, WaistMeasurementPanel } from './rest-day/RestDayPanels';
-import { getMeasurementCheckDue } from '@/lib/measurement-schedule';
+import { RestDayActionRow } from './rest-day/RestDayPanels';
 
 export interface MobilityHookState {
   exercise: MobilityExercise;
@@ -36,17 +33,8 @@ interface RestDayScreenProps {
   mobility: MobilityHookState;
 }
 
-export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mobility }: RestDayScreenProps) {
-  const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>(() => loadDailyLogs());
-  const isSunday = date.getDay() === 0;
+export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility }: RestDayScreenProps) {
   const shouldReduceMotion = useReducedMotion();
-  const dueCheck = getMeasurementCheckDue(date, dailyLogs);
-  const restDayMeasurementFields = dueCheck.measurementFields.filter((field) => field.key === 'waistCm' || field.key === 'shoulderCm');
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDailyLogs(loadDailyLogs());
-  }, []);
 
   if (mobility.isActive) {
     return (
@@ -128,14 +116,6 @@ export function RestDayScreen({ date, nextTraining, weekCompleted, weekTotal, mo
               />
             </RestDayActionRow>
           </nav>
-          {isSunday && restDayMeasurementFields.length > 0 && (
-            <WaistMeasurementPanel
-              date={date}
-              fields={restDayMeasurementFields}
-              logs={dailyLogs}
-              onLogsChange={setDailyLogs}
-            />
-          )}
           <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
             <WatchPrimaryAction
               onClick={mobility.startMobility}
