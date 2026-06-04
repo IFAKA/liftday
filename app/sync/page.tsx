@@ -47,6 +47,7 @@ import {
 
 type SyncMode = 'laptop' | 'phone';
 type TransferState = 'idle' | 'waiting' | 'sending' | 'done' | 'error';
+const OFFER_QUERY_PARAM = 'offer';
 
 interface BarcodeDetectorShape {
   detect(source: CanvasImageSource): Promise<Array<{ rawValue: string }>>;
@@ -57,7 +58,8 @@ interface BarcodeDetectorConstructor {
 }
 
 export default function SyncPage() {
-  const [mode, setMode] = useState<SyncMode>(() => getInitialSyncMode());
+  const [initialOffer] = useState(() => getInitialOfferFromUrl());
+  const [mode, setMode] = useState<SyncMode>(() => initialOffer ? 'phone' : getInitialSyncMode());
 
   return (
     <WatchScreen
@@ -73,7 +75,7 @@ export default function SyncPage() {
           {mode === 'laptop' ? 'Receive from phone' : 'Send to laptop'}
         </p>
         <p className="mt-2 text-fluid-label leading-snug text-white/40">
-          {mode === 'laptop' ? 'Show this QR, then scan the phone answer.' : 'Scan the laptop QR, then show your answer QR.'}
+          {mode === 'laptop' ? 'Phone Camera opens LiftDay.' : 'Show the answer QR to the laptop.'}
         </p>
       </section>
 
@@ -81,7 +83,7 @@ export default function SyncPage() {
         <SyncModeSelector mode={mode} onModeChange={setMode} />
       </WatchDetailsPanel>
 
-      {mode === 'laptop' ? <LaptopSyncPanel /> : <PhoneSyncPanel />}
+      {mode === 'laptop' ? <LaptopSyncPanel /> : <PhoneSyncPanel initialOffer={initialOffer} />}
     </WatchScreen>
   );
 }
@@ -105,6 +107,7 @@ function LaptopSyncPanel() {
   const channelRef = useRef<RTCDataChannel | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const [offerText, setOfferText] = useState('');
+  const [offerLink, setOfferLink] = useState('');
   const [answerText, setAnswerText] = useState('');
   const [qrSrc, setQrSrc] = useState('');
   const [qrError, setQrError] = useState<string | null>(null);
@@ -154,15 +157,18 @@ function LaptopSyncPanel() {
     setQrSrc('');
     setQrError(null);
     setAnswerText('');
+    setOfferLink('');
 
     try {
       const session = await createLaptopOffer();
       const encodedOffer = JSON.stringify(session.offerPayload);
+      const phoneLink = createOfferLink(encodedOffer);
       peerRef.current = session.peer;
       channelRef.current = session.channel;
       sessionIdRef.current = session.sessionId;
       setOfferText(encodedOffer);
-      setMessage('Phone scans this QR. Then scan or paste the phone answer below.');
+      setOfferLink(phoneLink);
+      setMessage('Scan with the phone Camera. LiftDay opens on the phone and creates an answer QR.');
 
       session.channel.onmessage = (event) => {
         handleLaptopChannelMessage(String(event.data));
@@ -172,7 +178,7 @@ function LaptopSyncPanel() {
         setMessage('Direct connection failed. Try a new QR or use file import.');
       };
 
-      await renderQr(encodedOffer, setQrSrc, setQrError);
+      await renderQr(phoneLink, setQrSrc, setQrError);
     } catch {
       setState('error');
       setMessage('This browser could not create a direct sync session. Use file import instead.');
@@ -203,8 +209,9 @@ function LaptopSyncPanel() {
   }
 
   async function copyOffer() {
-    if (!offerText) return;
-    await copyText(offerText);
+    const value = offerLink || offerText;
+    if (!value) return;
+    await copyText(value);
     setCopiedOffer(true);
     window.setTimeout(() => setCopiedOffer(false), 1600);
   }
@@ -214,8 +221,8 @@ function LaptopSyncPanel() {
       <WatchPanel className="rounded-[28px] p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-widest text-white/35">Receive</p>
-            <p className="mt-1 text-xl font-black tracking-tight text-white">Direct pair</p>
+          <p className="text-sm font-black uppercase tracking-widest text-white/35">Receive</p>
+            <p className="mt-1 text-xl font-black tracking-tight text-white">Step 1: phone scan</p>
           </div>
           <StatusPill state={state} />
         </div>
@@ -234,7 +241,7 @@ function LaptopSyncPanel() {
         </Button>
       </WatchPanel>
 
-      <WatchDetailsPanel summary="Phone answer" className="mt-4">
+      <WatchDetailsPanel summary="Step 2: laptop answer" className="mt-4">
         <ScannerBox
           scanning={scanning}
           setScanning={setScanning}
@@ -253,11 +260,16 @@ function LaptopSyncPanel() {
           submitLabel="Use answer"
         />
         <ManualPairingText
-          label="Laptop offer"
-          value={offerText}
+          label="Phone link"
+          value={offerLink}
           readOnly
           onCopy={copyOffer}
           copied={copiedOffer}
+        />
+        <ManualPairingText
+          label="Raw offer"
+          value={offerText}
+          readOnly
         />
       </WatchDetailsPanel>
 
@@ -277,17 +289,17 @@ function LaptopSyncPanel() {
   );
 }
 
-function PhoneSyncPanel() {
+function PhoneSyncPanel({ initialOffer }: { initialOffer: string | null }) {
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
-  const [offerText, setOfferText] = useState('');
+  const [offerText, setOfferText] = useState(() => initialOffer ?? '');
   const [answerText, setAnswerText] = useState('');
   const [answerQrSrc, setAnswerQrSrc] = useState('');
   const [qrError, setQrError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [state, setState] = useState<TransferState>('idle');
   const [message, setMessage] = useState(() => hasWebRtcSupport()
-    ? 'Scan the laptop QR.'
+    ? initialOffer ? 'Creating answer QR.' : 'Scan the laptop QR from inside LiftDay, or use the phone Camera on the laptop QR.'
     : 'This browser cannot use direct WebRTC sync. Save a backup file instead.'
   );
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -299,8 +311,25 @@ function PhoneSyncPanel() {
     };
   }, []);
 
-  async function acceptOffer(rawOffer = offerText) {
-    if (!rawOffer.trim()) return;
+  const handlePhoneChannelMessage = useCallback((raw: string, expectedSessionId: string) => {
+    try {
+      const payload = parseSyncChannelMessage(raw, expectedSessionId);
+      if (payload.type === 'imported') {
+        setState('done');
+        setMessage(`Sent. Laptop restored ${payload.importedSessions} sessions.`);
+      } else if (payload.type === 'error') {
+        setState('error');
+        setMessage(payload.message);
+      }
+    } catch (error) {
+      setState('error');
+      setMessage(error instanceof Error ? error.message : 'Laptop acknowledgement was invalid.');
+    }
+  }, []);
+
+  const acceptOffer = useCallback(async (rawOffer = offerText) => {
+    const pairingPayload = extractPairingPayload(rawOffer, OFFER_QUERY_PARAM);
+    if (!pairingPayload.trim()) return;
 
     try {
       const snapshot = createSyncSnapshot('phone');
@@ -312,7 +341,7 @@ function PhoneSyncPanel() {
 
       setState('waiting');
       setMessage('Creating phone answer QR.');
-      const session = await acceptLaptopOffer(rawOffer.trim());
+      const session = await acceptLaptopOffer(pairingPayload);
       const encodedAnswer = JSON.stringify(session.answerPayload);
       peerRef.current?.close();
       peerRef.current = session.peer;
@@ -336,23 +365,14 @@ function PhoneSyncPanel() {
       setState('error');
       setMessage(error instanceof Error ? error.message : 'Could not read the laptop QR.');
     }
-  }
+  }, [handlePhoneChannelMessage, offerText]);
 
-  function handlePhoneChannelMessage(raw: string, expectedSessionId: string) {
-    try {
-      const payload = parseSyncChannelMessage(raw, expectedSessionId);
-      if (payload.type === 'imported') {
-        setState('done');
-        setMessage(`Sent. Laptop restored ${payload.importedSessions} sessions.`);
-      } else if (payload.type === 'error') {
-        setState('error');
-        setMessage(payload.message);
-      }
-    } catch (error) {
-      setState('error');
-      setMessage(error instanceof Error ? error.message : 'Laptop acknowledgement was invalid.');
-    }
-  }
+  useEffect(() => {
+    if (!initialOffer) return;
+    queueMicrotask(() => {
+      void acceptOffer(initialOffer);
+    });
+  }, [acceptOffer, initialOffer]);
 
   return (
     <section>
@@ -360,7 +380,7 @@ function PhoneSyncPanel() {
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase tracking-widest text-white/35">Send</p>
-            <p className="mt-1 text-xl font-black tracking-tight text-white">Laptop QR</p>
+            <p className="mt-1 text-xl font-black tracking-tight text-white">{answerQrSrc ? 'Step 2: show answer' : 'Step 1: laptop QR'}</p>
           </div>
           <StatusPill state={state} />
         </div>
@@ -373,9 +393,10 @@ function PhoneSyncPanel() {
             setScanning={setScanning}
             idleMessage="Point your phone at the laptop QR."
             onDetected={(raw) => {
+              const pairingPayload = extractPairingPayload(raw, OFFER_QUERY_PARAM);
               setScanning(false);
-              setOfferText(raw);
-              void acceptOffer(raw);
+              setOfferText(pairingPayload);
+              void acceptOffer(pairingPayload);
             }}
           />
         )}
@@ -390,7 +411,7 @@ function PhoneSyncPanel() {
               setAnswerText('');
               setSessionId(null);
               setState('idle');
-              setMessage('Scan the laptop QR.');
+              setMessage('Scan the laptop QR from inside LiftDay, or use the phone Camera on the laptop QR.');
             }}
             variant="secondary"
             className="mt-5 h-12 w-full rounded-2xl border border-white/10 bg-white/10 text-white hover:bg-white/15 active:scale-[0.98]"
@@ -789,6 +810,35 @@ function getInitialSyncMode(): SyncMode {
 
 function hasWebRtcSupport(): boolean {
   return typeof window !== 'undefined' && 'RTCPeerConnection' in window;
+}
+
+function createOfferLink(rawOffer: string): string {
+  if (typeof window === 'undefined') return rawOffer;
+  const url = new URL('/sync', window.location.origin);
+  url.searchParams.set(OFFER_QUERY_PARAM, rawOffer);
+  return url.toString();
+}
+
+function getInitialOfferFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  const directOffer = new URLSearchParams(window.location.search).get(OFFER_QUERY_PARAM);
+  if (directOffer) return directOffer;
+
+  const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+  if (!hash) return null;
+  return new URLSearchParams(hash).get(OFFER_QUERY_PARAM);
+}
+
+function extractPairingPayload(raw: string, paramName: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+
+  try {
+    const url = new URL(trimmed);
+    return url.searchParams.get(paramName) ?? new URLSearchParams(url.hash.replace(/^#/, '')).get(paramName) ?? trimmed;
+  } catch {
+    return trimmed;
+  }
 }
 
 function hasSnapshotData(snapshot: SyncSnapshot): boolean {

@@ -256,15 +256,16 @@ test('WebRTC pairing payloads validate version, expiry, SDP, and session', async
 test('laptop direct sync renders an offer QR with copy fallback', async ({ page }) => {
   await page.goto('/sync');
 
-  await expect(page.getByText('Direct pair', { exact: true })).toBeVisible();
+  await expect(page.getByText('Step 1: phone scan', { exact: true })).toBeVisible();
   await expect(page.getByAltText('LiftDay WebRTC offer QR code')).toBeVisible({ timeout: 15_000 });
 
-  const answerDetails = page.locator('details').filter({ hasText: 'Phone answer' });
+  const answerDetails = page.locator('details').filter({ hasText: 'Step 2: laptop answer' });
   await answerDetails.locator('summary').click();
-  await expect.poll(() => answerDetails.getByRole('textbox').nth(1).inputValue()).toContain(WEBRTC_OFFER_TYPE);
+  await expect.poll(() => answerDetails.getByRole('textbox').nth(1).inputValue()).toContain('/sync?offer=');
+  await expect.poll(() => answerDetails.getByRole('textbox').nth(2).inputValue()).toContain(WEBRTC_OFFER_TYPE);
 });
 
-test('phone accepts a laptop offer and shows an answer QR', async ({ browser }) => {
+test('phone opens a laptop offer link and shows an answer QR', async ({ browser }) => {
   const context = await browser.newContext();
   const laptop = await context.newPage();
   const phone = await context.newPage();
@@ -272,19 +273,44 @@ test('phone accepts a laptop offer and shows an answer QR', async ({ browser }) 
 
   await laptop.goto('/sync');
   await expect(laptop.getByAltText('LiftDay WebRTC offer QR code')).toBeVisible({ timeout: 15_000 });
-  const offerDetails = laptop.locator('details').filter({ hasText: 'Phone answer' });
+  const offerDetails = laptop.locator('details').filter({ hasText: 'Step 2: laptop answer' });
   await offerDetails.locator('summary').click();
-  const offer = await offerDetails.getByRole('textbox').nth(1).inputValue();
+  const offerLink = await offerDetails.getByRole('textbox').nth(1).inputValue();
 
-  await phone.goto('/sync');
-  await chooseSyncMode(phone, 'Send');
+  await phone.goto(offerLink);
   const manualPairing = phone.locator('details').filter({ hasText: 'Manual pairing' });
   await manualPairing.locator('summary').click();
-  await manualPairing.getByRole('textbox').first().fill(offer);
-  await manualPairing.getByRole('button', { name: /create answer/i }).click();
 
   await expect(phone.getByAltText('LiftDay WebRTC answer QR code')).toBeVisible({ timeout: 15_000 });
   await expect.poll(() => manualPairing.getByRole('textbox').nth(1).inputValue()).toContain(WEBRTC_ANSWER_TYPE);
+
+  await context.close();
+});
+
+test('laptop ignores a duplicate phone answer instead of showing WebRTC state errors', async ({ browser }) => {
+  const context = await browser.newContext();
+  const laptop = await context.newPage();
+  const phone = await context.newPage();
+  await seedFullLocalState(phone);
+
+  await laptop.goto('/sync');
+  await expect(laptop.getByAltText('LiftDay WebRTC offer QR code')).toBeVisible({ timeout: 15_000 });
+  const laptopAnswerDetails = laptop.locator('details').filter({ hasText: 'Step 2: laptop answer' });
+  await laptopAnswerDetails.locator('summary').click();
+  const offerLink = await laptopAnswerDetails.getByRole('textbox').nth(1).inputValue();
+
+  await phone.goto(offerLink);
+  const manualPairing = phone.locator('details').filter({ hasText: 'Manual pairing' });
+  await manualPairing.locator('summary').click();
+  await expect(phone.getByAltText('LiftDay WebRTC answer QR code')).toBeVisible({ timeout: 15_000 });
+  const answer = await manualPairing.getByRole('textbox').nth(1).inputValue();
+
+  const laptopAnswerBox = laptopAnswerDetails.getByRole('textbox').first();
+  await laptopAnswerBox.fill(answer);
+  await laptopAnswerDetails.getByRole('button', { name: /use answer/i }).click();
+  await expect(laptop.getByText(/Connected|Waiting for phone backup/i)).toBeVisible();
+  await laptopAnswerDetails.getByRole('button', { name: /use answer/i }).click();
+  await expect(laptop.locator('body')).not.toContainText(/wrong state: stable|setRemoteDescription/i);
 
   await context.close();
 });

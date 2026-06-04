@@ -139,6 +139,12 @@ export async function acceptPhoneAnswer(
   rawAnswerPayload: string
 ): Promise<void> {
   const answer = await decodePairingPayload(rawAnswerPayload, WEBRTC_ANSWER_TYPE, { expectedSessionId: sessionId });
+  if (peer.signalingState === 'stable' && peer.remoteDescription?.type === 'answer') {
+    return;
+  }
+  if (peer.signalingState !== 'have-local-offer') {
+    throw new Error('This answer is no longer active. Create a new laptop QR and scan it again.');
+  }
   await peer.setRemoteDescription(answer);
 }
 
