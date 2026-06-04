@@ -1,16 +1,19 @@
 'use client';
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import {
   Check,
+  Copy,
   Download,
   FileUp,
   LoaderCircle,
   QrCode,
   RotateCcw,
   ScanLine,
+  Send,
+  Share,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +27,7 @@ import {
   WatchSegmentedControl,
 } from '@/components/WatchSurface';
 import { StatusPill, SyncMetricGrid } from '@/components/sync/SyncMetrics';
+import { copyText } from '@/lib/clipboard';
 import {
   createSyncSnapshot,
   getLocalSyncSummary,
@@ -31,6 +35,15 @@ import {
   parseSyncSnapshot,
   SyncSnapshot,
 } from '@/lib/sync';
+import {
+  acceptLaptopOffer,
+  acceptPhoneAnswer,
+  createLaptopOffer,
+  parseSyncChannelMessage,
+  sendImportAcknowledgement,
+  sendSnapshotWhenOpen,
+  sendSyncError,
+} from '@/lib/sync-webrtc';
 
 type SyncMode = 'laptop' | 'phone';
 type TransferState = 'idle' | 'waiting' | 'sending' | 'done' | 'error';
@@ -44,11 +57,7 @@ interface BarcodeDetectorConstructor {
 }
 
 export default function SyncPage() {
-  const [pairToken] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('pair');
-  });
-  const [mode, setMode] = useState<SyncMode>(() => pairToken ? 'phone' : getInitialSyncMode());
+  const [mode, setMode] = useState<SyncMode>(() => getInitialSyncMode());
 
   return (
     <WatchScreen
@@ -64,21 +73,15 @@ export default function SyncPage() {
           {mode === 'laptop' ? 'Receive from phone' : 'Send to laptop'}
         </p>
         <p className="mt-2 text-fluid-label leading-snug text-white/40">
-          {mode === 'laptop' ? 'Scan with the phone.' : 'Scan the laptop QR.'}
+          {mode === 'laptop' ? 'Show this QR, then scan the phone answer.' : 'Scan the laptop QR, then show your answer QR.'}
         </p>
       </section>
 
-      {!pairToken && (
-        <WatchDetailsPanel summary="Direction" className="mb-4">
-          <SyncModeSelector mode={mode} onModeChange={setMode} />
-        </WatchDetailsPanel>
-      )}
+      <WatchDetailsPanel summary="Direction" className="mb-4">
+        <SyncModeSelector mode={mode} onModeChange={setMode} />
+      </WatchDetailsPanel>
 
-      {mode === 'laptop' ? (
-        <LaptopSyncPanel />
-      ) : (
-        <PhoneSyncPanel pairToken={pairToken} />
-      )}
+      {mode === 'laptop' ? <LaptopSyncPanel /> : <PhoneSyncPanel />}
     </WatchScreen>
   );
 }
@@ -98,106 +101,112 @@ function SyncModeSelector({ mode, onModeChange }: { mode: SyncMode; onModeChange
 }
 
 function LaptopSyncPanel() {
-  const [token, setToken] = useState(() => crypto.randomUUID());
-  const [pairOrigin, setPairOrigin] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    return window.location.origin;
-  });
+  const peerRef = useRef<RTCPeerConnection | null>(null);
+  const channelRef = useRef<RTCDataChannel | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const [offerText, setOfferText] = useState('');
+  const [answerText, setAnswerText] = useState('');
   const [qrSrc, setQrSrc] = useState('');
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
   const [state, setState] = useState<TransferState>('idle');
-  const [message, setMessage] = useState('Ready to pair with your phone.');
+  const [message, setMessage] = useState('Creating a direct pairing code.');
   const [summary, setSummary] = useState(() => getLocalSyncSummary());
+  const [copiedOffer, setCopiedOffer] = useState(false);
 
-  const pairUrl = useMemo(() => {
-    if (!pairOrigin) return '';
-    return `${pairOrigin}/sync?pair=${token}`;
-  }, [pairOrigin, token]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !isLocalHost(window.location.hostname)) return;
-
-    let alive = true;
-    async function loadNetworkOrigin() {
-      try {
-        const response = await fetch('/api/sync/network-origin');
-        const payload = await response.json() as { origin: string | null };
-        if (alive && payload.origin) setPairOrigin(payload.origin);
-      } catch {
-        if (alive) setMessage('Use your Mac network address if the phone cannot connect.');
-      }
-    }
-
-    loadNetworkOrigin();
-    return () => {
-      alive = false;
-    };
+  const closeSession = useCallback(() => {
+    channelRef.current?.close();
+    peerRef.current?.close();
+    channelRef.current = null;
+    peerRef.current = null;
+    sessionIdRef.current = null;
   }, []);
 
-  useEffect(() => {
-    if (!pairUrl) return;
-    let alive = true;
+  const handleLaptopChannelMessage = useCallback((raw: string) => {
+    const channel = channelRef.current;
+    const sessionId = sessionIdRef.current;
+    if (!channel || !sessionId) return;
 
-    async function setupRoom() {
-      try {
-        setState('waiting');
-        setMessage('Waiting for phone.');
-        await fetch(`/api/sync/rooms/${token}`, { method: 'PUT' });
-        const qr = await QRCode.toDataURL(pairUrl, {
-          margin: 1,
-          width: 320,
-          color: {
-            dark: '#000000',
-            light: '#ffffff',
-          },
-        });
-        if (alive) setQrSrc(qr);
-      } catch {
-        if (!alive) return;
-        setState('error');
-        setMessage('Could not create a sync session. Try again.');
-      }
-    }
-
-    setupRoom();
-    return () => {
-      alive = false;
-    };
-  }, [pairUrl, token]);
-
-  useEffect(() => {
-    if (state !== 'waiting') return;
-
-    const interval = window.setInterval(async () => {
-      try {
-        const response = await fetch(`/api/sync/rooms/${token}`);
-        if (!response.ok) return;
-
-        const payload = await response.json() as {
-          status: 'waiting' | 'received';
-          snapshot?: SyncSnapshot;
-        };
-
-        if (payload.status !== 'received' || !payload.snapshot) return;
-
+    try {
+      const payload = parseSyncChannelMessage(raw, sessionId);
+      if (payload.type === 'snapshot') {
         const result = importPhoneSnapshot(payload.snapshot);
-        await fetch(`/api/sync/rooms/${token}`, { method: 'DELETE' });
+        sendImportAcknowledgement(channel, sessionId, result.importedSessions);
         setSummary(getLocalSyncSummary());
         setState('done');
         setMessage(`Restored ${result.importedSessions} sessions. Phone unchanged.`);
-      } catch {
+      } else if (payload.type === 'error') {
         setState('error');
-        setMessage('Transfer failed. Create a new QR and try again.');
+        setMessage(payload.message);
       }
-    }, 1200);
+    } catch (error) {
+      const nextMessage = error instanceof Error ? error.message : 'Import failed.';
+      sendSyncError(channel, nextMessage, sessionId);
+      setState('error');
+      setMessage(nextMessage);
+    }
+  }, []);
 
-    return () => window.clearInterval(interval);
-  }, [state, token]);
-
-  function resetRoom() {
-    setToken(crypto.randomUUID());
+  const startOffer = useCallback(async () => {
+    closeSession();
+    setState('waiting');
+    setMessage('Creating direct WebRTC offer.');
     setQrSrc('');
-    setState('idle');
-    setMessage('Ready to pair with your phone.');
+    setQrError(null);
+    setAnswerText('');
+
+    try {
+      const session = await createLaptopOffer();
+      const encodedOffer = JSON.stringify(session.offerPayload);
+      peerRef.current = session.peer;
+      channelRef.current = session.channel;
+      sessionIdRef.current = session.sessionId;
+      setOfferText(encodedOffer);
+      setMessage('Phone scans this QR. Then scan or paste the phone answer below.');
+
+      session.channel.onmessage = (event) => {
+        handleLaptopChannelMessage(String(event.data));
+      };
+      session.channel.onerror = () => {
+        setState('error');
+        setMessage('Direct connection failed. Try a new QR or use file import.');
+      };
+
+      await renderQr(encodedOffer, setQrSrc, setQrError);
+    } catch {
+      setState('error');
+      setMessage('This browser could not create a direct sync session. Use file import instead.');
+    }
+  }, [closeSession, handleLaptopChannelMessage]);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void startOffer();
+    });
+    return closeSession;
+  }, [closeSession, startOffer]);
+
+  async function acceptAnswer(rawAnswer = answerText) {
+    const peer = peerRef.current;
+    const sessionId = sessionIdRef.current;
+    if (!peer || !sessionId || !rawAnswer.trim()) return;
+
+    try {
+      setState('waiting');
+      setMessage('Completing direct connection.');
+      await acceptPhoneAnswer(peer, sessionId, rawAnswer.trim());
+      setMessage('Connected. Waiting for phone backup.');
+    } catch (error) {
+      setState('error');
+      setMessage(error instanceof Error ? error.message : 'Could not read the phone answer.');
+    }
+  }
+
+  async function copyOffer() {
+    if (!offerText) return;
+    await copyText(offerText);
+    setCopiedOffer(true);
+    window.setTimeout(() => setCopiedOffer(false), 1600);
   }
 
   return (
@@ -206,33 +215,17 @@ function LaptopSyncPanel() {
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase tracking-widest text-white/35">Receive</p>
-            <p className="mt-1 text-xl font-black tracking-tight text-white">Phone scan</p>
+            <p className="mt-1 text-xl font-black tracking-tight text-white">Direct pair</p>
           </div>
           <StatusPill state={state} />
         </div>
 
-        <div className="mt-4 flex justify-center">
-          <div className="grid aspect-square w-full max-w-64 place-items-center rounded-[24px] bg-white p-4 shadow-[0_18px_60px_rgba(255,255,255,0.08)]">
-            {qrSrc ? (
-              <Image
-                src={qrSrc}
-                alt="LiftDay sync QR code"
-                width={288}
-                height={288}
-                unoptimized
-                className="size-full rounded-xl"
-              />
-            ) : (
-              <LoaderCircle className="size-8 animate-spin text-black/40" />
-            )}
-          </div>
-        </div>
-
+        <PairingQr qrSrc={qrSrc} qrError={qrError} alt="LiftDay WebRTC offer QR code" />
         <p className="mx-auto mt-5 max-w-xs text-center text-sm leading-relaxed text-white/55">{message}</p>
 
         <Button
           type="button"
-          onClick={resetRoom}
+          onClick={startOffer}
           variant="secondary"
           className="mt-5 h-12 w-full rounded-2xl border border-white/10 bg-white/10 text-white hover:bg-white/15 active:scale-[0.98]"
         >
@@ -241,13 +234,38 @@ function LaptopSyncPanel() {
         </Button>
       </WatchPanel>
 
-      <WatchDetailsPanel summary="Details" className="mt-4">
+      <WatchDetailsPanel summary="Phone answer" className="mt-4">
+        <ScannerBox
+          scanning={scanning}
+          setScanning={setScanning}
+          idleMessage="Scan the QR shown on the phone."
+          onDetected={(raw) => {
+            setScanning(false);
+            setAnswerText(raw);
+            void acceptAnswer(raw);
+          }}
+        />
+        <ManualPairingText
+          label="Paste phone answer"
+          value={answerText}
+          onChange={setAnswerText}
+          onSubmit={() => void acceptAnswer()}
+          submitLabel="Use answer"
+        />
+        <ManualPairingText
+          label="Laptop offer"
+          value={offerText}
+          readOnly
+          onCopy={copyOffer}
+          copied={copiedOffer}
+        />
+      </WatchDetailsPanel>
+
+      <WatchDetailsPanel summary="Files" className="mt-4">
         <SyncMetricGrid summary={summary} />
-        {isLocalPairUrl(pairUrl) && (
-          <p className="mt-3 text-xs leading-relaxed text-amber-200/80">
-            This QR uses localhost, which phones cannot reach. Open the Mac on its network address.
-          </p>
-        )}
+        <p className="mt-3 text-xs leading-relaxed text-white/45">
+          Direct sync uses WebRTC with public STUN discovery and no LiftDay backend. If QR, camera, or network pairing fails, use backup files.
+        </p>
         <DesktopExportFallback compact />
         <ManualImportFallback onImported={() => {
           setSummary(getLocalSyncSummary());
@@ -259,77 +277,171 @@ function LaptopSyncPanel() {
   );
 }
 
-function PhoneSyncPanel({ pairToken }: { pairToken: string | null }) {
-  if (pairToken) {
-    return <AutoSendPanel pairToken={pairToken} />;
-  }
-
-  return <ScannerPanel />;
-}
-
-function AutoSendPanel({ pairToken }: { pairToken: string }) {
-  const [state, setState] = useState<TransferState>('sending');
-  const [message, setMessage] = useState('Sending backup to laptop.');
+function PhoneSyncPanel() {
+  const peerRef = useRef<RTCPeerConnection | null>(null);
+  const channelRef = useRef<RTCDataChannel | null>(null);
+  const [offerText, setOfferText] = useState('');
+  const [answerText, setAnswerText] = useState('');
+  const [answerQrSrc, setAnswerQrSrc] = useState('');
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [state, setState] = useState<TransferState>('idle');
+  const [message, setMessage] = useState(() => hasWebRtcSupport()
+    ? 'Scan the laptop QR.'
+    : 'This browser cannot use direct WebRTC sync. Save a backup file instead.'
+  );
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    let alive = true;
-
-    async function sendSnapshot() {
-      try {
-        const response = await fetch(`/api/sync/rooms/${pairToken}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(createSyncSnapshot('phone')),
-        });
-
-        if (!response.ok) {
-          throw new Error('Sync session expired.');
-        }
-
-        if (!alive) return;
-        setState('done');
-        setMessage('Sent. Your phone data stayed exactly where it is.');
-      } catch {
-        if (!alive) return;
-        setState('error');
-        setMessage('Could not reach the laptop. Create a new QR and scan again.');
-      }
-    }
-
-    sendSnapshot();
     return () => {
-      alive = false;
+      channelRef.current?.close();
+      peerRef.current?.close();
     };
-  }, [pairToken]);
+  }, []);
+
+  async function acceptOffer(rawOffer = offerText) {
+    if (!rawOffer.trim()) return;
+
+    try {
+      const snapshot = createSyncSnapshot('phone');
+      if (!hasSnapshotData(snapshot)) {
+        setState('error');
+        setMessage('No phone data was found here. Open Sync from the phone app that has your data, then use Save backup file.');
+        return;
+      }
+
+      setState('waiting');
+      setMessage('Creating phone answer QR.');
+      const session = await acceptLaptopOffer(rawOffer.trim());
+      const encodedAnswer = JSON.stringify(session.answerPayload);
+      peerRef.current?.close();
+      peerRef.current = session.peer;
+      setSessionId(session.sessionId);
+      setAnswerText(encodedAnswer);
+      await renderQr(encodedAnswer, setAnswerQrSrc, setQrError);
+      setMessage('Show this QR to the laptop. Sending starts after the laptop scans it.');
+
+      const channel = await session.channelReady;
+      channelRef.current = channel;
+      channel.onmessage = (event) => handlePhoneChannelMessage(String(event.data), session.sessionId);
+      channel.onerror = () => {
+        setState('error');
+        setMessage('Direct connection failed. Use Save backup file instead.');
+      };
+
+      setState('sending');
+      setMessage('Connected. Sending backup to laptop.');
+      await sendSnapshotWhenOpen(channel, session.sessionId, snapshot);
+    } catch (error) {
+      setState('error');
+      setMessage(error instanceof Error ? error.message : 'Could not read the laptop QR.');
+    }
+  }
+
+  function handlePhoneChannelMessage(raw: string, expectedSessionId: string) {
+    try {
+      const payload = parseSyncChannelMessage(raw, expectedSessionId);
+      if (payload.type === 'imported') {
+        setState('done');
+        setMessage(`Sent. Laptop restored ${payload.importedSessions} sessions.`);
+      } else if (payload.type === 'error') {
+        setState('error');
+        setMessage(payload.message);
+      }
+    } catch (error) {
+      setState('error');
+      setMessage(error instanceof Error ? error.message : 'Laptop acknowledgement was invalid.');
+    }
+  }
 
   return (
-    <WatchPanel className="rounded-[28px] px-5 py-8 text-center">
-      <div className="mx-auto grid size-20 place-items-center rounded-full bg-white text-black">
-        {state === 'done' ? (
-          <Check className="size-9" />
-        ) : state === 'error' ? (
-          <X className="size-9" />
+    <section>
+      <WatchPanel className="rounded-[28px] p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-black uppercase tracking-widest text-white/35">Send</p>
+            <p className="mt-1 text-xl font-black tracking-tight text-white">Laptop QR</p>
+          </div>
+          <StatusPill state={state} />
+        </div>
+
+        {answerQrSrc ? (
+          <PairingQr qrSrc={answerQrSrc} qrError={qrError} alt="LiftDay WebRTC answer QR code" />
         ) : (
-          <LoaderCircle className="size-9 animate-spin" />
+          <ScannerBox
+            scanning={scanning}
+            setScanning={setScanning}
+            idleMessage="Point your phone at the laptop QR."
+            onDetected={(raw) => {
+              setScanning(false);
+              setOfferText(raw);
+              void acceptOffer(raw);
+            }}
+          />
         )}
-      </div>
-      <p className="mt-5 text-2xl font-black tracking-tight text-white">
-        {state === 'done' ? 'Backup sent' : state === 'error' ? 'Could not sync' : 'Sending'}
-      </p>
-      <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/55">{message}</p>
-    </WatchPanel>
+
+        <p className="mx-auto mt-5 max-w-xs text-center text-sm leading-relaxed text-white/55">{message}</p>
+
+        {answerQrSrc && (
+          <Button
+            type="button"
+            onClick={() => {
+              setAnswerQrSrc('');
+              setAnswerText('');
+              setSessionId(null);
+              setState('idle');
+              setMessage('Scan the laptop QR.');
+            }}
+            variant="secondary"
+            className="mt-5 h-12 w-full rounded-2xl border border-white/10 bg-white/10 text-white hover:bg-white/15 active:scale-[0.98]"
+          >
+            <RotateCcw />
+            Scan again
+          </Button>
+        )}
+      </WatchPanel>
+
+      <WatchDetailsPanel summary="Manual pairing" className="mt-4">
+        <ManualPairingText
+          label="Paste laptop offer"
+          value={offerText}
+          onChange={setOfferText}
+          onSubmit={() => void acceptOffer()}
+          submitLabel="Create answer"
+        />
+        <ManualPairingText
+          label="Phone answer"
+          value={answerText}
+          readOnly
+          sessionId={sessionId}
+        />
+      </WatchDetailsPanel>
+
+      <WatchDetailsPanel summary="Files" className="mt-4">
+        <PhoneExportFallback compact />
+      </WatchDetailsPanel>
+    </section>
   );
 }
 
-function ScannerPanel() {
+function ScannerBox({
+  scanning,
+  setScanning,
+  idleMessage,
+  onDetected,
+}: {
+  scanning: boolean;
+  setScanning: (scanning: boolean) => void;
+  idleMessage: string;
+  onDetected: (raw: string) => void;
+}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [scanning, setScanning] = useState(false);
   const [message, setMessage] = useState(() => {
     if (typeof window !== 'undefined' && !window.isSecureContext) {
-      return 'Use your phone Camera app to scan the QR, or open LiftDay over HTTPS.';
+      return 'Camera needs HTTPS. Paste the pairing text instead.';
     }
-    return 'Point your phone at the QR on the laptop.';
+    return idleMessage;
   });
 
   useEffect(() => {
@@ -340,14 +452,14 @@ function ScannerPanel() {
 
     async function startScanner() {
       if (!window.isSecureContext) {
-        setMessage('Browser camera needs HTTPS. Use your phone Camera app to scan the QR.');
+        setMessage('Camera needs HTTPS. Paste the pairing text instead.');
         setScanning(false);
         return;
       }
 
       const Detector = getBarcodeDetector();
       if (!Detector) {
-        setMessage('Camera scanning is not available here. Use your phone camera to open the QR.');
+        setMessage('Camera scanning is not available here. Paste the pairing text instead.');
         setScanning(false);
         return;
       }
@@ -371,7 +483,7 @@ function ScannerPanel() {
             const codes = await detector.detect(videoRef.current);
             const rawValue = codes[0]?.rawValue;
             if (rawValue) {
-              window.location.href = rawValue;
+              onDetected(rawValue);
               return;
             }
           } catch {
@@ -382,7 +494,7 @@ function ScannerPanel() {
 
         scan();
       } catch {
-        setMessage('Camera permission was blocked. Use your phone camera app to scan the QR.');
+        setMessage('Camera permission was blocked. Paste the pairing text instead.');
         setScanning(false);
       }
     }
@@ -395,48 +507,116 @@ function ScannerPanel() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-  }, [scanning]);
+  }, [onDetected, scanning, setScanning]);
 
   return (
-    <section>
-      <WatchPanel className="rounded-[28px] p-4">
-        <div className="flex items-center gap-3">
-          <div className="grid size-11 place-items-center rounded-full bg-white text-black">
-            <ScanLine className="size-5" />
+    <>
+      <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03]">
+        {scanning ? (
+          <video ref={videoRef} muted playsInline className="aspect-square w-full object-cover" />
+        ) : (
+          <div className="grid aspect-square place-items-center">
+            <QrCode className="size-16 text-white/20" />
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-widest text-white/35">Send</p>
-            <p className="text-xl font-black tracking-tight text-white">Laptop QR</p>
-          </div>
-        </div>
+        )}
+      </div>
 
-        <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03]">
-          {scanning ? (
-            <video ref={videoRef} muted playsInline className="aspect-square w-full object-cover" />
-          ) : (
-            <div className="grid aspect-square place-items-center">
-              <QrCode className="size-16 text-white/20" />
-            </div>
-          )}
-        </div>
+      <p className="mt-4 text-center text-sm leading-relaxed text-white/55">{message}</p>
 
-        <p className="mt-4 text-center text-sm leading-relaxed text-white/55">{message}</p>
+      <Button
+        type="button"
+        onClick={() => setScanning(true)}
+        disabled={typeof window !== 'undefined' && !window.isSecureContext}
+        className="mt-5 h-14 w-full rounded-2xl bg-white text-base font-black text-black hover:bg-white/90 active:scale-[0.98]"
+      >
+        <ScanLine />
+        Scan QR
+      </Button>
+    </>
+  );
+}
 
+function PairingQr({ qrSrc, qrError, alt }: { qrSrc: string; qrError: string | null; alt: string }) {
+  return (
+    <div className="mt-4 flex justify-center">
+      <div className="grid aspect-square w-full max-w-64 place-items-center rounded-[24px] bg-white p-4 shadow-[0_18px_60px_rgba(255,255,255,0.08)]">
+        {qrSrc ? (
+          <Image
+            src={qrSrc}
+            alt={alt}
+            width={288}
+            height={288}
+            unoptimized
+            className="size-full rounded-xl"
+          />
+        ) : qrError ? (
+          <X className="size-8 text-black/40" />
+        ) : (
+          <LoaderCircle className="size-8 animate-spin text-black/40" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ManualPairingText({
+  label,
+  value,
+  onChange,
+  onSubmit,
+  submitLabel,
+  readOnly = false,
+  onCopy,
+  copied = false,
+  sessionId,
+}: {
+  label: string;
+  value: string;
+  onChange?: (value: string) => void;
+  onSubmit?: () => void;
+  submitLabel?: string;
+  readOnly?: boolean;
+  onCopy?: () => void;
+  copied?: boolean;
+  sessionId?: string | null;
+}) {
+  return (
+    <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-black uppercase tracking-widest text-white/35">{label}</p>
+        {sessionId && <p className="text-[10px] font-bold uppercase text-white/30">{sessionId.slice(0, 8)}</p>}
+      </div>
+      <textarea
+        value={value}
+        readOnly={readOnly}
+        onChange={(event) => onChange?.(event.target.value)}
+        rows={4}
+        className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-black/40 p-3 text-xs leading-relaxed text-white/75 outline-none focus:border-white/30"
+        placeholder={readOnly ? 'Waiting for pairing code.' : 'Paste pairing text.'}
+      />
+      {onSubmit && (
         <Button
           type="button"
-          onClick={() => setScanning(true)}
-          disabled={typeof window !== 'undefined' && !window.isSecureContext}
-          className="mt-5 h-14 w-full rounded-2xl bg-white text-base font-black text-black hover:bg-white/90 active:scale-[0.98]"
+          onClick={onSubmit}
+          disabled={!value.trim()}
+          className="mt-2 h-11 w-full rounded-xl bg-white text-black hover:bg-white/90 active:scale-[0.98]"
         >
-          <ScanLine />
-          Scan QR
+          <Send />
+          {submitLabel ?? 'Continue'}
         </Button>
-      </WatchPanel>
-
-      <WatchDetailsPanel summary="Details" className="mt-4">
-        <PhoneExportFallback compact />
-      </WatchDetailsPanel>
-    </section>
+      )}
+      {(onCopy || readOnly) && value.trim() && (
+        <Button
+          type="button"
+          onClick={onCopy ?? (() => void copyText(value))}
+          variant="secondary"
+          className="mt-2 h-10 w-full rounded-xl border border-white/10 bg-white/10 text-white hover:bg-white/15 active:scale-[0.98]"
+        >
+          {copied ? <Check /> : <Copy />}
+          {copied ? 'Copied' : 'Copy'}
+        </Button>
+      )}
+    </div>
   );
 }
 
@@ -500,14 +680,29 @@ function DesktopExportFallback({ compact = false }: { compact?: boolean }) {
 }
 
 function BackupExportFallback({ source, compact = false }: { source: 'phone' | 'laptop'; compact?: boolean }) {
+  const [shareSupported] = useState(() => {
+    if (typeof navigator === 'undefined') return false;
+    const file = createBackupFile(source);
+    return Boolean(navigator.canShare?.({ files: [file] }));
+  });
+
   function downloadExport() {
-    const blob = new Blob([JSON.stringify(createSyncSnapshot(source), null, 2)], { type: 'application/json' });
+    const blob = createBackupBlob(source);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `liftday-${source}-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = getBackupFileName(source);
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function shareExport() {
+    const file = createBackupFile(source);
+    await navigator.share({
+      title: 'LiftDay backup',
+      text: 'LiftDay transfer file',
+      files: [file],
+    });
   }
 
   return (
@@ -526,8 +721,54 @@ function BackupExportFallback({ source, compact = false }: { source: 'phone' | '
         <Download />
         Save backup file
       </Button>
+      {shareSupported && (
+        <Button
+          type="button"
+          onClick={shareExport}
+          variant="secondary"
+          className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-white/10 text-white hover:bg-white/15 active:scale-[0.98]"
+        >
+          <Share />
+          Share backup file
+        </Button>
+      )}
     </div>
   );
+}
+
+async function renderQr(
+  payload: string,
+  setQrSrc: (src: string) => void,
+  setQrError: (error: string | null) => void
+) {
+  try {
+    const qr = await QRCode.toDataURL(payload, {
+      margin: 1,
+      width: 320,
+      errorCorrectionLevel: 'L',
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    });
+    setQrSrc(qr);
+    setQrError(null);
+  } catch {
+    setQrSrc('');
+    setQrError('QR is too large. Copy and paste the pairing text.');
+  }
+}
+
+function createBackupBlob(source: 'phone' | 'laptop'): Blob {
+  return new Blob([JSON.stringify(createSyncSnapshot(source), null, 2)], { type: 'application/json' });
+}
+
+function createBackupFile(source: 'phone' | 'laptop'): File {
+  return new File([createBackupBlob(source)], getBackupFileName(source), { type: 'application/json' });
+}
+
+function getBackupFileName(source: 'phone' | 'laptop'): string {
+  return `liftday-${source}-backup-${new Date().toISOString().slice(0, 10)}.json`;
 }
 
 function getBarcodeDetector(): BarcodeDetectorConstructor | null {
@@ -546,14 +787,23 @@ function getInitialSyncMode(): SyncMode {
   return mobileUa || coarsePointer ? 'phone' : 'laptop';
 }
 
-function isLocalHost(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+function hasWebRtcSupport(): boolean {
+  return typeof window !== 'undefined' && 'RTCPeerConnection' in window;
 }
 
-function isLocalPairUrl(url: string): boolean {
-  try {
-    return isLocalHost(new URL(url).hostname);
-  } catch {
-    return false;
-  }
+function hasSnapshotData(snapshot: SyncSnapshot): boolean {
+  const sessionCount = Object.keys(snapshot.schemaVersion === 1 ? snapshot.data : snapshot.sessions).length;
+  const dailyLogCount = snapshot.schemaVersion === 1 ? 0 : Object.keys(snapshot.dailyLogs).length;
+  const progressPhotoCount = snapshot.schemaVersion === 3 ? snapshot.progressPhotos.length : 0;
+
+  return Boolean(
+    sessionCount > 0 ||
+    dailyLogCount > 0 ||
+    progressPhotoCount > 0 ||
+    snapshot.profile ||
+    (snapshot.schemaVersion !== 1 && snapshot.activeWorkoutDraft) ||
+    snapshot.firstSessionDate ||
+    snapshot.mobilityDoneDate ||
+    (snapshot.schemaVersion !== 1 && snapshot.onboardingCompleted)
+  );
 }

@@ -1,5 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
+import {
+  decodePairingPayload,
+  encodePairingPayload,
+  WEBRTC_ANSWER_TYPE,
+  WEBRTC_OFFER_TYPE,
+} from '@/lib/sync-webrtc';
 
 const seededSession = {
   logged_at: '2026-05-11T10:00:00.000Z',
@@ -193,6 +199,94 @@ test('exports a backup from the desktop receive view', async ({ page }, testInfo
   expect(Object.keys(exported.sessions)).toContain('2026-05-11');
   expect(exported.progressPhotos).toHaveLength(1);
   expect(exported.onboardingCompleted).toBe(true);
+});
+
+test('phone pairing reports when the opened URL has no local data', async ({ page }) => {
+  await page.goto('/sync');
+  await chooseSyncMode(page, 'Send');
+  const manualPairing = page.locator('details').filter({ hasText: 'Manual pairing' });
+  await manualPairing.locator('summary').click();
+  await manualPairing.getByRole('textbox').first().fill('not a real offer');
+  await manualPairing.getByRole('button', { name: /create answer/i }).click();
+
+  await expect(page.getByText('Retry')).toBeVisible();
+  await expect(page.getByText(/No phone data was found here/i)).toBeVisible();
+});
+
+test('WebRTC pairing payloads validate version, expiry, SDP, and session', async () => {
+  const offer = await encodePairingPayload(WEBRTC_OFFER_TYPE, 'session-a', {
+    type: 'offer',
+    sdp: 'v=0\r\na=group:BUNDLE 0\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n',
+  }, new Date('2026-05-11T10:00:00.000Z'));
+
+  const decoded = await decodePairingPayload(offer, WEBRTC_OFFER_TYPE, {
+    expectedSessionId: 'session-a',
+    now: new Date('2026-05-11T10:01:00.000Z'),
+  });
+  expect(decoded.type).toBe('offer');
+  expect(decoded.sessionId).toBe('session-a');
+  expect(decoded.sdp).toContain('webrtc-datachannel');
+
+  await expect(decodePairingPayload(offer, WEBRTC_ANSWER_TYPE, {
+    now: new Date('2026-05-11T10:01:00.000Z'),
+  })).rejects.toThrow(/wrong sync step/i);
+
+  await expect(decodePairingPayload(offer, WEBRTC_OFFER_TYPE, {
+    expectedSessionId: 'session-b',
+    now: new Date('2026-05-11T10:01:00.000Z'),
+  })).rejects.toThrow(/different sync session/i);
+
+  await expect(decodePairingPayload(offer, WEBRTC_OFFER_TYPE, {
+    now: new Date('2026-05-11T10:20:01.000Z'),
+  })).rejects.toThrow(/expired/i);
+
+  const malformed = JSON.stringify({
+    app: 'liftday',
+    type: WEBRTC_OFFER_TYPE,
+    sessionId: 'session-a',
+    createdAt: '2026-05-11T10:00:00.000Z',
+    sdp: 'bm90LXNkcA',
+    compressed: false,
+  });
+  await expect(decodePairingPayload(malformed, WEBRTC_OFFER_TYPE, {
+    now: new Date('2026-05-11T10:01:00.000Z'),
+  })).rejects.toThrow(/malformed/i);
+});
+
+test('laptop direct sync renders an offer QR with copy fallback', async ({ page }) => {
+  await page.goto('/sync');
+
+  await expect(page.getByText('Direct pair', { exact: true })).toBeVisible();
+  await expect(page.getByAltText('LiftDay WebRTC offer QR code')).toBeVisible({ timeout: 15_000 });
+
+  const answerDetails = page.locator('details').filter({ hasText: 'Phone answer' });
+  await answerDetails.locator('summary').click();
+  await expect.poll(() => answerDetails.getByRole('textbox').nth(1).inputValue()).toContain(WEBRTC_OFFER_TYPE);
+});
+
+test('phone accepts a laptop offer and shows an answer QR', async ({ browser }) => {
+  const context = await browser.newContext();
+  const laptop = await context.newPage();
+  const phone = await context.newPage();
+  await seedFullLocalState(phone);
+
+  await laptop.goto('/sync');
+  await expect(laptop.getByAltText('LiftDay WebRTC offer QR code')).toBeVisible({ timeout: 15_000 });
+  const offerDetails = laptop.locator('details').filter({ hasText: 'Phone answer' });
+  await offerDetails.locator('summary').click();
+  const offer = await offerDetails.getByRole('textbox').nth(1).inputValue();
+
+  await phone.goto('/sync');
+  await chooseSyncMode(phone, 'Send');
+  const manualPairing = phone.locator('details').filter({ hasText: 'Manual pairing' });
+  await manualPairing.locator('summary').click();
+  await manualPairing.getByRole('textbox').first().fill(offer);
+  await manualPairing.getByRole('button', { name: /create answer/i }).click();
+
+  await expect(phone.getByAltText('LiftDay WebRTC answer QR code')).toBeVisible({ timeout: 15_000 });
+  await expect.poll(() => manualPairing.getByRole('textbox').nth(1).inputValue()).toContain(WEBRTC_ANSWER_TYPE);
+
+  await context.close();
 });
 
 test('imports a v1 sync file without losing current session compatibility', async ({ page }, testInfo) => {
