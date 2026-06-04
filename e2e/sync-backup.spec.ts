@@ -253,6 +253,44 @@ test('WebRTC pairing payloads validate version, expiry, SDP, and session', async
   })).rejects.toThrow(/malformed/i);
 });
 
+test('accepts phone backups with skipped measurement arrays in daily logs', async ({ page }, testInfo) => {
+  const backupPath = testInfo.outputPath('liftday-daily-log-array-backup.json');
+  await writeFile(backupPath, JSON.stringify({
+    app: 'liftday',
+    schemaVersion: 3,
+    exportedAt: '2026-06-04T08:18:32.349Z',
+    source: 'phone',
+    sessions: {
+      '2026-06-04': seededSession,
+    },
+    dailyLogs: {
+      '2026-06-01': {
+        dateKey: '2026-06-01',
+        measurementCheckSkippedDateKeys: ['2026-06-01'],
+      },
+      '2026-06-04': {
+        dateKey: '2026-06-04',
+        weightCheckSkippedDateKeys: ['2026-06-03'],
+      },
+    },
+    progressPhotos: [],
+    profile: seededProfile,
+    activeWorkoutDraft: null,
+    firstSessionDate: '2026-06-01',
+    mobilityDoneDate: null,
+    onboardingCompleted: true,
+  }));
+
+  await page.goto('/sync');
+  await chooseSyncMode(page, 'Receive');
+  await openFileDetails(page, 'Import from file');
+  await page.locator('input[type="file"]').setInputFiles(backupPath);
+  await page.getByRole('button', { name: /^import$/i }).click();
+
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_daily_logs'))).toContain('measurementCheckSkippedDateKeys');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_daily_logs'))).toContain('weightCheckSkippedDateKeys');
+});
+
 test('laptop direct sync renders an offer QR with copy fallback', async ({ page }) => {
   await page.goto('/sync');
 

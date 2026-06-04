@@ -458,11 +458,15 @@ function isDailyLogs(value: unknown): value is Record<string, DailyLog> {
 
 function isDailyLog(value: unknown): value is DailyLog {
   if (!isRecord(value)) return false;
-  return Object.values(value).every((fieldValue) => {
-    if (fieldValue === undefined || fieldValue === null) return true;
-    if (Array.isArray(fieldValue)) return false;
-    return ['string', 'number', 'boolean', 'object'].includes(typeof fieldValue);
-  });
+  return Object.values(value).every(isJsonSafeDailyLogValue);
+}
+
+function isJsonSafeDailyLogValue(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  if (['string', 'number', 'boolean'].includes(typeof value)) return true;
+  if (Array.isArray(value)) return value.every(isJsonSafeDailyLogValue);
+  if (!isRecord(value)) return false;
+  return Object.values(value).every(isJsonSafeDailyLogValue);
 }
 
 function isProgressPhotos(value: unknown): value is ProgressPhoto[] {
