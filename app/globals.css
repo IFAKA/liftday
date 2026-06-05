@@ -287,12 +287,12 @@ input[type="number"] {
 }
 
 .text-fluid-compact-number {
-  font-size: 3.75rem;
+  font-size: 4.125rem;
   line-height: 0.9;
 }
 
 .text-fluid-compact-label {
-  font-size: 1rem;
+  font-size: 1.125rem;
   line-height: 1.1;
 }
 
@@ -319,8 +319,8 @@ input[type="number"] {
 @media (min-width: 390px) {
   .text-fluid-title { font-size: 4.5rem; }
   .text-fluid-exercise { font-size: 2.5rem; }
-  .text-fluid-compact-number { font-size: 4.25rem; }
-  .text-fluid-compact-label { font-size: 1.125rem; }
+  .text-fluid-compact-number { font-size: 4.75rem; }
+  .text-fluid-compact-label { font-size: 1.25rem; }
   .text-fluid-timer { font-size: 4.75rem; }
   .text-fluid-ui { font-size: 1.25rem; }
   .text-fluid-label { font-size: 0.875rem; }
