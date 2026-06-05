@@ -13,13 +13,13 @@ interface RouteContext {
 
 export async function PUT(_request: NextRequest, context: RouteContext) {
   const { token } = await context.params;
-  createSyncRoom(token);
+  await createSyncRoom(token);
   return NextResponse.json({ status: 'waiting' });
 }
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   const { token } = await context.params;
-  const payload = getSyncRoomPayload(token);
+  const payload = await getSyncRoomPayload(token);
 
   if (payload === undefined) {
     return NextResponse.json({ status: 'missing' }, { status: 404 });
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Invalid LiftDay sync data' }, { status: 400 });
   }
 
-  if (!saveSyncRoomPayload(token, snapshot)) {
+  if (!await saveSyncRoomPayload(token, snapshot)) {
     return NextResponse.json({ error: 'Sync session expired' }, { status: 404 });
   }
 
@@ -53,6 +53,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const { token } = await context.params;
-  clearSyncRoom(token);
+  await clearSyncRoom(token);
   return NextResponse.json({ status: 'cleared' });
 }

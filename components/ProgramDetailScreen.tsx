@@ -84,6 +84,13 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                 const activeKey = resolveExerciseKey(chain, tiers);
                 const active = getExerciseName(activeKey);
                 const progression = getProgressionPath(chain).filter((key) => key !== activeKey);
+                const setCount = getChainSetCount(chain, fallbackSets);
+                const setLabel = chain.optional && setCount === 0
+                  ? `Optional 0-${chain.prescription?.sets ?? fallbackSets}x`
+                  : `${setCount}x`;
+                const detailLabel = chain.optional && setCount === 0
+                  ? `Optional 0-${chain.prescription?.sets ?? fallbackSets}x${chain.prescription?.minReps ?? 8}-${chain.prescription?.maxReps ?? 12}`
+                  : `${setCount}x${chain.prescription?.minReps ?? 8}-${chain.prescription?.maxReps ?? 12}`;
                 return (
                   <Link
                     key={chain.slotId}
@@ -93,7 +100,7 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                     <div className="min-w-0">
                       <p className="truncate text-fluid-label font-black uppercase text-white/70">{active}</p>
                       <p className="text-xs font-mono uppercase text-white/25">
-                        {[`${getChainSetCount(chain, fallbackSets)}x${chain.prescription?.minReps ?? 8}-${chain.prescription?.maxReps ?? 12}`, chain.prescription?.targetRir, chain.prescription?.restLabel, formatCadence(chain.cadence)].filter(Boolean).join(' - ')}
+                        {[detailLabel, chain.prescription?.targetRir, chain.prescription?.restLabel, formatCadence(chain.cadence)].filter(Boolean).join(' - ')}
                       </p>
                       {progression.length > 0 && (
                         <p className="truncate text-xs font-mono uppercase text-white/20">
@@ -102,7 +109,7 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                       )}
                     </div>
                     <span className="shrink-0 text-fluid-label font-mono tabular-nums text-white/30">
-                      {getChainSetCount(chain, fallbackSets)}x
+                      {setLabel}
                     </span>
                     <ChevronRight className="h-4 w-4 shrink-0 text-white/25" />
                   </Link>

@@ -1,5 +1,6 @@
 'use client';
 
+import { Play, RotateCcw } from 'lucide-react';
 import { CountdownTimerScreen } from './CountdownTimerScreen';
 
 interface PrepTimerProps {
@@ -29,14 +30,25 @@ export function PrepTimer({
 }: PrepTimerProps) {
   const title = mode === 'warmup' ? 'Warm Up' : 'Stretch';
   const isWaitingToStart = !isRunning && seconds > 0 && Boolean(onStartTimer);
-  const isPrimaryLocked = requireCompletionBeforePrimary && isRunning && seconds > 0;
-  const primaryLabel = isWaitingToStart
-    ? 'Start Timer'
-    : isPrimaryLocked
-      ? 'Stretching'
-      : mode === 'warmup' ? 'Start Workout' : 'Done';
-  const handlePrimary = isWaitingToStart && onStartTimer ? onStartTimer : onPrimary;
-  const repeatLabel = totalSeconds === 60 ? 'Repeat 1m' : 'Repeat 30s';
+  const isComplete = seconds <= 0;
+  const isPrimaryLocked = requireCompletionBeforePrimary && !isComplete;
+  const primaryLabel = mode === 'warmup' ? 'Start Workout' : 'Done';
+  const durationLabel = totalSeconds === 60 ? '1m' : '30s';
+  const centerAction = isWaitingToStart && onStartTimer
+    ? {
+        label: `Start ${durationLabel}`,
+        ariaLabel: `Start ${durationLabel} timer`,
+        onClick: onStartTimer,
+        icon: <Play className="size-8 fill-current" />,
+      }
+    : isComplete && onRepeat
+      ? {
+          label: `Repeat ${durationLabel}`,
+          ariaLabel: `Repeat ${durationLabel} timer`,
+          onClick: onRepeat,
+          icon: <RotateCcw className="size-8" />,
+        }
+      : undefined;
 
   return (
     <CountdownTimerScreen
@@ -46,7 +58,7 @@ export function PrepTimer({
       isRunning={isRunning}
       primaryAction={{
         label: primaryLabel,
-        onClick: handlePrimary,
+        onClick: onPrimary,
         disabled: isPrimaryLocked,
       }}
       cancelAction={onCancel ? {
@@ -57,7 +69,7 @@ export function PrepTimer({
         { label: '1m', onClick: () => onPreset(60) },
         { label: '30s', onClick: () => onPreset(30) },
       ] : undefined}
-      repeatAction={onRepeat ? { label: repeatLabel, onClick: onRepeat } : undefined}
+      centerAction={centerAction}
     />
   );
 }

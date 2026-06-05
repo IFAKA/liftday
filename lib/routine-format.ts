@@ -37,7 +37,11 @@ export function formatRoutineForCopy(
         ? `; alternatives ${chain.alternatives.map(getExerciseName).join(', ')}`
         : '';
       const cadence = chain.cadence ? `; ${formatCadence(chain.cadence)}` : '';
-      lines.push(`- ${chain.slotId}: ${active}; ${getChainSetCount(chain, fallbackSets)} sets; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}${cadence}; progression ${progression}${alternatives}`);
+      const setCount = getChainSetCount(chain, fallbackSets);
+      const setText = chain.optional && setCount === 0
+        ? `optional 0-${chain.prescription?.sets ?? fallbackSets} sets`
+        : `${setCount} sets`;
+      lines.push(`- ${chain.slotId}: ${active}; ${setText}; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}${cadence}; progression ${progression}${alternatives}`);
     }
   }
 

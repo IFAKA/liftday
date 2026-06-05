@@ -12,14 +12,22 @@ export async function GET(request: NextRequest) {
 }
 
 function getPrivateIpv4Address(): string | null {
-  for (const entries of Object.values(networkInterfaces())) {
+  const candidates: Array<{ address: string; interfaceName: string; score: number }> = [];
+
+  for (const [interfaceName, entries] of Object.entries(networkInterfaces())) {
     for (const entry of entries ?? []) {
       if (entry.family !== 'IPv4' || entry.internal) continue;
-      if (isPrivateIpv4(entry.address)) return entry.address;
+      if (!isPrivateIpv4(entry.address)) continue;
+
+      candidates.push({
+        address: entry.address,
+        interfaceName,
+        score: getAddressScore(entry.address, interfaceName),
+      });
     }
   }
 
-  return null;
+  return candidates.sort((a, b) => b.score - a.score)[0]?.address ?? null;
 }
 
 function isPrivateIpv4(address: string): boolean {
@@ -28,4 +36,16 @@ function isPrivateIpv4(address: string): boolean {
     address.startsWith('192.168.') ||
     /^172\.(1[6-9]|2\d|3[01])\./.test(address)
   );
+}
+
+function getAddressScore(address: string, interfaceName: string): number {
+  const lowerName = interfaceName.toLowerCase();
+  const virtualPenalty = /^(awdl|bridge|docker|llw|utun|vbox|vmnet)/.test(lowerName) ? 100 : 0;
+  const privateRangeScore = address.startsWith('192.168.')
+    ? 30
+    : /^172\.(1[6-9]|2\d|3[01])\./.test(address)
+      ? 20
+      : 10;
+
+  return privateRangeScore - virtualPenalty;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { RotateCcw, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
@@ -18,6 +18,11 @@ type DurationPreset = {
   onClick: () => void;
 };
 
+type CenterTimerAction = TimerAction & {
+  ariaLabel?: string;
+  icon?: ReactNode;
+};
+
 interface CountdownTimerScreenProps {
   title: string;
   seconds: number;
@@ -31,7 +36,7 @@ interface CountdownTimerScreenProps {
   };
   secondaryActions?: TimerAction[];
   durationPresets?: DurationPreset[];
-  repeatAction?: TimerAction;
+  centerAction?: CenterTimerAction;
   footerContext?: ReactNode;
   completedLabel?: string;
 }
@@ -53,7 +58,7 @@ export function CountdownTimerScreen({
   cancelAction,
   secondaryActions = [],
   durationPresets,
-  repeatAction,
+  centerAction,
   footerContext,
   completedLabel = 'READY',
 }: CountdownTimerScreenProps) {
@@ -62,8 +67,7 @@ export function CountdownTimerScreen({
   const progress = ((clampedTotalSeconds - clampedSeconds) / clampedTotalSeconds) * 100;
   const display = formatTimer(seconds, completedLabel);
   const isFinalCountdown = isRunning && !isPaused && seconds <= 3 && seconds > 0;
-  const showRepeat = Boolean(repeatAction && seconds <= 0);
-  const showPresets = Boolean(durationPresets?.length && !showRepeat);
+  const showPresets = Boolean(durationPresets?.length && !isRunning && seconds > 0);
 
   return (
     <motion.div className="relative flex h-full w-full flex-col items-center overflow-hidden bg-black">
@@ -89,14 +93,33 @@ export function CountdownTimerScreen({
         >
           <WatchTimerRing progress={progress} />
 
-          <span
-            className={`z-10 font-mono text-fluid-timer font-black tracking-tighter text-white tabular-nums transition-[opacity,transform] duration-150 ease-[var(--ease-out-ui)]${isFinalCountdown ? ' scale-105' : ''}${isPaused ? ' opacity-50' : ''}`}
-            style={isFinalCountdown ? { animation: 'countdown-pulse 150ms var(--ease-out-ui)' } : undefined}
-            key={isFinalCountdown ? seconds : display}
-            aria-live="polite"
-          >
-            {display}
-          </span>
+          {centerAction ? (
+            <button
+              type="button"
+              onClick={centerAction.onClick}
+              disabled={centerAction.disabled}
+              aria-label={centerAction.ariaLabel ?? centerAction.label}
+              className="absolute inset-0 z-10 flex min-h-24 min-w-24 flex-col items-center justify-center rounded-full text-white transition-[opacity,transform] duration-150 ease-[var(--ease-out-ui)] active:scale-95 disabled:opacity-40"
+            >
+              {centerAction.icon ? (
+                <span className="mb-2 flex size-9 items-center justify-center" aria-hidden="true">
+                  {centerAction.icon}
+                </span>
+              ) : null}
+              <span className="max-w-[70%] text-center text-fluid-ui font-black uppercase leading-tight tracking-tight">
+                {centerAction.label}
+              </span>
+            </button>
+          ) : (
+            <span
+              className={`z-10 font-mono text-fluid-timer font-black tracking-tighter text-white tabular-nums transition-[opacity,transform] duration-150 ease-[var(--ease-out-ui)]${isFinalCountdown ? ' scale-105' : ''}${isPaused ? ' opacity-50' : ''}`}
+              style={isFinalCountdown ? { animation: 'countdown-pulse 150ms var(--ease-out-ui)' } : undefined}
+              key={isFinalCountdown ? seconds : display}
+              aria-live="polite"
+            >
+              {display}
+            </span>
+          )}
         </div>
 
         {showPresets && (
@@ -114,17 +137,6 @@ export function CountdownTimerScreen({
           </div>
         )}
 
-        {showRepeat && (
-          <Button
-            variant="outline"
-            onClick={repeatAction!.onClick}
-            disabled={repeatAction!.disabled}
-            className="mt-3 w-full max-w-xs min-h-[44px] btn-mobile-secondary rounded-full border-white/15 bg-white/10 text-fluid-label font-black uppercase tracking-widest text-white/80 active:scale-95 active:bg-white/20"
-          >
-            <RotateCcw className="h-4 w-4" />
-            {repeatAction!.label}
-          </Button>
-        )}
       </main>
 
       {footerContext}

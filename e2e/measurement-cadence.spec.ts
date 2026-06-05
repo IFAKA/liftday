@@ -135,7 +135,7 @@ test('weekly workout gate only renders due waist and saves body fallbacks', asyn
   await expect(page.locator('body')).toContainText('WEIGHT');
   await page.getByRole('spinbutton', { name: /bodyweight/i }).fill('68.4');
   await page.getByRole('button', { name: /save weight/i }).click();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
 
   await expect.poll(() => page.evaluate(() => {
     const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, DailyLog>;
@@ -192,7 +192,7 @@ test('monthly photo check accepts an upload and displays it in body progress', a
   });
   await expect(page.getByAltText('Selected progress photo')).toBeVisible();
   await page.getByRole('button', { name: /^save$/i }).click();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
 
   await page.goto('/history/body');
   await expect(page.locator('body')).toContainText('Photos');

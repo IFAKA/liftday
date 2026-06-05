@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --webpack --hostname 0.0.0.0",
     "build": "NEXT_TELEMETRY_DISABLED=1 next build --webpack",
     "build:turbo": "NEXT_TELEMETRY_DISABLED=1 next build --turbopack",
     "start": "next start",

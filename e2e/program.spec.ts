@@ -45,8 +45,8 @@ async function prepareTodayWorkout(page: Page, sessions: Record<string, unknown>
 async function startWarmupAndWorkout(page: Page) {
   await page.getByRole('button', { name: /^start$/i }).click();
   await skipPreWorkoutGates(page);
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
-  await page.getByRole('button', { name: /^start timer$/i }).click();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
+  await page.getByRole('button', { name: /^start 1m timer$/i }).click();
   await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await page.getByRole('button', { name: /^start workout$/i }).click();
 }
@@ -118,8 +118,8 @@ test('routine detail shows v5 Saturday delt-arm cap and neutral copy', async ({ 
   await expect(page.getByRole('link', { name: /DUMBBELL SHRUG 2x10-15 - 1-2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /OVERHEAD TRICEP EXTENSION 2x10-15 - 1-2 RIR/i }).last()).toBeVisible();
   await expect(page.getByRole('link', { name: /NECK ISO .* 2x20-30 - 2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /DUMBBELL REVERSE CURL 2x12-20 - 2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /DUMBBELL WRIST EXTENSION 2x12-20 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /DUMBBELL REVERSE CURL Optional 0-2x12-20 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /DUMBBELL WRIST EXTENSION Optional 0-2x12-20 - 2 RIR/i })).toBeVisible();
   expect(bodyText).not.toMatch(/CABLE LATERAL RAISE[\s\S]{0,80}5x/i);
   expect(bodyText).not.toMatch(/highest-SMV|dominance|formidability|clothed-SMV/i);
 });
@@ -352,7 +352,7 @@ test('missed Monday start opens due measurements, gym weight check, then warm-up
   await page.getByRole('spinbutton', { name: /bodyweight/i }).fill('66.8');
   await page.getByRole('button', { name: /save weight/i }).click();
   await expect(page.getByText(/warm up/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
 
   await expect.poll(() => page.evaluate(() => {
     const logs = JSON.parse(localStorage.getItem('liftday_daily_logs') ?? '{}') as Record<string, { morningWeightKg?: number; weightCheckSkipped?: boolean; waistCm?: number; shoulderCm?: number; chestCm?: number; bicepsCm?: number; forearmCm?: number }>;
@@ -363,8 +363,8 @@ test('missed Monday start opens due measurements, gym weight check, then warm-up
   await expect(page.locator('body')).toContainText('66.8kg');
 
   await page.goto('/');
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
-  await page.getByRole('button', { name: /^start timer$/i }).click();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
+  await page.getByRole('button', { name: /^start 1m timer$/i }).click();
   await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await page.getByRole('button', { name: /^start workout$/i }).click();
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
@@ -404,7 +404,7 @@ test('Monday start can skip due checks and open warm-up', async ({ page }) => {
   await page.getByRole('button', { name: /^no scale$/i }).click();
 
   await expect(page.getByText(/warm up/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
 });
 
 test('today start opens warm-up before the first exercise', async ({ page }) => {
@@ -423,23 +423,21 @@ test('today start opens warm-up before the first exercise', async ({ page }) => 
   await skipPreWorkoutGates(page);
 
   await expect(page.getByText(/warm up/i)).toBeVisible();
-  await expect(page.getByText('01:00')).toBeVisible();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^start workout$/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /log set/i })).toHaveCount(0);
 
   await page.getByRole('button', { name: /^30s$/i }).click();
-  await expect(page.getByText('00:30')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start 30s timer$/i })).toBeVisible();
 
-  await page.getByRole('button', { name: /^start timer$/i }).click();
+  await page.getByRole('button', { name: /^start 30s timer$/i }).click();
   await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await page.clock.fastForward(30000);
-  await expect(page.getByText(/ready/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /^repeat 30s$/i })).toBeVisible();
-  await page.getByRole('button', { name: /^repeat 30s$/i }).click();
+  await expect(page.getByRole('button', { name: /^repeat 30s timer$/i })).toBeVisible();
+  await page.getByRole('button', { name: /^repeat 30s timer$/i }).click();
   await expect(page.getByText('00:30')).toBeVisible();
   await page.clock.fastForward(30000);
-  await expect(page.getByText(/ready/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /^repeat 30s timer$/i })).toBeVisible();
   await page.getByRole('button', { name: /^start workout$/i }).click();
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
 });
@@ -472,7 +470,7 @@ test('today start is not blocked by pending notification permission', async ({ p
   await page.getByRole('button', { name: /^start$/i }).click();
   await skipPreWorkoutGates(page);
   await expect(page.getByText(/warm up/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
 });
 
 test('rest timer next exercise name copies to clipboard', async ({ page }) => {
@@ -972,11 +970,11 @@ test('restores an active workout after reload', async ({ page }) => {
 
   await page.getByRole('button', { name: /^start$/i }).click();
   await skipPreWorkoutGates(page);
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
   await page.reload();
   await expect(page.getByText(/warm up/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
-  await page.getByRole('button', { name: /^start timer$/i }).click();
+  await expect(page.getByRole('button', { name: /^start 1m timer$/i })).toBeVisible();
+  await page.getByRole('button', { name: /^start 1m timer$/i }).click();
   await expect(page.getByRole('button', { name: /^start workout$/i })).toBeVisible();
   await page.getByRole('button', { name: /^start workout$/i }).click();
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
@@ -1131,15 +1129,13 @@ test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page
   }
 
   await expect(page.getByText(/stretch/i)).toBeVisible();
-  await expect(page.getByText('00:30')).toBeVisible();
-  await expect(page.getByRole('button', { name: /^start timer$/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^done$/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^start 30s timer$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^done$/i })).toBeDisabled();
 
-  await page.getByRole('button', { name: /^start timer$/i }).click();
-  await expect(page.getByRole('button', { name: /^stretching$/i })).toBeDisabled();
+  await page.getByRole('button', { name: /^start 30s timer$/i }).click();
+  await expect(page.getByRole('button', { name: /^done$/i })).toBeDisabled();
   await page.waitForTimeout(31000);
-  await expect(page.getByText(/ready/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /^repeat 30s$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^repeat 30s timer$/i })).toBeVisible();
   await page.getByRole('button', { name: /^done$/i }).click();
 
   await expect(page.locator('body')).toContainText(/session complete/i);

@@ -11,6 +11,7 @@ import {
 } from './session-volume-constraints';
 
 export function getChainSetCount(chain: TierChain, fallbackSets: number): number {
+  if (chain.optional) return chain.sets ?? 0;
   return chain.sets ?? chain.prescription?.sets ?? fallbackSets;
 }
 
@@ -40,11 +41,13 @@ export function getResolvedSessionPlan(
     );
     const exercise = EXERCISES.find((entry) => entry.key === key);
     if (!exercise) return [];
+    const setCount = getChainSetCount(chain, fallbackSets);
+    if (setCount <= 0) return [];
     return [{
       exercise,
       chain,
       chainIndex,
-      setCount: getChainSetCount(chain, fallbackSets),
+      setCount,
       prescription: getPrescriptionForChain(chain, key, fallbackSets),
     }];
   });
@@ -59,6 +62,7 @@ function enforceNormalTrainingVolumeFloors(
   workoutType: Exclude<WorkoutType, 'rest'>
 ): ResolvedSessionPlanItem[] {
   const withExerciseFloors = plan.map((item) => {
+    if (item.chain.optional) return item;
     const minSets = isDirectArmExercise(item.exercise)
       ? INCLUDED_DIRECT_ARM_MIN_SETS
       : INCLUDED_EXERCISE_MIN_SETS;
