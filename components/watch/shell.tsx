@@ -5,6 +5,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 interface WatchScreenProps {
@@ -111,5 +112,64 @@ export function WatchSection({ title, children, className }: WatchSectionProps) 
       )}
       {children}
     </section>
+  );
+}
+
+interface WorkoutFlowScreenProps {
+  top?: ReactNode;
+  progress?: number;
+  children: ReactNode;
+  footer?: ReactNode;
+  overlay?: ReactNode;
+  className?: string;
+  bodyClassName?: string;
+  footerClassName?: string;
+  flashClassName?: string;
+  progressClassName?: string;
+  onClick?: () => void;
+}
+
+export function WorkoutFlowScreen({
+  top,
+  progress,
+  children,
+  footer,
+  overlay,
+  className,
+  bodyClassName,
+  footerClassName,
+  flashClassName,
+  progressClassName,
+  onClick,
+}: WorkoutFlowScreenProps) {
+  return (
+    <div
+      className={cn('relative flex h-full w-full flex-col overflow-hidden bg-black text-white', flashClassName, className)}
+      onClick={onClick}
+    >
+      {typeof progress === 'number' && (
+        <Progress
+          value={progress}
+          className={cn(
+            'absolute left-0 right-0 top-0 z-50 h-0.5 rounded-none bg-white/10 [&_[data-slot=progress-indicator]]:bg-white',
+            progressClassName
+          )}
+        />
+      )}
+
+      {top}
+
+      <main className={cn('flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4', bodyClassName)}>
+        {children}
+      </main>
+
+      {footer && (
+        <footer className={cn('z-20 w-full shrink-0 px-4 pb-safe', footerClassName)}>
+          {footer}
+        </footer>
+      )}
+
+      {overlay}
+    </div>
   );
 }

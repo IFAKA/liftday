@@ -10,11 +10,13 @@ import { QuitConfirmScreen } from './QuitConfirmScreen';
 import { NumberInput } from './NumberInput';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { TopBar } from './TopBar';
-import { copyText } from '@/lib/clipboard';
+import { useCopyFeedback } from '@/hooks/useCopyFeedback';
+import { useWorkoutQuitGuard } from '@/hooks/useWorkoutQuitGuard';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion, type AutoAdjustTone } from '@/lib/workout-auto-adjust';
 import type { CoachingReference } from '@/hooks/useWorkout';
 import { formatLoadTarget } from '@/lib/load-targets';
 import { CoachingPanel, ExerciseCopyTitle, MachineOccupiedControl, RirPicker, SwapPicker } from './exercise/ExercisePanels';
+import { WatchActionFooter } from './WatchSurface';
 
 interface ExerciseScreenProps {
   exercise: Exercise;
@@ -74,13 +76,17 @@ export function ExerciseScreen({
   const firstSetWeight = previousWeight ?? currentWeightTarget;
   const defaultVal = currentSet === 0 ? firstSetVal : currentTarget;
   const defaultWeight = currentSet === 0 ? firstSetWeight : currentWeightTarget;
-  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [val, setVal] = useState(defaultVal);
   const [weight, setWeight] = useState(defaultWeight);
   const [rir, setRir] = useState(prescription?.targetRirMax ?? 2);
-  const [copiedName, setCopiedName] = useState(false);
+  const { copy, isCopied } = useCopyFeedback();
+  const { showQuitConfirm, setShowQuitConfirm, requestQuit, confirmQuit } = useWorkoutQuitGuard({
+    historyStateKey: 'exercise',
+    onConfirm: onQuit,
+  });
   const [showSwapPicker, setShowSwapPicker] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+  const copiedName = isCopied(exercise.key);
 
   useEffect(() => {
     // Exercise changes reset to hook-owned progression or auto-adjust targets.
@@ -88,7 +94,6 @@ export function ExerciseScreen({
     setWeight(defaultWeight);
     setRir(autoAdjustSuggestion?.rir ?? prescription?.targetRirMax ?? 2);
     setShowQuitConfirm(false);
-    setCopiedName(false);
     setShowSwapPicker(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercise.key, prescription?.targetRirMax]);
@@ -106,19 +111,8 @@ export function ExerciseScreen({
     setWeight(currentWeightTarget);
     setRir(autoAdjustSuggestion?.rir ?? (currentSet + 1 === setsPerExercise && prescription?.finalSetRir ? prescription.targetRirMin : prescription?.targetRirMax ?? 2));
     setShowQuitConfirm(false);
-    setCopiedName(false);
     setShowSwapPicker(false);
-  }, [currentSet, currentTarget, currentWeightTarget, prescription, setsPerExercise, autoAdjustSuggestion]);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      setShowQuitConfirm(true);
-      window.history.pushState({ exercise: true }, '');
-    };
-    window.history.pushState({ exercise: true }, '');
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [currentSet, currentTarget, currentWeightTarget, prescription, setsPerExercise, autoAdjustSuggestion, setShowQuitConfirm]);
 
   const totalSets = Math.max(1, totalPlannedSets);
   const completedSets = completedPlannedSets;
@@ -147,9 +141,7 @@ export function ExerciseScreen({
   const coachingToneClass = getCoachingToneClass(coaching.tone);
 
   async function handleCopyExerciseName() {
-    await copyText(exercise.name);
-    setCopiedName(true);
-    window.setTimeout(() => setCopiedName(false), 1400);
+    await copy(exercise.key, exercise.name);
   }
 
   return (
@@ -174,7 +166,7 @@ export function ExerciseScreen({
         >
           <TopBar
             leftAction={
-              <Button variant="ghost" size="icon-xl" aria-label="Quit workout" onClick={() => setShowQuitConfirm(true)} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
+              <Button variant="ghost" size="icon-xl" aria-label="Quit workout" onClick={requestQuit} className="-ml-2 text-white/50 hover:text-white hover:bg-transparent active:text-white">
                 <X className="icon-lg" />
               </Button>
             }
@@ -262,18 +254,18 @@ export function ExerciseScreen({
           </div>
 
           <div className="w-full px-4 pb-safe mb-3 shrink-0 z-10">
-            <Button
-              onClick={() => {
+            <WatchActionFooter
+              primary={{
+                label: persistenceError ? 'RETRY SAVE' : 'LOG SET',
+                onClick: () => {
                 if (persistenceError && onRetryComplete) {
                   onRetryComplete();
                   return;
                 }
                 onLogSet(val, isSeconds ? undefined : weight, rir);
+                },
               }}
-              className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
-            >
-              {persistenceError ? 'RETRY SAVE' : 'LOG SET'}
-            </Button>
+            />
           </div>
         </motion.div>
       </AnimatePresence>
@@ -281,7 +273,7 @@ export function ExerciseScreen({
       <QuitConfirmScreen
         open={showQuitConfirm}
         onOpenChange={setShowQuitConfirm}
-        onConfirm={onQuit}
+        onConfirm={confirmQuit}
       />
 
       <AnimatePresence>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { X, ChevronLeft, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
@@ -10,6 +10,8 @@ import { MobilityExercise } from '@/lib/types';
 import { ExerciseDemo } from './ExerciseDemo';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { traceLiftDay } from '@/lib/debug-trace';
+import { useWorkoutQuitGuard } from '@/hooks/useWorkoutQuitGuard';
+import { WatchActionFooter } from './WatchSurface';
 
 interface MobilityFlowProps {
   exercise: MobilityExercise;
@@ -36,16 +38,19 @@ export function MobilityFlow({
   onResume,
   onQuit,
 }: MobilityFlowProps) {
-  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  const showQuitConfirmRef = useRef(false);
   const shouldReduceMotion = useReducedMotion();
 
   const progressPercent = (exerciseIndex / totalExercises) * 100;
-
-  useEffect(() => {
-    showQuitConfirmRef.current = showQuitConfirm;
-  }, [showQuitConfirm]);
+  const { showQuitConfirm, setShowQuitConfirm, requestQuit, confirmQuit } = useWorkoutQuitGuard({
+    historyStateKey: 'mobility',
+    onConfirm: onQuit,
+    onBack: () => {
+      if (!showTutorial) return false;
+      setShowTutorial(false);
+      return true;
+    },
+  });
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -61,22 +66,6 @@ export function MobilityFlow({
       showTutorial,
     });
   }, [exercise.name, exerciseIndex, side, showTutorial, timer]);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      if (showTutorial) {
-        setShowTutorial(false);
-      } else if (showQuitConfirmRef.current) {
-        setShowQuitConfirm(false);
-      } else {
-        setShowQuitConfirm(true);
-      }
-      window.history.pushState({ mobility: true }, '');
-    };
-    window.history.pushState({ mobility: true }, '');
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [showTutorial]);
 
   const handlePlayingChange = useCallback(
     (isPlaying: boolean) => {
@@ -102,7 +91,7 @@ export function MobilityFlow({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowQuitConfirm(true)}
+              onClick={requestQuit}
               className="-ml-2 text-white/40 hover:text-white hover:bg-transparent active:text-white"
               aria-label="Quit mobility"
             >
@@ -145,20 +134,10 @@ export function MobilityFlow({
         </div>
 
         <div className="w-full px-4 pb-safe mb-4 shrink-0 flex flex-col gap-4">
-          <Button
-            onClick={onSkip}
-            className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
-          >
-            Skip Exercise
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={isPaused ? onResume : onPause}
-            className="w-full btn-mobile-secondary rounded-full text-fluid-label font-black uppercase tracking-widest bg-white/5 border-0 text-white/40 active:bg-white/10 active:scale-95 transition-[background-color,color,transform] duration-150 ease-[var(--ease-out-ui)]"
-          >
-            {isPaused ? 'Resume' : 'Pause Session'}
-          </Button>
+          <WatchActionFooter
+            primary={{ label: 'Skip Exercise', onClick: onSkip }}
+            secondary={[{ label: isPaused ? 'Resume' : 'Pause Session', onClick: isPaused ? onResume : onPause }]}
+          />
         </div>
       </div>
 
@@ -216,7 +195,7 @@ export function MobilityFlow({
       <QuitConfirmScreen
         open={showQuitConfirm}
         onOpenChange={setShowQuitConfirm}
-        onConfirm={onQuit}
+        onConfirm={confirmQuit}
       />
     </div>
   );

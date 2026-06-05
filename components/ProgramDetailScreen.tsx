@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { TopBar } from '@/components/TopBar';
-import { copyText } from '@/lib/clipboard';
+import { useCopyFeedback } from '@/hooks/useCopyFeedback';
 import { cn } from '@/lib/utils';
 import { getChainsForRoutine, getProgressionPath, resolveExerciseKey } from '@/lib/tiers';
 import { RoutineConfig, UserProfile, WorkoutType } from '@/lib/types';
@@ -21,7 +21,7 @@ import {
 import { formatWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 
 export function ProgramDetailScreen() {
-  const [copied, setCopied] = useState(false);
+  const { copy, isCopied } = useCopyFeedback({ resetMs: 1600 });
   const [{ routine, profile, setsPerExercise }, setProgramDetail] = useState<{
     routine: RoutineConfig | null;
     profile: UserProfile | null;
@@ -39,9 +39,7 @@ export function ProgramDetailScreen() {
   }, []);
 
   async function handleCopyRoutine() {
-    await copyText(formatRoutineForCopy(routine, profile, setsPerExercise));
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+    await copy('routine', formatRoutineForCopy(routine, profile, setsPerExercise));
   }
 
   return (
@@ -60,7 +58,7 @@ export function ProgramDetailScreen() {
         </WatchSection>
       )}
 
-      <WatchCopyButton copied={copied} onClick={handleCopyRoutine} label="Copy Routine" />
+      <WatchCopyButton copied={isCopied('routine')} onClick={handleCopyRoutine} label="Copy Routine" />
     </WatchScreen>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { QuitConfirmScreen } from './QuitConfirmScreen';
 import { CountdownTimerScreen } from './CountdownTimerScreen';
-import { copyText } from '@/lib/clipboard';
+import { useCopyFeedback } from '@/hooks/useCopyFeedback';
+import { useWorkoutQuitGuard } from '@/hooks/useWorkoutQuitGuard';
 import { showRestCompleteNotification } from '@/lib/rest-notifications';
 import { cn } from '@/lib/utils';
 
@@ -35,28 +36,12 @@ function cancelRestNotification() {
 }
 
 export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName }: RestTimerProps) {
-  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-  const [copiedExerciseName, setCopiedExerciseName] = useState<string | null>(null);
-  const showQuitConfirmRef = useRef(false);
-  const copiedName = copiedExerciseName === nextExerciseName;
-
-  useEffect(() => {
-    showQuitConfirmRef.current = showQuitConfirm;
-  }, [showQuitConfirm]);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      if (showQuitConfirmRef.current) {
-        setShowQuitConfirm(false);
-      } else {
-        setShowQuitConfirm(true);
-      }
-      window.history.pushState({ rest: true }, '');
-    };
-    window.history.pushState({ rest: true }, '');
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  const { copy, isCopied } = useCopyFeedback();
+  const { showQuitConfirm, setShowQuitConfirm, requestQuit, confirmQuit } = useWorkoutQuitGuard({
+    historyStateKey: 'rest',
+    onConfirm: onQuit,
+  });
+  const copiedName = nextExerciseName ? isCopied(nextExerciseName) : false;
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -75,13 +60,7 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
 
   async function handleCopyNextExerciseName() {
     if (!nextExerciseName) return;
-    await copyText(nextExerciseName);
-    setCopiedExerciseName(nextExerciseName);
-    window.setTimeout(() => {
-      setCopiedExerciseName((currentName) => (
-        currentName === nextExerciseName ? null : currentName
-      ));
-    }, 1400);
+    await copy(nextExerciseName, nextExerciseName);
   }
 
   return (
@@ -92,7 +71,7 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
         totalSeconds={totalSeconds}
         isPaused={isPaused}
         primaryAction={{ label: 'Skip Rest', onClick: onSkip }}
-        cancelAction={{ label: 'Quit workout', onClick: () => setShowQuitConfirm(true) }}
+        cancelAction={{ label: 'Quit workout', onClick: requestQuit }}
         secondaryActions={[{ label: 'Undo Last Set', onClick: onUndo }]}
         footerContext={nextExerciseName ? (
           <div className="mb-2 flex w-full shrink-0 flex-col items-center gap-1 px-4">
@@ -120,7 +99,7 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
       <QuitConfirmScreen
         open={showQuitConfirm}
         onOpenChange={setShowQuitConfirm}
-        onConfirm={onQuit}
+        onConfirm={confirmQuit}
       />
     </>
   );

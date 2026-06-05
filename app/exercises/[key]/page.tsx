@@ -1,18 +1,17 @@
 'use client';
 
-import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Check, Copy } from 'lucide-react';
 import { TopBar } from '@/components/TopBar';
 import { WatchBackButton, WatchScreen } from '@/components/WatchSurface';
-import { copyText } from '@/lib/clipboard';
+import { useCopyFeedback } from '@/hooks/useCopyFeedback';
 import { EXERCISES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { formatWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 
 export default function ExerciseDetailPage() {
   const { key } = useParams<{ key: string }>();
-  const [copied, setCopied] = useState(false);
+  const { copy, isCopied } = useCopyFeedback();
   const ex = EXERCISES.find((e) => e.key === key);
 
   if (!ex) {
@@ -23,12 +22,12 @@ export default function ExerciseDetailPage() {
     );
   }
 
+  const exerciseKey = ex.key;
   const exerciseName = ex.name;
+  const copied = isCopied(exerciseKey);
 
   async function handleCopyName() {
-    await copyText(exerciseName);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1400);
+    await copy(exerciseKey, exerciseName);
   }
 
   return (

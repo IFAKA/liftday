@@ -4,15 +4,14 @@ import { useState } from 'react';
 import { Camera, Check, Ruler, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
+  WatchActionFooter,
   WatchFormPanel,
   WatchMeasurementGrid,
   WatchMeasurementInput,
-  WatchPrimaryAction,
-  WatchScreen,
-  WatchSecondaryAction,
 } from '@/components/WatchSurface';
+import { PreWorkoutGateScreen } from './PreWorkoutGateScreen';
 import type { DailyLog } from '@/lib/types';
-import { formatDateKey, formatDisplayDate } from '@/lib/workout-utils';
+import { formatDateKey } from '@/lib/workout-utils';
 import {
   getDefaultProfile,
   loadDailyLogs,
@@ -32,7 +31,6 @@ import {
 } from '@/lib/body-measurements';
 import type { DueMeasurementKey, MeasurementFieldDefinition } from '@/lib/measurement-schedule';
 import { compressProgressPhotoFile, saveProgressPhoto } from '@/lib/progress-photos';
-import { TopBar } from '../TopBar';
 
 type DueMeasurements = Partial<Record<DueMeasurementKey, number>>;
 
@@ -86,17 +84,11 @@ export function WeightCheckScreen({
   const previousLabel = lastWeight !== null ? `Last ${formatKg(lastWeight)}` : 'No recent weight';
 
   return (
-    <WatchScreen
-      scrollable={false}
-      top={(
-        <TopBar
-          center={
-            <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
-              {formatDisplayDate(date)}
-            </span>
-          }
-        />
-      )}
+    <PreWorkoutGateScreen
+      date={date}
+      icon={<Scale className="mb-5 h-14 w-14 text-white/35" />}
+      title="WEIGHT"
+      subtitle={previousLabel}
       bodyClassName="flex flex-col items-center justify-center"
       footer={(
         <>
@@ -130,32 +122,17 @@ export function WeightCheckScreen({
             />
           </WatchFormPanel>
 
-          <div className="grid grid-cols-2 gap-2">
-            <WatchSecondaryAction
-              type="button"
-              onClick={onCancel}
-            >
-              Cancel
-            </WatchSecondaryAction>
-            <WatchSecondaryAction
-              type="button"
-              onClick={skipWeight}
-            >
-              No scale
-            </WatchSecondaryAction>
-          </div>
+          <WatchActionFooter
+            secondary={[
+              { label: 'Cancel', onClick: onCancel },
+              { label: 'No scale', onClick: skipWeight },
+            ]}
+            layout="grid"
+          />
         </>
       )}
       footerClassName="mb-4 flex flex-col gap-3"
-    >
-        <Scale className="mb-5 h-14 w-14 text-white/35" />
-        <h1 className="text-fluid-title font-black uppercase leading-none text-white text-center">
-          WEIGHT
-        </h1>
-        <p className="mt-3 text-fluid-label font-mono font-black uppercase text-white/45">
-          {previousLabel}
-        </p>
-    </WatchScreen>
+    />
   );
 }
 
@@ -230,49 +207,25 @@ export function WeeklyMeasurementScreen({
   };
 
   return (
-    <WatchScreen
-      scrollable={false}
-      top={(
-        <TopBar
-          center={
-            <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
-              {formatDisplayDate(date)}
-            </span>
-          }
-        />
-      )}
+    <PreWorkoutGateScreen
+      date={date}
+      title="Measurements"
       bodyClassName="flex flex-col"
       footer={(
-        <div className="grid grid-cols-2 gap-2">
-          <WatchSecondaryAction
-            type="button"
-            onClick={onCancel}
-          >
-            Cancel
-          </WatchSecondaryAction>
-          <WatchPrimaryAction
-            type="button"
-            onClick={saveMeasurements}
-          >
-            Save
-          </WatchPrimaryAction>
-          <WatchSecondaryAction
-            type="button"
-            onClick={skipMeasurements}
-            className="col-span-2"
-          >
-            Skip
-          </WatchSecondaryAction>
-        </div>
+        <WatchActionFooter
+          primary={{ label: 'Save', onClick: saveMeasurements }}
+          secondary={[
+            { label: 'Cancel', onClick: onCancel },
+            { label: 'Skip', onClick: skipMeasurements },
+          ]}
+          layout="grid"
+        />
       )}
       footerClassName="mb-4"
     >
         <header className="flex shrink-0 items-center gap-3 py-4">
           <Ruler className="h-10 w-10 shrink-0 text-white/35" />
           <div className="min-w-0">
-            <h1 className="text-fluid-ui font-black uppercase leading-none text-white">
-              Measurements
-            </h1>
             <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
               {fields.length} due before gym
             </p>
@@ -296,7 +249,7 @@ export function WeeklyMeasurementScreen({
             </WatchMeasurementGrid>
           </WatchFormPanel>
         </div>
-    </WatchScreen>
+    </PreWorkoutGateScreen>
   );
 }
 
@@ -354,17 +307,16 @@ export function ProgressPhotoCheckScreen({
   }
 
   return (
-    <WatchScreen
-      scrollable={false}
-      top={(
-        <TopBar
-          center={
-            <span className="text-fluid-label font-mono font-black text-white/70 uppercase tracking-widest">
-              {formatDisplayDate(date)}
-            </span>
-          }
-        />
+    <PreWorkoutGateScreen
+      date={date}
+      icon={preview ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={preview} alt="Selected progress photo" className="mb-5 aspect-[3/4] max-h-[42dvh] w-auto rounded-2xl border border-white/10 object-cover" />
+      ) : (
+        <Camera className="mb-5 h-14 w-14 text-white/35" />
       )}
+      title="Photo"
+      subtitle="Monthly progress check"
       bodyClassName="flex flex-col items-center justify-center px-5 text-center"
       footer={(
         <div className="mb-4 flex flex-col gap-3">
@@ -384,32 +336,16 @@ export function ProgressPhotoCheckScreen({
               {inputError}
             </p>
           )}
-          <div className="grid grid-cols-2 gap-2">
-            <WatchSecondaryAction type="button" onClick={onCancel}>
-              Cancel
-            </WatchSecondaryAction>
-            <WatchPrimaryAction type="button" onClick={savePhoto}>
-              Save
-            </WatchPrimaryAction>
-            <WatchSecondaryAction type="button" onClick={skipPhoto} className="col-span-2">
-              Skip
-            </WatchSecondaryAction>
-          </div>
+          <WatchActionFooter
+            primary={{ label: 'Save', onClick: savePhoto }}
+            secondary={[
+              { label: 'Cancel', onClick: onCancel },
+              { label: 'Skip', onClick: skipPhoto },
+            ]}
+            layout="grid"
+          />
         </div>
       )}
-    >
-      {preview ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="Selected progress photo" className="mb-5 aspect-[3/4] max-h-[42dvh] w-auto rounded-2xl border border-white/10 object-cover" />
-      ) : (
-        <Camera className="mb-5 h-14 w-14 text-white/35" />
-      )}
-      <h1 className="text-fluid-title font-black uppercase leading-none text-white">
-        Photo
-      </h1>
-      <p className="mt-3 max-w-64 text-fluid-label font-mono uppercase leading-snug text-white/45">
-        Monthly progress check
-      </p>
-    </WatchScreen>
+    />
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ProgressPacePanel } from '@/components/ProgressPacePanel';
 import { TopBar } from '@/components/TopBar';
-import { copyText } from '@/lib/clipboard';
+import { useCopyFeedback } from '@/hooks/useCopyFeedback';
 import { ProgressDiagnosis } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { OptimizationContext, WorkoutData } from '@/lib/types';
@@ -16,7 +16,7 @@ import {
 } from './WatchSurface';
 
 export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
-  const [copied, setCopied] = useState(false);
+  const { copy, isCopied } = useCopyFeedback({ resetMs: 1600 });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -36,9 +36,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
   }, [data, mounted]);
 
   async function handleCopyProgress() {
-    await copyText(progress.prompt);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+    await copy('progress', progress.prompt);
   }
 
   return (
@@ -53,7 +51,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
     >
       <ProgressPacePanel frontier={progress.frontier} />
       <AdaptiveProgressPanel adaptation={progress.adaptation} diagnosis={progress.diagnosis} />
-      <WatchCopyButton copied={copied} onClick={handleCopyProgress} label="Copy Progress" />
+      <WatchCopyButton copied={isCopied('progress')} onClick={handleCopyProgress} label="Copy Progress" />
     </WatchScreen>
   );
 }

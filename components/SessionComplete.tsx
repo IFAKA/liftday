@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { PrepTimer } from './PrepTimer';
+import { CompletionSummaryScreen } from './CompletionSummaryScreen';
 import { EXERCISES } from '@/lib/constants';
 import { STRETCH_DURATION_SECONDS } from '@/lib/constants';
 import { WorkoutData, SetEntry, setEntryReps } from '@/lib/types';
-import { WatchScreen } from './WatchSurface';
+import { useCountdownTimer } from '@/hooks/useCountdownTimer';
 
 type SessionCompleteProps =
   | {
@@ -24,33 +24,24 @@ type SessionCompleteProps =
 export function SessionComplete(props: SessionCompleteProps) {
   const isWorkout = props.mode === 'workout';
   const [stretchComplete, setStretchComplete] = useState(!isWorkout);
-  const [stretchRunning, setStretchRunning] = useState(false);
-  const [stretchSeconds, setStretchSeconds] = useState(STRETCH_DURATION_SECONDS);
+  const stretchTimer = useCountdownTimer({
+    initialSeconds: STRETCH_DURATION_SECONDS,
+    autoStart: false,
+  });
   const workoutPropsTyped = isWorkout ? (props as Extract<typeof props, { mode: 'workout' }>) : null;
   const mobilityProps = !isWorkout ? (props as Extract<typeof props, { mode: 'mobility' }>) : null;
-
-  useEffect(() => {
-    if (!stretchRunning || stretchSeconds <= 0) return;
-    const timer = setInterval(() => {
-      setStretchSeconds((seconds) => Math.max(0, seconds - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [stretchRunning, stretchSeconds]);
 
   if (isWorkout && !stretchComplete) {
     return (
       <PrepTimer
         mode="stretch"
-        seconds={stretchSeconds}
+        seconds={stretchTimer.seconds}
         totalSeconds={STRETCH_DURATION_SECONDS}
-        isRunning={stretchRunning}
-        onStartTimer={() => setStretchRunning(true)}
-        onRepeat={() => {
-          setStretchSeconds(STRETCH_DURATION_SECONDS);
-          setStretchRunning(true);
-        }}
+        isRunning={stretchTimer.isRunning}
+        onStartTimer={stretchTimer.start}
+        onRepeat={stretchTimer.repeat}
         onPrimary={() => {
-          if (stretchSeconds > 0) return;
+          if (stretchTimer.seconds > 0) return;
           setStretchComplete(true);
         }}
         requireCompletionBeforePrimary
@@ -66,40 +57,22 @@ export function SessionComplete(props: SessionCompleteProps) {
     : 0;
 
   return (
-    <WatchScreen
-      scrollable={false}
-      bodyClassName="flex flex-col items-center justify-center py-8"
-      footer={(
-        <Button
-          onClick={props.onDone}
-          className="w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight bg-white text-black active:scale-95 transition-transform duration-150 ease-[var(--ease-out-ui)] shadow-xl"
-        >
-          DONE
-        </Button>
-      )}
-      footerClassName="mb-4 z-10"
-    >
+    <CompletionSummaryScreen
+      icon={(
         <CheckCircle2
-          className="w-24 h-24 sm:w-28 sm:h-28 text-green-500 mb-4"
+          className="mb-4 h-24 w-24 text-green-500 sm:h-28 sm:w-28"
           style={{ animation: 'bounce-in 240ms var(--ease-out-ui) backwards' }}
         />
-        
-        <h1 className="text-fluid-label font-black tracking-[0.2em] uppercase text-white/80 mb-3 text-center">
-          {isWorkout ? 'SESSION COMPLETE' : 'MOBILITY COMPLETE'}
-        </h1>
-        
-        <p className="text-fluid-timer leading-none font-black tracking-tighter tabular-nums text-white text-center">
-          {isWorkout ? totalReps : `${mobilityProps?.weekCompleted}/${mobilityProps?.weekTotal}`}
-        </p>
-        <p className="text-fluid-ui font-black tracking-[0.1em] uppercase text-white/60 text-center mt-2">
-          {isWorkout ? 'TOTAL REPS' : 'DAYS DONE'}
-        </p>
-
-        {isWorkout && workoutPropsTyped?.advancedTiers && workoutPropsTyped.advancedTiers.length > 0 && (
-          <Badge variant="ghost" className="mt-8 bg-green-500/10 border-green-500/20 px-6 py-3 rounded-2xl text-fluid-label text-green-400 uppercase tracking-widest font-black">
-            ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
-          </Badge>
-        )}
-    </WatchScreen>
+      )}
+      title={isWorkout ? 'SESSION COMPLETE' : 'MOBILITY COMPLETE'}
+      metric={isWorkout ? totalReps : `${mobilityProps?.weekCompleted}/${mobilityProps?.weekTotal}`}
+      metricLabel={isWorkout ? 'TOTAL REPS' : 'DAYS DONE'}
+      badge={isWorkout && workoutPropsTyped?.advancedTiers && workoutPropsTyped.advancedTiers.length > 0 ? (
+        <Badge variant="ghost" className="mt-8 bg-green-500/10 border-green-500/20 px-6 py-3 rounded-2xl text-fluid-label text-green-400 uppercase tracking-widest font-black">
+          ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
+        </Badge>
+      ) : undefined}
+      onDone={props.onDone}
+    />
   );
 }

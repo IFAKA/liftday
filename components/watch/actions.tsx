@@ -7,6 +7,13 @@ import { cn } from '@/lib/utils';
 
 type WatchActionTone = 'primary' | 'secondary' | 'danger';
 
+type WatchFooterAction = {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  tone?: WatchActionTone;
+};
+
 interface WatchActionProps extends ComponentProps<typeof Button> {
   tone?: WatchActionTone;
 }
@@ -25,7 +32,7 @@ export function WatchPrimaryAction({ className, tone = 'primary', ...props }: Wa
   return (
     <Button
       className={cn(
-        'w-full btn-mobile-accessible rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
+        'w-full btn-mobile-accessible !h-[56px] !min-h-[56px] rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
         getWatchActionClassName(tone),
         className
       )}
@@ -39,12 +46,62 @@ export function WatchSecondaryAction({ className, tone = 'secondary', variant = 
     <Button
       variant={variant}
       className={cn(
-        'btn-mobile-secondary rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
+        'btn-mobile-secondary !h-[48px] !min-h-[48px] rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
         getWatchActionClassName(tone),
         className
       )}
       {...props}
     />
+  );
+}
+
+interface WatchActionFooterProps {
+  primary?: WatchFooterAction;
+  secondary?: WatchFooterAction[];
+  layout?: 'stack' | 'grid';
+  className?: string;
+}
+
+export function WatchActionFooter({
+  primary,
+  secondary = [],
+  layout = 'stack',
+  className,
+}: WatchActionFooterProps) {
+  if (!primary && secondary.length === 0) return null;
+
+  const secondaryClassName = layout === 'grid' ? 'w-full' : 'w-full';
+
+  return (
+    <div className={cn('flex w-full flex-col gap-3', className)}>
+      {primary && (
+        <WatchPrimaryAction
+          type="button"
+          onClick={primary.onClick}
+          disabled={primary.disabled}
+          tone={primary.tone ?? 'primary'}
+        >
+          {primary.label}
+        </WatchPrimaryAction>
+      )}
+
+      {secondary.length > 0 && (
+        <div className={cn(layout === 'grid' ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-3')}>
+          {secondary.map((action) => (
+            <WatchSecondaryAction
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              disabled={action.disabled}
+              tone={action.tone ?? 'secondary'}
+              className={secondaryClassName}
+            >
+              {action.label}
+            </WatchSecondaryAction>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

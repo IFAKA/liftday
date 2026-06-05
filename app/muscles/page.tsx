@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ViewSide } from '@/components/MuscleBodyChart';
 import { TopBar } from '@/components/TopBar';
 import { WatchBackButton, WatchScreen } from '@/components/WatchSurface';
+import { useCopyFeedback } from '@/hooks/useCopyFeedback';
 import {
   getLoggedEffectiveVolume,
   getLoggedWorkoutEffectiveVolume,
@@ -19,7 +20,6 @@ import {
 import { loadProgramSummary, type ProgramSummary } from '@/lib/program-summary';
 import { formatWorkoutType, getWorkoutType } from '@/lib/schedule';
 import type { MuscleGroup } from '@/lib/types';
-import { copyText } from '@/lib/clipboard';
 import {
   LENS_LABELS,
   MuscleLensSummaryPanel,
@@ -34,7 +34,7 @@ export default function MusclesPage() {
   const [lens, setLens] = useState<MuscleLens>('today');
   const [view, setView] = useState<ViewSide>(ViewSide.FRONT);
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | null>(null);
-  const [copied, setCopied] = useState(false);
+  const { copy, isCopied } = useCopyFeedback({ resetMs: 1800 });
 
   useEffect(() => {
     const nextSummary = loadProgramSummary();
@@ -107,14 +107,9 @@ export default function MusclesPage() {
         contextLabel={contextLabel}
         totalSets={totalSets}
         totalTarget={totalTarget}
-        copied={copied}
+        copied={isCopied('muscle-report')}
         onLensChange={setLens}
-        onCopyReport={() => {
-          copyText(reportText).then(() => {
-            setCopied(true);
-            window.setTimeout(() => setCopied(false), 1800);
-          });
-        }}
+        onCopyReport={() => void copy('muscle-report', reportText)}
       />
 
       <MuscleMapPanel
