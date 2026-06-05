@@ -5,6 +5,7 @@ import { RotateCcw, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
+import { WatchTimerRing } from './watch/timer-ring';
 
 type TimerAction = {
   label: string;
@@ -59,7 +60,6 @@ export function CountdownTimerScreen({
   const clampedTotalSeconds = Math.max(1, totalSeconds);
   const clampedSeconds = Math.max(0, Math.min(seconds, clampedTotalSeconds));
   const progress = ((clampedTotalSeconds - clampedSeconds) / clampedTotalSeconds) * 100;
-  const circumference = 2 * Math.PI * 45;
   const display = formatTimer(seconds, completedLabel);
   const isFinalCountdown = isRunning && !isPaused && seconds <= 3 && seconds > 0;
   const showRepeat = Boolean(repeatAction && seconds <= 0);
@@ -87,21 +87,7 @@ export function CountdownTimerScreen({
           className="relative flex items-center justify-center"
           style={{ width: 'min(75vw, 45dvh)', height: 'min(75vw, 45dvh)' }}
         >
-          <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" />
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={circumference * (1 - progress / 100)}
-              style={{ transition: 'stroke-dashoffset 1s linear' }}
-            />
-          </svg>
+          <WatchTimerRing progress={progress} />
 
           <span
             className={`z-10 font-mono text-fluid-timer font-black tracking-tighter text-white tabular-nums transition-[opacity,transform] duration-150 ease-[var(--ease-out-ui)]${isFinalCountdown ? ' scale-105' : ''}${isPaused ? ' opacity-50' : ''}`}
