@@ -216,7 +216,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'standing_calf_raise_machine',
       alternatives: ['calf_raise'],
       exercises: ['standing_calf_raise_machine'],
-      prescription: prescription(3, 8, 15, '60-120 sec', 'Full stretch, full peak.'),
+      prescription: prescription(4, 8, 15, '60-120 sec', 'Full stretch, full peak.'),
     },
 
     {
@@ -370,7 +370,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_rear_delt_fly',
       alternatives: ['reverse_pec_deck', 'cable_face_pull'],
       exercises: ['cable_rear_delt_fly'],
-      prescription: prescription(2, 12, 20, '60-120 sec', 'Posture top-up. Rear delts only, traps quiet.'),
+      prescription: prescription(3, 12, 20, '60-120 sec', 'Posture top-up. Rear delts only, traps quiet.'),
     },
     {
       slotId: 'delts_arms_shrug',
@@ -417,9 +417,17 @@ export const gymRoutine: RoutineConfig = {
       fixed: true,
       priority: 'aesthetic',
       selectedExercise: 'neck_iso_ext',
-      alternatives: ['neck_iso_flex'],
       exercises: ['neck_iso_ext'],
-      prescription: prescription(2, 20, 30, '60-120 sec', 'Easy neck isometrics. Gentle pressure only.', '2 RIR'),
+      prescription: prescription(1, 20, 30, '60-120 sec', 'Easy back-of-neck isometric. Gentle pressure only.', '2 RIR'),
+    },
+    {
+      slotId: 'delts_arms_neck_flex',
+      workoutType: 'delts_arms',
+      fixed: true,
+      priority: 'aesthetic',
+      selectedExercise: 'neck_iso_flex',
+      exercises: ['neck_iso_flex'],
+      prescription: prescription(1, 20, 30, '60-120 sec', 'Easy front-of-neck isometric. Gentle pressure only.', '2 RIR'),
     },
     {
       slotId: 'delts_arms_reverse_curl',

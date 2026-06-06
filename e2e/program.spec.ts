@@ -114,10 +114,11 @@ test('routine detail shows v5 Saturday delt-arm cap and neutral copy', async ({ 
   const bodyText = await page.locator('body').innerText();
   await expect(page.getByRole('link', { name: /CABLE LATERAL RAISE 3x10-20 - 1-2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /CABLE Y RAISE 2x12-20 - 1-2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /CABLE REAR-DELT FLY 2x12-20 - 1-2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /CABLE REAR-DELT FLY 3x12-20 - 1-2 RIR/i }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /DUMBBELL SHRUG 2x10-15 - 1-2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /OVERHEAD TRICEP EXTENSION 2x10-15 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /NECK ISO .* 2x20-30 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /NECK ISO .* BACK 1x20-30 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /NECK ISO .* FRONT 1x20-30 - 2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /DUMBBELL REVERSE CURL Optional 0-2x12-20 - 2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /DUMBBELL WRIST EXTENSION Optional 0-2x12-20 - 2 RIR/i })).toBeVisible();
   expect(bodyText).not.toMatch(/CABLE LATERAL RAISE[\s\S]{0,80}5x/i);
