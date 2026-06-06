@@ -80,7 +80,6 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
                 href="/muscles"
                 icon={Activity}
                 title="Muscles"
-                subtitle="What is working"
                 subtle
                 className="py-3"
               />
@@ -90,7 +89,6 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
                 href="/program"
                 icon={CalendarDays}
                 title="Program"
-                subtitle="Routine"
                 subtle
                 className="py-3"
               />
@@ -100,7 +98,6 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
                 href="/history"
                 icon={ChartBar}
                 title="Progress"
-                subtitle="Changes and attention"
                 subtle
                 className="py-3"
               />
@@ -110,7 +107,6 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
                 href="/settings"
                 icon={Settings}
                 title="Options"
-                subtitle="Routine, body, sync"
                 subtle
                 className="py-3"
               />

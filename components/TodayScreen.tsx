@@ -7,7 +7,7 @@ import { Dumbbell } from 'lucide-react';
 import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
-import { formatWorkoutType, getWorkoutType, getTrainingStreak } from '@/lib/schedule';
+import { formatWorkoutType, getWorkoutType } from '@/lib/schedule';
 import { DailyLog } from '@/lib/types';
 import { loadDailyLogs } from '@/lib/storage';
 import { getStorageIssues } from '@/lib/browser-storage';
@@ -78,7 +78,6 @@ function TodayContent({ date }: { date: Date }) {
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
   const workoutType = getWorkoutType(date);
-  const streak = getTrainingStreak(date, workout.data);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -298,10 +297,8 @@ nextExerciseName={workout.nextExerciseAfterRestName}
 
   return (
     <TodayHub
-      date={date}
       isDone={isDone}
       workoutTitle={formatWorkoutType(workoutType)}
-      streak={streak}
       storageReady={storageReady}
       storageIssueMessage={storageIssueMessage}
       startError={startError}
