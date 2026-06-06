@@ -418,7 +418,7 @@ export const gymRoutine: RoutineConfig = {
       priority: 'aesthetic',
       selectedExercise: 'neck_iso_ext',
       exercises: ['neck_iso_ext'],
-      prescription: prescription(1, 20, 30, '60-120 sec', 'Easy back-of-neck isometric. Gentle pressure only.', '2 RIR'),
+      prescription: prescription(2, 20, 30, '60-120 sec', 'Easy back-of-neck isometric. Gentle pressure only.', '2 RIR'),
     },
     {
       slotId: 'delts_arms_neck_flex',
@@ -427,7 +427,7 @@ export const gymRoutine: RoutineConfig = {
       priority: 'aesthetic',
       selectedExercise: 'neck_iso_flex',
       exercises: ['neck_iso_flex'],
-      prescription: prescription(1, 20, 30, '60-120 sec', 'Easy front-of-neck isometric. Gentle pressure only.', '2 RIR'),
+      prescription: prescription(2, 20, 30, '60-120 sec', 'Easy front-of-neck isometric. Gentle pressure only.', '2 RIR'),
     },
     {
       slotId: 'delts_arms_reverse_curl',
