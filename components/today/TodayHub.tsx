@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   WatchAlertPanel,
   WatchListItem,
-  WatchPanel,
   WatchPrimaryAction,
   WatchScreen,
 } from '@/components/WatchSurface';
@@ -18,8 +17,6 @@ export function TodayHub({
   workoutTitle,
   streak,
   storageReady,
-  nextExerciseName,
-  nextPrescription,
   storageIssueMessage,
   startError,
   onStart,
@@ -29,13 +26,6 @@ export function TodayHub({
   workoutTitle: string;
   streak: number;
   storageReady: boolean;
-  nextExerciseName?: string;
-  nextPrescription?: {
-    sets: number;
-    minReps: number;
-    maxReps: number;
-    targetRir: string;
-  } | null;
   storageIssueMessage: string | null;
   startError: string | null;
   onStart: () => void;
@@ -94,37 +84,8 @@ export function TodayHub({
         )}
       </div>
 
-      {storageReady && !isDone && nextExerciseName && nextPrescription && (
-        <WorkoutStartPanel exerciseName={nextExerciseName} prescription={nextPrescription} />
-      )}
-
       <TodayNavList />
     </WatchScreen>
-  );
-}
-
-function WorkoutStartPanel({
-  exerciseName,
-  prescription,
-}: {
-  exerciseName: string;
-  prescription: {
-    sets: number;
-    minReps: number;
-    maxReps: number;
-    targetRir: string;
-  };
-}) {
-  return (
-    <WatchPanel subtle className="py-3">
-      <p className="text-fluid-label text-zinc-500 uppercase font-mono">Next</p>
-      <p className="mt-1 truncate text-fluid-label font-black uppercase text-white">
-        {exerciseName}
-      </p>
-      <p className="mt-1 text-fluid-label font-mono uppercase text-white/35">
-        {prescription.sets}x{prescription.minReps}-{prescription.maxReps} · {prescription.targetRir}
-      </p>
-    </WatchPanel>
   );
 }
 
