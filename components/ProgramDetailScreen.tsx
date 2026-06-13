@@ -83,12 +83,8 @@ function RoutineSlots({ routine, profile, fallbackSets }: { routine: RoutineConf
                 const active = getExerciseName(activeKey);
                 const progression = getProgressionPath(chain).filter((key) => key !== activeKey);
                 const setCount = getChainSetCount(chain, fallbackSets);
-                const setLabel = chain.optional && setCount === 0
-                  ? `Optional 0-${chain.prescription?.sets ?? fallbackSets}x`
-                  : `${setCount}x`;
-                const detailLabel = chain.optional && setCount === 0
-                  ? `Optional 0-${chain.prescription?.sets ?? fallbackSets}x${chain.prescription?.minReps ?? 8}-${chain.prescription?.maxReps ?? 12}`
-                  : `${setCount}x${chain.prescription?.minReps ?? 8}-${chain.prescription?.maxReps ?? 12}`;
+                const setLabel = `${setCount}x`;
+                const detailLabel = `${setCount}x${chain.prescription?.minReps ?? 8}-${chain.prescription?.maxReps ?? 12}`;
                 return (
                   <Link
                     key={chain.slotId}

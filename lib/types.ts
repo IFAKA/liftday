@@ -458,8 +458,6 @@ export interface TierChain {
   priority: TrainingPriority;
   /** Overrides the profile default for frontier-biased routine slots. */
   sets?: number;
-  /** Optional slots are visible in the routine but skipped unless explicitly enabled. */
-  optional?: boolean;
   /** Limits a slot to the first or second occurrence of that workout type in the weekly split. */
   cadence?: WorkoutCadence;
   /** Active exercise selected by the deterministic optimizer for this slot. */

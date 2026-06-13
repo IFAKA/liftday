@@ -38,9 +38,7 @@ export function formatRoutineForCopy(
         : '';
       const cadence = chain.cadence ? `; ${formatCadence(chain.cadence)}` : '';
       const setCount = getChainSetCount(chain, fallbackSets);
-      const setText = chain.optional && setCount === 0
-        ? `optional 0-${chain.prescription?.sets ?? fallbackSets} sets`
-        : `${setCount} sets`;
+      const setText = `${setCount} sets`;
       lines.push(`- ${chain.slotId}: ${active}; ${setText}; priority ${chain.priority}; ${chain.fixed ? 'fixed' : 'progression'}${cadence}; progression ${progression}${alternatives}`);
     }
   }
