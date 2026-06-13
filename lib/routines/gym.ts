@@ -45,7 +45,7 @@ function prescription(
 export const gymRoutine: RoutineConfig = {
   id: 'gym',
   name: 'Gym Hypertrophy',
-  description: 'Six-day SMV routine using double progression, arm specialization, upper-chest priority, capped lats, high delts, and leg maintenance.',
+  description: 'Six-day gym routine using double progression, arm specialization, upper-chest priority, capped lats, high delts, and leg maintenance.',
   icon: 'dumbbell',
   schedule: ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'],
   tierChains: [
