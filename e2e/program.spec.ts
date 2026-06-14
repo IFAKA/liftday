@@ -296,7 +296,7 @@ test('program avoids joint-risk-only deload when progression needs reps', async 
   await expect(page.locator('body')).not.toContainText('Hold structure');
 });
 
-test('missed Monday start opens due measurements, gym weight check, then warm-up', async ({ page }) => {
+test('missed Sunday start opens due measurements, gym weight check, then warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
@@ -392,7 +392,7 @@ test('saturday weight check can record no scale and continue to warm-up', async 
   })).toMatchObject({ dateKey: '2026-05-16', weightCheckSkipped: true, waistCm: 74.5 });
 });
 
-test('Monday start can skip due checks and open warm-up', async ({ page }) => {
+test('Monday start can skip missed Sunday checks and open warm-up', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {

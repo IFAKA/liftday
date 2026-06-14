@@ -29,10 +29,10 @@ async function installRequiredNotificationStack(page: Page) {
   });
 }
 
-test('measurement cadence follows weekly waist, monthly full checks, and 3-4x weekly weight', () => {
+test('measurement cadence follows Sunday waist, monthly full checks, and 3-4x weekly weight', () => {
   const emptyLogs: Record<string, DailyLog> = {};
 
-  expect(getMeasurementCheckDue(new Date('2026-05-04T08:00:00'), emptyLogs)).toMatchObject({
+  expect(getMeasurementCheckDue(new Date('2026-05-03T08:00:00'), emptyLogs)).toMatchObject({
     weightDue: true,
     photoDue: false,
     measurementFields: [{ key: 'waistCm', label: 'Waist' }],
@@ -43,15 +43,15 @@ test('measurement cadence follows weekly waist, monthly full checks, and 3-4x we
     photoDue: false,
   });
 
-  expect(getMeasurementCheckDue(new Date('2026-05-11T08:00:00'), emptyLogs).measurementFields.map((field) => field.key))
+  expect(getMeasurementCheckDue(new Date('2026-05-10T08:00:00'), emptyLogs).measurementFields.map((field) => field.key))
     .toEqual(['waistCm']);
 
-  expect(getMeasurementCheckDue(new Date('2026-05-25T08:00:00'), emptyLogs).measurementFields.map((field) => field.key))
+  expect(getMeasurementCheckDue(new Date('2026-05-24T08:00:00'), emptyLogs).measurementFields.map((field) => field.key))
     .toEqual(['waistCm', 'shoulderCm', 'chestCm', 'bicepsCm', 'forearmCm', 'neckCm', 'hipCm', 'quadCm', 'calfCm', 'wristCm', 'ankleCm']);
-  expect(getMeasurementCheckDue(new Date('2026-05-25T08:00:00'), emptyLogs).photoDue).toBe(true);
+  expect(getMeasurementCheckDue(new Date('2026-05-24T08:00:00'), emptyLogs).photoDue).toBe(true);
 });
 
-test('missed Monday remains due until completed or skipped', () => {
+test('missed Sunday remains due until completed or skipped', () => {
   const tuesday = new Date('2026-05-12T08:00:00');
 
   expect(getMeasurementCheckDue(tuesday, {}).measurementFields.map((field) => field.key))
@@ -73,7 +73,7 @@ test('missed Monday remains due until completed or skipped', () => {
     '2026-05-12': {
       dateKey: '2026-05-12',
       weightCheckSkippedDateKeys: ['2026-05-11'],
-      measurementCheckSkippedDateKeys: ['2026-05-11'],
+      measurementCheckSkippedDateKeys: ['2026-05-10'],
     },
   })).toMatchObject({
     weightDue: false,

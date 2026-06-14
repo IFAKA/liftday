@@ -27,7 +27,7 @@ export interface MeasurementCheckDue {
   photoDue: boolean;
 }
 
-const CADENCE_ANCHOR = new Date(2026, 0, 5);
+const MEASUREMENT_CADENCE_ANCHOR = new Date(2026, 0, 4);
 const DAYS_PER_WEEK = 7;
 
 export const MEASUREMENT_FIELD_DEFINITIONS: readonly MeasurementFieldDefinition[] = [
@@ -69,7 +69,7 @@ export function getMeasurementCheckDue(
     if (cycleHasDue) dueDateKeys.add(scheduledDateKey);
   }
 
-  for (const scheduled of getScheduledMondaysThrough(date)) {
+  for (const scheduled of getScheduledMeasurementDaysThrough(date)) {
     const scheduledDateKey = formatDateKey(scheduled.date);
     const dueForCycle = getCycleDueFields(scheduled.weekIndex);
     let cycleHasDue = false;
@@ -100,14 +100,18 @@ export function getMeasurementCheckDue(
 }
 
 export function isMondayCheckDay(date: Date): boolean {
-  return date.getDay() === 1;
+  return isMeasurementCheckDay(date);
 }
 
-function getScheduledMondaysThrough(date: Date): { date: Date; weekIndex: number }[] {
+export function isMeasurementCheckDay(date: Date): boolean {
+  return date.getDay() === 0;
+}
+
+function getScheduledMeasurementDaysThrough(date: Date): { date: Date; weekIndex: number }[] {
   const current = startOfLocalDay(date);
-  const latestMonday = getMondayOnOrBefore(current);
-  const weekIndex = getWeeksSinceAnchor(latestMonday);
-  return weekIndex >= 0 ? [{ date: latestMonday, weekIndex }] : [];
+  const latestMeasurementDay = getSundayOnOrBefore(current);
+  const weekIndex = getWeeksSinceMeasurementAnchor(latestMeasurementDay);
+  return weekIndex >= 0 ? [{ date: latestMeasurementDay, weekIndex }] : [];
 }
 
 function getCycleDueFields(weekIndex: number): {
@@ -149,7 +153,7 @@ function getScheduledWeightDaysThrough(date: Date): { date: Date; weekIndex: num
       return scheduledDate;
     })
     .filter((scheduledDate) => scheduledDate <= current)
-    .map((scheduledDate) => ({ date: scheduledDate, weekIndex: getWeeksSinceAnchor(monday) }));
+    .map((scheduledDate) => ({ date: scheduledDate, weekIndex: getWeeksSinceMeasurementAnchor(monday) }));
 }
 
 function hasWeightHandled(logs: Record<string, DailyLog>, scheduledDateKey: string, currentDateKey: string): boolean {
@@ -188,15 +192,21 @@ function getLogsInWindow(logs: Record<string, DailyLog>, startDateKey: string, e
   return Object.values(logs).filter((log) => log.dateKey >= startDateKey && log.dateKey <= endDateKey);
 }
 
-function getWeeksSinceAnchor(date: Date): number {
+function getWeeksSinceMeasurementAnchor(date: Date): number {
   const normalized = startOfLocalDay(date);
-  return Math.round((normalized.getTime() - CADENCE_ANCHOR.getTime()) / (DAYS_PER_WEEK * 24 * 60 * 60 * 1000));
+  return Math.round((normalized.getTime() - MEASUREMENT_CADENCE_ANCHOR.getTime()) / (DAYS_PER_WEEK * 24 * 60 * 60 * 1000));
 }
 
 function getMondayOnOrBefore(date: Date): Date {
   const normalized = startOfLocalDay(date);
   const daysSinceMonday = (normalized.getDay() + 6) % DAYS_PER_WEEK;
   normalized.setDate(normalized.getDate() - daysSinceMonday);
+  return normalized;
+}
+
+function getSundayOnOrBefore(date: Date): Date {
+  const normalized = startOfLocalDay(date);
+  normalized.setDate(normalized.getDate() - normalized.getDay());
   return normalized;
 }
 
