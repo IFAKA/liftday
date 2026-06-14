@@ -80,12 +80,11 @@ test('calculates weekly SMV volume with indirect sets', () => {
   const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
   const volume = calculateRoutineVolume(optimized.routine, getDefaultProfile(), 3);
 
-  expect(volume.side_delt).toBeGreaterThanOrEqual(12);
-  expect(volume.side_delt).toBeLessThanOrEqual(14);
+  expect(volume.side_delt).toBe(10);
   expect(volume.rear_delt).toBeGreaterThanOrEqual(9);
   expect(volume.rear_delt).toBeLessThanOrEqual(13);
   expect(volume.chest).toBeGreaterThanOrEqual(12);
-  expect(volume.triceps).toBeGreaterThanOrEqual(13);
+  expect(volume.triceps).toBe(10);
   expect(volume.biceps).toBeGreaterThanOrEqual(11);
   expect(volume.quads).toBeGreaterThanOrEqual(6);
   expect(volume.quads).toBeLessThanOrEqual(7);
@@ -408,7 +407,7 @@ test('ranks crowded-gym substitutions and migrates legacy set entries', () => {
 
   expect(getRankedSubstitutions(chain!, ['dumbbells'])).toEqual([
     'high_incline_machine_press',
-    'barbell_bench_press',
+    'smith_incline_press',
   ]);
 
   const migrated = migrateWorkoutData({

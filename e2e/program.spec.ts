@@ -112,7 +112,7 @@ test('routine detail shows corrected Saturday delt-arm cap and neutral copy', as
   await page.goto('/program/detail');
 
   const bodyText = await page.locator('body').innerText();
-  await expect(page.getByRole('link', { name: /CABLE LATERAL RAISE 3x10-20 - 1-2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /CABLE LATERAL RAISE 3x10-20 - 1-2 RIR/i }).last()).toBeVisible();
   await expect(page.getByRole('link', { name: /CABLE REAR-DELT FLY 2x12-20 - 1-2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /DUMBBELL SHRUG 2x10-15 - 2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /OVERHEAD TRICEP EXTENSION 2x10-15 - 1-2 RIR/i }).last()).toBeVisible();
