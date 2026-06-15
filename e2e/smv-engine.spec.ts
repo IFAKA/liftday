@@ -92,6 +92,25 @@ test('calculates weekly SMV volume with indirect sets', () => {
   expect(optimized.sessionDurations.some((session) => session.minutes >= 45)).toBe(true);
 });
 
+test('default routine keeps biceps on the efficient frontier for the current profile', () => {
+  const directBicepsChains = gymRoutine.tierChains.filter((chain) => {
+    const exercise = chain.selectedExercise ?? chain.exercises[0];
+    return ['cable_curl', 'hammer_curl', 'db_reverse_curl', 'preacher_curl', 'db_incline_curl'].includes(exercise);
+  });
+  const directBicepsSets = directBicepsChains.reduce((sum, chain) => sum + (chain.prescription?.sets ?? 3), 0);
+
+  expect(directBicepsChains.map((chain) => chain.workoutType)).toEqual([
+    'pull_a',
+    'pull_a',
+    'pull_b',
+    'delts_arms',
+  ]);
+  expect(directBicepsSets).toBe(10);
+  expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('push_a_cable_curl');
+  expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('push_b_incline_curl');
+  expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('pull_b_hammer_curl');
+});
+
 test('SMV optimizer rejects unavailable idealized machines and reports allocation constraints', () => {
   const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
   const selected = optimized.selectedSlots.map((slot) => slot.exercise);

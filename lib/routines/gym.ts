@@ -90,17 +90,6 @@ export const gymRoutine: RoutineConfig = {
       prescription: prescription(3, 10, 15, '90-150 sec', 'Long-head stretch for sleeve fill. Elbows fixed.', '1-2 RIR'),
     },
     {
-      slotId: 'push_a_cable_curl',
-      workoutType: 'push_a',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'cable_curl',
-      alternatives: ['db_curl', 'preacher_curl'],
-      exercises: ['cable_curl'],
-      prescription: prescription(3, 8, 12, '90-150 sec', 'Strict arm specialization. Elbows pinned; no planned failure.', '1-2 RIR'),
-    },
-
-    {
       slotId: 'pull_a_neutral_pulldown',
       workoutType: 'pull_a',
       fixed: true,
@@ -261,17 +250,6 @@ export const gymRoutine: RoutineConfig = {
       prescription: prescription(3, 10, 15, '90-150 sec', 'Hard lockout, shoulders still. Reduce this first if elbows complain.', '1-2 RIR'),
     },
     {
-      slotId: 'push_b_incline_curl',
-      workoutType: 'push_b',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'db_incline_curl',
-      alternatives: ['cable_curl', 'preacher_curl'],
-      exercises: ['db_incline_curl'],
-      prescription: prescription(2, 8, 12, '90-150 sec', 'Lengthened biceps work. Strict reps; no planned failure.', '1-2 RIR'),
-    },
-
-    {
       slotId: 'pull_b_pulldown',
       workoutType: 'pull_b',
       fixed: true,
@@ -321,17 +299,6 @@ export const gymRoutine: RoutineConfig = {
       prescription: prescription(3, 8, 12, '90-150 sec', 'Stable biceps double progression. Add reps first; no planned failure.', '1-2 RIR'),
     },
     {
-      slotId: 'pull_b_hammer_curl',
-      workoutType: 'pull_b',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'hammer_curl',
-      alternatives: ['db_reverse_curl', 'cable_curl'],
-      exercises: ['hammer_curl'],
-      prescription: prescription(2, 8, 12, '90-150 sec', 'Brachialis top-up. Keep elbows calm and reps controlled.', '1-2 RIR'),
-    },
-
-    {
       slotId: 'delts_arms_lateral_cable',
       workoutType: 'delts_arms',
       fixed: true,
@@ -378,7 +345,7 @@ export const gymRoutine: RoutineConfig = {
       selectedExercise: 'cable_curl',
       alternatives: ['preacher_curl', 'db_curl'],
       exercises: ['cable_curl'],
-      prescription: prescription(3, 8, 12, '90-150 sec', 'Cable tension. Elbows pinned; no planned failure.', '1-2 RIR'),
+      prescription: prescription(2, 8, 12, '90-150 sec', 'Cable tension. Elbows pinned; no planned failure.', '1-2 RIR'),
     },
     {
       slotId: 'delts_arms_wrist_extension',

@@ -116,7 +116,7 @@ test('routine detail shows corrected Saturday delt-arm cap and neutral copy', as
   await expect(page.getByRole('link', { name: /CABLE REAR-DELT FLY 2x12-20 - 1-2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /DUMBBELL SHRUG 2x10-15 - 2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /OVERHEAD TRICEP EXTENSION 2x10-15 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /CABLE CURL 3x8-12 - 1-2 RIR/i }).last()).toBeVisible();
+  await expect(page.getByRole('link', { name: /CABLE CURL 2x8-12 - 1-2 RIR/i }).last()).toBeVisible();
   await expect(page.getByRole('link', { name: /DUMBBELL WRIST EXTENSION 2x12-20 - 2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /NECK ISO .* FRONT 2x20-30 - 2 RIR/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /NECK ISO .* BACK 2x20-30 - 2 RIR/i })).toBeVisible();
@@ -479,7 +479,7 @@ test('rest timer next exercise name copies to clipboard', async ({ page }) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await prepareTodayWorkout(page, null);
 
-  for (let setIndex = 0; setIndex < 3; setIndex += 1) {
+  for (let setIndex = 0; setIndex < 4; setIndex += 1) {
     await logSetAndWaitForRest(page, 2);
     await page.getByRole('button', { name: /skip rest/i }).click();
     await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();

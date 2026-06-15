@@ -145,14 +145,13 @@ test('failed workout save does not show completion', async ({ page }) => {
       version: 1,
       dateKey: '2026-05-11',
       state: 'exercising',
-      exerciseIndex: 4,
-      currentSet: 2,
+      exerciseIndex: 3,
+      currentSet: 3,
       sessionReps: {
         cable_lateral_raise: [{ reps: 12, weight: 5, rir: 2 }],
         db_incline_press: [{ reps: 8, weight: 20, rir: 2 }],
         cable_fly: [{ reps: 10, weight: 10, rir: 2 }],
-        overhead_tricep_ext: [{ reps: 10, weight: 10, rir: 2 }],
-        cable_tricep_pushdown: [
+        overhead_tricep_ext: [
           { reps: 10, weight: 10, rir: 2 },
           { reps: 10, weight: 10, rir: 2 },
         ],
