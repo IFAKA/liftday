@@ -126,6 +126,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const restoredDraftRef = useRef(false);
   const restCompletionNotifiedRef = useRef(false);
 
+  const resetSessionPlanModifiers = useCallback(() => {
+    setUnavailableEquipment([]);
+    setSelectedSubstitutions({});
+    setSkippedChainIndices(new Set());
+    setRequeuedExercises([]);
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     Promise.all([storageAdapter.loadWorkoutData(), storageAdapter.getFirstSessionDate()]).then(
@@ -612,6 +619,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     unlockAudio();
     playStart();
     clearActiveWorkoutDraft();
+    resetSessionPlanModifiers();
     startedAtRef.current = new Date().toISOString();
     sessionRepsRef.current = {};
     timerEndRef.current = null;
@@ -638,7 +646,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       exerciseCount: exercises.length,
       firstExercise: exercises[0]?.name ?? null,
     });
-  }, [dateKey, exercises, workoutType]);
+  }, [dateKey, exercises, resetSessionPlanModifiers, workoutType]);
 
   const startWarmupTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -766,7 +774,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setCurrentSet(0);
     setSessionReps({});
     setAutoAdjustSuggestions({});
-  }, []);
+    resetSessionPlanModifiers();
+  }, [resetSessionPlanModifiers]);
 
   const togglePauseTimer = useCallback(() => {
     setTimerPaused((p) => {

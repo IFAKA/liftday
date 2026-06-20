@@ -70,6 +70,14 @@ async function logFirstSetAndSkipRest(page: Page, rir: number) {
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
 }
 
+
+async function readActiveWorkoutDraft(page: Page) {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem('liftday_active_workout_draft');
+    return raw ? JSON.parse(raw) : null;
+  });
+}
+
 async function logSetAndWaitForRest(page: Page, rir: number) {
   await page.getByRole('button', { name: `${rir} RIR` }).click();
   await page.getByRole('button', { name: /log set/i }).click();
@@ -106,6 +114,14 @@ test('routine detail uses cable pull-through for the leg-day hinge slot', async 
   expect(indices.every((index) => index >= 0)).toBe(true);
   expect(indices).toEqual([...indices].sort((a, b) => a - b));
   expect(bodyText).not.toContain('ROMANIAN DEADLIFT');
+});
+
+test('routine detail replaces chest supported row with braced cable row', async ({ page }) => {
+  await page.goto('/program/detail');
+
+  const bodyText = await page.locator('body').innerText();
+  expect(bodyText).toContain('BRACED CABLE ROW');
+  expect(bodyText).not.toContain('CHEST SUPPORTED ROW');
 });
 
 test('routine detail shows corrected Saturday delt-arm cap and neutral copy', async ({ page }) => {
@@ -1078,6 +1094,40 @@ test('set 2 coaching reference prefers today set 1 over prior workout set 2', as
 
   await expect(page.getByText(/^Last: 10kg x 20 @4$/)).toBeVisible();
   await expect(page.getByText(/^Last: 12.5kg x 12 @2$/)).toHaveCount(0);
+});
+
+
+test('cancel and restart after occupied-machine deferral clears session plan modifiers', async ({ page }) => {
+  await prepareTodayWorkout(page, null);
+
+  const firstExerciseName = await page.locator('[aria-label^="Copy "]').first().innerText();
+  await page.getByRole('button', { name: /machine occupied/i }).click();
+  await expect.poll(async () => page.locator('[aria-label^="Copy "]').first().innerText()).not.toBe(firstExerciseName);
+  await expect.poll(async () => {
+    const draft = await readActiveWorkoutDraft(page);
+    return draft?.requeuedExercises?.length ?? 0;
+  }).toBeGreaterThan(0);
+
+  await page.getByRole('button', { name: /quit workout/i }).click();
+  await page.getByRole('button', { name: /^quit$/i }).click();
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
+
+  await startWarmupAndWorkout(page);
+  await expect(page.locator('[aria-label^="Copy "]').first()).toContainText(firstExerciseName);
+  await expect.poll(async () => {
+    const draft = await readActiveWorkoutDraft(page);
+    return {
+      unavailableEquipment: draft?.unavailableEquipment?.length ?? 0,
+      selectedSubstitutions: Object.keys(draft?.selectedSubstitutions ?? {}).length,
+      skippedChainIndices: draft?.skippedChainIndices?.length ?? 0,
+      requeuedExercises: draft?.requeuedExercises?.length ?? 0,
+    };
+  }).toEqual({
+    unavailableEquipment: 0,
+    selectedSubstitutions: 0,
+    skippedChainIndices: 0,
+    requeuedExercises: 0,
+  });
 });
 
 test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page }) => {
