@@ -80,11 +80,11 @@ test('calculates weekly SMV volume with indirect sets', () => {
   const optimized = optimizeRoutineForFrontier(gymRoutine, getDefaultProfile(), {}, 3);
   const volume = calculateRoutineVolume(optimized.routine, getDefaultProfile(), 3);
 
-  expect(volume.side_delt).toBe(10);
+  expect(volume.side_delt).toBeGreaterThanOrEqual(20);
   expect(volume.rear_delt).toBeGreaterThanOrEqual(9);
-  expect(volume.rear_delt).toBeLessThanOrEqual(13);
+  expect(volume.rear_delt).toBeLessThanOrEqual(16);
   expect(volume.chest).toBeGreaterThanOrEqual(12);
-  expect(volume.triceps).toBe(10);
+  expect(volume.triceps).toBeGreaterThanOrEqual(15);
   expect(volume.biceps).toBeGreaterThanOrEqual(11);
   expect(volume.quads).toBeGreaterThanOrEqual(6);
   expect(volume.quads).toBeLessThanOrEqual(7);
@@ -102,10 +102,12 @@ test('default routine keeps biceps on the efficient frontier for the current pro
   expect(directBicepsChains.map((chain) => chain.workoutType)).toEqual([
     'pull_a',
     'pull_a',
+    'push_b',
     'pull_b',
     'delts_arms',
+    'delts_arms',
   ]);
-  expect(directBicepsSets).toBe(10);
+  expect(directBicepsSets).toBe(17);
   expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('push_a_cable_curl');
   expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('push_b_incline_curl');
   expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('pull_b_hammer_curl');
@@ -158,7 +160,7 @@ test('generated frontier routine does not optimize normal sessions down to minim
 });
 
 test('allows the smallest load jump when average reps are near the top at target RIR', () => {
-  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_a_incline_db');
+  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_b_incline_db');
   expect(chain).toBeTruthy();
   const prescription = getPrescriptionForChain(chain!, 'db_incline_press', 3);
 
@@ -421,7 +423,7 @@ test('detects deload and waist calorie adjustment triggers', () => {
 });
 
 test('ranks crowded-gym substitutions and migrates legacy set entries', () => {
-  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_a_incline_db');
+  const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_b_incline_db');
   expect(chain).toBeTruthy();
 
   expect(getRankedSubstitutions(chain!, ['dumbbells'])).toEqual([

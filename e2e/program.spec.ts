@@ -96,49 +96,50 @@ test('opens the program screen', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
-test('routine detail uses cable pull-through for the leg-day hinge slot', async ({ page }) => {
+test('routine detail uses machine leg maintenance before delt specialization', async ({ page }) => {
   await page.goto('/program/detail');
 
-  await expect(page.locator('body')).toContainText('LEGS');
+  await expect(page.locator('body')).toContainText('LEG CURL');
   const bodyText = await page.locator('body').innerText();
   const legExercises = [
-    'HACK SQUAT',
-    'LEG PRESS',
     'LEG CURL',
-    'CABLE PULL-THROUGH',
+    'LEG PRESS',
     'LEG EXTENSION',
+    'CABLE PULL-THROUGH',
     'STANDING CALF RAISE',
   ];
   const indices = legExercises.map((name) => bodyText.indexOf(name));
 
   expect(indices.every((index) => index >= 0)).toBe(true);
   expect(indices).toEqual([...indices].sort((a, b) => a - b));
+  expect(bodyText).toContain('CABLE LATERAL RAISE');
   expect(bodyText).not.toContain('ROMANIAN DEADLIFT');
+  expect(bodyText).not.toContain('BARBELL SQUAT');
 });
 
-test('routine detail replaces chest supported row with braced cable row', async ({ page }) => {
+test('routine detail replaces unsupported rows with braced cable rows', async ({ page }) => {
   await page.goto('/program/detail');
 
+  await expect(page.locator('body')).toContainText('BRACED CABLE ROW');
   const bodyText = await page.locator('body').innerText();
   expect(bodyText).toContain('BRACED CABLE ROW');
-  expect(bodyText).not.toContain('CHEST SUPPORTED ROW');
+  expect(bodyText).not.toContain('BARBELL ROW');
 });
 
-test('routine detail shows corrected Saturday delt-arm cap and neutral copy', async ({ page }) => {
+test('routine detail shows Saturday delt-arm specialization with neutral copy', async ({ page }) => {
   await page.goto('/program/detail');
 
+  await expect(page.getByRole('link', { name: /CABLE LATERAL RAISE 6x10-20 - 1-2 RIR/i }).last()).toBeVisible();
   const bodyText = await page.locator('body').innerText();
-  await expect(page.getByRole('link', { name: /CABLE LATERAL RAISE 3x10-20 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /CABLE REAR-DELT FLY 2x12-20 - 1-2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /DUMBBELL SHRUG 2x10-15 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /MACHINE LATERAL RAISE 3x10-20 - 1-2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /REVERSE PEC DECK 2x12-20 - 1-2 RIR/i }).last()).toBeVisible();
+  await expect(page.getByRole('link', { name: /CABLE TRICEP PUSHDOWN 3x10-15 - 1-2 RIR/i }).last()).toBeVisible();
   await expect(page.getByRole('link', { name: /OVERHEAD TRICEP EXTENSION 2x10-15 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /CABLE CURL 2x8-12 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /DUMBBELL WRIST EXTENSION 2x12-20 - 2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /NECK ISO .* FRONT 2x20-30 - 2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /NECK ISO .* BACK 2x20-30 - 2 RIR/i })).toBeVisible();
-  expect(bodyText).not.toMatch(/CABLE LATERAL RAISE[\s\S]{0,80}5x/i);
+  await expect(page.getByRole('link', { name: /CABLE CURL 3x8-12 - 1-2 RIR/i }).last()).toBeVisible();
+  await expect(page.getByRole('link', { name: /HAMMER CURL 2x8-12 - 1-2 RIR/i }).last()).toBeVisible();
+  await expect(page.getByRole('link', { name: /NECK ISO .* FRONT 1x20-30 - 2 RIR/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /NECK ISO .* BACK 1x20-30 - 2 RIR/i })).toBeVisible();
   expect(bodyText).not.toContain('CABLE Y RAISE');
-  expect(bodyText).not.toContain('DUMBBELL REVERSE CURL');
   expect(bodyText).not.toMatch(/highest-SMV|dominance|formidability|clothed-SMV/i);
 });
 
@@ -495,14 +496,14 @@ test('rest timer next exercise name copies to clipboard', async ({ page }) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await prepareTodayWorkout(page, null);
 
-  for (let setIndex = 0; setIndex < 4; setIndex += 1) {
+  for (let setIndex = 0; setIndex < 3; setIndex += 1) {
     await logSetAndWaitForRest(page, 2);
     await page.getByRole('button', { name: /skip rest/i }).click();
     await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
   }
 
   await logSetAndWaitForRest(page, 2);
-  const nextExerciseName = 'INCLINE DUMBBELL PRESS';
+  const nextExerciseName = 'CABLE FLY';
   await expect(page.getByRole('button', { name: `Copy ${nextExerciseName}` })).toBeVisible();
   await page.getByRole('button', { name: `Copy ${nextExerciseName}` }).click();
 
@@ -1012,15 +1013,15 @@ test('shows set 1 coaching reference from the previous workout', async ({ page }
       logged_at: '2026-05-04T10:00:00.000Z',
       week_number: 1,
       workout_type: 'push_a',
-      cable_lateral_raise: [
-        { reps: 20, weight: 10, rir: 2 },
-        { reps: 20, weight: 10, rir: 2 },
-        { reps: 20, weight: 10, rir: 2 },
+      high_incline_machine_press: [
+        { reps: 12, weight: 50, rir: 2 },
+        { reps: 12, weight: 50, rir: 2 },
+        { reps: 12, weight: 50, rir: 2 },
       ],
     },
   });
 
-  const previousRow = page.getByText(/^Last: 10kg x 20 @2$/);
+  const previousRow = page.getByText(/^Last: 50kg x 12 @2$/);
   const logSet = page.getByRole('button', { name: /log set/i });
   await expect(previousRow).toBeVisible();
   await expect(logSet).toBeVisible();
@@ -1052,11 +1053,11 @@ test('auto-fills adjusted next set while allowing manual edits', async ({ page }
   await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
 
   await expect(page.getByText('Add reps')).toBeVisible();
-  await expect(page.locator('body')).toContainText(/12\s*REPS/);
+  await expect(page.locator('body')).toContainText(/10\s*REPS/);
   await expect(page.getByText(/nudge reps while staying in the rep range/i)).toBeVisible();
 
   await page.getByRole('button', { name: 'Decrease' }).nth(1).click();
-  await expect(page.locator('body')).toContainText(/11\s*REPS/);
+  await expect(page.locator('body')).toContainText(/9\s*REPS/);
   await expect(page.getByText(/changed the target/i)).toBeVisible();
 });
 
@@ -1066,15 +1067,15 @@ test('set 2 coaching reference uses today set 1 when prior workout only has set 
       logged_at: '2026-05-04T10:00:00.000Z',
       week_number: 1,
       workout_type: 'push_a',
-      cable_lateral_raise: [
-        { reps: 20, weight: 10, rir: 2 },
+      high_incline_machine_press: [
+        { reps: 12, weight: 50, rir: 2 },
       ],
     },
   });
 
   await logFirstSetAndSkipRest(page, 4);
 
-  await expect(page.getByText(/^Last: 10kg x 20 @4$/)).toBeVisible();
+  await expect(page.getByText(/^Last: 50kg x 12 @4$/)).toBeVisible();
 });
 
 test('set 2 coaching reference prefers today set 1 over prior workout set 2', async ({ page }) => {
@@ -1083,17 +1084,17 @@ test('set 2 coaching reference prefers today set 1 over prior workout set 2', as
       logged_at: '2026-05-04T10:00:00.000Z',
       week_number: 1,
       workout_type: 'push_a',
-      cable_lateral_raise: [
-        { reps: 20, weight: 10, rir: 2 },
-        { reps: 12, weight: 12.5, rir: 2 },
+      high_incline_machine_press: [
+        { reps: 12, weight: 50, rir: 2 },
+        { reps: 12, weight: 55, rir: 2 },
       ],
     },
   });
 
   await logFirstSetAndSkipRest(page, 4);
 
-  await expect(page.getByText(/^Last: 10kg x 20 @4$/)).toBeVisible();
-  await expect(page.getByText(/^Last: 12.5kg x 12 @2$/)).toHaveCount(0);
+  await expect(page.getByText(/^Last: 50kg x 12 @4$/)).toBeVisible();
+  await expect(page.getByText(/^Last: 55kg x 12 @2$/)).toHaveCount(0);
 });
 
 

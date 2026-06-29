@@ -145,14 +145,37 @@ test('failed workout save does not show completion', async ({ page }) => {
       version: 1,
       dateKey: '2026-05-11',
       state: 'exercising',
-      exerciseIndex: 3,
-      currentSet: 3,
+      exerciseIndex: 5,
+      currentSet: 1,
       sessionReps: {
-        cable_lateral_raise: [{ reps: 12, weight: 5, rir: 2 }],
-        db_incline_press: [{ reps: 8, weight: 20, rir: 2 }],
-        cable_fly: [{ reps: 10, weight: 10, rir: 2 }],
+        high_incline_machine_press: [
+          { reps: 8, weight: 40, rir: 2 },
+          { reps: 8, weight: 40, rir: 2 },
+          { reps: 8, weight: 40, rir: 2 },
+          { reps: 8, weight: 40, rir: 2 },
+        ],
+        cable_fly: [
+          { reps: 10, weight: 10, rir: 2 },
+          { reps: 10, weight: 10, rir: 2 },
+          { reps: 10, weight: 10, rir: 2 },
+        ],
+        cable_lateral_raise: [
+          { reps: 12, weight: 5, rir: 2 },
+          { reps: 12, weight: 5, rir: 2 },
+          { reps: 12, weight: 5, rir: 2 },
+          { reps: 12, weight: 5, rir: 2 },
+          { reps: 12, weight: 5, rir: 2 },
+        ],
+        machine_shoulder_press: [
+          { reps: 8, weight: 20, rir: 2 },
+          { reps: 8, weight: 20, rir: 2 },
+        ],
         overhead_tricep_ext: [
           { reps: 10, weight: 10, rir: 2 },
+          { reps: 10, weight: 10, rir: 2 },
+          { reps: 10, weight: 10, rir: 2 },
+        ],
+        cable_tricep_pushdown: [
           { reps: 10, weight: 10, rir: 2 },
         ],
       },
