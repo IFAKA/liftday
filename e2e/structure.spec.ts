@@ -36,7 +36,7 @@ async function expectNoNestedInteractiveRoots(page: Page) {
 test('major routes use one main landmark and avoid nested interactive roots', async ({ page }) => {
   await prepareApp(page);
 
-  for (const route of ['/', '/program', '/muscles', '/history', '/settings', '/sync']) {
+  for (const route of ['/', '/program', '/progress', '/muscles', '/history', '/settings', '/settings/sync', '/sync']) {
     await page.goto(route);
     await expectSingleVisibleMain(page);
     await expectNoNestedInteractiveRoots(page);
@@ -47,12 +47,12 @@ test('mobile footer actions stay inside the viewport', async ({ page }) => {
   await prepareApp(page);
 
   await page.goto('/');
-  await expect(page.getByRole('link', { name: /options/i })).toBeInViewport();
+  await expect(page.getByRole('link', { name: /settings/i })).toBeInViewport();
 
   await page.goto('/settings');
   await expect(page.getByRole('switch', { name: /trace mode/i })).toBeInViewport();
 
-  await page.goto('/sync');
+  await page.goto('/settings/sync');
   await expect(page.locator('summary').filter({ hasText: 'Direction' })).toBeInViewport();
 });
 
@@ -64,7 +64,7 @@ test('today actions remain reachable in a compressed mobile viewport', async ({ 
   await page.goto('/');
 
   await expect(page.getByRole('button', { name: /^start$/i })).toBeInViewport();
-  const optionsLink = page.getByRole('link', { name: /options/i });
+  const optionsLink = page.getByRole('link', { name: /settings/i });
   await optionsLink.scrollIntoViewIfNeeded();
   await expect(optionsLink).toBeInViewport();
 });

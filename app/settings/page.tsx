@@ -34,7 +34,7 @@ export default function SettingsPage() {
       top={(
         <TopBar
           leftAction={<WatchBackButton fallbackHref="/" />}
-          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Options</span>}
+          center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Settings</span>}
         />
       )}
       bodyClassName="pt-2 flex flex-col gap-2"
@@ -52,7 +52,7 @@ export default function SettingsPage() {
       />
 
       <WatchListItem
-        onClick={() => router.push('/sync')}
+        onClick={() => router.push('/settings/sync')}
         label="Backup"
         title="Sync & export"
       />

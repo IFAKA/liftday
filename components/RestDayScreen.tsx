@@ -1,7 +1,7 @@
 'use client';
 
 import { useReducedMotion } from 'motion/react';
-import { Activity, CalendarDays, ChartBar, Moon, Play, Settings } from 'lucide-react';
+import { CalendarDays, ChartBar, Moon, Play, Settings } from 'lucide-react';
 import { MobilityFlow } from './MobilityFlow';
 import { MobilityErrorBoundary } from './MobilityErrorBoundary';
 import { SessionComplete } from './SessionComplete';
@@ -77,15 +77,6 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
           <nav aria-label="Main sections" className="flex flex-col gap-2">
             <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
               <WatchListItem
-                href="/muscles"
-                icon={Activity}
-                title="Muscles"
-                subtle
-                className="py-3"
-              />
-            </RestDayActionRow>
-            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
-              <WatchListItem
                 href="/program"
                 icon={CalendarDays}
                 title="Program"
@@ -95,7 +86,7 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
             </RestDayActionRow>
             <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
               <WatchListItem
-                href="/history"
+                href="/progress"
                 icon={ChartBar}
                 title="Progress"
                 subtle
@@ -106,7 +97,7 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
               <WatchListItem
                 href="/settings"
                 icon={Settings}
-                title="Options"
+                title="Settings"
                 subtle
                 className="py-3"
               />

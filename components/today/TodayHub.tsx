@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, CalendarDays, ChartBar, CheckCircle, Settings } from 'lucide-react';
+import { CalendarDays, ChartBar, CheckCircle, Settings } from 'lucide-react';
 import {
   WatchAlertPanel,
   WatchListItem,
@@ -70,10 +70,9 @@ export function TodayHub({
 function TodayNavList() {
   return (
     <nav aria-label="Main sections" className="flex flex-col gap-2">
-      <WatchListItem href="/muscles" icon={Activity} title="Muscles" subtle className="py-3" />
       <WatchListItem href="/program" icon={CalendarDays} title="Program" subtle className="py-3" />
-      <WatchListItem href="/history" icon={ChartBar} title="Progress" subtle className="py-3" />
-      <WatchListItem href="/settings" icon={Settings} title="Options" subtle className="py-3" />
+      <WatchListItem href="/progress" icon={ChartBar} title="Progress" subtle className="py-3" />
+      <WatchListItem href="/settings" icon={Settings} title="Settings" subtle className="py-3" />
     </nav>
   );
 }

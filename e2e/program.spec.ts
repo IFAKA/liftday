@@ -152,9 +152,9 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /muscles/i })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /settings/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('First: weight');
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
@@ -563,9 +563,9 @@ test('rest-day today exposes supporting drill-down rows without measurement prom
   await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
   await expect(page.getByRole('spinbutton', { name: /shoulder circumference/i })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /muscles/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /muscles/i })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /options/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /settings/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /mobility/i })).toBeVisible();
 
