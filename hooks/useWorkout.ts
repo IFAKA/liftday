@@ -59,6 +59,7 @@ export interface UseWorkoutReturn {
   exercises: Exercise[];
   nextExerciseName: string;
   nextExerciseAfterRestName: string | null;
+  canHandleNextExerciseMachineOccupied: boolean;
   timerPaused: boolean;
   advancedTiers: string[];
   hasSwapAlternative: boolean;
@@ -85,6 +86,7 @@ export interface UseWorkoutReturn {
   deferCurrentForOccupied: () => void;
   requeueCurrent: () => void;
   handleMachineOccupied: () => void;
+  handleNextExerciseMachineOccupied: () => void;
   retryWorkoutSave: () => void;
 }
 
@@ -968,6 +970,86 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     }
   }, [canDeferMachineOccupied, deferCurrentForOccupied, hasSwapAlternative, swapCurrentForOccupied, requeueCurrent]);
 
+  const canHandleNextExerciseMachineOccupied = useMemo(() => {
+    if (state !== 'resting') return false;
+    if (currentSet + 1 < currentSetCount) return false;
+    const targetIndex = exerciseIndex + 1;
+    const nextPlanItem = exercisePlan[targetIndex];
+    if (!nextPlanItem) return false;
+    const required = getRequiredEquipment(nextPlanItem.exercise.key);
+    if (required.length === 0) return false;
+    if (targetIndex + 1 < exercises.length) return true;
+    if (targetIndex >= derivedPlan.length) return false;
+    if (workoutType === 'rest') return false;
+
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
+    const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
+    const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
+    const chain = chains[nextPlanItem.chainIndex];
+    if (!chain) return false;
+    const tiers = userProfile?.tiers ?? {};
+    const newKey = resolveExerciseKeyWithEquipment(chain, tiers, newUnavailable, routine.id === 'gym');
+    return newKey !== nextPlanItem.exercise.key;
+  }, [
+    currentSet,
+    currentSetCount,
+    data,
+    derivedPlan.length,
+    exerciseIndex,
+    exercisePlan,
+    exercises.length,
+    setsPerExercise,
+    state,
+    unavailableEquipment,
+    userProfile,
+    workoutOccurrenceIndex,
+    workoutType,
+  ]);
+
+  const handleNextExerciseMachineOccupied = useCallback(() => {
+    if (!canHandleNextExerciseMachineOccupied) return;
+    const targetIndex = exerciseIndex + 1;
+    const nextPlanItem = exercisePlan[targetIndex];
+    if (!nextPlanItem) return;
+    const required = getRequiredEquipment(nextPlanItem.exercise.key);
+    if (required.length === 0) return;
+
+    traceLiftDay('workout.exercise.next_occupied_during_rest', {
+      exerciseIndex: targetIndex,
+      exerciseName: nextPlanItem.exercise.name,
+      derivedExerciseCount: derivedPlan.length,
+      totalExercises: exercises.length,
+      chainIndex: nextPlanItem.chainIndex,
+    });
+
+    setAutoAdjustSuggestions({});
+    if (targetIndex + 1 < exercises.length) {
+      if (targetIndex < derivedPlan.length) {
+        setSkippedChainIndices((prev) => new Set([...prev, nextPlanItem.chainIndex]));
+        setRequeuedExercises((prev) => [...prev, {
+          exercise: nextPlanItem.exercise,
+          setCount: nextPlanItem.setCount,
+          chainIndex: nextPlanItem.chainIndex,
+        }]);
+        return;
+      }
+
+      const requeuedIndex = targetIndex - derivedPlan.length;
+      setRequeuedExercises((prev) => {
+        const next = [...prev];
+        const [item] = next.splice(requeuedIndex, 1);
+        if (!item) return prev;
+        next.push(item);
+        return next;
+      });
+      return;
+    }
+
+    setUnavailableEquipment((prev) => [...new Set([...prev, ...required])]);
+  }, [canHandleNextExerciseMachineOccupied, derivedPlan.length, exerciseIndex, exercisePlan, exercises.length]);
+
   const nextExerciseAfterRestName = useMemo(() => {
     if (state !== 'resting') return null;
     const isLastSet = currentSet + 1 >= currentSetCount;
@@ -985,7 +1067,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, warmupDuration, currentExercise, currentTarget,
     currentWeightTarget, currentWeightStep: currentExercise ? getExerciseLoadStep(currentExercise.key) : 2.5, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
-    exercises, nextExerciseName, nextExerciseAfterRestName,
+    exercises, nextExerciseName, nextExerciseAfterRestName, canHandleNextExerciseMachineOccupied,
     timerPaused, advancedTiers,
     isReady: hydrated && !isRestoringActiveWorkout,
     isStorageHydrated: hydrated,
@@ -993,7 +1075,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     persistenceError,
     startWorkout, startWarmupTimer, repeatWarmupTimer, beginWorkoutAfterWarmup, setWarmupDuration, logSet, skipTimer, quitWorkout, refreshData, finishTransition, togglePauseTimer, undoLastSet,
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
-    hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied,
+    hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied, handleNextExerciseMachineOccupied,
     retryWorkoutSave: () => { void saveAndComplete(); },
   };
 }

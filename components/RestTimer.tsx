@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { AlertCircle, Check, Copy } from 'lucide-react';
 import { QuitConfirmScreen } from './QuitConfirmScreen';
 import { CountdownTimerScreen } from './CountdownTimerScreen';
 import { useCopyFeedback } from '@/hooks/useCopyFeedback';
@@ -17,6 +17,7 @@ interface RestTimerProps {
   onQuit: () => void;
   onUndo: () => void;
   nextExerciseName?: string | null;
+  onNextMachineOccupied?: () => void;
 }
 
 let restNotificationTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -35,7 +36,7 @@ function cancelRestNotification() {
   }
 }
 
-export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName }: RestTimerProps) {
+export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName, onNextMachineOccupied }: RestTimerProps) {
   const { copy, isCopied } = useCopyFeedback();
   const { showQuitConfirm, setShowQuitConfirm, requestQuit, confirmQuit } = useWorkoutQuitGuard({
     historyStateKey: 'rest',
@@ -93,6 +94,16 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
                 {copiedName ? 'Copied' : 'Tap name to copy'}
               </span>
             </button>
+            {onNextMachineOccupied && (
+              <button
+                type="button"
+                onClick={onNextMachineOccupied}
+                className="mt-1 flex min-h-8 items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[11px] font-black uppercase text-white/45 active:scale-95 active:bg-white/10"
+              >
+                <AlertCircle className="size-3.5 shrink-0" />
+                Machine occupied
+              </button>
+            )}
           </div>
         ) : undefined}
       />

@@ -511,6 +511,24 @@ test('rest timer next exercise name copies to clipboard', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(nextExerciseName);
 });
 
+test('rest timer can defer an occupied next exercise', async ({ page }) => {
+  await prepareTodayWorkout(page, null);
+
+  for (let setIndex = 0; setIndex < 3; setIndex += 1) {
+    await logSetAndWaitForRest(page, 2);
+    await page.getByRole('button', { name: /skip rest/i }).click();
+    await expect(page.getByRole('button', { name: /log set/i })).toBeVisible();
+  }
+
+  await logSetAndWaitForRest(page, 2);
+  const nextExerciseName = 'CABLE FLY';
+  await expect(page.getByRole('button', { name: `Copy ${nextExerciseName}` })).toBeVisible();
+
+  await page.getByRole('button', { name: /machine occupied/i }).click();
+
+  await expect(page.getByRole('button', { name: `Copy ${nextExerciseName}` })).toBeHidden();
+});
+
 test('warm-up cancel returns to Today without logging the workout', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));

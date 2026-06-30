@@ -175,7 +175,10 @@ function TodayContent({ date }: { date: Date }) {
         onSkip={workout.skipTimer}
         onQuit={workout.quitWorkout}
         onUndo={workout.undoLastSet}
-nextExerciseName={workout.nextExerciseAfterRestName}
+        nextExerciseName={workout.nextExerciseAfterRestName}
+        onNextMachineOccupied={
+          workout.canHandleNextExerciseMachineOccupied ? workout.handleNextExerciseMachineOccupied : undefined
+        }
       />
     );
   }
