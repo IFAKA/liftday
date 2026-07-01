@@ -23,7 +23,7 @@ type SessionCompleteProps =
 
 export function SessionComplete(props: SessionCompleteProps) {
   const isWorkout = props.mode === 'workout';
-  const [stretchComplete, setStretchComplete] = useState(!isWorkout);
+  const [showStretchTimer, setShowStretchTimer] = useState(false);
   const stretchTimer = useCountdownTimer({
     initialSeconds: STRETCH_DURATION_SECONDS,
     autoStart: false,
@@ -31,7 +31,13 @@ export function SessionComplete(props: SessionCompleteProps) {
   const workoutPropsTyped = isWorkout ? (props as Extract<typeof props, { mode: 'workout' }>) : null;
   const mobilityProps = !isWorkout ? (props as Extract<typeof props, { mode: 'mobility' }>) : null;
 
-  if (isWorkout && !stretchComplete) {
+  const exitStretchTimer = () => {
+    stretchTimer.pause();
+    stretchTimer.reset();
+    setShowStretchTimer(false);
+  };
+
+  if (isWorkout && showStretchTimer) {
     return (
       <PrepTimer
         mode="stretch"
@@ -40,11 +46,7 @@ export function SessionComplete(props: SessionCompleteProps) {
         isRunning={stretchTimer.isRunning}
         onStartTimer={stretchTimer.start}
         onRepeat={stretchTimer.repeat}
-        onPrimary={() => {
-          if (stretchTimer.seconds > 0) return;
-          setStretchComplete(true);
-        }}
-        requireCompletionBeforePrimary
+        onPrimary={exitStretchTimer}
       />
     );
   }
@@ -68,10 +70,21 @@ export function SessionComplete(props: SessionCompleteProps) {
       metric={isWorkout ? totalReps : `${mobilityProps?.weekCompleted}/${mobilityProps?.weekTotal}`}
       metricLabel={isWorkout ? 'TOTAL REPS' : 'DAYS DONE'}
       badge={isWorkout && workoutPropsTyped?.advancedTiers && workoutPropsTyped.advancedTiers.length > 0 ? (
-        <Badge variant="ghost" className="mt-8 bg-green-500/10 border-green-500/20 px-6 py-3 rounded-2xl text-fluid-label text-green-400 uppercase tracking-widest font-black">
-          ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
-        </Badge>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <Badge variant="ghost" className="bg-green-500/10 border-green-500/20 px-6 py-3 rounded-2xl text-fluid-label text-green-400 uppercase tracking-widest font-black">
+            ↑ LEVEL UP: {workoutPropsTyped.advancedTiers[0]}
+          </Badge>
+        </div>
       ) : undefined}
+      secondaryActions={isWorkout ? [
+        {
+          label: '30s Stretch',
+          onClick: () => {
+            stretchTimer.reset();
+            setShowStretchTimer(true);
+          },
+        },
+      ] : undefined}
       onDone={props.onDone}
     />
   );

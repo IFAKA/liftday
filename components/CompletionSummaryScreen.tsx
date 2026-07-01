@@ -3,12 +3,19 @@
 import type { ReactNode } from 'react';
 import { WatchActionFooter, WatchScreen } from './WatchSurface';
 
+type CompletionFooterAction = {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+};
+
 interface CompletionSummaryScreenProps {
   icon: ReactNode;
   title: string;
   metric: string | number;
   metricLabel: string;
   badge?: ReactNode;
+  secondaryActions?: CompletionFooterAction[];
   onDone: () => void;
 }
 
@@ -18,13 +25,19 @@ export function CompletionSummaryScreen({
   metric,
   metricLabel,
   badge,
+  secondaryActions,
   onDone,
 }: CompletionSummaryScreenProps) {
   return (
     <WatchScreen
       scrollable={false}
       bodyClassName="flex flex-col items-center justify-center py-8"
-      footer={<WatchActionFooter primary={{ label: 'DONE', onClick: onDone }} />}
+      footer={(
+        <WatchActionFooter
+          primary={{ label: 'DONE', onClick: onDone }}
+          secondary={secondaryActions}
+        />
+      )}
       footerClassName="mb-4 z-10"
     >
       {icon}

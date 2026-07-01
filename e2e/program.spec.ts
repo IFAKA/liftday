@@ -1179,7 +1179,7 @@ test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page
   }
 
   for (let i = 0; i < 80; i += 1) {
-    if (await page.getByText(/^stretch$/i).isVisible().catch(() => false)) break;
+    if (await page.getByText(/session complete/i).isVisible().catch(() => false)) break;
     if (await page.getByRole('button', { name: /log set/i }).isVisible().catch(() => false)) {
       await page.getByRole('button', { name: '2 RIR' }).click({ force: true });
       await page.getByRole('button', { name: /log set/i }).click({ force: true });
@@ -1199,16 +1199,27 @@ test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page
     await page.waitForTimeout(250);
   }
 
-  await expect(page.getByText(/stretch/i)).toBeVisible();
+  await expect(page.locator('body')).toContainText(/session complete/i);
+  await expect(page.getByRole('button', { name: /^done$/i })).toBeEnabled();
+  await expect(page.getByRole('button', { name: /30s stretch/i })).toBeVisible();
+
+  await page.getByRole('button', { name: /30s stretch/i }).click();
+  await expect(page.getByText(/^stretch$/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /^start 30s timer$/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^done$/i })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /^done$/i })).toBeEnabled();
 
   await page.getByRole('button', { name: /^start 30s timer$/i }).click();
-  await expect(page.getByRole('button', { name: /^done$/i })).toBeDisabled();
-  await page.waitForTimeout(31000);
-  await expect(page.getByRole('button', { name: /^repeat 30s timer$/i })).toBeVisible();
-  await page.getByRole('button', { name: /^done$/i }).click();
+  await page.clock.fastForward(2000);
+  await expect(page.getByText('00:28')).toBeVisible();
 
+  await page.getByRole('button', { name: /^done$/i }).click();
+  await expect(page.locator('body')).toContainText(/session complete/i);
+  await page.getByRole('button', { name: /30s stretch/i }).click();
+  await expect(page.getByRole('button', { name: /^start 30s timer$/i })).toBeVisible();
+  await page.getByRole('button', { name: /^start 30s timer$/i }).click();
+  await page.clock.fastForward(1000);
+  await expect(page.getByText('00:29')).toBeVisible();
+  await page.getByRole('button', { name: /^done$/i }).click();
   await expect(page.locator('body')).toContainText(/session complete/i);
   await page.goto('/history');
   await expect(page.locator('body')).toContainText(/Progress|Session/i);
