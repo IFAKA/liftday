@@ -35,7 +35,6 @@ export const PUSH_EXERCISES: Exercise[] = [
     unit: 'reps',
     primaryMuscle: 'shoulders',
     instruction: 'Feet elevated on chair. Hips high in pike. Lower crown toward floor, press back up. Heavier overhead load than standard pike push-up.',
-    youtubeId: 'XckEEwa1BPI',
     workoutType: 'push',
   },
   {
@@ -207,7 +206,6 @@ export const LEGS_EXERCISES: Exercise[] = [
     unit: 'reps',
     primaryMuscle: 'quads',
     instruction: 'Hold TRX lightly for balance only — legs do all the work, TRX does NOT pull you up. Feet hip-width. Sit back and down to depth. Builds squat mechanics before unassisted work.',
-    youtubeId: 'ul-yPBFwhnw',
     workoutType: 'legs',
   },
   {
@@ -306,7 +304,6 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     unit: 'weighted',
     primaryMuscle: 'chest',
     instruction: 'Lie on flat bench, bar at chest height. Grip slightly wider than shoulder-width. Lower bar to chest with control, elbows at 45°. Press to lockout. Core tight, feet flat on floor.',
-    youtubeId: 'rT7DggyJ4ow',
     workoutType: 'push',
   },
   {
@@ -315,7 +312,6 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     unit: 'weighted',
     primaryMuscle: 'chest',
     instruction: 'Bench at 30-45°. Dumbbells at chest height, elbows at 60°. Press up and slightly together. Superior upper chest activation compared to flat — builds the shelf that\'s visible in a T-shirt.',
-    youtubeId: 'DbFgADa2PL8',
     workoutType: 'push',
   },
   {
@@ -324,7 +320,6 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     unit: 'weighted',
     primaryMuscle: 'shoulders',
     instruction: 'Seated or standing. Dumbbells at ear height, elbows at 90°. Press overhead to near-lockout, don\'t lock out fully. Greater stabilizer demand than barbell. Start here before progressing to OHP.',
-    youtubeId: '6Z15_WdXmVw',
     workoutType: 'push',
   },
   {
@@ -418,7 +413,6 @@ export const GYM_PUSH_EXERCISES: Exercise[] = [
     unit: 'weighted',
     primaryMuscle: 'side_delt',
     instruction: 'Low cable at your side, D-handle in opposite hand. Raise arm straight out to shoulder height — lead with the elbow, not the hand. Pause 1 sec at top. Lower slowly under control (3 sec). Cable keeps constant tension through the full range.',
-    youtubeId: 'PPjDFHf2sCc',
     workoutType: 'push',
   },
   {
@@ -540,7 +534,6 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     unit: 'weighted',
     primaryMuscle: 'biceps',
     instruction: 'Dumbbells at sides, palms forward. Curl up, fully supinate (twist palm up) as you go. Squeeze biceps at top. Lower fully — full extension is the key rep most people skip. Don\'t swing.',
-    youtubeId: 'ykJmrZ5v0Oo',
     workoutType: 'pull',
   },
   {
@@ -583,7 +576,6 @@ export const GYM_PULL_EXERCISES: Exercise[] = [
     unit: 'weighted',
     primaryMuscle: 'biceps',
     instruction: 'Low cable, EZ bar or straight bar attachment. Elbows pinned at sides throughout. Curl to chest, squeeze hard at top. Lower fully — the cable keeps tension at the bottom stretch where dumbbells go slack. That constant tension is why cables outperform dumbbells for bicep size.',
-    youtubeId: 'av7-8CzC9Fk',
     workoutType: 'pull',
   },
   {
@@ -734,7 +726,6 @@ export const GYM_LEGS_EXERCISES: Exercise[] = [
     unit: 'weighted',
     primaryMuscle: 'hamstrings',
     instruction: 'Wide stance, toes out 45°, grip inside legs. Chest up, brace hard. Push knees out as you drive the floor away — think "spread the floor." More hip and adductor dominant than conventional. Shorter ROM allows heavier loads. Use to break conventional deadlift plateaus or as a glute-focused variation.',
-    youtubeId: 'b8-Wdqa6BDs',
     workoutType: 'legs',
   },
   {
@@ -787,7 +778,7 @@ export const MOBILITY_EXERCISES: MobilityExercise[] = [
     duration: 60,
     sides: false,
     instruction: 'On hands and knees. Arch back (cow), then round spine (cat). 20 slow reps. Breathe with movement.',
-    youtubeId: 'iZ1eZBY4fwM',
+    youtubeId: 'LIVJZZyZ2qM',
   },
   {
     name: 'HIP FLEXOR STRETCH',
@@ -808,21 +799,19 @@ export const MOBILITY_EXERCISES: MobilityExercise[] = [
     duration: 60,
     sides: false,
     instruction: 'Standing. Move shoulder blades: up, back, down, forward. 10 circles each direction. Slow, controlled.',
-    youtubeId: 'a9rqTzZaI7s',
   },
   {
     name: 'WRIST & ANKLE CIRCLES',
     duration: 60,
     sides: false,
     instruction: '10 circles each wrist (both directions). 10 circles each ankle. Shake out hands/feet after.',
-    youtubeId: 'oMSVe7PWJ3o',
   },
   {
     name: 'DEEP SQUAT HOLD',
     duration: 60,
     sides: false,
     instruction: 'Deep squat, heels down if possible. Hold 30s. Stand, shake out. Repeat. Opens hips.',
-    youtubeId: 'wPM8icPu6H8',
+    youtubeId: 'sIx1BSAVoVw',
   },
   {
     name: 'CHEST OPENER (DYNAMIC)',

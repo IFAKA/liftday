@@ -155,7 +155,8 @@ export function MobilityFlow({
               transform: shouldReduceMotion ? 'translateX(0)' : 'translateX(100%)',
             }}
             transition={{ duration: shouldReduceMotion ? 0.18 : 0.28, ease: [0.32, 0.72, 0, 1] }}
-            className="absolute inset-0 z-40 bg-black flex flex-col"
+            data-testid="mobility-tutorial"
+            className="absolute inset-0 z-[60] bg-black flex flex-col"
           >
             <TopBar
               leftAction={
@@ -171,7 +172,7 @@ export function MobilityFlow({
               }
             />
 
-            <div className="flex-1 overflow-y-auto px-6 pb-8 flex flex-col items-center">
+            <div className="flex-1 min-h-full overflow-y-auto px-6 pb-8 flex flex-col items-center justify-center">
               <h2 className="text-fluid-exercise font-black uppercase tracking-tight text-white mb-6 text-center">
                 {exercise.name}
               </h2>
