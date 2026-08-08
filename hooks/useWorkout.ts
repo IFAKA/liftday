@@ -13,7 +13,6 @@ import { getRoutine } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
 import { requireRestNotificationPermission, showRestCompleteNotification } from '@/lib/rest-notifications';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
-import { optimizeRoutineForFrontier } from '@/lib/frontier-optimizer';
 import { evaluateDoubleProgression, getPrescriptionForChain } from '@/lib/smv';
 import { hasExplicitInjuryMode } from '@/lib/session-volume-constraints';
 import { getProgramSummary } from '@/lib/program-summary';
@@ -157,7 +156,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
   const { workoutType, workoutOccurrenceIndex, derivedPlan } = useMemo(() => {
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
-    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const routine = baseRoutine;
     const unavailableForPlan = routine.id === 'gym'
       ? [...new Set([...getUnavailableProfileEquipment(userProfile?.availableEquipment), ...unavailableEquipment])]
       : unavailableEquipment;
@@ -518,7 +517,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     // Evaluate tier progress for non-fixed chains
     if (workoutType !== 'rest' && userProfileRef.current) {
       const baseRoutine = getRoutine(userProfileRef.current.activeRoutine ?? 'gym');
-      const routine = optimizeRoutineForFrontier(baseRoutine, userProfileRef.current, data, setsPerExercise).routine;
+      const routine = baseRoutine;
       const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
       const oldProfile = userProfileRef.current;
       let updatedProfile = oldProfile;
@@ -821,7 +820,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return false;
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
-    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
     if (workoutType === 'rest') return false;
@@ -841,7 +840,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return [];
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
-    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
     if (workoutType === 'rest') return [];
@@ -876,7 +875,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (chainIdx === undefined || chainIdx < 0) return;
     const required = getRequiredEquipment(ex.key);
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
-    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const sessionUnavailable = [...new Set([...unavailableEquipment, ...required])];
     const combinedUnavailable = [...new Set([...profileUnavailable, ...sessionUnavailable])];
@@ -983,7 +982,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (workoutType === 'rest') return false;
 
     const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
-    const routine = optimizeRoutineForFrontier(baseRoutine, userProfile, data, setsPerExercise).routine;
+    const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
     const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
