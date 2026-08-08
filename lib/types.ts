@@ -109,7 +109,7 @@ export interface RoutineConfig {
   description: string;
   /** Lucide icon name shown in the profile picker */
   icon: 'dumbbell' | 'person-standing';
-  /** Mon-Sat workout types (index 0 = Monday). Sunday is always rest. */
+  /** Monday-Friday workout types (index 0 = Monday). Saturday and Sunday are rest. */
   schedule: Exclude<WorkoutType, 'rest'>[];
   tierChains: TierChain[];
 }
@@ -123,6 +123,11 @@ export type ExerciseKey =
   | GymLegsExerciseKey;
 
 export type SMVWorkoutType =
+  | 'width_a'
+  | 'thickness_arms_a'
+  | 'legs_neck'
+  | 'width_b'
+  | 'thickness_arms_b'
   | 'push_a'
   | 'pull_a'
   | 'legs_maintenance'

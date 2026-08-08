@@ -7,6 +7,8 @@ import { TopBar } from '@/components/TopBar';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { loadProgramSummary } from '@/lib/program-summary';
 import { getProgramStatusCommand } from '@/components/status-command';
+import { getRoutineDays } from '@/lib/routine-days';
+import { formatWorkoutType } from '@/lib/schedule';
 import {
   WatchBackButton,
   WatchDetailsPanel,
@@ -52,13 +54,21 @@ export default function ProgramPage() {
       <WatchSection title="Plan">
         <div className="flex flex-col gap-2">
           {routine && (
-            <WatchListItem
-              href="/program/detail"
-              icon={Dumbbell}
-              title="Routine"
-              subtitle={routine.name}
-              className="py-3"
-            />
+            <>
+              <div className="flex items-center gap-3 px-3 pb-1">
+                <Dumbbell className="size-4 text-white/35" />
+                <p className="text-fluid-label font-mono uppercase text-white/40">{routine.name}</p>
+              </div>
+              {getRoutineDays(routine).map((day) => (
+                <WatchListItem
+                  key={day.slug}
+                  href={`/program/${day.slug}`}
+                  title={day.name}
+                  subtitle={formatWorkoutType(day.workoutType)}
+                  className="py-3"
+                />
+              ))}
+            </>
           )}
         </div>
       </WatchSection>
@@ -94,12 +104,10 @@ function ProgramGuidancePanel({
       tone={command.tone}
       active
     >
-      <div className="rounded-lg border border-white/5 bg-black/25 px-3 py-2">
+      <WatchDetailsPanel summary="Details" className="mt-3">
         <p className="text-fluid-label font-mono uppercase text-white/30">{command.routineTitle}</p>
         <p className="mt-1 text-fluid-label font-mono uppercase leading-relaxed text-white/55">{command.routineSummary}</p>
         <p className="mt-2 text-fluid-label font-mono uppercase leading-relaxed text-white/35">{command.routineAction}</p>
-      </div>
-      <WatchDetailsPanel summary="Details" className="mt-3">
         <WatchMetricGrid columns={2}>
           <WatchMetricCell label="Program score" value={adaptation.objectiveScore.toFixed(1)} />
           <WatchMetricCell label="Recovery" value={`${Math.round(recommendation.recoveryState * 100)}%`} />

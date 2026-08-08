@@ -32,7 +32,7 @@ export function WatchPrimaryAction({ className, tone = 'primary', ...props }: Wa
   return (
     <Button
       className={cn(
-        'w-full btn-mobile-accessible !h-[56px] !min-h-[56px] rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
+        'w-full btn-mobile-accessible !h-[56px] !min-h-[56px] rounded-full font-black uppercase tracking-tight active:scale-[0.98] transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
         getWatchActionClassName(tone),
         className
       )}
@@ -46,7 +46,7 @@ export function WatchSecondaryAction({ className, tone = 'secondary', variant = 
     <Button
       variant={variant}
       className={cn(
-        'btn-mobile-secondary !h-[48px] !min-h-[48px] rounded-full font-black uppercase tracking-tight active:scale-95 transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
+        'btn-mobile-secondary !h-[48px] !min-h-[48px] rounded-full font-black uppercase tracking-tight active:scale-[0.98] transition-[background-color,transform] duration-150 ease-[var(--ease-out-ui)]',
         getWatchActionClassName(tone),
         className
       )}

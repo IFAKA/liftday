@@ -142,13 +142,22 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    letter-spacing: 0 !important;
+  }
+
+  :where(button, a, input, select, textarea, [role='button'], [tabindex]):focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.92);
+    outline-offset: 3px;
+  }
+
+  :where(button, a, input, select, textarea) {
+    touch-action: manipulation;
   }
 
   html, body {
     height: 100dvh;
     overflow: hidden;
     background-color: #000000;
+    color-scheme: dark;
   }
 
   body {
@@ -160,6 +169,11 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
   }
 }
 
@@ -272,6 +286,15 @@ input[type="number"] {
 .px-safe { 
   padding-left: env(safe-area-inset-left, 16px);
   padding-right: env(safe-area-inset-right, 16px);
+}
+
+.no-scrollbar {
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Watch-sized typography. Avoid viewport-driven type so content remains stable

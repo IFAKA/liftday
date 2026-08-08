@@ -46,12 +46,6 @@ export default function SettingsPage() {
       />
 
       <WatchListItem
-        onClick={() => router.push('/history/body')}
-        title="Body"
-        subtitle="Weight, measurements"
-      />
-
-      <WatchListItem
         onClick={() => router.push('/settings/sync')}
         label="Backup"
         title="Sync & export"

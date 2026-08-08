@@ -44,14 +44,14 @@ function prescription(
 
 export const gymRoutine: RoutineConfig = {
   id: 'gym',
-  name: 'Efficient Frontier Gym Hypertrophy',
-  description: 'Six-day gym routine optimized for visible upper-body silhouette per recoverable fatigue: high delts, upper chest, lats, rear delts, arms, and leg maintenance.',
+  name: 'Five-Day Gym Routine',
+  description: 'A fixed Monday-Friday gym routine with two width days, two thickness and arms days, and one legs and neck day.',
   icon: 'dumbbell',
-  schedule: ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'],
+  schedule: ['width_a', 'thickness_arms_a', 'legs_neck', 'width_b', 'thickness_arms_b'],
   tierChains: [
     {
       slotId: 'push_a_high_incline',
-      workoutType: 'push_a',
+      workoutType: 'width_a',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'high_incline_machine_press',
@@ -61,7 +61,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_a_low_high_fly',
-      workoutType: 'push_a',
+      workoutType: 'width_a',
       fixed: true,
       priority: 'high',
       selectedExercise: 'cable_fly',
@@ -71,7 +71,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_a_lateral',
-      workoutType: 'push_a',
+      workoutType: 'width_a',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'cable_lateral_raise',
@@ -81,7 +81,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_a_machine_shoulder_press',
-      workoutType: 'push_a',
+      workoutType: 'width_a',
       fixed: true,
       priority: 'support',
       selectedExercise: 'machine_shoulder_press',
@@ -91,7 +91,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_a_overhead_triceps',
-      workoutType: 'push_a',
+      workoutType: 'width_a',
       fixed: true,
       priority: 'high',
       selectedExercise: 'overhead_tricep_ext',
@@ -101,7 +101,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_a_pressdown',
-      workoutType: 'push_a',
+      workoutType: 'width_a',
       fixed: true,
       priority: 'high',
       selectedExercise: 'cable_tricep_pushdown',
@@ -112,7 +112,7 @@ export const gymRoutine: RoutineConfig = {
 
     {
       slotId: 'pull_a_neutral_pulldown',
-      workoutType: 'pull_a',
+      workoutType: 'thickness_arms_a',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'neutral_grip_pulldown',
@@ -122,7 +122,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_a_straight_arm',
-      workoutType: 'pull_a',
+      workoutType: 'thickness_arms_a',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'straight_arm_pulldown_cable',
@@ -131,7 +131,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_a_chest_supported_row',
-      workoutType: 'pull_a',
+      workoutType: 'thickness_arms_a',
       fixed: true,
       priority: 'high',
       selectedExercise: 'braced_cable_row',
@@ -141,7 +141,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_a_rear_delt',
-      workoutType: 'pull_a',
+      workoutType: 'thickness_arms_a',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'reverse_pec_deck',
@@ -151,7 +151,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_a_cable_curl',
-      workoutType: 'pull_a',
+      workoutType: 'thickness_arms_a',
       fixed: true,
       priority: 'high',
       selectedExercise: 'cable_curl',
@@ -161,7 +161,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_a_hammer_curl',
-      workoutType: 'pull_a',
+      workoutType: 'thickness_arms_a',
       fixed: true,
       priority: 'high',
       selectedExercise: 'hammer_curl',
@@ -172,7 +172,7 @@ export const gymRoutine: RoutineConfig = {
 
     {
       slotId: 'legs_curl',
-      workoutType: 'legs_maintenance',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'support',
       selectedExercise: 'leg_curl_machine',
@@ -181,7 +181,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'legs_leg_press',
-      workoutType: 'legs_maintenance',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'support',
       selectedExercise: 'leg_press',
@@ -191,7 +191,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'legs_extension',
-      workoutType: 'legs_maintenance',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'support',
       selectedExercise: 'leg_extension_machine',
@@ -200,7 +200,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'legs_pull_through',
-      workoutType: 'legs_maintenance',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'support',
       selectedExercise: 'cable_pull_through',
@@ -210,7 +210,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'legs_lateral',
-      workoutType: 'legs_maintenance',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'cable_lateral_raise',
@@ -220,7 +220,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'legs_calf',
-      workoutType: 'legs_maintenance',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'aesthetic',
       selectedExercise: 'standing_calf_raise_machine',
@@ -231,7 +231,7 @@ export const gymRoutine: RoutineConfig = {
 
     {
       slotId: 'push_b_incline_db',
-      workoutType: 'push_b',
+      workoutType: 'width_b',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'db_incline_press',
@@ -241,7 +241,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_b_high_incline',
-      workoutType: 'push_b',
+      workoutType: 'width_b',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'high_incline_machine_press',
@@ -251,7 +251,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_b_pec_deck',
-      workoutType: 'push_b',
+      workoutType: 'width_b',
       fixed: true,
       priority: 'high',
       selectedExercise: 'pec_deck',
@@ -261,7 +261,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_b_lateral',
-      workoutType: 'push_b',
+      workoutType: 'width_b',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'cable_lateral_raise',
@@ -271,7 +271,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_b_overhead_triceps',
-      workoutType: 'push_b',
+      workoutType: 'width_b',
       fixed: true,
       priority: 'high',
       selectedExercise: 'overhead_tricep_ext',
@@ -281,7 +281,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_b_pressdown',
-      workoutType: 'push_b',
+      workoutType: 'width_b',
       fixed: true,
       priority: 'high',
       selectedExercise: 'cable_tricep_pushdown',
@@ -291,7 +291,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'push_b_preacher_curl',
-      workoutType: 'push_b',
+      workoutType: 'width_b',
       fixed: true,
       priority: 'high',
       selectedExercise: 'preacher_curl',
@@ -302,7 +302,7 @@ export const gymRoutine: RoutineConfig = {
 
     {
       slotId: 'pull_b_pulldown',
-      workoutType: 'pull_b',
+      workoutType: 'thickness_arms_b',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'lat_pulldown',
@@ -312,7 +312,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_b_chest_supported_row',
-      workoutType: 'pull_b',
+      workoutType: 'thickness_arms_b',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'braced_cable_row',
@@ -322,7 +322,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_b_machine_high_row',
-      workoutType: 'pull_b',
+      workoutType: 'thickness_arms_b',
       fixed: true,
       priority: 'high',
       selectedExercise: 'machine_row',
@@ -332,7 +332,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_b_rear_delt',
-      workoutType: 'pull_b',
+      workoutType: 'thickness_arms_b',
       fixed: true,
       priority: 'critical',
       selectedExercise: 'reverse_pec_deck',
@@ -342,7 +342,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_b_shrug',
-      workoutType: 'pull_b',
+      workoutType: 'thickness_arms_b',
       fixed: true,
       priority: 'aesthetic',
       selectedExercise: 'db_shrug',
@@ -351,7 +351,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_b_wrist_extension',
-      workoutType: 'pull_b',
+      workoutType: 'thickness_arms_b',
       fixed: true,
       priority: 'aesthetic',
       selectedExercise: 'db_wrist_extension',
@@ -360,7 +360,7 @@ export const gymRoutine: RoutineConfig = {
     },
     {
       slotId: 'pull_b_reverse_curl',
-      workoutType: 'pull_b',
+      workoutType: 'thickness_arms_b',
       fixed: true,
       priority: 'aesthetic',
       selectedExercise: 'db_reverse_curl',
@@ -370,88 +370,8 @@ export const gymRoutine: RoutineConfig = {
     },
 
     {
-      slotId: 'delts_arms_lateral_cable',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'critical',
-      selectedExercise: 'cable_lateral_raise',
-      alternatives: ['machine_lateral_raise', 'db_lateral_raise'],
-      exercises: ['cable_lateral_raise'],
-      prescription: prescription(6, 10, 20, '90-150 sec', 'Highest-ROI specialization. Stop when traps take over.', '1-2 RIR', '0-1 RIR'),
-    },
-    {
-      slotId: 'delts_arms_machine_lateral',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'critical',
-      selectedExercise: 'machine_lateral_raise',
-      alternatives: ['cable_lateral_raise', 'db_lateral_raise'],
-      exercises: ['machine_lateral_raise'],
-      prescription: prescription(3, 10, 20, '90-150 sec', 'Different resistance profile for side delts with stable execution.', '1-2 RIR'),
-    },
-    {
-      slotId: 'delts_arms_rear_delt',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'reverse_pec_deck',
-      alternatives: ['cable_rear_delt_fly', 'cable_face_pull'],
-      exercises: ['reverse_pec_deck'],
-      prescription: prescription(2, 12, 20, '90-150 sec', 'Posture top-up. Rear delts only, traps quiet.', '1-2 RIR'),
-    },
-    {
-      slotId: 'delts_arms_pressdown',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'cable_tricep_pushdown',
-      alternatives: ['overhead_tricep_ext'],
-      exercises: ['cable_tricep_pushdown'],
-      prescription: prescription(3, 10, 15, '90-150 sec', 'Elbow-friendly triceps volume. Hard lockout, shoulders still.', '1-2 RIR'),
-    },
-    {
-      slotId: 'delts_arms_overhead_triceps',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'overhead_tricep_ext',
-      alternatives: ['cable_tricep_pushdown'],
-      exercises: ['overhead_tricep_ext'],
-      prescription: prescription(2, 10, 15, '90-150 sec', 'Long-head sleeve work. Stop for elbow irritation.', '1-2 RIR'),
-    },
-    {
-      slotId: 'delts_arms_cable_curl',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'cable_curl',
-      alternatives: ['preacher_curl', 'db_curl'],
-      exercises: ['cable_curl'],
-      prescription: prescription(3, 8, 12, '90-150 sec', 'Cable tension for biceps. Elbows pinned; no planned failure.', '1-2 RIR'),
-    },
-    {
-      slotId: 'delts_arms_hammer_curl',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'high',
-      selectedExercise: 'hammer_curl',
-      alternatives: ['db_reverse_curl'],
-      exercises: ['hammer_curl'],
-      prescription: prescription(2, 8, 12, '90-150 sec', 'Brachialis top-up for arm thickness. Controlled eccentric.', '1-2 RIR'),
-    },
-    {
-      slotId: 'delts_arms_calf',
-      workoutType: 'delts_arms',
-      fixed: true,
-      priority: 'aesthetic',
-      selectedExercise: 'standing_calf_raise_machine',
-      alternatives: ['calf_raise'],
-      exercises: ['standing_calf_raise_machine'],
-      prescription: prescription(2, 8, 15, '90-150 sec', 'Small calf maintenance top-up. Full range only.', '1-2 RIR'),
-    },
-    {
-      slotId: 'delts_arms_neck_flex',
-      workoutType: 'delts_arms',
+      slotId: 'legs_neck_flex',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'aesthetic',
       selectedExercise: 'neck_iso_flex',
@@ -459,8 +379,8 @@ export const gymRoutine: RoutineConfig = {
       prescription: prescription(1, 20, 30, '60-90 sec', 'Conservative neck dose. Gentle pressure only.', '2 RIR'),
     },
     {
-      slotId: 'delts_arms_neck_iso',
-      workoutType: 'delts_arms',
+      slotId: 'legs_neck_iso',
+      workoutType: 'legs_neck',
       fixed: true,
       priority: 'aesthetic',
       selectedExercise: 'neck_iso_ext',

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { EXERCISES, MOBILITY_EXERCISES } from '@/lib/constants';
 
 async function installRequiredNotificationStack(page: Page) {
   await page.addInitScript(() => {
@@ -88,59 +89,48 @@ test('opens the program screen', async ({ page }) => {
   await page.goto('/program');
 
   await expect(page.locator('body')).toContainText('Program');
-  await expect(page.getByRole('link', { name: /^routine/i })).toBeVisible();
+  await expect(page.locator('a[href^="/program/"]')).toHaveCount(5);
+  await expect(page.getByRole('link', { name: /Monday.*WIDTH A/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Friday.*THICKNESS \+ ARMS B/i })).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('Saturday');
+  await expect(page.locator('body')).not.toContainText('Sunday');
   await expect(page.getByRole('link', { name: /muscles/i })).toHaveCount(0);
-  await expect(page.locator('body')).not.toContainText('Next days');
   await expect(page.getByRole('link', { name: /options/i })).toHaveCount(0);
-  await expect(page.locator('body')).toContainText(/Hold course|Add|Deload|Routine/);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
-test('routine detail uses machine leg maintenance before delt specialization', async ({ page }) => {
-  await page.goto('/program/detail');
+test('opens one day in workbook order and shows only its exercises', async ({ page }) => {
+  await page.goto('/program/legs-neck');
 
+  await expect(page.locator('body')).toContainText('LEGS + NECK');
   await expect(page.locator('body')).toContainText('LEG CURL');
-  const bodyText = await page.locator('body').innerText();
-  const legExercises = [
-    'LEG CURL',
-    'LEG PRESS',
-    'LEG EXTENSION',
-    'CABLE PULL-THROUGH',
-    'STANDING CALF RAISE',
-  ];
-  const indices = legExercises.map((name) => bodyText.indexOf(name));
-
-  expect(indices.every((index) => index >= 0)).toBe(true);
-  expect(indices).toEqual([...indices].sort((a, b) => a - b));
-  expect(bodyText).toContain('CABLE LATERAL RAISE');
-  expect(bodyText).not.toContain('ROMANIAN DEADLIFT');
-  expect(bodyText).not.toContain('BARBELL SQUAT');
+  await expect(page.locator('body')).toContainText('NECK ISO');
+  await expect(page.locator('body')).not.toContainText('CABLE CURL');
+  await expect(page.locator('a[href^="/exercises/"]')).toHaveCount(8);
 });
 
-test('routine detail replaces unsupported rows with braced cable rows', async ({ page }) => {
-  await page.goto('/program/detail');
-
-  await expect(page.locator('body')).toContainText('BRACED CABLE ROW');
-  const bodyText = await page.locator('body').innerText();
-  expect(bodyText).toContain('BRACED CABLE ROW');
-  expect(bodyText).not.toContain('BARBELL ROW');
+test('back navigation follows exercise to day to Program to Today', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /program/i }).click();
+  await page.getByRole('link', { name: /Monday.*WIDTH A/i }).click();
+  await page.locator('a[href^="/exercises/"]').first().click();
+  await expect(page.locator('body')).toContainText('Prescription');
+  await page.getByLabel('Back').click();
+  await expect(page).toHaveURL(/\/program\/width-a$/);
+  await page.getByLabel('Back').click();
+  await expect(page).toHaveURL(/\/program$/);
+  await page.getByLabel('Back').click();
+  await expect(page).toHaveURL(/\/$/);
 });
 
-test('routine detail shows Saturday delt-arm specialization with neutral copy', async ({ page }) => {
-  await page.goto('/program/detail');
+test('direct day and exercise links have safe back destinations', async ({ page }) => {
+  await page.goto('/program/width-a');
+  await page.getByLabel('Back').click();
+  await expect(page).toHaveURL(/\/program$/);
 
-  await expect(page.getByRole('link', { name: /CABLE LATERAL RAISE 6x10-20 - 1-2 RIR/i }).last()).toBeVisible();
-  const bodyText = await page.locator('body').innerText();
-  await expect(page.getByRole('link', { name: /MACHINE LATERAL RAISE 3x10-20 - 1-2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /REVERSE PEC DECK 2x12-20 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /CABLE TRICEP PUSHDOWN 3x10-15 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /OVERHEAD TRICEP EXTENSION 2x10-15 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /CABLE CURL 3x8-12 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /HAMMER CURL 2x8-12 - 1-2 RIR/i }).last()).toBeVisible();
-  await expect(page.getByRole('link', { name: /NECK ISO .* FRONT 1x20-30 - 2 RIR/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /NECK ISO .* BACK 1x20-30 - 2 RIR/i })).toBeVisible();
-  expect(bodyText).not.toContain('CABLE Y RAISE');
-  expect(bodyText).not.toMatch(/highest-SMV|dominance|formidability|clothed-SMV/i);
+  await page.goto('/exercises/high_incline_machine_press?day=width-a');
+  await page.getByLabel('Back').click();
+  await expect(page).toHaveURL(/\/program\/width-a$/);
 });
 
 test('today is the watch-style hub for app sections', async ({ page }) => {
@@ -158,6 +148,46 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('button', { name: /^start$/i })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('First: weight');
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+});
+
+test('mobility tutorial close control stays above quit control', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.removeItem('traindaily_mobility_done');
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /5 min mobility/i }).click();
+  await expect(page.getByRole('button', { name: /how to do this exercise/i })).toBeVisible();
+  await page.getByRole('button', { name: /how to do this exercise/i }).click();
+
+  const tutorial = page.getByTestId('mobility-tutorial');
+  await expect(tutorial).toBeVisible();
+  await expect(page.getByRole('button', { name: /back to mobility/i })).toBeVisible();
+
+  const back = page.getByRole('button', { name: /back to mobility/i });
+  const box = await back.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+
+  await expect(page.getByRole('button', { name: /back to mobility/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /quit mobility/i })).toBeVisible();
+});
+
+test('exercise demos are mapped only to matching verified exercises', () => {
+  expect(MOBILITY_EXERCISES.find((exercise) => exercise.name === 'CAT-COW (DYNAMIC)')?.youtubeId).toBe('LIVJZZyZ2qM');
+  expect(MOBILITY_EXERCISES.find((exercise) => exercise.name === 'HIP FLEXOR STRETCH')?.youtubeId).toBe('iZ1eZBY4fwM');
+  expect(MOBILITY_EXERCISES.find((exercise) => exercise.name === 'DEEP SQUAT HOLD')?.youtubeId).toBe('sIx1BSAVoVw');
+
+  for (const name of ['SCAPULAR CARS', 'WRIST & ANKLE CIRCLES']) {
+    expect(MOBILITY_EXERCISES.find((exercise) => exercise.name === name)?.youtubeId).toBeUndefined();
+  }
+
+  for (const key of ['trx_assisted_squat', 'decline_pike_pushup', 'reverse_pec_deck', 'cable_curl', 'sumo_deadlift'] as const) {
+    expect(EXERCISES.find((exercise) => exercise.key === key)?.youtubeId).toBeUndefined();
+  }
 });
 
 test('returning from program does not flash the home loader', async ({ page }) => {
@@ -577,6 +607,23 @@ test('rest-day today exposes supporting drill-down rows without measurement prom
   await expect(page.getByRole('spinbutton', { name: /waist circumference/i })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /mobility/i })).toBeVisible();
+});
+
+test('completed mobility keeps the rest-day hub layout', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-05-10T10:00:00'));
+  await page.addInitScript(() => {
+    localStorage.setItem('liftday_onboarding_completed', 'true');
+    localStorage.setItem('traindaily_mobility_done', '2026-05-10');
+  });
+
+  await page.goto('/');
+
+  await expect(page.locator('body')).toContainText('REST');
+  await expect(page.locator('body')).not.toContainText('MOBILITY COMPLETE');
+  await expect(page.getByRole('link', { name: /program/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /progress/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /settings/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /mobility done/i })).toBeDisabled();
 });
 
 test('muscle map switches filters and body views', async ({ page }) => {

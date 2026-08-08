@@ -9,7 +9,7 @@ import { TopBar } from './TopBar';
 import { getBodyTrendSummary, getProgressDiagnosis, getProgressSignal, getRoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { getDefaultProgramSummary, loadProgramSummaryForData } from '@/lib/program-summary';
 import { loadDailyLogs } from '@/lib/storage';
-import { WatchBackButton, WatchDetailsPanel, WatchListItem, WatchMetricCell, WatchMetricGrid, WatchScreen, WatchSignalPanel } from './WatchSurface';
+import { WatchBackButton, WatchListItem, WatchScreen, WatchSignalPanel } from './WatchSurface';
 
 interface HistoryScreenProps {
   data: WorkoutData;
@@ -69,7 +69,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
               onClick={() => router.push('/history/detail')}
               icon={Activity}
               title="Detail"
-              subtitle="Volume, recovery, and load"
+              subtitle="Load and recovery"
               subtle
               className="py-3"
             />
@@ -148,36 +148,6 @@ function ProgressSummary({
       metricLabel={`${totalSessions} sessions`}
       tone={command.tone}
       active
-    >
-      <div>
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-fluid-label font-mono uppercase text-white/30">Pace</p>
-          <p className="text-fluid-label font-mono uppercase text-white/35">
-            Progress score <span className="text-white/55">{frontier.current === null ? '--' : Math.round(frontier.current)}</span>
-          </p>
-        </div>
-        <WatchMetricGrid columns={2}>
-          <WatchMetricCell label="This week" value={formatSignedPoints(frontier.weeklyTrend)} tone={command.mixedPace ? command.tone : 'text-white/55'} />
-          <WatchMetricCell label="Plan" value={formatPlanPace(frontier)} tone="text-white/55" />
-        </WatchMetricGrid>
-      </div>
-      <WatchDetailsPanel summary="Details">
-        <WatchMetricGrid columns={3}>
-          <WatchMetricCell label="Up" value={diagnosis.improvingCount} tone="text-white/55" />
-          <WatchMetricCell label="Flat" value={diagnosis.flatCount} tone="text-white/55" />
-          <WatchMetricCell label="Down" value={diagnosis.decliningCount} tone={diagnosis.decliningCount > 0 ? command.tone : 'text-white/55'} />
-        </WatchMetricGrid>
-      </WatchDetailsPanel>
-    </WatchSignalPanel>
+    />
   );
-}
-
-function formatPlanPace(frontier: ReturnType<typeof loadProgramSummaryForData>['frontier']): string {
-  if (frontier.current === null || frontier.frontier === null) return '--';
-  return formatSignedPoints((frontier.frontier - frontier.current) / 4);
-}
-
-function formatSignedPoints(value: number): string {
-  const rounded = Math.round(value);
-  return `${rounded > 0 ? '+' : ''}${rounded} pts`;
 }

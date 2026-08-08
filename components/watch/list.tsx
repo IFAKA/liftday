@@ -67,7 +67,7 @@ export function WatchListItem({
   );
 
   const classes = cn(
-    'flex h-auto w-full items-center justify-start gap-4 whitespace-normal rounded-xl border px-4 py-4 text-left font-normal outline-none transition-[background-color,border-color,box-shadow,color,transform] duration-150 ease-[var(--ease-out-ui)] focus-visible:ring-3 focus-visible:ring-white/40',
+    'flex min-h-14 h-auto w-full items-center justify-start gap-4 whitespace-normal rounded-xl border px-4 py-4 text-left font-normal outline-none transition-[background-color,border-color,box-shadow,color,transform] duration-150 ease-[var(--ease-out-ui)] focus-visible:ring-3 focus-visible:ring-white/40 active:scale-[0.99]',
     active
       ? 'border-white/25 bg-white/15 ring-2 ring-white/15'
       : subtle

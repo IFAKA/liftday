@@ -9,7 +9,7 @@ export default function ProgressPage() {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton href="/" />}
+          leftAction={<WatchBackButton fallbackHref="/" />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Progress</span>}
         />
       )}
@@ -18,16 +18,14 @@ export default function ProgressPage() {
       <WatchListItem
         href="/history"
         icon={ChartBar}
-        title="Workout history"
-        subtitle="Sessions, load, and recovery"
+        title="Overview"
         subtle
         className="py-3"
       />
       <WatchListItem
         href="/muscles"
         icon={Activity}
-        title="Muscle map"
-        subtitle="Volume by muscle group"
+        title="Muscles"
         subtle
         className="py-3"
       />
@@ -35,7 +33,6 @@ export default function ProgressPage() {
         href="/history/body"
         icon={Scale}
         title="Body metrics"
-        subtitle="Weight, measurements, photos"
         subtle
         className="py-3"
       />

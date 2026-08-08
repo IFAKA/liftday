@@ -2,8 +2,13 @@ import { getDay, addDays, startOfWeek, subDays } from 'date-fns';
 import { WorkoutType } from './types';
 import { formatDateKey, formatDisplayDate } from './workout-utils';
 
-const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['push_a', 'pull_a', 'legs_maintenance', 'push_b', 'pull_b', 'delts_arms'];
+const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['width_a', 'thickness_arms_a', 'legs_neck', 'width_b', 'thickness_arms_b'];
 const WORKOUT_TYPE_TONES: Record<WorkoutType, string> = {
+  width_a: 'text-orange-400',
+  thickness_arms_a: 'text-blue-400',
+  legs_neck: 'text-green-400',
+  width_b: 'text-orange-300',
+  thickness_arms_b: 'text-sky-300',
   push_a: 'text-orange-400',
   pull_a: 'text-blue-400',
   legs_maintenance: 'text-green-400',
@@ -30,7 +35,8 @@ export function getWorkoutScheduleIndex(
   const day = getDay(date); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
   if (day === 0) return null; // Sunday is always rest
   const cycle = schedule ?? DEFAULT_SCHEDULE;
-  return (day - 1) % cycle.length;
+  const index = day - 1;
+  return index >= cycle.length ? null : index;
 }
 
 export function getWorkoutOccurrenceIndex(
@@ -63,7 +69,7 @@ export function getTrainingDaysCompletedThisWeek(
 ): { completed: number; total: number } {
   const weekStart = startOfWeek(date, { weekStartsOn: 1 });
   let completed = 0;
-  const total = 6;
+  const total = 5;
 
   for (let i = 0; i < 7; i++) {
     const d = addDays(weekStart, i);
@@ -84,6 +90,11 @@ export function getNextTrainingMessage(date: Date): string {
 
 export function formatWorkoutType(workoutType: WorkoutType): string {
   switch (workoutType) {
+    case 'width_a': return 'WIDTH A';
+    case 'thickness_arms_a': return 'THICKNESS + ARMS A';
+    case 'legs_neck': return 'LEGS + NECK';
+    case 'width_b': return 'WIDTH B';
+    case 'thickness_arms_b': return 'THICKNESS + ARMS B';
     case 'push_a': return 'PUSH A';
     case 'pull_a': return 'PULL A';
     case 'legs_maintenance': return 'LEGS';

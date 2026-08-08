@@ -56,7 +56,7 @@ export function RestDayScreen({ nextTraining, mobility }: RestDayScreenProps) {
   return (
     <WatchScreen
       scrollable={false}
-      bodyClassName="flex flex-col items-center justify-end pt-safe py-3"
+      bodyClassName="flex flex-col items-center justify-center pt-safe py-3"
       footer={(
         <>
           <TodayNavList />

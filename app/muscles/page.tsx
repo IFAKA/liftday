@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ViewSide } from '@/components/MuscleBodyChart';
 import { TopBar } from '@/components/TopBar';
-import { WatchBackButton, WatchScreen } from '@/components/WatchSurface';
+import { WatchBackButton, WatchDetailsPanel, WatchScreen } from '@/components/WatchSurface';
 import { useCopyFeedback } from '@/hooks/useCopyFeedback';
 import {
   getLoggedEffectiveVolume,
@@ -119,11 +119,12 @@ export default function MusclesPage() {
         onSelectedMuscleChange={setSelectedMuscle}
       />
 
-      <MuscleVolumeList lens={lens} entries={workedEntries} />
-
-      {selectedEntry && (
-        <SelectedMusclePanel lens={lens} selectedEntry={selectedEntry} lowCount={lowCount} />
-      )}
+      <WatchDetailsPanel summary="Muscle details">
+        <MuscleVolumeList lens={lens} entries={workedEntries} />
+        {selectedEntry && (
+          <SelectedMusclePanel lens={lens} selectedEntry={selectedEntry} lowCount={lowCount} />
+        )}
+      </WatchDetailsPanel>
     </WatchScreen>
   );
 }

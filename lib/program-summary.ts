@@ -47,7 +47,9 @@ export function getProgramSummary(
   const weekNumber = getWeekNumber(getFirstSessionDate(), today);
   const setsPerExercise = getSetsForWeek(weekNumber, profile?.setsPerExercise);
   const optimizer = optimizeRoutineForFrontier(baseRoutine, profile, data, setsPerExercise);
-  const routine = optimizer.routine;
+  // The workbook routine is fixed. The optimizer remains available for diagnostics,
+  // but never owns the active exercise selection or schedule.
+  const routine = baseRoutine;
   const weeklyExercises = getWeeklyExercises(routine, profile);
   const signal = getProgressSignal(data, weeklyExercises);
   const diagnosis = getProgressDiagnosis(data, weeklyExercises, optimizer.score);

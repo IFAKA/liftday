@@ -21,7 +21,7 @@ export function formatRoutineForCopy(
     `Gym access: ${profile?.gymAccess === false ? 'No' : 'Yes'}`,
     `Max workout time: ${profile?.maxWorkoutMinutes ?? '?'} minutes`,
     `Default sets per exercise this week: ${fallbackSets}`,
-    `Weekly schedule: ${routine.schedule.map((wt, index) => `${dayName(index)} ${wt}`).join(', ')}, Sunday rest`,
+    `Weekly schedule: ${routine.schedule.map((wt, index) => `${dayName(index)} ${formatWorkoutType(wt)}`).join(', ')}, Saturday and Sunday rest`,
     '',
     '## Exercise slots',
   ];
@@ -57,5 +57,5 @@ export function getExerciseName(key: ExerciseKey): string {
 }
 
 function dayName(index: number): string {
-  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index] ?? `Day ${index + 1}`;
+  return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][index] ?? `Day ${index + 1}`;
 }

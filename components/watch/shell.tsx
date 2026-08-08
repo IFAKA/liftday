@@ -28,7 +28,7 @@ export function WatchScreen({
   scrollable = true,
 }: WatchScreenProps) {
   return (
-    <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-black text-white', className)}>
+    <div className={cn('watch-shell flex h-full min-h-0 flex-col overflow-hidden bg-black text-white', className)}>
       {top}
       <main className={cn(
         'min-h-0 flex-1 px-4 pt-1 no-scrollbar',
