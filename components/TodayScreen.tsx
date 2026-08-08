@@ -102,8 +102,6 @@ function TodayContent({ date }: { date: Date }) {
       <RestDayScreen
         date={date}
         nextTraining={schedule.nextTraining}
-        weekCompleted={schedule.weekProgress.completed}
-        weekTotal={schedule.weekProgress.total}
         mobility={mobility}
       />
     );

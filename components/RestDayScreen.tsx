@@ -1,13 +1,13 @@
 'use client';
 
 import { useReducedMotion } from 'motion/react';
-import { CalendarDays, ChartBar, Moon, Play, Settings } from 'lucide-react';
+import { Moon, Play } from 'lucide-react';
 import { MobilityFlow } from './MobilityFlow';
 import { MobilityErrorBoundary } from './MobilityErrorBoundary';
-import { SessionComplete } from './SessionComplete';
 import { MobilityExercise } from '@/lib/types';
-import { WatchListItem, WatchPrimaryAction, WatchScreen } from './WatchSurface';
+import { WatchPrimaryAction, WatchScreen } from './WatchSurface';
 import { RestDayActionRow } from './rest-day/RestDayPanels';
+import { TodayNavList } from './today/TodayNavList';
 
 export interface MobilityHookState {
   exercise: MobilityExercise;
@@ -28,12 +28,10 @@ export interface MobilityHookState {
 interface RestDayScreenProps {
   date: Date;
   nextTraining: string | null;
-  weekCompleted: number;
-  weekTotal: number;
   mobility: MobilityHookState;
 }
 
-export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility }: RestDayScreenProps) {
+export function RestDayScreen({ nextTraining, mobility }: RestDayScreenProps) {
   const shouldReduceMotion = useReducedMotion();
 
   if (mobility.isActive) {
@@ -55,61 +53,22 @@ export function RestDayScreen({ nextTraining, weekCompleted, weekTotal, mobility
     );
   }
 
-  if (mobility.isComplete) {
-    return (
-      <SessionComplete
-        mode="mobility"
-        date={new Date()}
-        weekCompleted={weekCompleted}
-        weekTotal={weekTotal}
-        nextTraining={nextTraining}
-        onDone={mobility.quit}
-      />
-    );
-  }
-
   return (
     <WatchScreen
       scrollable={false}
       bodyClassName="flex flex-col items-center justify-end pt-safe py-3"
       footer={(
         <>
-          <nav aria-label="Main sections" className="flex flex-col gap-2">
-            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
-              <WatchListItem
-                href="/program"
-                icon={CalendarDays}
-                title="Program"
-                subtle
-                className="py-3"
-              />
-            </RestDayActionRow>
-            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
-              <WatchListItem
-                href="/progress"
-                icon={ChartBar}
-                title="Progress"
-                subtle
-                className="py-3"
-              />
-            </RestDayActionRow>
-            <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
-              <WatchListItem
-                href="/settings"
-                icon={Settings}
-                title="Settings"
-                subtle
-                className="py-3"
-              />
-            </RestDayActionRow>
-          </nav>
+          <TodayNavList />
           <RestDayActionRow shouldReduceMotion={shouldReduceMotion}>
             <WatchPrimaryAction
               onClick={mobility.startMobility}
+              disabled={mobility.isComplete}
+              aria-label={mobility.isComplete ? 'Mobility done' : '5 min mobility'}
               className="shadow-xl"
             >
               <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 fill-current" />
-              5 MIN MOBILITY
+              {mobility.isComplete ? 'MOBILITY DONE' : '5 MIN MOBILITY'}
             </WatchPrimaryAction>
           </RestDayActionRow>
         </>
