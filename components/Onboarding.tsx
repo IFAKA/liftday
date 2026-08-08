@@ -5,6 +5,7 @@ import { Activity, BarChart3, CheckCircle2, ChevronLeft, History, X } from 'luci
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
+import { WatchScreen } from './WatchSurface';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -67,38 +68,68 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col items-center overflow-hidden bg-black">
-      <TopBar
-        center={<span className="text-fluid-label font-black uppercase tracking-tight text-white/45">Setup</span>}
-        leftAction={
-          step > 0 ? (
+    <WatchScreen
+      scrollable={false}
+      bodyClassName="flex flex-col justify-center overflow-hidden px-4 pb-4"
+      footerClassName="mb-3 flex flex-col gap-3"
+      top={(
+        <TopBar
+          center={<span className="text-fluid-label font-black uppercase tracking-tight text-white/45">Setup</span>}
+          leftAction={
+            step > 0 ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBack}
+                className="-ml-2 text-white/45 hover:bg-transparent hover:text-white active:text-white"
+                aria-label="Previous step"
+              >
+                <ChevronLeft className="size-5" />
+              </Button>
+            ) : null
+          }
+          rightAction={
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleBack}
-              className="-ml-2 text-white/45 hover:bg-transparent hover:text-white active:text-white"
-              aria-label="Previous step"
+              onClick={onComplete}
+              className="-mr-2 text-white/45 hover:bg-transparent hover:text-white active:text-white"
+              aria-label="Skip onboarding"
             >
-              <ChevronLeft className="size-5" />
+              <X className="size-5" />
             </Button>
-          ) : null
-        }
-        rightAction={
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onComplete}
-            className="-mr-2 text-white/45 hover:bg-transparent hover:text-white active:text-white"
-            aria-label="Skip onboarding"
-          >
-            <X className="size-5" />
-          </Button>
-        }
-      />
+          }
+        />
+      )}
+      footer={(
+        <>
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-1.5" aria-label={`Step ${step + 1} of ${steps.length}`}>
+              {steps.map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1 rounded-full transition-[width,background-color] duration-180 ease-[var(--ease-out-ui)] ${
+                    i === step ? 'w-6 bg-white' : 'w-1.5 bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-fluid-label font-mono tabular-nums text-white/35">
+              {step + 1}/{steps.length}
+            </span>
+          </div>
 
-      <div className="flex w-full flex-1 flex-col overflow-y-auto px-4 pb-3 pt-1 no-scrollbar">
-        <AnimatePresence mode="wait">
-          <motion.div
+          <Button
+            onClick={handleNext}
+            className="h-12 w-full rounded-xl bg-white text-fluid-label font-black uppercase tracking-widest text-black hover:bg-white/90 active:scale-[0.98]"
+          >
+            {currentStep.action}
+          </Button>
+        </>
+      )}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
             key={step}
             initial={{
               opacity: 0,
@@ -110,73 +141,44 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               transform: shouldReduceMotion ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.97)',
             }}
             transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-            className="flex min-h-full w-full flex-col justify-center py-4"
+            className="w-full py-3"
           >
-            <div className="mb-4 flex items-center gap-2">
-              <div className="grid size-10 place-items-center rounded-2xl bg-white text-black shadow-[0_16px_50px_rgba(255,255,255,0.08)]">
-                <Icon className="size-5" />
-              </div>
-              <span className="text-fluid-label font-black uppercase tracking-[0.18em] text-white/40">
+            <div className="mb-3 flex items-center gap-2">
+              <Icon className="size-4 text-white/45" />
+              <span className="text-fluid-label font-mono uppercase tracking-widest text-white/40">
                 {currentStep.label}
               </span>
             </div>
 
-            <h1 className="max-w-sm text-[2rem] font-black leading-[0.95] tracking-normal text-white min-[390px]:text-[2.35rem]">
+            <h1 className="max-w-[19rem] text-fluid-heading font-black leading-tight tracking-tight text-white">
               {currentStep.title}
             </h1>
 
-            <div className="mt-4 flex max-w-sm flex-col gap-2">
+            <div className="mt-3 flex max-w-[20rem] flex-col gap-1">
               {currentStep.description.map((line) => (
-                <p key={line} className="text-base font-medium leading-snug text-white/58">
+                <p key={line} className="text-fluid-label leading-relaxed text-white/50">
                   {line}
                 </p>
               ))}
             </div>
 
-            <div className="mt-6 flex flex-col gap-2">
+            <div className="mt-5 flex flex-col divide-y divide-white/5 rounded-xl border border-white/5 bg-white/[0.03]">
               {currentStep.checklist.map((item) => (
                 <div
                   key={item}
-                  className="flex min-h-11 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 text-sm font-bold text-white/78"
+                  className="flex min-h-11 items-center gap-3 px-3 text-fluid-label font-bold text-white/70 first:rounded-t-xl last:rounded-b-xl"
                 >
-                  <CheckCircle2 className="size-4 text-green-400" />
+                  <CheckCircle2 className="size-4 text-white/35" />
                   <span>{item}</span>
                 </div>
               ))}
             </div>
           </motion.div>
-        </AnimatePresence>
+      </AnimatePresence>
+      <div className="mt-3 flex items-center justify-center gap-2 text-fluid-label text-white/30">
+        <History className="size-3.5" />
+        <span>Settings can be changed later.</span>
       </div>
-
-      <div className="w-full shrink-0 px-4 pb-safe">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex gap-1">
-            {steps.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1 rounded-full transition-[width,background-color] duration-180 ease-[var(--ease-out-ui)] ${
-                  i === step ? 'w-6 bg-white' : 'w-2 bg-white/18'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-xs font-black uppercase tracking-[0.16em] text-white/35">
-            {step + 1}/{steps.length}
-          </span>
-        </div>
-
-        <Button
-          onClick={handleNext}
-          className="mb-4 h-14 w-full rounded-2xl bg-white text-base font-black uppercase tracking-tight text-black shadow-[0_18px_45px_rgba(255,255,255,0.10)] transition-transform duration-150 ease-[var(--ease-out-ui)] active:scale-[0.98]"
-        >
-          {currentStep.action}
-        </Button>
-
-        <div className="flex items-center justify-center gap-2 pb-1 text-xs font-semibold text-white/32">
-          <History className="size-3.5" />
-          <span>Settings can be changed later.</span>
-        </div>
-      </div>
-    </div>
+    </WatchScreen>
   );
 }
