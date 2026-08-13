@@ -33,6 +33,7 @@ interface ExerciseScreenProps {
   coachingReference: CoachingReference | null;
   autoAdjustSuggestion: AutoAdjustSuggestion | null;
   topRecommendation: AdaptiveRecommendation | null;
+  supersetPartnerName: string | null;
   currentExerciseSets: SetEntry[];
   flashColor: 'green' | 'red' | null;
   onLogSet: (reps: number, weight?: number, rir?: number) => void;
@@ -60,6 +61,7 @@ export function ExerciseScreen({
   coachingReference,
   autoAdjustSuggestion,
   topRecommendation,
+  supersetPartnerName,
   currentExerciseSets,
   flashColor,
   onLogSet,
@@ -179,6 +181,11 @@ export function ExerciseScreen({
 
           <div className="w-full px-5 pt-3 shrink-0">
             <ExerciseCopyTitle exerciseName={exercise.name} copied={copiedName} onCopy={handleCopyExerciseName} />
+            {supersetPartnerName && (
+              <p className="mt-1 text-center text-fluid-label font-mono font-black uppercase tracking-widest text-white/45 sm:text-left">
+                Superset · {supersetPartnerName}
+              </p>
+            )}
             <div className="mt-2 flex min-h-8 flex-wrap items-center justify-center gap-2 sm:justify-start">
               {prescription && (
                 <div className="flex flex-wrap items-center gap-2 text-fluid-label font-mono uppercase text-white/40">

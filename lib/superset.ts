@@ -5,6 +5,21 @@ export interface SupersetPair {
   b: Exercise | null;
 }
 
+export interface SupersetPlanItem {
+  exercise: Exercise;
+  supersetGroup?: string;
+}
+
+export function getSupersetPartner(
+  plan: SupersetPlanItem[],
+  index: number,
+): Exercise | null {
+  const group = plan[index]?.supersetGroup;
+  if (!group) return null;
+
+  return plan.find((item, itemIndex) => itemIndex !== index && item.supersetGroup === group)?.exercise ?? null;
+}
+
 export function buildSupersetPairs(exercises: Exercise[]): SupersetPair[] {
   const remaining = [...exercises];
   const pairs: SupersetPair[] = [];

@@ -161,6 +161,14 @@ test('today is the watch-style hub for app sections', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
+test('workout shows the explicit superset partner while logging and resting', async ({ page }) => {
+  await prepareTodayWorkout(page, null);
+
+  await expect(page.locator('body')).toContainText('SUPERSET · NEUTRAL GRIP PULLDOWN');
+  await logSetAndWaitForRest(page, 2);
+  await expect(page.locator('body')).toContainText('SUPERSET · NEUTRAL GRIP PULLDOWN');
+});
+
 test('mobility tutorial close control stays above quit control', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));

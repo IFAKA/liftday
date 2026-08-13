@@ -11,6 +11,7 @@ import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { assessSetCoaching } from '@/lib/set-coaching';
 import { getNextSetAutoAdjust } from '@/lib/workout-auto-adjust';
 import { getNextHigherLoad, getNextLowerLoad, snapLoadTarget } from '@/lib/load-targets';
+import { getSupersetPartner } from '@/lib/superset';
 import {
   calculateRoutineVolume,
   evaluateDoubleProgression,
@@ -111,6 +112,36 @@ test('default routine keeps biceps on the efficient frontier for the current pro
   expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('push_a_cable_curl');
   expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('push_b_incline_curl');
   expect(directBicepsChains.map((chain) => chain.slotId)).not.toContain('pull_b_hammer_curl');
+});
+
+test('fixed routine exposes explicit superset partners without changing slot order', () => {
+  const profile = getDefaultProfile();
+  const chains = getChainsForRoutine(gymRoutine, 'upper_a');
+  const plan = getResolvedSessionPlan(gymRoutine, 'upper_a', chains, profile.tiers, 3);
+
+  expect(plan.map((item) => item.exercise.key)).toEqual([
+    'high_incline_machine_press',
+    'neutral_grip_pulldown',
+    'cable_lateral_raise',
+    'braced_cable_row',
+    'overhead_tricep_ext',
+    'cable_curl',
+  ]);
+  expect(getSupersetPartner(plan, 0)?.key).toBe('neutral_grip_pulldown');
+  expect(getSupersetPartner(plan, 1)?.key).toBe('high_incline_machine_press');
+  expect(getSupersetPartner(plan, 4)?.key).toBe('cable_curl');
+  expect(getSupersetPartner(plan, 5)?.key).toBe('overhead_tricep_ext');
+});
+
+test('every configured superset group resolves to exactly two workout slots', () => {
+  for (const workoutType of gymRoutine.schedule) {
+    const groups = new Map<string, number>();
+    for (const chain of getChainsForRoutine(gymRoutine, workoutType)) {
+      if (chain.supersetGroup) groups.set(chain.supersetGroup, (groups.get(chain.supersetGroup) ?? 0) + 1);
+    }
+
+    expect([...groups.values()].every((count) => count === 2)).toBe(true);
+  }
 });
 
 test('SMV optimizer rejects unavailable idealized machines and reports allocation constraints', () => {

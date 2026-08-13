@@ -5,10 +5,11 @@ import { WatchActionFooter, WorkoutFlowScreen } from './WatchSurface';
 
 interface ExerciseTransitionProps {
   exerciseName: string;
+  supersetPartnerName: string | null;
   onComplete: () => void;
 }
 
-export function ExerciseTransition({ exerciseName, onComplete }: ExerciseTransitionProps) {
+export function ExerciseTransition({ exerciseName, supersetPartnerName, onComplete }: ExerciseTransitionProps) {
   useEffect(() => {
     const timeout = setTimeout(onComplete, 2500);
     return () => clearTimeout(timeout);
@@ -31,6 +32,11 @@ export function ExerciseTransition({ exerciseName, onComplete }: ExerciseTransit
         <h1 className="text-fluid-exercise font-black tracking-tight text-white leading-tight uppercase line-clamp-2">
           {exerciseName}
         </h1>
+        {supersetPartnerName && (
+          <p className="mt-2 text-fluid-label font-mono font-black uppercase tracking-widest text-white/45">
+            Superset · {supersetPartnerName}
+          </p>
+        )}
     </WorkoutFlowScreen>
   );
 }

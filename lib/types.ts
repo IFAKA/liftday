@@ -477,6 +477,8 @@ export interface TierChain {
   progression?: ExerciseKey[];
   /** Same-slot substitutes used for equipment/workflow fallbacks, not hidden routine choices. */
   alternatives?: ExerciseKey[];
+  /** Explicit superset group. Slots sharing a group are trained as a pair. */
+  supersetGroup?: string;
   prescription?: Omit<SMVExercisePrescription, 'exerciseKey'>;
   exercises: ExerciseKey[]; // tier 0 → 1 → 2
 }

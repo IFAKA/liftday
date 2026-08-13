@@ -17,6 +17,7 @@ interface RestTimerProps {
   onQuit: () => void;
   onUndo: () => void;
   nextExerciseName?: string | null;
+  nextSupersetPartnerName?: string | null;
   onNextMachineOccupied?: () => void;
 }
 
@@ -36,7 +37,7 @@ function cancelRestNotification() {
   }
 }
 
-export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName, onNextMachineOccupied }: RestTimerProps) {
+export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName, nextSupersetPartnerName, onNextMachineOccupied }: RestTimerProps) {
   const { copy, isCopied } = useCopyFeedback();
   const { showQuitConfirm, setShowQuitConfirm, requestQuit, confirmQuit } = useWorkoutQuitGuard({
     historyStateKey: 'rest',
@@ -94,6 +95,11 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
                 {copiedName ? 'Copied' : 'Tap name to copy'}
               </span>
             </button>
+            {nextSupersetPartnerName && (
+              <span className="text-fluid-label font-mono font-black uppercase tracking-widest text-white/45">
+                Superset · {nextSupersetPartnerName}
+              </span>
+            )}
             {onNextMachineOccupied && (
               <button
                 type="button"

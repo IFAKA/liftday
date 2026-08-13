@@ -141,6 +141,7 @@ function TodayContent({ date }: { date: Date }) {
         coachingReference={workout.coachingReference}
         autoAdjustSuggestion={workout.autoAdjustSuggestion}
         topRecommendation={workout.topRecommendation}
+        supersetPartnerName={workout.currentSupersetPartnerName}
         currentExerciseSets={workout.sessionReps[workout.currentExercise!.key] ?? []}
         flashColor={workout.flashColor}
         persistenceError={workout.persistenceError}
@@ -159,6 +160,7 @@ function TodayContent({ date }: { date: Date }) {
     return (
       <ExerciseTransition
         exerciseName={workout.nextExerciseName}
+        supersetPartnerName={workout.nextSupersetPartnerName}
         onComplete={workout.finishTransition}
       />
     );
@@ -174,6 +176,7 @@ function TodayContent({ date }: { date: Date }) {
         onQuit={workout.quitWorkout}
         onUndo={workout.undoLastSet}
         nextExerciseName={workout.nextExerciseAfterRestName}
+        nextSupersetPartnerName={workout.nextSupersetPartnerName}
         onNextMachineOccupied={
           workout.canHandleNextExerciseMachineOccupied ? workout.handleNextExerciseMachineOccupied : undefined
         }
