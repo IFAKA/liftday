@@ -2,8 +2,13 @@ import { getDay, addDays, startOfWeek, subDays } from 'date-fns';
 import { WorkoutType } from './types';
 import { formatDateKey, formatDisplayDate } from './workout-utils';
 
-const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['width_a', 'thickness_arms_a', 'legs_neck', 'width_b', 'thickness_arms_b'];
+const DEFAULT_SCHEDULE: Exclude<WorkoutType, 'rest'>[] = ['upper_a', 'lower_aesthetic', 'upper_b', 'aesthetic'];
+const DEFAULT_TRAINING_WEEKDAYS = [0, 1, 3, 4];
 const WORKOUT_TYPE_TONES: Record<WorkoutType, string> = {
+  upper_a: 'text-orange-400',
+  lower_aesthetic: 'text-green-400',
+  upper_b: 'text-orange-300',
+  aesthetic: 'text-pink-300',
   width_a: 'text-orange-400',
   thickness_arms_a: 'text-blue-400',
   legs_neck: 'text-green-400',
@@ -35,7 +40,8 @@ export function getWorkoutScheduleIndex(
   const day = getDay(date); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
   if (day === 0) return null; // Sunday is always rest
   const cycle = schedule ?? DEFAULT_SCHEDULE;
-  const index = day - 1;
+  const weekdays = cycle.length === 4 ? DEFAULT_TRAINING_WEEKDAYS : cycle.map((_, index) => index);
+  const index = weekdays.indexOf(day - 1);
   return index >= cycle.length ? null : index;
 }
 
@@ -90,6 +96,10 @@ export function getNextTrainingMessage(date: Date): string {
 
 export function formatWorkoutType(workoutType: WorkoutType): string {
   switch (workoutType) {
+    case 'upper_a': return 'UPPER A';
+    case 'lower_aesthetic': return 'LOWER + AESTHETIC';
+    case 'upper_b': return 'UPPER B';
+    case 'aesthetic': return 'AESTHETIC';
     case 'width_a': return 'WIDTH A';
     case 'thickness_arms_a': return 'THICKNESS + ARMS A';
     case 'legs_neck': return 'LEGS + NECK';

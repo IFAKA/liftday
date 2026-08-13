@@ -123,6 +123,10 @@ export type ExerciseKey =
   | GymLegsExerciseKey;
 
 export type SMVWorkoutType =
+  | 'upper_a'
+  | 'lower_aesthetic'
+  | 'upper_b'
+  | 'aesthetic'
   | 'width_a'
   | 'thickness_arms_a'
   | 'legs_neck'
