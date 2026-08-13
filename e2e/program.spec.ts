@@ -1257,26 +1257,17 @@ test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page
     await page.waitForTimeout(250);
   }
 
-  await expect(page.locator('body')).toContainText(/session complete/i);
-  await expect(page.getByRole('button', { name: /^done$/i })).toBeEnabled();
-  await expect(page.getByRole('button', { name: /30s stretch/i })).toBeVisible();
-
-  await page.getByRole('button', { name: /30s stretch/i }).click();
   await expect(page.getByText(/^stretch$/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /^start 30s timer$/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^done$/i })).toBeEnabled();
+  await expect(page.getByRole('button', { name: /^done$/i })).toBeDisabled();
 
   await page.getByRole('button', { name: /^start 30s timer$/i }).click();
   await page.clock.fastForward(2000);
   await expect(page.getByText('00:28')).toBeVisible();
 
-  await page.getByRole('button', { name: /^done$/i }).click();
-  await expect(page.locator('body')).toContainText(/session complete/i);
-  await page.getByRole('button', { name: /30s stretch/i }).click();
-  await expect(page.getByRole('button', { name: /^start 30s timer$/i })).toBeVisible();
-  await page.getByRole('button', { name: /^start 30s timer$/i }).click();
-  await page.clock.fastForward(1000);
-  await expect(page.getByText('00:29')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^done$/i })).toBeDisabled();
+  await page.clock.fastForward(28000);
+  await expect(page.getByRole('button', { name: /^done$/i })).toBeEnabled();
   await page.getByRole('button', { name: /^done$/i }).click();
   await expect(page.locator('body')).toContainText(/session complete/i);
   await page.goto('/history');

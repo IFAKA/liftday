@@ -23,7 +23,7 @@ type SessionCompleteProps =
 
 export function SessionComplete(props: SessionCompleteProps) {
   const isWorkout = props.mode === 'workout';
-  const [showStretchTimer, setShowStretchTimer] = useState(false);
+  const [showStretchTimer, setShowStretchTimer] = useState(isWorkout);
   const stretchTimer = useCountdownTimer({
     initialSeconds: STRETCH_DURATION_SECONDS,
     autoStart: false,
@@ -47,6 +47,7 @@ export function SessionComplete(props: SessionCompleteProps) {
         onStartTimer={stretchTimer.start}
         onRepeat={stretchTimer.repeat}
         onPrimary={exitStretchTimer}
+        requireCompletionBeforePrimary
       />
     );
   }
@@ -76,15 +77,6 @@ export function SessionComplete(props: SessionCompleteProps) {
           </Badge>
         </div>
       ) : undefined}
-      secondaryActions={isWorkout ? [
-        {
-          label: '30s Stretch',
-          onClick: () => {
-            stretchTimer.reset();
-            setShowStretchTimer(true);
-          },
-        },
-      ] : undefined}
       onDone={props.onDone}
     />
   );
