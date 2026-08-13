@@ -4,13 +4,16 @@ import { useEffect, useState } from 'react';
 import { Dumbbell } from 'lucide-react';
 import { OptimizationContext, RoutineConfig } from '@/lib/types';
 import { TopBar } from '@/components/TopBar';
+import { useCopyFeedback } from '@/hooks/useCopyFeedback';
 import { RoutineAdjustmentDecision } from '@/lib/progress-insights';
 import { loadProgramSummary } from '@/lib/program-summary';
 import { getProgramStatusCommand } from '@/components/status-command';
 import { getRoutineDays } from '@/lib/routine-days';
+import { formatRoutineForCopy } from '@/lib/routine-format';
 import { formatWorkoutType } from '@/lib/schedule';
 import {
   WatchBackButton,
+  WatchCopyButton,
   WatchDetailsPanel,
   WatchListItem,
   WatchMetricCell,
@@ -21,21 +24,30 @@ import {
 } from '@/components/WatchSurface';
 
 export default function ProgramPage() {
-  const [{ routine, routineDecision, adaptation }, setProgramState] = useState<{
+  const { copy, isCopied } = useCopyFeedback({ resetMs: 1600 });
+  const [{ routine, profile, setsPerExercise, routineDecision, adaptation }, setProgramState] = useState<{
     routine: RoutineConfig | null;
+    profile: ReturnType<typeof loadProgramSummary>['profile'];
+    setsPerExercise: number;
     routineDecision: RoutineAdjustmentDecision | null;
     adaptation: OptimizationContext | null;
-  }>({ routine: null, routineDecision: null, adaptation: null });
+  }>({ routine: null, profile: null, setsPerExercise: 3, routineDecision: null, adaptation: null });
 
   useEffect(() => {
     const summary = loadProgramSummary();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgramState({
       routine: summary.routine,
+      profile: summary.profile,
+      setsPerExercise: summary.setsPerExercise,
       routineDecision: summary.routineDecision,
       adaptation: summary.adaptation,
     });
   }, []);
+
+  async function handleCopyRoutine() {
+    await copy('routine', formatRoutineForCopy(routine, profile, setsPerExercise));
+  }
 
   return (
     <WatchScreen
@@ -72,6 +84,8 @@ export default function ProgramPage() {
           )}
         </div>
       </WatchSection>
+
+      <WatchCopyButton copied={isCopied('routine')} onClick={handleCopyRoutine} label="Copy Routine" />
     </WatchScreen>
   );
 }

@@ -99,6 +99,17 @@ test('opens the program screen', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
 });
 
+test('copies the current routine from the program screen', async ({ page }) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/program');
+
+  await page.getByRole('button', { name: /^copy routine$/i }).click();
+
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Routine:');
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('WIDTH A');
+  await expect(page.getByRole('button', { name: /^copied$/i })).toBeVisible();
+});
+
 test('opens one day in workbook order and shows only its exercises', async ({ page }) => {
   await page.goto('/program/legs-neck');
 
