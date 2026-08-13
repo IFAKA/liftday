@@ -15,9 +15,10 @@ export interface RoutineDay {
 }
 
 export function getRoutineDays(routine: RoutineConfig = getRoutine('gym')): RoutineDay[] {
-  return routine.schedule.slice(0, 5).map((workoutType, index) => ({
-    index,
-    name: ROUTINE_DAY_NAMES[index],
+  const weekdays = routine.trainingWeekdays ?? routine.schedule.map((_, index) => index);
+  return routine.schedule.map((workoutType, index) => ({
+    index: weekdays[index],
+    name: ROUTINE_DAY_NAMES[weekdays[index]],
     slug: workoutType.replace(/_/g, '-'),
     workoutType,
     label: formatWorkoutType(workoutType),

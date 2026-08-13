@@ -109,8 +109,10 @@ export interface RoutineConfig {
   description: string;
   /** Lucide icon name shown in the profile picker */
   icon: 'dumbbell' | 'person-standing';
-  /** Monday-Friday workout types (index 0 = Monday). Saturday and Sunday are rest. */
+  /** Workout types in training-day order. */
   schedule: Exclude<WorkoutType, 'rest'>[];
+  /** Weekday indexes (0 = Monday) for the schedule entries. */
+  trainingWeekdays?: number[];
   tierChains: TierChain[];
 }
 

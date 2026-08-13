@@ -15,6 +15,7 @@ export const gymRoutine: RoutineConfig = {
   description: 'A fixed four-day gym routine with upper, lower, and aesthetic-focused sessions.',
   icon: 'dumbbell',
   schedule: ['upper_a', 'lower_aesthetic', 'upper_b', 'aesthetic'],
+  trainingWeekdays: [0, 1, 3, 4],
   tierChains: [
     // Monday — UPPER A
     slot('upper_a_high_incline_press', 'upper_a', 'high_incline_machine_press', 'critical', 3, 6, 10, '2 min', 'Stable upper-chest pressing.', ['db_incline_press', 'smith_incline_press']),
