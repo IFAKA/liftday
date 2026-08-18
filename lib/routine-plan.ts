@@ -21,6 +21,7 @@ interface ResolvedSessionPlanItem {
   setCount: number;
   prescription: SMVExercisePrescription;
   supersetGroup?: string;
+  equipmentBlockGroup?: string;
 }
 
 export function getResolvedSessionPlan(
@@ -49,6 +50,7 @@ export function getResolvedSessionPlan(
       chainIndex,
       setCount,
       supersetGroup: chain.supersetGroup,
+      equipmentBlockGroup: chain.equipmentBlockGroup,
       prescription: getPrescriptionForChain(chain, key, fallbackSets),
     }];
   });

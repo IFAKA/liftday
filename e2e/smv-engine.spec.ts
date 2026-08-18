@@ -11,7 +11,7 @@ import { getResolvedSessionPlan } from '@/lib/routine-plan';
 import { assessSetCoaching } from '@/lib/set-coaching';
 import { getNextSetAutoAdjust } from '@/lib/workout-auto-adjust';
 import { getNextHigherLoad, getNextLowerLoad, snapLoadTarget } from '@/lib/load-targets';
-import { getSupersetPartner } from '@/lib/superset';
+import { getSupersetPartner, getEquipmentBlockPartner } from '@/lib/superset';
 import {
   calculateRoutineVolume,
   evaluateDoubleProgression,
@@ -127,10 +127,23 @@ test('fixed routine exposes explicit superset partners without changing slot ord
     'overhead_tricep_ext',
     'cable_curl',
   ]);
-  expect(getSupersetPartner(plan, 0)?.key).toBe('neutral_grip_pulldown');
-  expect(getSupersetPartner(plan, 1)?.key).toBe('high_incline_machine_press');
+  expect(getSupersetPartner(plan, 0)).toBeNull();
+  expect(getSupersetPartner(plan, 1)).toBeNull();
   expect(getSupersetPartner(plan, 4)?.key).toBe('cable_curl');
   expect(getSupersetPartner(plan, 5)?.key).toBe('overhead_tricep_ext');
+});
+
+test('equipment block partners share same station without alternating-set semantics', () => {
+  const profile = getDefaultProfile();
+  const upperAChains = getChainsForRoutine(gymRoutine, 'upper_a');
+  const upperAPlan = getResolvedSessionPlan(gymRoutine, 'upper_a', upperAChains, profile.tiers, 3);
+
+  expect(getEquipmentBlockPartner(upperAPlan, 0)?.key).toBe('neutral_grip_pulldown');
+  expect(getEquipmentBlockPartner(upperAPlan, 1)?.key).toBe('high_incline_machine_press');
+  expect(getEquipmentBlockPartner(upperAPlan, 2)?.key).toBe('braced_cable_row');
+  expect(getEquipmentBlockPartner(upperAPlan, 3)?.key).toBe('cable_lateral_raise');
+  expect(getEquipmentBlockPartner(upperAPlan, 4)).toBeNull();
+  expect(getEquipmentBlockPartner(upperAPlan, 5)).toBeNull();
 });
 
 test('every configured superset group resolves to exactly two workout slots', () => {

@@ -8,6 +8,7 @@ export interface SupersetPair {
 export interface SupersetPlanItem {
   exercise: Exercise;
   supersetGroup?: string;
+  equipmentBlockGroup?: string;
 }
 
 export function getSupersetPartner(
@@ -18,6 +19,23 @@ export function getSupersetPartner(
   if (!group) return null;
 
   return plan.find((item, itemIndex) => itemIndex !== index && item.supersetGroup === group)?.exercise ?? null;
+}
+
+export function getEquipmentBlockPartner(
+  plan: SupersetPlanItem[],
+  index: number,
+): Exercise | null {
+  const group = plan[index]?.equipmentBlockGroup;
+  if (!group) return null;
+
+  return plan.find((item, itemIndex) => itemIndex !== index && item.equipmentBlockGroup === group)?.exercise ?? null;
+}
+
+export function hasEquipmentBlockGroup(
+  plan: SupersetPlanItem[],
+  index: number,
+): boolean {
+  return plan[index]?.equipmentBlockGroup != null;
 }
 
 export function buildSupersetPairs(exercises: Exercise[]): SupersetPair[] {

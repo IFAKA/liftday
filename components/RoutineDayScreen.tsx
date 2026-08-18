@@ -38,12 +38,13 @@ export function RoutineDayScreen() {
           {exercises.map(({ exercise, chain }) => {
             const prescription = chain.prescription;
             const detail = `${getChainSetCount(chain, 3)}x${prescription?.minReps ?? 8}-${prescription?.maxReps ?? 12} · ${prescription?.targetRir ?? '1-2 RIR'}`;
+            const groupLabel = chain.supersetGroup ? ' · Superset' : chain.equipmentBlockGroup ? ' · Same station' : '';
             return (
               <WatchListItem
                 key={chain.slotId}
                 href={`/exercises/${exercise.key}?day=${day.slug}`}
                 title={exercise.name}
-                subtitle={detail}
+                subtitle={`${detail}${groupLabel}`}
                 className="py-3"
               />
             );

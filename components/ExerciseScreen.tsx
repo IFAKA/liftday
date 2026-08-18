@@ -34,6 +34,7 @@ interface ExerciseScreenProps {
   autoAdjustSuggestion: AutoAdjustSuggestion | null;
   topRecommendation: AdaptiveRecommendation | null;
   supersetPartnerName: string | null;
+  equipmentBlockPartnerName: string | null;
   currentExerciseSets: SetEntry[];
   flashColor: 'green' | 'red' | null;
   onLogSet: (reps: number, weight?: number, rir?: number) => void;
@@ -62,6 +63,7 @@ export function ExerciseScreen({
   autoAdjustSuggestion,
   topRecommendation,
   supersetPartnerName,
+  equipmentBlockPartnerName,
   currentExerciseSets,
   flashColor,
   onLogSet,
@@ -184,6 +186,11 @@ export function ExerciseScreen({
             {supersetPartnerName && (
               <p className="mt-1 text-center text-fluid-label font-mono font-black uppercase tracking-widest text-white/45 sm:text-left">
                 Superset · {supersetPartnerName}
+              </p>
+            )}
+            {!supersetPartnerName && equipmentBlockPartnerName && (
+              <p className="mt-1 text-center text-fluid-label font-mono font-black uppercase tracking-widest text-white/45 sm:text-left">
+                Same station · {equipmentBlockPartnerName}
               </p>
             )}
             <div className="mt-2 flex min-h-8 flex-wrap items-center justify-center gap-2 sm:justify-start">

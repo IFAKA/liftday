@@ -18,7 +18,7 @@ import { hasExplicitInjuryMode } from '@/lib/session-volume-constraints';
 import { getProgramSummary } from '@/lib/program-summary';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion } from '@/lib/workout-auto-adjust';
 import { getExerciseLoadStep, getNextHigherLoad, snapLoadTarget } from '@/lib/load-targets';
-import { getSupersetPartner } from '@/lib/superset';
+import { getSupersetPartner, getEquipmentBlockPartner } from '@/lib/superset';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -61,6 +61,8 @@ export interface UseWorkoutReturn {
   nextExerciseAfterRestName: string | null;
   currentSupersetPartnerName: string | null;
   nextSupersetPartnerName: string | null;
+  currentEquipmentBlockPartnerName: string | null;
+  nextEquipmentBlockPartnerName: string | null;
   canHandleNextExerciseMachineOccupied: boolean;
   timerPaused: boolean;
   advancedTiers: string[];
@@ -194,6 +196,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         exercise: selectedExercise ?? item.exercise,
         setCount: item.setCount,
         chainIndex,
+        supersetGroup: item.supersetGroup,
+        equipmentBlockGroup: item.equipmentBlockGroup,
         prescription: selectedExercise && chains[chainIndex]
           ? { ...getPrescriptionForChain(chains[chainIndex], selectedExercise.key, setsPerExercise), sets: item.setCount }
           : item.prescription,
@@ -226,6 +230,14 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   );
   const nextSupersetPartnerName = useMemo(
     () => getSupersetPartner(exercisePlan, exerciseIndex + 1)?.name ?? null,
+    [exerciseIndex, exercisePlan],
+  );
+  const currentEquipmentBlockPartnerName = useMemo(
+    () => getEquipmentBlockPartner(exercisePlan, exerciseIndex)?.name ?? null,
+    [exerciseIndex, exercisePlan],
+  );
+  const nextEquipmentBlockPartnerName = useMemo(
+    () => getEquipmentBlockPartner(exercisePlan, exerciseIndex + 1)?.name ?? null,
     [exerciseIndex, exercisePlan],
   );
   const currentSetCount = exercisePlan[exerciseIndex]?.setCount ?? setsPerExercise;
@@ -1075,7 +1087,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, warmupDuration, currentExercise, currentTarget,
     currentWeightTarget, currentWeightStep: currentExercise ? getExerciseLoadStep(currentExercise.key) : 2.5, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
-    exercises, nextExerciseName, nextExerciseAfterRestName, currentSupersetPartnerName, nextSupersetPartnerName, canHandleNextExerciseMachineOccupied,
+    exercises, nextExerciseName, nextExerciseAfterRestName, currentSupersetPartnerName, nextSupersetPartnerName, currentEquipmentBlockPartnerName, nextEquipmentBlockPartnerName, canHandleNextExerciseMachineOccupied,
     timerPaused, advancedTiers,
     isReady: hydrated && !isRestoringActiveWorkout,
     isStorageHydrated: hydrated,
