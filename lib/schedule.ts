@@ -42,6 +42,7 @@ export function getWorkoutScheduleIndex(
   const cycle = schedule ?? DEFAULT_SCHEDULE;
   const weekdays = cycle.length === 4 ? DEFAULT_TRAINING_WEEKDAYS : cycle.map((_, index) => index);
   const index = weekdays.indexOf(day - 1);
+  if (index === -1) return null;
   return index >= cycle.length ? null : index;
 }
 
