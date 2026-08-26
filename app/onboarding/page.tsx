@@ -26,8 +26,9 @@ function OnboardingRoute() {
   };
 
   const handleComplete = () => {
+    const result = saveUserProfile(getDefaultProfile());
+    if (!result.success) return;
     localStorage.setItem(ONBOARDING_KEY, 'true');
-    saveUserProfile(getDefaultProfile());
     router.replace('/');
   };
 

@@ -20,14 +20,15 @@ export function TodayScreen() {
 
   useEffect(() => {
     const hasSeenOnboarding = window.localStorage.getItem('liftday_onboarding_completed');
-    if (!hasSeenOnboarding) {
+    const hasActiveProfile = Boolean(loadUserProfile()?.activeRoutine);
+    if (!hasSeenOnboarding || !hasActiveProfile) {
       router.replace('/onboarding');
     }
   }, [router]);
 
   useEffect(() => {
     if (!workout.isStorageHydrated) return;
-    if (!window.localStorage.getItem('liftday_onboarding_completed') || workout.setupRequired) return;
+    if (!window.localStorage.getItem('liftday_onboarding_completed') || !loadUserProfile()?.activeRoutine || workout.setupRequired) return;
     if (mobility.isActive) {
       router.replace('/mobility');
       return;
@@ -69,7 +70,7 @@ function TodayContent({ date }: { date: Date }) {
   }
 
   if (workout.setupRequired || !profile?.activeRoutine) {
-    return <TodayHub isDone={false} workoutTitle="SETUP REQUIRED" storageReady={false} storageIssueMessage="Choose a routine to continue." startError={null} />;
+    return <LoadingScreen />;
   }
   const routine = getRoutine(profile.activeRoutine);
   const workoutType = getWorkoutType(date, routine.schedule, routine.trainingWeekdays);
