@@ -48,7 +48,6 @@ export function WatchScreen({
 
 interface WatchBackButtonProps {
   href?: string;
-  fallbackHref?: string;
   onClick?: () => void;
   ariaLabel?: string;
   className?: string;
@@ -56,7 +55,6 @@ interface WatchBackButtonProps {
 
 export function WatchBackButton({
   href,
-  fallbackHref,
   onClick,
   ariaLabel = 'Back',
   className,
@@ -70,10 +68,6 @@ export function WatchBackButton({
   const handleClick = () => {
     if (onClick) {
       onClick();
-      return;
-    }
-    if (fallbackHref) {
-      router.replace(fallbackHref);
       return;
     }
     router.back();

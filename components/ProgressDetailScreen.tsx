@@ -43,7 +43,7 @@ export function ProgressDetailScreen({ data }: { data: WorkoutData }) {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton fallbackHref="/history" />}
+          leftAction={<WatchBackButton href="/history" />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Progress Detail</span>}
         />
       )}

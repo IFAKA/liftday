@@ -33,7 +33,7 @@ export default function SettingsPage() {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton fallbackHref="/" />}
+          leftAction={<WatchBackButton href="/" />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Settings</span>}
         />
       )}

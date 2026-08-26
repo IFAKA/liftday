@@ -262,7 +262,6 @@ export interface StorageIssue {
   operation: 'read' | 'write' | 'remove' | 'parse' | 'validate' | 'import';
   reason: string;
   happenedAt: string;
-  recoveryKey?: string;
 }
 
 export interface ComparisonResult {
@@ -276,12 +275,22 @@ export interface WeeklyStats {
   vsLastWeek: number | null;
 }
 
-export type WorkoutState = 'idle' | 'warming-up' | 'exercising' | 'resting' | 'transitioning' | 'complete';
+export type WorkoutState = 'idle' | 'warming-up' | 'exercising' | 'resting' | 'transitioning' | 'cooling-down' | 'complete';
+
+/** The small, serializable state machine shared by the app and native surfaces. */
+export type WorkoutPhase =
+  | 'warmup-stretch'
+  | 'warmup-plank'
+  | 'exercise-ready'
+  | 'resting'
+  | 'cooldown-stretch'
+  | 'cooldown-choice'
+  | 'complete';
 
 export interface ActiveWorkoutDraft {
-  version: 1;
   dateKey: string;
   state: Exclude<WorkoutState, 'idle' | 'complete'>;
+  phase: WorkoutPhase;
   exerciseIndex: number;
   currentSet: number;
   sessionReps: Record<string, SetEntry[]>;

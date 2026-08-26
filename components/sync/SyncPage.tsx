@@ -65,7 +65,7 @@ export default function SyncPage() {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton fallbackHref="/settings" />}
+          leftAction={<WatchBackButton href="/settings" />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight">Sync</span>}
         />
       )}
@@ -842,18 +842,18 @@ function extractPairingPayload(raw: string, paramName: string): string {
 }
 
 function hasSnapshotData(snapshot: SyncSnapshot): boolean {
-  const sessionCount = Object.keys(snapshot.schemaVersion === 1 ? snapshot.data : snapshot.sessions).length;
-  const dailyLogCount = snapshot.schemaVersion === 1 ? 0 : Object.keys(snapshot.dailyLogs).length;
-  const progressPhotoCount = snapshot.schemaVersion === 3 ? snapshot.progressPhotos.length : 0;
+  const sessionCount = Object.keys(snapshot.sessions).length;
+  const dailyLogCount = Object.keys(snapshot.dailyLogs).length;
+  const progressPhotoCount = snapshot.progressPhotos.length;
 
   return Boolean(
     sessionCount > 0 ||
     dailyLogCount > 0 ||
     progressPhotoCount > 0 ||
     snapshot.profile ||
-    (snapshot.schemaVersion !== 1 && snapshot.activeWorkoutDraft) ||
+    snapshot.activeWorkoutDraft ||
     snapshot.firstSessionDate ||
     snapshot.mobilityDoneDate ||
-    (snapshot.schemaVersion !== 1 && snapshot.onboardingCompleted)
+    snapshot.onboardingCompleted
   );
 }

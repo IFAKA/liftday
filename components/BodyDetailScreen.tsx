@@ -180,7 +180,7 @@ export function BodyDetailScreen() {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton fallbackHref="/history" />}
+          leftAction={<WatchBackButton href="/history" />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Body</span>}
         />
       )}

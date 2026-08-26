@@ -68,7 +68,7 @@ export function BodyMeasurementDetailScreen() {
       <WatchScreen
         top={(
           <TopBar
-            leftAction={<WatchBackButton fallbackHref="/history/body" />}
+            leftAction={<WatchBackButton href="/history/body" />}
             center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Not Found</span>}
           />
         )}
@@ -95,7 +95,7 @@ export function BodyMeasurementDetailScreen() {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton fallbackHref="/history/body" />}
+            leftAction={<WatchBackButton href="/history/body" />}
           center={<span className="max-w-48 truncate text-fluid-ui font-black uppercase tracking-tight text-white">{definition.label}</span>}
         />
       )}

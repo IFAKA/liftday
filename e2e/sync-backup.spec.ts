@@ -353,56 +353,25 @@ test('laptop ignores a duplicate phone answer instead of showing WebRTC state er
   await context.close();
 });
 
-test('imports a v1 sync file without losing current session compatibility', async ({ page }, testInfo) => {
-  await page.clock.setFixedTime(new Date('2026-05-11T10:15:00'));
-  await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
-  });
-
+test('rejects legacy v1 sync files without writing local data', async ({ page }, testInfo) => {
   const backupPath = testInfo.outputPath('liftday-v1-sync.json');
-  await testInfo.attach('v1-sync-source', {
-    body: JSON.stringify({
-      app: 'liftday',
-      schemaVersion: 1,
-      exportedAt: '2026-05-11T10:00:00.000Z',
-      source: 'phone',
-      data: {
-        '2026-05-11': seededSession,
-      },
-      profile: seededProfile,
-      firstSessionDate: '2026-05-01',
-      mobilityDoneDate: '2026-05-10',
-    }),
-    contentType: 'application/json',
-  });
-  await page.goto('/sync');
-  await page.evaluate((content) => {
-    localStorage.setItem('test_v1_sync_content', content);
-  }, JSON.stringify({
+  await writeFile(backupPath, JSON.stringify({
     app: 'liftday',
     schemaVersion: 1,
     exportedAt: '2026-05-11T10:00:00.000Z',
     source: 'phone',
-    data: {
-      '2026-05-11': seededSession,
-    },
+    data: { '2026-05-11': seededSession },
     profile: seededProfile,
     firstSessionDate: '2026-05-01',
     mobilityDoneDate: '2026-05-10',
   }));
-  const v1Content = await page.evaluate(() => localStorage.getItem('test_v1_sync_content')!);
-  await writeFile(backupPath, v1Content);
 
+  await page.goto('/sync');
   await chooseSyncMode(page, 'Receive');
   await openFileDetails(page, 'Import from file');
   await page.locator('input[type="file"]').setInputFiles(backupPath);
   await page.getByRole('button', { name: /^import$/i }).click();
 
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('traindaily_sessions'))).toContain('db_incline_press');
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_user_profile'))).toContain('E2E backup fixture');
-
-  await page.goto('/history');
-  await expect(page.locator('body')).toContainText('Progress');
-  await page.goto('/program');
-  await expect(page.locator('body')).toContainText('Command');
+  await expect(page.locator('body')).toContainText('This is not a valid LiftDay sync file.');
+  await expect(page.evaluate(() => localStorage.getItem('traindaily_sessions'))).resolves.toBeNull();
 });

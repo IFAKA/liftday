@@ -19,10 +19,15 @@ export default function RoutineSettingPage() {
     if (typeof window === 'undefined') return 'gym';
     return loadUserProfile()?.activeRoutine ?? 'gym';
   });
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function handleSelect(id: string) {
     setActiveRoutineId(id);
-    setActiveRoutine(id);
+    const result = setActiveRoutine(id as 'gym' | 'calisthenics');
+    if (!result.success) {
+      setSaveError(result.reason);
+      return;
+    }
     router.back();
   }
 
@@ -62,6 +67,7 @@ export default function RoutineSettingPage() {
       <p className="text-fluid-label text-white/20 font-mono mt-4 leading-relaxed px-1">
         Switching routines preserves all progress. Tiers are tracked independently per routine.
       </p>
+      {saveError && <p role="alert" className="text-fluid-label text-red-300 px-1">{saveError}</p>}
     </WatchScreen>
   );
 }

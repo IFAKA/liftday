@@ -1,8 +1,6 @@
 import { STORAGE_ISSUES_KEY } from './constants';
 import type { PersistenceReadResult, PersistenceResult, StorageIssue } from './types';
 
-const CORRUPT_BACKUP_PREFIX = 'liftday_corrupt_payload_';
-
 export function ok(): PersistenceResult {
   return { success: true };
 }
@@ -78,8 +76,7 @@ export function readJsonStorageResult<T>(
     const transformed = transform?.(parsed) ?? (parsed as T);
     if (transformed === null) {
       const reason = `Persisted data for "${key}" failed validation.`;
-      const recoveryKey = preserveRawPayload(key, raw);
-      recordStorageIssue({ key, operation: 'validate', reason, recoveryKey });
+      recordStorageIssue({ key, operation: 'validate', reason });
       console.error(reason);
       return { success: false, value: fallback, reason, raw, error: new Error(reason) };
     }
@@ -87,8 +84,7 @@ export function readJsonStorageResult<T>(
   } catch (error) {
     const raw = readStorageValue(key);
     const reason = `Persisted data for "${key}" is corrupt JSON.`;
-    const recoveryKey = raw ? preserveRawPayload(key, raw) : undefined;
-    recordStorageIssue({ key, operation: 'parse', reason, recoveryKey });
+    recordStorageIssue({ key, operation: 'parse', reason });
     console.error(reason, error);
     return { success: false, value: fallback, reason, raw: raw ?? undefined, error };
   }
@@ -117,18 +113,6 @@ export function clearStorageIssues(): PersistenceResult {
   return removeStorageValue(STORAGE_ISSUES_KEY);
 }
 
-function preserveRawPayload(key: string, raw: string): string | undefined {
-  if (typeof window === 'undefined') return undefined;
-  const recoveryKey = `${CORRUPT_BACKUP_PREFIX}${key}_${Date.now()}`;
-  try {
-    window.localStorage.setItem(recoveryKey, raw);
-    return recoveryKey;
-  } catch (error) {
-    const reason = `Could not preserve corrupt local storage payload for "${key}".`;
-    console.error(reason, error);
-    return undefined;
-  }
-}
 
 function recordStorageIssue(input: Omit<StorageIssue, 'happenedAt'>): void {
   if (typeof window === 'undefined') return;

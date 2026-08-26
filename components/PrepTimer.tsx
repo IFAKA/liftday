@@ -4,14 +4,13 @@ import { Play, RotateCcw } from 'lucide-react';
 import { CountdownTimerScreen } from './CountdownTimerScreen';
 
 interface PrepTimerProps {
-  mode: 'warmup' | 'stretch';
+  mode: 'warmup-stretch' | 'warmup-plank' | 'stretch';
   seconds: number;
   totalSeconds: number;
   isRunning?: boolean;
   onCancel?: () => void;
   onPrimary: () => void;
   onStartTimer?: () => void;
-  onPreset?: (seconds: 30 | 60) => void;
   onRepeat?: () => void;
   requireCompletionBeforePrimary?: boolean;
 }
@@ -24,15 +23,16 @@ export function PrepTimer({
   onCancel,
   onPrimary,
   onStartTimer,
-  onPreset,
   onRepeat,
   requireCompletionBeforePrimary = false,
 }: PrepTimerProps) {
-  const title = mode === 'warmup' ? 'Warm Up' : 'Stretch';
+  const isStretch = mode === 'stretch';
+  const isManualWarmup = mode === 'warmup-stretch';
+  const title = isStretch ? 'STRETCH' : isManualWarmup ? 'WARM-UP STRETCH' : 'PLANK';
   const isWaitingToStart = !isRunning && seconds > 0 && Boolean(onStartTimer);
   const isComplete = seconds <= 0;
-  const isPrimaryLocked = requireCompletionBeforePrimary && !isComplete;
-  const primaryLabel = mode === 'warmup' ? 'Start Workout' : 'Done';
+  const isPrimaryLocked = (requireCompletionBeforePrimary || mode === 'warmup-plank') && !isComplete;
+  const primaryLabel = isManualWarmup ? 'DONE' : isStretch ? 'DONE' : 'DONE';
   const durationLabel = totalSeconds === 60 ? '1m' : '30s';
   const centerAction = isWaitingToStart && onStartTimer
     ? {
@@ -62,13 +62,10 @@ export function PrepTimer({
         disabled: isPrimaryLocked,
       }}
       cancelAction={onCancel ? {
-        label: mode === 'warmup' ? 'Cancel warm-up' : 'Cancel stretch',
+        label: 'Cancel workout',
         onClick: onCancel,
       } : undefined}
-      durationPresets={onPreset ? [
-        { label: '1m', onClick: () => onPreset(60) },
-        { label: '30s', onClick: () => onPreset(30) },
-      ] : undefined}
+      durationPresets={undefined}
       centerAction={centerAction}
     />
   );

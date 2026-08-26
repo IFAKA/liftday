@@ -51,7 +51,7 @@ export default function ExerciseDetailPage() {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton fallbackHref={context.day ? `/program/${context.day.slug}` : '/program'} />}
+          leftAction={<WatchBackButton href={context.day ? `/program/${context.day.slug}` : '/program'} />}
           center={
             <div className="flex flex-col items-center">
               <span className={cn('max-w-52 truncate px-2 py-1 text-fluid-ui font-black uppercase tracking-tight leading-none', getWorkoutTypeTone(ex.workoutType))}>

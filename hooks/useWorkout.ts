@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { WorkoutState, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight, setEntryRir, ActiveWorkoutDraft, SMVExercisePrescription, AdaptiveRecommendation } from '@/lib/types';
-import { EXERCISES, REST_DURATION, WARMUP_DURATION_SECONDS } from '@/lib/constants';
+import { WorkoutState, WorkoutPhase, WorkoutData, ExerciseKey, Exercise, StorageAdapter, UserProfile, SetEntry, setEntryReps, setEntryWeight, setEntryRir, ActiveWorkoutDraft, SMVExercisePrescription, AdaptiveRecommendation } from '@/lib/types';
+import { EXERCISES, REST_DURATION, WARMUP_DURATION_SECONDS, STRETCH_DURATION_SECONDS } from '@/lib/constants';
 import { formatDateKey, getWeekNumber, getSetsForWeek, getPreviousExerciseSessionDate } from '@/lib/workout-utils';
 import { getTargets, getWeightTarget, evaluateTierProgress, isDeloadWeek } from '@/lib/progression';
 import { getWorkoutOccurrenceIndex, getWorkoutType } from '@/lib/schedule';
 import { clearActiveWorkoutDraft, loadActiveWorkoutDraft, pwaStorage, saveActiveWorkoutDraft, loadUserProfile, saveUserProfile } from '@/lib/storage';
 import { getChainsForRoutine, getProgressionPath, getSubstitutionPath, resolveExerciseKey, resolveExerciseKeyWithEquipment } from '@/lib/tiers';
 import { EquipmentKey, canPerformExercise, getRequiredEquipment, getUnavailableProfileEquipment } from '@/lib/equipment';
-import { getRoutine } from '@/lib/routines';
+import { getRoutine, ROUTINES } from '@/lib/routines';
 import { traceLiftDay } from '@/lib/debug-trace';
 import { requireRestNotificationPermission, showRestCompleteNotification } from '@/lib/rest-notifications';
 import { getResolvedSessionPlan } from '@/lib/routine-plan';
@@ -19,6 +19,7 @@ import { getProgramSummary } from '@/lib/program-summary';
 import { getNextSetAutoAdjust, type AutoAdjustSuggestion } from '@/lib/workout-auto-adjust';
 import { getExerciseLoadStep, getNextHigherLoad, snapLoadTarget } from '@/lib/load-targets';
 import { getSupersetPartner, getEquipmentBlockPartner } from '@/lib/superset';
+import { createWorkoutSurfaceSnapshot, WorkoutSurfaceSnapshot, WorkoutSurfaceAction } from '@/lib/workout-surface';
 import {
   unlockAudio, playStart, playSetLogged, playCountdownTick,
   playRestComplete, playNextExercise, playSkip, playSessionComplete,
@@ -33,6 +34,8 @@ export interface CoachingReference {
 
 export interface UseWorkoutReturn {
   state: WorkoutState;
+  phase: WorkoutPhase;
+  surfaceSnapshot: WorkoutSurfaceSnapshot;
   exerciseIndex: number;
   currentSet: number;
   setsPerExercise: number;
@@ -71,6 +74,8 @@ export interface UseWorkoutReturn {
   canDeferMachineOccupied: boolean;
   isReady: boolean;
   isStorageHydrated: boolean;
+  setupRequired: boolean;
+  routineError: string | null;
   isRestoringActiveWorkout: boolean;
   persistenceError: string | null;
   startWorkout: () => Promise<void>;
@@ -92,6 +97,8 @@ export interface UseWorkoutReturn {
   handleMachineOccupied: () => void;
   handleNextExerciseMachineOccupied: () => void;
   retryWorkoutSave: () => void;
+  repeatCooldown: () => void;
+  finishWorkout: () => void;
 }
 
 type RequeuedExercise = { exercise: Exercise; setCount: number; chainIndex?: number };
@@ -100,6 +107,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const storageAdapter: StorageAdapter = pwaStorage;
 
   const [state, setState] = useState<WorkoutState>('idle');
+  const [phase, setPhase] = useState<WorkoutPhase>('complete');
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(0);
   const [timer, setTimer] = useState(REST_DURATION);
@@ -131,6 +139,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const restDurationRef = useRef(REST_DURATION);
   const restoredDraftRef = useRef(false);
   const restCompletionNotifiedRef = useRef(false);
+  const completionInFlightRef = useRef(false);
+  const surfaceRevisionRef = useRef(0);
+  const surfaceFingerprintRef = useRef('');
 
   const resetSessionPlanModifiers = useCallback(() => {
     setUnavailableEquipment([]);
@@ -160,12 +171,18 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const setsPerExercise = getSetsForWeek(weekNumber, userProfile?.setsPerExercise);
 
   const { workoutType, workoutOccurrenceIndex, derivedPlan } = useMemo(() => {
-    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    if (!userProfile?.activeRoutine) {
+      return { workoutType: 'rest' as const, workoutOccurrenceIndex: null, derivedPlan: [] as { exercise: Exercise; setCount: number; chainIndex: number; prescription: SMVExercisePrescription }[] };
+    }
+    const baseRoutine = ROUTINES.find((candidate) => candidate.id === userProfile.activeRoutine);
+    if (!baseRoutine) {
+      return { workoutType: 'rest' as const, workoutOccurrenceIndex: null, derivedPlan: [] as { exercise: Exercise; setCount: number; chainIndex: number; prescription: SMVExercisePrescription }[] };
+    }
     const routine = baseRoutine;
     const unavailableForPlan = routine.id === 'gym'
       ? [...new Set([...getUnavailableProfileEquipment(userProfile?.availableEquipment), ...unavailableEquipment])]
       : unavailableEquipment;
-    const wt = getWorkoutType(date, routine.schedule);
+    const wt = getWorkoutType(date, routine.schedule, routine.trainingWeekdays);
     if (wt === 'rest') {
       return {
         workoutType: wt,
@@ -307,7 +324,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [currentExercise, currentSet, previousEntry, sessionReps]);
 
   useEffect(() => {
-    if (state !== 'resting' && state !== 'warming-up') setTimerPaused(false);
+    if (state !== 'resting' && state !== 'warming-up' && state !== 'cooling-down') setTimerPaused(false);
   }, [state]);
 
   useEffect(() => {
@@ -347,14 +364,22 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     setNextExerciseName(draft.nextExerciseName);
     setTimerPaused(draft.timerPaused);
     setWarmupDurationSeconds(draft.warmupDuration ?? WARMUP_DURATION_SECONDS);
+    setPhase(draft.phase);
 
     if (draft.state === 'warming-up' && !draft.timerPaused && draft.timerEndAt !== null) {
       const remaining = Math.max(0, Math.ceil((draft.timerEndAt - Date.now()) / 1000));
       setTimer(remaining);
-    } else if (draft.state === 'resting' && !draft.timerPaused && draft.timerEndAt !== null) {
+    } else if ((draft.state === 'resting' || draft.state === 'cooling-down') && !draft.timerPaused && draft.timerEndAt !== null) {
       const remaining = Math.max(0, Math.ceil((draft.timerEndAt - Date.now()) / 1000));
       if (remaining <= 0) {
         const setCount = exercisePlan[draft.exerciseIndex]?.setCount ?? setsPerExercise;
+        if (draft.state === 'cooling-down') {
+          setPhase('cooldown-choice');
+          setTimer(0);
+          setTimerPaused(true);
+          setRestorationChecked(true);
+          return;
+        }
         if (draft.currentSet + 1 < setCount) {
           setCurrentSet(draft.currentSet + 1);
           setTimer(currentPrescription?.restSeconds ?? restDurationRef.current);
@@ -368,7 +393,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
           setCurrentSet(0);
           setNextExerciseName(exercises[nextIdx].name);
           setTimer(currentPrescription?.restSeconds ?? restDurationRef.current);
-          setState('transitioning');
+          setState('exercising');
+          setPhase('exercise-ready');
           setRestorationChecked(true);
           return;
         }
@@ -386,9 +412,9 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const persistActiveDraft = useCallback((stateToPersist: ActiveWorkoutDraft['state']) => {
     if (workoutType === 'rest' || !startedAtRef.current) return;
     saveActiveWorkoutDraft({
-      version: 1,
       dateKey,
       state: stateToPersist,
+      phase,
       exerciseIndex,
       currentSet,
       sessionReps: sessionRepsRef.current,
@@ -421,6 +447,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     warmupDuration,
     timerPaused,
     unavailableEquipment,
+    phase,
     workoutType,
   ]);
 
@@ -458,7 +485,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [currentExercise?.name, currentSet, currentSetCount, exerciseIndex, exercises]);
 
   useEffect(() => {
-    if (state === 'warming-up' && !timerPaused && timer > 0) {
+    if ((state === 'warming-up' || state === 'cooling-down') && !timerPaused && timer > 0) {
       if (timerEndRef.current === null) {
         timerEndRef.current = Date.now() + timer * 1000;
       }
@@ -470,7 +497,14 @@ export function useWorkout(date: Date): UseWorkoutReturn {
           if (remaining <= 0 || t <= 1) {
             clearInterval(timerRef.current!);
             timerRef.current = null;
-            playExerciseReady();
+            if (state === 'cooling-down') {
+              setPhase('cooldown-choice');
+              setTimerPaused(true);
+            } else {
+              playExerciseReady();
+              setPhase('exercise-ready');
+              setState('exercising');
+            }
             return 0;
           }
           if (remaining <= 3 && !countdownPlayedRef.current.has(remaining)) {
@@ -514,6 +548,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   }, [state, timer === restDurationRef.current, timerPaused, notifyRestCompleteIfHidden, timer]);
 
   const saveAndComplete = useCallback(async () => {
+    if (completionInFlightRef.current) return;
+    completionInFlightRef.current = true;
     setPersistenceError(null);
     const reps = sessionRepsRef.current;
     const session: WorkoutData[string] = {
@@ -527,11 +563,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     }
     const sessionResult = await storageAdapter.saveSession(dateKey, session);
     if (!sessionResult.success) {
+      completionInFlightRef.current = false;
       setPersistenceError(sessionResult.reason);
       return;
     }
     const firstSessionResult = await storageAdapter.setFirstSessionDate(dateKey);
     if (!firstSessionResult.success) {
+      completionInFlightRef.current = false;
       setPersistenceError(firstSessionResult.reason);
       return;
     }
@@ -539,7 +577,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
 
     // Evaluate tier progress for non-fixed chains
     if (workoutType !== 'rest' && userProfileRef.current) {
-      const baseRoutine = getRoutine(userProfileRef.current.activeRoutine ?? 'gym');
+      const baseRoutine = getRoutine(userProfileRef.current.activeRoutine ?? '');
       const routine = baseRoutine;
       const chains = getChainsForRoutine(routine, workoutType, workoutOccurrenceIndex ?? undefined);
       const oldProfile = userProfileRef.current;
@@ -567,6 +605,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       setAdvancedTiers(advanced);
       const profileResult = saveUserProfile(updatedProfile);
       if (!profileResult.success) {
+        completionInFlightRef.current = false;
         setPersistenceError(profileResult.reason);
         return;
       }
@@ -577,10 +616,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     playSessionComplete();
     const clearDraftResult = clearActiveWorkoutDraft();
     if (!clearDraftResult.success) {
+      completionInFlightRef.current = false;
       setPersistenceError(clearDraftResult.reason);
       return;
     }
     setState('complete');
+    setPhase('complete');
+    completionInFlightRef.current = false;
   }, [dateKey, weekNumber, exercises, workoutType, workoutOccurrenceIndex, storageAdapter]);
 
   const advanceAfterRest = useCallback(() => {
@@ -595,7 +637,8 @@ export function useWorkout(date: Date): UseWorkoutReturn {
         setNextExerciseName(exercises[nextIdx].name);
         setExerciseIndex(nextIdx);
         setCurrentSet(0);
-        setState('transitioning');
+        setPhase('exercise-ready');
+        setState('exercising');
       } else {
         saveAndComplete();
       }
@@ -649,15 +692,17 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     timerEndRef.current = null;
     timerPauseStartRef.current = null;
     restCompletionNotifiedRef.current = false;
+    completionInFlightRef.current = false;
     setExerciseIndex(0);
     setCurrentSet(0);
     setSessionReps({});
     setAutoAdjustSuggestions({});
     setWarmupDurationSeconds(WARMUP_DURATION_SECONDS);
-    setTimer(WARMUP_DURATION_SECONDS);
+    setTimer(0);
     timerEndRef.current = null;
     setTimerPaused(true);
     countdownPlayedRef.current = new Set();
+    setPhase('warmup-stretch');
     setState('warming-up');
     void requireRestNotificationPermission().catch((error: unknown) => {
       traceLiftDay('rest.notification_permission_unavailable', {
@@ -676,11 +721,13 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     unlockAudio();
     playStart();
-    timerEndRef.current = Date.now() + timer * 1000;
+    setTimer(WARMUP_DURATION_SECONDS);
+    timerEndRef.current = Date.now() + WARMUP_DURATION_SECONDS * 1000;
     timerPauseStartRef.current = null;
     countdownPlayedRef.current = new Set();
     setTimerPaused(false);
-  }, [timer]);
+    setPhase('warmup-plank');
+  }, []);
 
   const repeatWarmupTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -700,6 +747,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     countdownPlayedRef.current = new Set();
     setTimerPaused(false);
     playExerciseReady();
+    setPhase('exercise-ready');
     setState('exercising');
   }, []);
 
@@ -732,7 +780,11 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const isLastSet = currentSet + 1 >= currentSetCount;
     const isLastExercise = exerciseIndex + 1 >= exercises.length;
     if (isLastSet && isLastExercise) {
-      saveAndComplete();
+      setTimer(STRETCH_DURATION_SECONDS);
+      timerEndRef.current = Date.now() + STRETCH_DURATION_SECONDS * 1000;
+      setTimerPaused(false);
+      setPhase('cooldown-stretch');
+      setState('cooling-down');
       return;
     }
 
@@ -769,9 +821,10 @@ export function useWorkout(date: Date): UseWorkoutReturn {
       setTimer(restSeconds);
       timerEndRef.current = Date.now() + restSeconds * 1000;
       setTimerPaused(false);
+      setPhase('resting');
       setState('resting');
     }, 700);
-  }, [currentExercise, currentSet, currentSetCount, exerciseIndex, exercises, currentPrescription, currentTarget, previousEntry, topRecommendation, autoAdjustSuggestion, saveAndComplete]);
+  }, [currentExercise, currentSet, currentSetCount, exerciseIndex, exercises, currentPrescription, currentTarget, previousEntry, topRecommendation, autoAdjustSuggestion]);
 
   const skipTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -789,17 +842,31 @@ export function useWorkout(date: Date): UseWorkoutReturn {
   const quitWorkout = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     clearActiveWorkoutDraft();
+    completionInFlightRef.current = false;
     sessionRepsRef.current = {};
     startedAtRef.current = null;
     timerEndRef.current = null;
     timerPauseStartRef.current = null;
     setState('idle');
+    setPhase('complete');
     setExerciseIndex(0);
     setCurrentSet(0);
     setSessionReps({});
     setAutoAdjustSuggestions({});
     resetSessionPlanModifiers();
   }, [resetSessionPlanModifiers]);
+
+  const repeatCooldown = useCallback(() => {
+    setTimer(STRETCH_DURATION_SECONDS);
+    timerEndRef.current = Date.now() + STRETCH_DURATION_SECONDS * 1000;
+    setTimerPaused(false);
+    setPhase('cooldown-stretch');
+    setState('cooling-down');
+  }, []);
+
+  const finishWorkout = useCallback(() => {
+    void saveAndComplete();
+  }, [saveAndComplete]);
 
   const togglePauseTimer = useCallback(() => {
     setTimerPaused((p) => {
@@ -842,7 +909,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (!ex) return false;
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return false;
-    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? '');
     const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
@@ -862,7 +929,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (!ex) return [];
     const required = getRequiredEquipment(ex.key);
     if (required.length === 0) return [];
-    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? '');
     const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
@@ -897,7 +964,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     const chainIdx = exercisePlan[exerciseIndex]?.chainIndex;
     if (chainIdx === undefined || chainIdx < 0) return;
     const required = getRequiredEquipment(ex.key);
-    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? '');
     const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const sessionUnavailable = [...new Set([...unavailableEquipment, ...required])];
@@ -1004,7 +1071,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     if (targetIndex >= derivedPlan.length) return false;
     if (workoutType === 'rest') return false;
 
-    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? 'gym');
+    const baseRoutine = getRoutine(userProfile?.activeRoutine ?? '');
     const routine = baseRoutine;
     const profileUnavailable = routine.id === 'gym' ? getUnavailableProfileEquipment(userProfile?.availableEquipment) : [];
     const newUnavailable = [...new Set([...profileUnavailable, ...unavailableEquipment, ...required])];
@@ -1083,13 +1150,40 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     return draft?.dateKey === dateKey && draft.workoutType === workoutType;
   }, [dateKey, exercises.length, hydrated, restorationChecked, workoutType]);
 
+  const surfaceSnapshot = useMemo(() => {
+    const input = {
+      phase,
+      exerciseName: phase === 'exercise-ready' ? currentExercise?.name ?? null : phase === 'resting' ? nextExerciseAfterRestName : null,
+      recommendedWeight: phase === 'exercise-ready' && currentExercise?.unit === 'weighted' ? currentWeightTarget : null,
+      recommendedReps: phase === 'exercise-ready' ? currentTarget : null,
+      restSeconds: phase === 'resting' ? timer : null,
+      plankSeconds: phase === 'warmup-plank' ? timer : null,
+      cooldownSeconds: phase === 'cooldown-stretch' ? timer : null,
+      availableActions: (phase === 'warmup-stretch' ? ['done']
+        : phase === 'exercise-ready' ? ['busy', 'log']
+        : phase === 'resting' ? ['skip-rest']
+        : phase === 'cooldown-choice' ? ['end', 'repeat']
+        : []) as WorkoutSurfaceAction[],
+    };
+    const fingerprint = JSON.stringify([input, currentSet, sessionReps]);
+    if (fingerprint !== surfaceFingerprintRef.current) {
+      surfaceFingerprintRef.current = fingerprint;
+      surfaceRevisionRef.current += 1;
+    }
+    return createWorkoutSurfaceSnapshot({ ...input, revision: surfaceRevisionRef.current });
+  }, [currentExercise, currentSet, currentTarget, currentWeightTarget, nextExerciseAfterRestName, phase, sessionReps, timer]);
+
   return {
-    state, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, warmupDuration, currentExercise, currentTarget,
+    state, phase, surfaceSnapshot, exerciseIndex, currentSet, setsPerExercise: currentSetCount, timer, warmupDuration, currentExercise, currentTarget,
     currentWeightTarget, currentWeightStep: currentExercise ? getExerciseLoadStep(currentExercise.key) : 2.5, currentPrescription, previousRep, previousWeight, previousRir, coachingReference, autoAdjustSuggestion, topRecommendation, flashColor, sessionReps, weekNumber, data,
     totalExercises: exercises.length, totalPlannedSets, completedPlannedSets,
     exercises, nextExerciseName, nextExerciseAfterRestName, currentSupersetPartnerName, nextSupersetPartnerName, currentEquipmentBlockPartnerName, nextEquipmentBlockPartnerName, canHandleNextExerciseMachineOccupied,
     timerPaused, advancedTiers,
     isReady: hydrated && !isRestoringActiveWorkout,
+    setupRequired: !userProfile?.activeRoutine,
+    routineError: userProfile?.activeRoutine && !ROUTINES.some((routine) => routine.id === userProfile.activeRoutine)
+      ? `Unknown routine "${userProfile.activeRoutine}".`
+      : null,
     isStorageHydrated: hydrated,
     isRestoringActiveWorkout,
     persistenceError,
@@ -1097,6 +1191,7 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     swapCurrentForOccupied, selectAlternativeForOccupied, deferCurrentForOccupied, requeueCurrent,
     hasSwapAlternative, swapAlternatives, canDeferMachineOccupied, handleMachineOccupied, handleNextExerciseMachineOccupied,
     retryWorkoutSave: () => { void saveAndComplete(); },
+    repeatCooldown, finishWorkout,
   };
 }
 

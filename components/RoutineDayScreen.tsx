@@ -30,7 +30,7 @@ export function RoutineDayScreen() {
   const exercises = getRoutineDayExercises(routine, day, profile);
   return (
     <WatchScreen
-      top={<TopBar leftAction={<WatchBackButton fallbackHref="/program" />} center={<div className="text-center"><p className="text-fluid-ui font-black uppercase text-white">{day.name}</p><p className="text-fluid-label font-mono uppercase text-white/40">{day.label}</p></div>} />}
+      top={<TopBar leftAction={<WatchBackButton href="/program" />} center={<div className="text-center"><p className="text-fluid-ui font-black uppercase text-white">{day.name}</p><p className="text-fluid-label font-mono uppercase text-white/40">{day.label}</p></div>} />}
       bodyClassName="pt-2 flex flex-col gap-4"
     >
       <WatchSection title="Exercises">

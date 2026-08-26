@@ -41,7 +41,7 @@ export function getProgramSummary(
   data: WorkoutData,
   profile: UserProfile | null,
   today: Date = new Date(),
-  routineId = profile?.activeRoutine ?? 'gym'
+  routineId = profile?.activeRoutine ?? ''
 ): ProgramSummary {
   const baseRoutine = getRoutine(routineId);
   const weekNumber = getWeekNumber(getFirstSessionDate(), today);

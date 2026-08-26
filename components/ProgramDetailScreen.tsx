@@ -46,7 +46,7 @@ export function ProgramDetailScreen() {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton fallbackHref="/program" />}
+          leftAction={<WatchBackButton href="/program" />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white">Routine</span>}
         />
       )}

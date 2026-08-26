@@ -19,7 +19,7 @@ const baseProfile = {
 function snapshot(overrides: Record<string, unknown> = {}) {
   return {
     app: 'liftday',
-    schemaVersion: 2,
+    schemaVersion: 3,
     exportedAt: '2026-05-11T10:15:00.000Z',
     source: 'phone',
     sessions: { '2026-05-11': baseSession },
@@ -29,6 +29,7 @@ function snapshot(overrides: Record<string, unknown> = {}) {
         note: 'transactional import',
       },
     },
+    progressPhotos: [],
     profile: baseProfile,
     activeWorkoutDraft: null,
     firstSessionDate: '2026-05-11',
@@ -59,7 +60,7 @@ async function writeJsonFixture(testInfo: { outputPath: (path: string) => string
   return path;
 }
 
-test('corrupt JSON surfaces a storage issue and preserves the raw payload', async ({ page }) => {
+test('corrupt JSON surfaces a storage error without preserving the raw payload', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
     localStorage.setItem('liftday_onboarding_completed', 'true');
@@ -68,11 +69,11 @@ test('corrupt JSON surfaces a storage issue and preserves the raw payload', asyn
 
   await page.goto('/');
 
-  await expect(page.locator('body')).toContainText('Storage issue');
+  await expect(page.locator('body')).toContainText('Storage setup required');
   await expect(page.locator('body')).toContainText('corrupt JSON');
   await expect.poll(() => page.evaluate(() => (
-    Object.keys(localStorage).some((key) => key.startsWith('liftday_corrupt_payload_traindaily_sessions_'))
-  ))).toBe(true);
+    Object.keys(localStorage).some((key) => key.startsWith('liftday_corrupt_payload_'))
+  ))).toBe(false);
 });
 
 test('invalid import payload writes nothing and shows an error', async ({ page }, testInfo) => {

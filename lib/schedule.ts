@@ -27,20 +27,21 @@ const WORKOUT_TYPE_TONES: Record<WorkoutType, string> = {
 };
 
 /** Returns the workout type for a given date using the routine's schedule (or the default 6-day PPL). */
-export function getWorkoutType(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[]): WorkoutType {
-  const scheduleIndex = getWorkoutScheduleIndex(date, schedule);
+export function getWorkoutType(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[], trainingWeekdays?: number[]): WorkoutType {
+  const scheduleIndex = getWorkoutScheduleIndex(date, schedule, trainingWeekdays);
   if (scheduleIndex === null) return 'rest';
   return (schedule ?? DEFAULT_SCHEDULE)[scheduleIndex];
 }
 
 export function getWorkoutScheduleIndex(
   date: Date,
-  schedule?: Exclude<WorkoutType, 'rest'>[]
+  schedule?: Exclude<WorkoutType, 'rest'>[],
+  trainingWeekdays?: number[],
 ): number | null {
   const day = getDay(date); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
   if (day === 0) return null; // Sunday is always rest
   const cycle = schedule ?? DEFAULT_SCHEDULE;
-  const weekdays = cycle.length === 4 ? DEFAULT_TRAINING_WEEKDAYS : cycle.map((_, index) => index);
+  const weekdays = trainingWeekdays ?? (cycle.length === 4 ? DEFAULT_TRAINING_WEEKDAYS : cycle.map((_, index) => index));
   const index = weekdays.indexOf(day - 1);
   if (index === -1) return null;
   return index >= cycle.length ? null : index;
@@ -58,13 +59,13 @@ export function getWorkoutOccurrenceIndex(
   return cycle.slice(0, scheduleIndex).filter((wt) => wt === workoutType).length;
 }
 
-export function isTrainingDay(date: Date): boolean {
-  return getWorkoutType(date) !== 'rest';
+export function isTrainingDay(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[], trainingWeekdays?: number[]): boolean {
+  return getWorkoutType(date, schedule, trainingWeekdays) !== 'rest';
 }
 
-export function nextTrainingDay(date: Date): Date {
+export function nextTrainingDay(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[], trainingWeekdays?: number[]): Date {
   let d = addDays(date, 1);
-  while (!isTrainingDay(d)) {
+  while (!isTrainingDay(d, schedule, trainingWeekdays)) {
     d = addDays(d, 1);
   }
   return d;
@@ -72,11 +73,13 @@ export function nextTrainingDay(date: Date): Date {
 
 export function getTrainingDaysCompletedThisWeek(
   date: Date,
-  data: Record<string, { logged_at?: string }>
+  data: Record<string, { logged_at?: string }>,
+  schedule?: Exclude<WorkoutType, 'rest'>[],
+  trainingWeekdays?: number[],
 ): { completed: number; total: number } {
   const weekStart = startOfWeek(date, { weekStartsOn: 1 });
   let completed = 0;
-  const total = 5;
+  const total = trainingWeekdays?.length ?? schedule?.length ?? 0;
 
   for (let i = 0; i < 7; i++) {
     const d = addDays(weekStart, i);
@@ -89,9 +92,9 @@ export function getTrainingDaysCompletedThisWeek(
   return { completed, total };
 }
 
-export function getNextTrainingMessage(date: Date): string {
-  const next = nextTrainingDay(date);
-  const workoutType = getWorkoutType(next);
+export function getNextTrainingMessage(date: Date, schedule?: Exclude<WorkoutType, 'rest'>[], trainingWeekdays?: number[]): string {
+  const next = nextTrainingDay(date, schedule, trainingWeekdays);
+  const workoutType = getWorkoutType(next, schedule, trainingWeekdays);
   return `${formatDisplayDate(next)} - ${formatWorkoutType(workoutType)}`;
 }
 

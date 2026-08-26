@@ -41,6 +41,8 @@ interface ExerciseDemoProps {
 
 export function ExerciseDemo({ youtubeId, title, onPlayingChange }: ExerciseDemoProps) {
   const [showPlayer, setShowPlayer] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
+  const [thumbnailAvailable, setThumbnailAvailable] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YT.Player | null>(null);
   const onPlayingChangeRef = useRef(onPlayingChange);
@@ -48,11 +50,23 @@ export function ExerciseDemo({ youtubeId, title, onPlayingChange }: ExerciseDemo
     onPlayingChangeRef.current = onPlayingChange;
   }, [onPlayingChange]);
 
+  useEffect(() => {
+    const markOnline = () => setIsOffline(false);
+    const markOffline = () => setIsOffline(true);
+    window.addEventListener('online', markOnline);
+    window.addEventListener('offline', markOffline);
+    return () => {
+      window.removeEventListener('online', markOnline);
+      window.removeEventListener('offline', markOffline);
+    };
+  }, []);
+
   const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
 
   const handleTap = useCallback(() => {
+    if (isOffline) return;
     setShowPlayer(true);
-  }, []);
+  }, [isOffline]);
 
   useEffect(() => {
     if (playerRef.current) {
@@ -61,6 +75,7 @@ export function ExerciseDemo({ youtubeId, title, onPlayingChange }: ExerciseDemo
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowPlayer(false);
+    setThumbnailAvailable(true);
     onPlayingChangeRef.current?.(false);
   }, [youtubeId]);
 
@@ -112,20 +127,32 @@ export function ExerciseDemo({ youtubeId, title, onPlayingChange }: ExerciseDemo
     <Button
       variant="ghost"
       onClick={handleTap}
+      disabled={isOffline}
       className="relative block w-full h-auto rounded-lg overflow-hidden p-0 hover:bg-transparent"
-      aria-label={`Watch ${title} demo`}
+      aria-label={isOffline ? `${title} demo unavailable offline` : `Watch ${title} demo`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={thumbnailUrl}
-        alt={`${title} demonstration`}
-        className="w-full aspect-video object-cover"
-        loading="lazy"
-      />
-      <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-active:bg-black/50 transition-colors">
-        <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-          <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+      {thumbnailAvailable ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumbnailUrl}
+          alt={`${title} demonstration`}
+          className="w-full aspect-video object-cover"
+          loading="lazy"
+          onError={() => setThumbnailAvailable(false)}
+        />
+      ) : (
+        <div className="flex aspect-video items-center justify-center bg-white/5 px-4 text-center text-xs font-bold uppercase tracking-wide text-white/45">
+          Demo unavailable offline
         </div>
+      )}
+      <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-active:bg-black/50 transition-colors">
+        {isOffline ? (
+          <span className="rounded-full bg-black/75 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/75">Online only</span>
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+            <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+          </div>
+        )}
       </div>
     </Button>
   );

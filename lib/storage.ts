@@ -1,4 +1,4 @@
-import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId, DailyLog, setEntryReps, setEntryWeight, PersistenceReadResult, PersistenceResult } from './types';
+import { ActiveWorkoutDraft, StorageAdapter, WorkoutData, WorkoutSession, UserProfile, RoutineId, DailyLog, PersistenceReadResult, PersistenceResult } from './types';
 import { ACTIVE_WORKOUT_DRAFT_KEY, STORAGE_KEY, FIRST_SESSION_KEY, MOBILITY_DONE_KEY, USER_PROFILE_KEY, DAILY_LOGS_KEY } from './constants';
 import { formatDateKey } from './workout-utils';
 import { SMV_PROFILE_DEFAULTS } from './smv';
@@ -10,25 +10,7 @@ export function loadWorkoutData(): WorkoutData {
 }
 
 export function loadWorkoutDataResult(): PersistenceReadResult<WorkoutData> {
-  return readJsonStorageResult(STORAGE_KEY, {}, (value) => migrateWorkoutData(value as WorkoutData));
-}
-
-export function migrateWorkoutData(data: WorkoutData): WorkoutData {
-  const migrated: WorkoutData = {};
-
-  for (const [dateKey, session] of Object.entries(data)) {
-    const nextSession: WorkoutSession = { ...session };
-    for (const [key, value] of Object.entries(session)) {
-      if (!Array.isArray(value)) continue;
-      (nextSession as Record<string, unknown>)[key] = value.map((entry) => {
-        if (typeof entry === 'number') return { reps: entry, weight: 0, rir: 2 };
-        return { reps: setEntryReps(entry), weight: setEntryWeight(entry) ?? 0, rir: entry.rir ?? 2 };
-      });
-    }
-    migrated[dateKey] = nextSession;
-  }
-
-  return migrated;
+  return readJsonStorageResult(STORAGE_KEY, {}, (value) => isWorkoutData(value) ? value : null);
 }
 
 export function loadDailyLogs(): Record<string, DailyLog> {
@@ -36,23 +18,7 @@ export function loadDailyLogs(): Record<string, DailyLog> {
 }
 
 export function loadDailyLogsResult(): PersistenceReadResult<Record<string, DailyLog>> {
-  return readJsonStorageResult(DAILY_LOGS_KEY, {}, (value) => migrateDailyLogs(value as Record<string, DailyLog>));
-}
-
-export function migrateDailyLogs(logs: Record<string, DailyLog>): Record<string, DailyLog> {
-  const migrated: Record<string, DailyLog> = {};
-
-  for (const [dateKey, log] of Object.entries(logs)) {
-    migrated[dateKey] = {
-      ...log,
-      dateKey: log.dateKey ?? dateKey,
-      jointPainScores: log.jointPain && !log.jointPainScores
-        ? { shoulder: 3, elbow: 3 }
-        : log.jointPainScores,
-    };
-  }
-
-  return migrated;
+  return readJsonStorageResult(DAILY_LOGS_KEY, {}, (value) => isDailyLogs(value) ? value : null);
 }
 
 export function saveDailyLog(dateKey: string, log: DailyLog): PersistenceResult {
@@ -68,10 +34,7 @@ export function saveWorkoutData(data: WorkoutData): PersistenceResult {
 }
 
 export function loadActiveWorkoutDraft(): ActiveWorkoutDraft | null {
-  return readJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => {
-    const draft = value as ActiveWorkoutDraft;
-    return draft.version === 1 ? draft : null;
-  });
+  return readJsonStorage(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => value === null || isActiveWorkoutDraft(value) ? value as ActiveWorkoutDraft | null : null);
 }
 
 export function saveActiveWorkoutDraft(draft: ActiveWorkoutDraft): PersistenceResult {
@@ -104,40 +67,7 @@ export function setFirstSessionDate(dateKey: string): PersistenceResult {
 // ── User Profile ──────────────────────────────────────────────────────────────
 
 export function loadUserProfile(): UserProfile | null {
-  return readJsonStorage(USER_PROFILE_KEY, null, (value) => migrateUserProfile(value as UserProfile));
-}
-
-export function migrateUserProfile(profile: UserProfile): UserProfile {
-  const migrated = { ...profile };
-  if (!migrated.activeRoutine) migrated.activeRoutine = 'gym';
-  if (!migrated.setsPerExercise || migrated.setsPerExercise < 3) migrated.setsPerExercise = 3;
-  if (!migrated.heightCm) migrated.heightCm = 172;
-  if (!migrated.weightKg) migrated.weightKg = SMV_PROFILE_DEFAULTS.weightKg;
-  if (!migrated.age) migrated.age = 26;
-  if (!migrated.sex) migrated.sex = 'male';
-  if (!migrated.bodyComposition) migrated.bodyComposition = 'skinny_fat';
-  if (!migrated.shoulderCircumferenceCm) migrated.shoulderCircumferenceCm = 113;
-  if (!migrated.chestCircumferenceCm) migrated.chestCircumferenceCm = 91.5;
-  if (!migrated.waistCircumferenceCm) migrated.waistCircumferenceCm = 74.5;
-  if (!migrated.hipCircumferenceCm) migrated.hipCircumferenceCm = 86;
-  if (!migrated.neckCircumferenceCm) migrated.neckCircumferenceCm = 37;
-  if (!migrated.quadCircumferenceCm) migrated.quadCircumferenceCm = 50;
-  if (!migrated.calfCircumferenceCm) migrated.calfCircumferenceCm = 35;
-  if (!migrated.forearmCircumferenceCm) migrated.forearmCircumferenceCm = 26;
-  if (!migrated.wristCircumferenceCm) migrated.wristCircumferenceCm = 16.5;
-  if (!migrated.ankleCircumferenceCm) migrated.ankleCircumferenceCm = 22.5;
-  if (!migrated.bicepsCircumferenceCm) migrated.bicepsCircumferenceCm = 28;
-  if (!migrated.targetWeightKg) migrated.targetWeightKg = 72;
-  if (!migrated.trainingBackground) migrated.trainingBackground = 'Rugby 15 years; intermittent gym blocks';
-  if (migrated.gymAccess === undefined) migrated.gymAccess = true;
-  if (!migrated.injuryStatus) migrated.injuryStatus = 'No injuries or pain';
-  if (!migrated.maxWorkoutMinutes) migrated.maxWorkoutMinutes = 105;
-  if (!migrated.goal) migrated.goal = 'Build a balanced, recoverable hypertrophy routine';
-  if (!migrated.targetDate) migrated.targetDate = SMV_PROFILE_DEFAULTS.targetDate;
-  if (!migrated.proteinTargetGrams) migrated.proteinTargetGrams = SMV_PROFILE_DEFAULTS.proteinTargetGrams;
-  if (!migrated.calorieSurplusTarget) migrated.calorieSurplusTarget = SMV_PROFILE_DEFAULTS.calorieSurplusTarget;
-  if (!migrated.availableEquipment?.length) migrated.availableEquipment = DEFAULT_AVAILABLE_EQUIPMENT;
-  return migrated;
+  return readJsonStorage(USER_PROFILE_KEY, null, (value) => value === null || isUserProfile(value) ? value as UserProfile | null : null);
 }
 
 export function setActiveRoutine(id: RoutineId): PersistenceResult {
@@ -277,3 +207,36 @@ export const pwaStorage: StorageAdapter = {
     return writeStorageValue(MOBILITY_DONE_KEY, formatDateKey(new Date()));
   },
 };
+
+export function clearLiftDayStorage(): PersistenceResult {
+  try {
+    if (typeof window === 'undefined') return { success: true };
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (key?.startsWith('liftday_')) window.localStorage.removeItem(key);
+    }
+    return { success: true };
+  } catch (error) {
+    return fail('Could not reset LiftDay local data.', error);
+  }
+}
+
+function isWorkoutData(value: unknown): value is WorkoutData {
+  return isRecord(value) && Object.values(value).every((session) => isRecord(session) && typeof session.logged_at === 'string' && typeof session.week_number === 'number' && typeof session.workout_type === 'string');
+}
+
+function isDailyLogs(value: unknown): value is Record<string, DailyLog> {
+  return isRecord(value) && Object.entries(value).every(([dateKey, log]) => isRecord(log) && log.dateKey === dateKey);
+}
+
+function isUserProfile(value: unknown): value is UserProfile {
+  return isRecord(value) && typeof value.activeRoutine === 'string' && isRecord(value.tiers) && isRecord(value.tierProgress) && typeof value.createdAt === 'string';
+}
+
+function isActiveWorkoutDraft(value: unknown): value is ActiveWorkoutDraft {
+  return isRecord(value) && typeof value.dateKey === 'string' && typeof value.phase === 'string' && typeof value.state === 'string' && typeof value.exerciseIndex === 'number' && typeof value.currentSet === 'number' && isRecord(value.sessionReps) && typeof value.startedAt === 'string' && typeof value.workoutType === 'string' && typeof value.savedAt === 'string' && typeof value.timer === 'number';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}

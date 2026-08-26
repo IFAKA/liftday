@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { formatWorkoutType, getWorkoutType, getWorkoutTypeTone } from '@/lib/schedule';
 import { formatDateKey } from '@/lib/workout-utils';
 import { WorkoutData } from '@/lib/types';
+import { loadUserProfile } from '@/lib/storage';
+import { getRoutine } from '@/lib/routines';
 
 interface WeeklySplitProps {
   currentDate: Date;
@@ -17,13 +19,16 @@ export function WeeklySplit({ currentDate, data, embedded = false }: WeeklySplit
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const firstVisibleDay = embedded ? currentDate : weekStart;
   const days = Array.from({ length: 7 }, (_, i) => addDays(firstVisibleDay, i));
+  const profile = loadUserProfile();
+  if (!profile?.activeRoutine) return null;
+  const routine = getRoutine(profile.activeRoutine);
 
   return (
     <div className={cn('flex flex-col bg-black', embedded ? '' : 'h-full overflow-hidden relative')}>
       <div className={cn(embedded ? '' : 'flex-1 overflow-y-auto px-3 pb-8 no-scrollbar mt-2')}>
         <div className={cn('flex flex-col overflow-hidden rounded-xl border border-white/5 bg-white/[0.03]', embedded ? '' : '')}>
           {days.map((day) => {
-            const workoutType = getWorkoutType(day);
+            const workoutType = getWorkoutType(day, routine.schedule, routine.trainingWeekdays);
             const dateKey = formatDateKey(day);
             const isCompleted = !!data[dateKey]?.logged_at;
             const isToday = isSameDay(day, currentDate);

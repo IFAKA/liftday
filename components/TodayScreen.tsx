@@ -8,16 +8,13 @@ import { useWorkout } from '@/hooks/useWorkout';
 import { useSchedule } from '@/hooks/useSchedule';
 import { useMobility } from '@/hooks/useMobility';
 import { formatWorkoutType, getWorkoutType } from '@/lib/schedule';
-import { DailyLog } from '@/lib/types';
-import { loadDailyLogs } from '@/lib/storage';
-import { getStorageIssues } from '@/lib/browser-storage';
+import { clearStorageIssues, getStorageIssues } from '@/lib/browser-storage';
 import { REST_DURATION } from '@/lib/constants';
-import { getMeasurementCheckDue } from '@/lib/measurement-schedule';
-import { loadProgressPhotos } from '@/lib/progress-photos';
+import { installNativeWorkoutBridge, publishWorkoutSnapshot } from '@/lib/native-bridge';
+import { getRoutine } from '@/lib/routines';
+import { clearLiftDayStorage, loadUserProfile } from '@/lib/storage';
 import { TodayHub } from './today/TodayHub';
-import { ProgressPhotoCheckScreen, WeeklyMeasurementScreen, WeightCheckScreen } from './today/PreWorkoutGates';
-
-type PreWorkoutGate = 'measurements' | 'weight' | 'photo' | null;
+import { CooldownStretchScreen } from './CooldownStretchScreen';
 const ONBOARDING_KEY = 'liftday_onboarding_completed';
 const ScreenFallback = () => <LoadingScreen />;
 
@@ -27,10 +24,6 @@ const ExerciseScreen = dynamic(
 );
 const RestTimer = dynamic(
   () => import('@/components/RestTimer').then((mod) => mod.RestTimer),
-  { loading: ScreenFallback, ssr: false }
-);
-const ExerciseTransition = dynamic(
-  () => import('@/components/ExerciseTransition').then((mod) => mod.ExerciseTransition),
   { loading: ScreenFallback, ssr: false }
 );
 const SessionComplete = dynamic(
@@ -69,32 +62,57 @@ function LoadingScreen() {
 }
 
 function TodayContent({ date }: { date: Date }) {
-  const [startError, setStartError] = useState<string | null>(null);
-  const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({});
-  const [photoDateKeys, setPhotoDateKeys] = useState<string[]>([]);
-  const [storageIssue, setStorageIssue] = useState<string | null>(null);
-  const [preWorkoutGate, setPreWorkoutGate] = useState<PreWorkoutGate>(null);
+  const [storageIssue] = useState<string | null>(() => {
+    const latestIssue = getStorageIssues().at(-1);
+    return latestIssue?.reason ?? null;
+  });
   const workout = useWorkout(date);
+  const { isStorageHydrated, state: workoutState, startWorkout } = workout;
   const schedule = useSchedule(date, workout.data);
   const mobility = useMobility();
-  const workoutType = getWorkoutType(date);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDailyLogs(loadDailyLogs());
-    setPhotoDateKeys(loadProgressPhotos().map((photo) => photo.dateKey));
-    const latestIssue = getStorageIssues().at(-1);
-    if (latestIssue) {
-      setStorageIssue(`${latestIssue.reason} Recovery: ${latestIssue.recoveryKey ?? 'not available'}.`);
+    if (isStorageHydrated && workoutState === 'idle' && schedule.isTraining && !schedule.isDone) {
+      void startWorkout();
     }
-  }, []);
+  }, [isStorageHydrated, schedule.isDone, schedule.isTraining, startWorkout, workoutState]);
+
+  useEffect(() => {
+    const cleanup = installNativeWorkoutBridge(workout.surfaceSnapshot, {
+      startPlank: workout.startWarmupTimer,
+      busy: workout.handleMachineOccupied,
+      log: (reps, weight) => workout.logSet(reps, weight),
+      skipRest: workout.skipTimer,
+      repeatCooldown: workout.repeatCooldown,
+      end: workout.finishWorkout,
+    });
+    publishWorkoutSnapshot(workout.surfaceSnapshot);
+    return cleanup;
+  // The callbacks are stable hook-owned commands; the snapshot is the only changing bridge payload.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workout.surfaceSnapshot]);
+
+  const profile = loadUserProfile();
+  const storageReady = workout.isStorageHydrated;
+  const storageIssueMessage = storageIssue ?? formatStorageIssue(getStorageIssues().at(-1));
+
+  if (storageIssueMessage) {
+    return <StorageErrorScreen message={storageIssueMessage} />;
+  }
+
+  if (workout.routineError || schedule.routineError) {
+    return <StorageErrorScreen message={workout.routineError ?? schedule.routineError ?? 'Routine setup is invalid.'} />;
+  }
+
+  if (workout.setupRequired || !profile?.activeRoutine) {
+    return <TodayHub isDone={false} workoutTitle="SETUP REQUIRED" storageReady={false} storageIssueMessage="Choose a routine to continue." startError={null} />;
+  }
+  const routine = getRoutine(profile.activeRoutine);
+  const workoutType = getWorkoutType(date, routine.schedule, routine.trainingWeekdays);
 
   if (workout.isRestoringActiveWorkout) {
     return <LoadingScreen />;
   }
-
-  const storageReady = workout.isStorageHydrated;
-  const storageIssueMessage = storageIssue ?? formatStorageIssue(getStorageIssues().at(-1));
 
   // Rest day
   if (!schedule.isTraining) {
@@ -108,18 +126,16 @@ function TodayContent({ date }: { date: Date }) {
   }
 
   // Workout in progress
-  if (workout.state === 'warming-up') {
+  if (workout.phase === 'warmup-stretch' || workout.phase === 'warmup-plank') {
     return (
       <PrepTimer
-        mode="warmup"
+        mode={workout.phase === 'warmup-stretch' ? 'warmup-stretch' : 'warmup-plank'}
         seconds={workout.timer}
-        totalSeconds={workout.warmupDuration}
+        totalSeconds={workout.phase === 'warmup-stretch' ? 1 : workout.warmupDuration}
         isRunning={!workout.timerPaused}
         onCancel={workout.quitWorkout}
-        onPrimary={workout.beginWorkoutAfterWarmup}
+        onPrimary={workout.phase === 'warmup-stretch' ? workout.startWarmupTimer : workout.beginWorkoutAfterWarmup}
         onStartTimer={workout.startWarmupTimer}
-        onPreset={workout.setWarmupDuration}
-        onRepeat={workout.repeatWarmupTimer}
       />
     );
   }
@@ -157,17 +173,6 @@ function TodayContent({ date }: { date: Date }) {
     );
   }
 
-  if (workout.state === 'transitioning') {
-    return (
-      <ExerciseTransition
-        exerciseName={workout.nextExerciseName}
-        supersetPartnerName={workout.nextSupersetPartnerName}
-        equipmentBlockPartnerName={workout.nextEquipmentBlockPartnerName}
-        onComplete={workout.finishTransition}
-      />
-    );
-  }
-
   if (workout.state === 'resting') {
     return (
       <RestTimer
@@ -176,13 +181,23 @@ function TodayContent({ date }: { date: Date }) {
         isPaused={workout.timerPaused}
         onSkip={workout.skipTimer}
         onQuit={workout.quitWorkout}
-        onUndo={workout.undoLastSet}
         nextExerciseName={workout.nextExerciseAfterRestName}
         nextSupersetPartnerName={workout.nextSupersetPartnerName}
         nextEquipmentBlockPartnerName={workout.nextEquipmentBlockPartnerName}
         onNextMachineOccupied={
           workout.canHandleNextExerciseMachineOccupied ? workout.handleNextExerciseMachineOccupied : undefined
         }
+      />
+    );
+  }
+
+  if (workout.phase === 'cooldown-stretch' || workout.phase === 'cooldown-choice') {
+    return (
+      <CooldownStretchScreen
+        phase={workout.phase}
+        seconds={workout.timer}
+        onRepeat={workout.repeatCooldown}
+        onEnd={workout.finishWorkout}
       />
     );
   }
@@ -202,119 +217,35 @@ function TodayContent({ date }: { date: Date }) {
 
   // Idle — ready to start (or already done today)
   const isDone = storageReady && schedule.isDone;
-  const dueCheck = getMeasurementCheckDue(date, dailyLogs, photoDateKeys);
-
-  const startWarmup = () => {
-    setStartError(null);
-    setPreWorkoutGate(null);
-
-    workout.startWorkout().catch((error: unknown) => {
-      setStartError(error instanceof Error ? error.message : 'Workout start failed.');
-    });
-  };
-
-  const continueAfterMeasurements = (nextLogs: Record<string, DailyLog>) => {
-    setDailyLogs(nextLogs);
-    const nextDue = getMeasurementCheckDue(date, nextLogs, photoDateKeys);
-    if (nextDue.weightDue) {
-      setPreWorkoutGate('weight');
-      return;
-    }
-
-    if (nextDue.photoDue) {
-      setPreWorkoutGate('photo');
-      return;
-    }
-
-    startWarmup();
-  };
-
-  const continueAfterWeight = (nextLogs: Record<string, DailyLog>) => {
-    setDailyLogs(nextLogs);
-    const nextDue = getMeasurementCheckDue(date, nextLogs, photoDateKeys);
-    if (nextDue.photoDue) {
-      setPreWorkoutGate('photo');
-      return;
-    }
-    startWarmup();
-  };
-
-  const continueAfterPhoto = (nextLogs: Record<string, DailyLog>) => {
-    setDailyLogs(nextLogs);
-    setPhotoDateKeys(loadProgressPhotos().map((photo) => photo.dateKey));
-    startWarmup();
-  };
-
-  const handleStart = () => {
-    setStartError(null);
-    if (dueCheck.measurementFields.length > 0) {
-      setPreWorkoutGate('measurements');
-      return;
-    }
-
-    if (dueCheck.weightDue) {
-      setPreWorkoutGate('weight');
-      return;
-    }
-
-    if (dueCheck.photoDue) {
-      setPreWorkoutGate('photo');
-      return;
-    }
-
-    startWarmup();
-  };
-
-  if (!isDone && preWorkoutGate === 'measurements') {
-    return (
-      <WeeklyMeasurementScreen
-        date={date}
-        dueDateKeys={dueCheck.dueDateKeys}
-        fields={dueCheck.measurementFields}
-        logs={dailyLogs}
-        onCancel={() => setPreWorkoutGate(null)}
-        onComplete={continueAfterMeasurements}
-      />
-    );
-  }
-
-  if (!isDone && preWorkoutGate === 'weight') {
-    return (
-      <WeightCheckScreen
-        date={date}
-        dueDateKeys={dueCheck.dueDateKeys}
-        logs={dailyLogs}
-        onCancel={() => setPreWorkoutGate(null)}
-        onComplete={continueAfterWeight}
-      />
-    );
-  }
-
-  if (!isDone && preWorkoutGate === 'photo') {
-    return (
-      <ProgressPhotoCheckScreen
-        date={date}
-        dueDateKeys={dueCheck.dueDateKeys}
-        logs={dailyLogs}
-        onCancel={() => setPreWorkoutGate(null)}
-        onComplete={continueAfterPhoto}
-      />
-    );
-  }
-
   return (
     <TodayHub
       isDone={isDone}
       workoutTitle={formatWorkoutType(workoutType)}
       storageReady={storageReady}
       storageIssueMessage={storageIssueMessage}
-      startError={startError}
-      onStart={handleStart}
+      startError={null}
     />
   );
 }
 
 function formatStorageIssue(issue: ReturnType<typeof getStorageIssues>[number] | undefined): string | null {
   if (!issue) return null;
-  return `${issue.reason} Recovery: ${issue.recoveryKey ?? 'not available'}.`;
+  return issue.reason;
+}
+
+function StorageErrorScreen({ message }: { message: string }) {
+  const reset = () => {
+    const result = clearLiftDayStorage();
+    if (!result.success) return;
+    clearStorageIssues();
+    window.location.href = '/onboarding';
+  };
+
+  return (
+    <div className="flex h-[100dvh] flex-col items-center justify-center gap-4 bg-black px-6 text-center text-white">
+      <h1 className="text-fluid-title font-black uppercase">Storage setup required</h1>
+      <p className="max-w-xs text-fluid-label text-white/55">{message}</p>
+      <button type="button" onClick={reset} className="h-12 rounded-xl bg-white px-5 text-fluid-label font-black uppercase text-black">Reset local data</button>
+    </div>
+  );
 }

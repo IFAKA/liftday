@@ -1,10 +1,9 @@
 import { getChainsForRoutine, resolveExerciseKey } from './tiers';
-import { getRoutine } from './routines';
 import type { Exercise, RoutineConfig, UserProfile, WorkoutType } from './types';
 import { EXERCISES } from './constants';
 import { formatWorkoutType } from './schedule';
 
-export const ROUTINE_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as const;
+export const ROUTINE_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 
 export interface RoutineDay {
   index: number;
@@ -14,18 +13,18 @@ export interface RoutineDay {
   label: string;
 }
 
-export function getRoutineDays(routine: RoutineConfig = getRoutine('gym')): RoutineDay[] {
+export function getRoutineDays(routine: RoutineConfig): RoutineDay[] {
   const weekdays = routine.trainingWeekdays ?? routine.schedule.map((_, index) => index);
   return routine.schedule.map((workoutType, index) => ({
     index: weekdays[index],
     name: ROUTINE_DAY_NAMES[weekdays[index]],
     slug: workoutType.replace(/_/g, '-'),
     workoutType,
-    label: formatWorkoutType(workoutType),
+    label: `${formatWorkoutType(workoutType)} ${index + 1}`,
   }));
 }
 
-export function getRoutineDay(slug: string, routine: RoutineConfig = getRoutine('gym')): RoutineDay | null {
+export function getRoutineDay(slug: string, routine: RoutineConfig): RoutineDay | null {
   return getRoutineDays(routine).find((day) => day.slug === slug) ?? null;
 }
 

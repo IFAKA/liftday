@@ -3,7 +3,6 @@
 import { CheckCircle } from 'lucide-react';
 import {
   WatchAlertPanel,
-  WatchPrimaryAction,
   WatchScreen,
 } from '@/components/WatchSurface';
 import { TodayNavList } from './TodayNavList';
@@ -14,14 +13,12 @@ export function TodayHub({
   storageReady,
   storageIssueMessage,
   startError,
-  onStart,
 }: {
   isDone: boolean;
   workoutTitle: string;
   storageReady: boolean;
   storageIssueMessage: string | null;
   startError: string | null;
-  onStart: () => void;
 }) {
   return (
     <WatchScreen
@@ -36,9 +33,6 @@ export function TodayHub({
               {startError && (
                 <StorageIssuePanel tone="danger" message={startError} />
               )}
-              <WatchPrimaryAction onClick={onStart} className="shadow-xl">
-                Start
-              </WatchPrimaryAction>
             </>
           )}
         </>

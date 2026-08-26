@@ -21,3 +21,6 @@ playwright-report/
 test-results/
 tsconfig.tsbuildinfo
 .aider*
+android/build/
+android/app/build/
+android/.gradle/

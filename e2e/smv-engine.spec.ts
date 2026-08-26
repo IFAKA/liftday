@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { getDefaultProfile, migrateDailyLogs, migrateWorkoutData } from '@/lib/storage';
+import { getDefaultProfile } from '@/lib/storage';
+import type { DailyLog, WorkoutData } from '@/lib/types';
 import { getRecoveryState } from '@/lib/adaptation/recovery-engine';
 import { getFatigueState } from '@/lib/adaptation/fatigue-engine';
 import { getProgressionQuality } from '@/lib/adaptation/progression-engine';
@@ -21,6 +22,9 @@ import {
   shouldDeload,
 } from '@/lib/smv';
 import { gymRoutine } from '@/lib/routines/gym';
+
+const currentWorkoutData = (data: unknown) => data as WorkoutData;
+const currentDailyLogs = (data: unknown) => data as Record<string, DailyLog>;
 import { getChainsForRoutine } from '@/lib/tiers';
 import type { FatigueState, MuscleGroup, RecoveryState, SetEntry, WorkoutSession, WorkoutType } from '@/lib/types';
 
@@ -466,7 +470,7 @@ test('detects deload and waist calorie adjustment triggers', () => {
   expect(getNutritionAdjustment(0.3, 2).calorieDelta).toBe(0);
 });
 
-test('ranks crowded-gym substitutions and migrates legacy set entries', () => {
+test('ranks crowded-gym substitutions and keeps current set entries unchanged', () => {
   const chain = gymRoutine.tierChains.find((entry) => entry.slotId === 'push_b_incline_db');
   expect(chain).toBeTruthy();
 
@@ -475,16 +479,16 @@ test('ranks crowded-gym substitutions and migrates legacy set entries', () => {
     'smith_incline_press',
   ]);
 
-  const migrated = migrateWorkoutData({
+  const current = currentWorkoutData({
     '2026-05-04': {
       logged_at: '2026-05-04T10:00:00.000Z',
       week_number: 1,
       workout_type: 'push_a',
-      smith_incline_press: [8, { reps: 9, weight: 40 }],
+      smith_incline_press: [{ reps: 8, weight: 0, rir: 2 }, { reps: 9, weight: 40, rir: 2 }],
     },
   });
 
-  expect(migrated['2026-05-04'].smith_incline_press).toEqual([
+  expect(current['2026-05-04'].smith_incline_press).toEqual([
     { reps: 8, weight: 0, rir: 2 },
     { reps: 9, weight: 40, rir: 2 },
   ]);
@@ -493,7 +497,7 @@ test('ranks crowded-gym substitutions and migrates legacy set entries', () => {
 test('calculates adaptive effective volume, recovery, fatigue, and recommendations', () => {
   const profile = getDefaultProfile();
   const today = new Date('2026-05-10T12:00:00');
-  const data = migrateWorkoutData({
+  const data = currentWorkoutData({
     '2026-05-08': {
       logged_at: '2026-05-08T10:00:00.000Z',
       week_number: 1,
@@ -519,7 +523,7 @@ test('calculates adaptive effective volume, recovery, fatigue, and recommendatio
       ],
     },
   });
-  const logs = migrateDailyLogs({
+  const logs = currentDailyLogs({
     '2026-05-10': {
       dateKey: '2026-05-10',
       sleepHours: 6,
@@ -581,7 +585,7 @@ test('heavier load below target reps becomes build-reps guidance', () => {
   const recovery = baseRecovery({ chest: 0.82 });
   const fatigue = baseFatigue({ chest: 0.2 });
   const progression = getProgressionQuality({
-    data: migrateWorkoutData({
+    data: currentWorkoutData({
       '2026-05-08': session('push_b', { db_incline_press: [{ reps: 6, weight: 60, rir: 1 }] }),
       '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
       '2026-04-24': session('push_b', { db_incline_press: [{ reps: 12, weight: 50, rir: 2 }] }),
@@ -604,7 +608,7 @@ test('low volume plus build-reps guidance does not recommend adding sets', () =>
   const recovery = baseRecovery({ chest: 0.84 });
   const fatigue = baseFatigue({ chest: 0.18 });
   const progression = getProgressionQuality({
-    data: migrateWorkoutData({
+    data: currentWorkoutData({
       '2026-05-08': session('push_b', { db_incline_press: [{ reps: 6, weight: 60, rir: 1 }] }),
       '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
     }),
@@ -626,7 +630,7 @@ test('top reps at target RIR stays productive progression', () => {
   const profile = getDefaultProfile();
   const effectiveVolume = [{ muscle: 'chest' as const, sets: 12, target: 16, minimum: 12, priorityRank: 2, status: 'productive' as const }];
   const progression = getProgressionQuality({
-    data: migrateWorkoutData({
+    data: currentWorkoutData({
       '2026-05-08': session('push_b', { db_incline_press: [{ reps: 12, weight: 50, rir: 2 }] }),
       '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
     }),
@@ -647,7 +651,7 @@ test('severe fatigue and recovery produce deload ahead of build-reps guidance', 
   const recovery = baseRecovery({ chest: 0.4 }, 0.42);
   const fatigue = baseFatigue({ chest: 0.78 }, { systemicFatigue: 0.82, jointRisk: 0.76, bottlenecks: ['systemic fatigue is high'] });
   const progression = getProgressionQuality({
-    data: migrateWorkoutData({
+    data: currentWorkoutData({
       '2026-05-08': session('push_b', { db_incline_press: [{ reps: 6, weight: 60, rir: 1 }] }),
       '2026-05-01': session('push_b', { db_incline_press: [{ reps: 10, weight: 50, rir: 2 }] }),
     }),
@@ -666,7 +670,7 @@ test('severe fatigue and recovery produce deload ahead of build-reps guidance', 
 
 test('missing prescription falls back without crashing', () => {
   const progression = getProgressionQuality({
-    data: migrateWorkoutData({
+    data: currentWorkoutData({
       '2026-05-08': session('push', { pushup: [{ reps: 16, weight: 0, rir: 2 }] }),
       '2026-05-01': session('push', { pushup: [{ reps: 12, weight: 0, rir: 2 }] }),
     }),

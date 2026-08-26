@@ -8,8 +8,7 @@ import {
   USER_PROFILE_KEY,
 } from './constants';
 import { readBooleanFlag, readJsonStorageResult, readStorageValue, readStorageValueResult, removeStorageValue, writeStorageValue } from './browser-storage';
-import { migrateProgressPhotos } from './progress-photos';
-import { migrateDailyLogs, migrateUserProfile, migrateWorkoutData } from './storage';
+import { loadProgressPhotosResult } from './progress-photos';
 import { ActiveWorkoutDraft, DailyLog, ProgressPhoto, UserProfile, WorkoutData, WorkoutSession } from './types';
 
 const SYNC_SCHEMA_VERSION = 3;
@@ -20,20 +19,9 @@ const ONBOARDING_KEY = 'liftday_onboarding_completed';
 type SyncSource = 'phone' | 'laptop' | 'unknown';
 type UnknownRecord = Record<string, unknown>;
 
-export interface SyncSnapshotV1 {
+export interface SyncSnapshot {
   app: 'liftday';
-  schemaVersion: 1;
-  exportedAt: string;
-  source: SyncSource;
-  data: WorkoutData;
-  profile: UserProfile | null;
-  firstSessionDate: string | null;
-  mobilityDoneDate: string | null;
-}
-
-export interface SyncSnapshotV2 {
-  app: 'liftday';
-  schemaVersion: 2;
+  schemaVersion: 3;
   exportedAt: string;
   source: SyncSource;
   sessions: WorkoutData;
@@ -43,14 +31,8 @@ export interface SyncSnapshotV2 {
   firstSessionDate: string | null;
   mobilityDoneDate: string | null;
   onboardingCompleted?: boolean;
-}
-
-export interface SyncSnapshotV3 extends Omit<SyncSnapshotV2, 'schemaVersion'> {
-  schemaVersion: 3;
   progressPhotos: ProgressPhoto[];
 }
-
-export type SyncSnapshot = SyncSnapshotV1 | SyncSnapshotV2 | SyncSnapshotV3;
 
 export interface ImportResult {
   importedSessions: number;
@@ -71,7 +53,7 @@ export interface ImportResult {
   exportedAt: string;
 }
 
-export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshotV3 {
+export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshot {
   return {
     app: 'liftday',
     schemaVersion: SYNC_SCHEMA_VERSION,
@@ -185,7 +167,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
 
   let profileImported = false;
   if (snapshot.profile) {
-    writes.set(USER_PROFILE_KEY, JSON.stringify(migrateUserProfile(snapshot.profile)));
+    writes.set(USER_PROFILE_KEY, JSON.stringify(snapshot.profile));
     profileImported = true;
   }
 
@@ -249,7 +231,7 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
   };
 }
 
-function createImportBaseSnapshot(): SyncSnapshotV3 {
+function createImportBaseSnapshot(): SyncSnapshot {
   const sessions = readWorkoutDataResult();
   const dailyLogs = readDailyLogsResult();
   const progressPhotos = readProgressPhotosResult();
@@ -331,7 +313,7 @@ function readWorkoutData(): WorkoutData {
 }
 
 function readWorkoutDataResult() {
-  return readJsonStorageResult(STORAGE_KEY, {}, (value) => isWorkoutData(value) ? migrateWorkoutData(value) : null);
+  return readJsonStorageResult(STORAGE_KEY, {}, (value) => isWorkoutData(value) ? value : null);
 }
 
 function readDailyLogs(): Record<string, DailyLog> {
@@ -339,7 +321,7 @@ function readDailyLogs(): Record<string, DailyLog> {
 }
 
 function readDailyLogsResult() {
-  return readJsonStorageResult(DAILY_LOGS_KEY, {}, (value) => isDailyLogs(value) ? migrateDailyLogs(value) : null);
+  return readJsonStorageResult(DAILY_LOGS_KEY, {}, (value) => isDailyLogs(value) ? value : null);
 }
 
 function readProgressPhotos(): ProgressPhoto[] {
@@ -347,7 +329,7 @@ function readProgressPhotos(): ProgressPhoto[] {
 }
 
 function readProgressPhotosResult() {
-  return readJsonStorageResult(PROGRESS_PHOTOS_KEY, [], (value) => migrateProgressPhotos(value));
+  return loadProgressPhotosResult();
 }
 
 function readProfile(): UserProfile | null {
@@ -355,7 +337,7 @@ function readProfile(): UserProfile | null {
 }
 
 function readProfileResult() {
-  return readJsonStorageResult(USER_PROFILE_KEY, null, (value) => value === null ? null : isUserProfile(value) ? migrateUserProfile(value) : null);
+  return readJsonStorageResult(USER_PROFILE_KEY, null, (value) => value === null || isUserProfile(value) ? value as UserProfile | null : null);
 }
 
 function readActiveWorkoutDraft(): ActiveWorkoutDraft | null {
@@ -363,7 +345,7 @@ function readActiveWorkoutDraft(): ActiveWorkoutDraft | null {
 }
 
 function readActiveWorkoutDraftResult() {
-  return readJsonStorageResult(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => value === null ? null : isActiveWorkoutDraft(value) ? value : null);
+  return readJsonStorageResult(ACTIVE_WORKOUT_DRAFT_KEY, null, (value) => value === null || isActiveWorkoutDraft(value) ? value as ActiveWorkoutDraft | null : null);
 }
 
 function newerSession(current: WorkoutSession, incoming: WorkoutSession): WorkoutSession {
@@ -381,41 +363,6 @@ function earliestDate(a: string | null, b: string | null): string | null {
 }
 
 function isSyncSnapshot(value: unknown): value is SyncSnapshot {
-  return isSyncSnapshotV1(value) || isSyncSnapshotV2(value) || isSyncSnapshotV3(value);
-}
-
-function isSyncSnapshotV1(value: unknown): value is SyncSnapshotV1 {
-  if (!isRecord(value)) return false;
-  return (
-    value.app === 'liftday' &&
-    value.schemaVersion === 1 &&
-    typeof value.exportedAt === 'string' &&
-    isSyncSource(value.source) &&
-    isWorkoutData(value.data) &&
-    (value.profile === null || isUserProfile(value.profile)) &&
-    (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
-    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string')
-  );
-}
-
-function isSyncSnapshotV2(value: unknown): value is SyncSnapshotV2 {
-  if (!isRecord(value)) return false;
-  return (
-    value.app === 'liftday' &&
-    value.schemaVersion === 2 &&
-    typeof value.exportedAt === 'string' &&
-    isSyncSource(value.source) &&
-    isWorkoutData(value.sessions) &&
-    isDailyLogs(value.dailyLogs) &&
-    (value.profile === null || isUserProfile(value.profile)) &&
-    (value.activeWorkoutDraft === null || isActiveWorkoutDraft(value.activeWorkoutDraft)) &&
-    (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
-    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string') &&
-    (value.onboardingCompleted === undefined || typeof value.onboardingCompleted === 'boolean')
-  );
-}
-
-function isSyncSnapshotV3(value: unknown): value is SyncSnapshotV3 {
   if (!isRecord(value)) return false;
   return (
     value.app === 'liftday' &&
@@ -470,7 +417,7 @@ function isJsonSafeDailyLogValue(value: unknown): boolean {
 }
 
 function isProgressPhotos(value: unknown): value is ProgressPhoto[] {
-  return Array.isArray(value) && migrateProgressPhotos(value) !== null;
+  return Array.isArray(value) && value.every(isProgressPhoto);
 }
 
 function isUserProfile(value: unknown): value is UserProfile {
@@ -485,9 +432,8 @@ function isUserProfile(value: unknown): value is UserProfile {
 function isActiveWorkoutDraft(value: unknown): value is ActiveWorkoutDraft {
   if (!isRecord(value)) return false;
   return (
-    value.version === 1 &&
     typeof value.dateKey === 'string' &&
-    (value.state === 'warming-up' || value.state === 'exercising' || value.state === 'resting' || value.state === 'transitioning') &&
+    (value.state === 'warming-up' || value.state === 'exercising' || value.state === 'resting' || value.state === 'transitioning' || value.state === 'cooling-down') &&
     typeof value.exerciseIndex === 'number' &&
     typeof value.currentSet === 'number' &&
     isRecord(value.sessionReps) &&
@@ -506,26 +452,31 @@ function isActiveWorkoutDraft(value: unknown): value is ActiveWorkoutDraft {
 }
 
 function getSnapshotSessions(snapshot: SyncSnapshot): WorkoutData {
-  return migrateWorkoutData(snapshot.schemaVersion === 1 ? snapshot.data : snapshot.sessions);
+  return snapshot.sessions;
 }
 
 function getSnapshotDailyLogs(snapshot: SyncSnapshot): Record<string, DailyLog> {
-  return snapshot.schemaVersion === 1 ? {} : migrateDailyLogs(snapshot.dailyLogs);
+  return snapshot.dailyLogs;
 }
 
 function getSnapshotProgressPhotos(snapshot: SyncSnapshot): ProgressPhoto[] {
-  return snapshot.schemaVersion === 3 ? migrateProgressPhotos(snapshot.progressPhotos) ?? [] : [];
+  return snapshot.progressPhotos;
 }
 
 function getSnapshotActiveWorkoutDraft(snapshot: SyncSnapshot): ActiveWorkoutDraft | null {
-  return snapshot.schemaVersion === 1 ? null : snapshot.activeWorkoutDraft;
+  return snapshot.activeWorkoutDraft;
 }
 
 function getSnapshotOnboardingCompleted(snapshot: SyncSnapshot, incomingSessions: WorkoutData): boolean {
-  if (snapshot.schemaVersion !== 1 && typeof snapshot.onboardingCompleted === 'boolean') {
+  if (typeof snapshot.onboardingCompleted === 'boolean') {
     return snapshot.onboardingCompleted;
   }
   return Boolean(snapshot.profile || Object.keys(incomingSessions).length > 0);
+}
+
+function isProgressPhoto(value: unknown): value is ProgressPhoto {
+  if (!isRecord(value)) return false;
+  return typeof value.id === 'string' && typeof value.dateKey === 'string' && typeof value.createdAt === 'string' && typeof value.imageData === 'string' && (value.pose === 'front' || value.pose === 'side' || value.pose === 'back' || value.pose === 'other') && (value.note === undefined || typeof value.note === 'string');
 }
 
 function shouldImportDraft(current: ActiveWorkoutDraft | null, incoming: ActiveWorkoutDraft | null): boolean {

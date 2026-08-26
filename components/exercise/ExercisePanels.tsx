@@ -44,7 +44,7 @@ export function MachineOccupiedControl({ onClick }: { onClick: () => void }) {
       className="flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[11px] font-black uppercase text-white/45 transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out-ui)] hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95"
     >
       <AlertCircle className="size-3.5 shrink-0" />
-      Machine occupied
+      BUSY
     </button>
   );
 }

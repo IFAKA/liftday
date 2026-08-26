@@ -8,19 +8,7 @@ export function loadProgressPhotos(): ProgressPhoto[] {
 }
 
 export function loadProgressPhotosResult(): PersistenceReadResult<ProgressPhoto[]> {
-  return readJsonStorageResult(PROGRESS_PHOTOS_KEY, [], (value) => migrateProgressPhotos(value));
-}
-
-export function migrateProgressPhotos(value: unknown): ProgressPhoto[] | null {
-  if (!Array.isArray(value)) return null;
-  return value
-    .filter(isProgressPhoto)
-    .map((photo) => ({
-      ...photo,
-      pose: normalizePose(photo.pose),
-      note: typeof photo.note === 'string' && photo.note.trim() ? photo.note : undefined,
-    }))
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return readJsonStorageResult(PROGRESS_PHOTOS_KEY, [], (value) => Array.isArray(value) && value.every(isProgressPhoto) ? value as ProgressPhoto[] : null);
 }
 
 export function listProgressPhotos(): ProgressPhoto[] {
@@ -52,7 +40,7 @@ export function saveProgressPhoto(input: {
 }
 
 export function saveProgressPhotos(photos: ProgressPhoto[]): PersistenceResult {
-  return writeJsonStorage(PROGRESS_PHOTOS_KEY, migrateProgressPhotos(photos) ?? []);
+  return writeJsonStorage(PROGRESS_PHOTOS_KEY, photos);
 }
 
 export function deleteProgressPhoto(id: string): PersistenceResult {
@@ -100,12 +88,7 @@ function isProgressPhoto(value: unknown): value is ProgressPhoto {
     typeof candidate.dateKey === 'string' &&
     typeof candidate.createdAt === 'string' &&
     typeof candidate.imageData === 'string' &&
-    (candidate.pose === undefined || typeof candidate.pose === 'string') &&
+    (candidate.pose === 'front' || candidate.pose === 'side' || candidate.pose === 'back' || candidate.pose === 'other') &&
     (candidate.note === undefined || typeof candidate.note === 'string')
   );
-}
-
-function normalizePose(value: unknown): ProgressPhotoPose {
-  if (value === 'front' || value === 'side' || value === 'back' || value === 'other') return value;
-  return 'front';
 }

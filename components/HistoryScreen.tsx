@@ -46,7 +46,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
     <WatchScreen
       top={(
         <TopBar
-          leftAction={<WatchBackButton onClick={onBack} fallbackHref="/" />}
+          leftAction={<WatchBackButton onClick={onBack} />}
           center={<span className="text-fluid-ui font-black uppercase tracking-tight text-white leading-none">Progress</span>}
         />
       )}

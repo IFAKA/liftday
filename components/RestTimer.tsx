@@ -15,7 +15,6 @@ interface RestTimerProps {
   isPaused: boolean;
   onSkip: () => void;
   onQuit: () => void;
-  onUndo: () => void;
   nextExerciseName?: string | null;
   nextSupersetPartnerName?: string | null;
   nextEquipmentBlockPartnerName?: string | null;
@@ -38,7 +37,7 @@ function cancelRestNotification() {
   }
 }
 
-export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onUndo, nextExerciseName, nextSupersetPartnerName, nextEquipmentBlockPartnerName, onNextMachineOccupied }: RestTimerProps) {
+export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, nextExerciseName, nextSupersetPartnerName, nextEquipmentBlockPartnerName, onNextMachineOccupied }: RestTimerProps) {
   const { copy, isCopied } = useCopyFeedback();
   const { showQuitConfirm, setShowQuitConfirm, requestQuit, confirmQuit } = useWorkoutQuitGuard({
     historyStateKey: 'rest',
@@ -69,13 +68,13 @@ export function RestTimer({ seconds, totalSeconds, isPaused, onSkip, onQuit, onU
   return (
     <>
       <CountdownTimerScreen
-        title="Resting"
+        title="REST"
         seconds={seconds}
         totalSeconds={totalSeconds}
         isPaused={isPaused}
-        primaryAction={{ label: 'Skip Rest', onClick: onSkip }}
+        primaryAction={{ label: 'SKIP', onClick: onSkip }}
         cancelAction={{ label: 'Quit workout', onClick: requestQuit }}
-        secondaryActions={[{ label: 'Undo Last Set', onClick: onUndo }]}
+        secondaryActions={[]}
         footerContext={nextExerciseName ? (
           <div className="mb-2 flex w-full shrink-0 flex-col items-center gap-1 px-4">
             <span className="font-mono text-fluid-label uppercase tracking-widest text-white/30">Next exercise</span>
