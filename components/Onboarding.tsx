@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { Activity, BarChart3, CheckCircle2, History, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { TopBar } from './TopBar';
 import { WatchBackButton, WatchPanel, WatchPrimaryAction, WatchScreen, WatchSection, WatchStatusPill } from './WatchSurface';
 
 interface OnboardingProps {
+  step: number;
+  onStepChange: (step: number) => void;
   onComplete: () => void;
 }
 
@@ -46,14 +47,13 @@ const steps = [
   },
 ];
 
-export function Onboarding({ onComplete }: OnboardingProps) {
-  const [step, setStep] = useState(0);
+export function Onboarding({ step, onStepChange, onComplete }: OnboardingProps) {
   const currentStep = steps[step];
   const Icon = currentStep.icon;
 
   const handleNext = () => {
     if (step < steps.length - 1) {
-      setStep(step + 1);
+      onStepChange(step + 1);
     } else {
       onComplete();
     }
@@ -61,7 +61,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
   const handleBack = () => {
     if (step > 0) {
-      setStep(step - 1);
+      onStepChange(step - 1);
     }
   };
 

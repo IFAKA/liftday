@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Bug } from 'lucide-react';
 import { loadUserProfile } from '@/lib/storage';
 import { getRoutine } from '@/lib/routines';
@@ -10,7 +9,6 @@ import { WatchBackButton, WatchListItem, WatchScreen, WatchSwitchItem } from '@/
 import { isDebugTraceEnabled, setDebugTraceEnabled } from '@/lib/debug-trace';
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [debugEnabled, setDebugEnabled] = useState(() => {
     if (typeof window === 'undefined') return false;
     return isDebugTraceEnabled();
@@ -40,13 +38,13 @@ export default function SettingsPage() {
       bodyClassName="pt-2 flex flex-col gap-2"
     >
       <WatchListItem
-        onClick={() => router.push('/settings/routine')}
+        href="/settings/routine"
         label="Routine"
         title={routineName}
       />
 
       <WatchListItem
-        onClick={() => router.push('/settings/sync')}
+        href="/settings/sync"
         label="Backup"
         title="Sync & export"
       />

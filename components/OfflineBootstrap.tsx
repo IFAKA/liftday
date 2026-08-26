@@ -9,6 +9,11 @@ import { getRoutineDays } from '@/lib/routine-days';
 const STATIC_ROUTES = [
   '/',
   '/onboarding',
+  '/onboarding?step=0',
+  '/onboarding?step=1',
+  '/onboarding?step=2',
+  '/workout',
+  '/mobility',
   '/program',
   '/program/detail',
   '/progress',

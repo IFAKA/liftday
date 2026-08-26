@@ -1,7 +1,7 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { TopBar } from '@/components/TopBar';
 import { WatchBackButton, WatchScreen } from '@/components/WatchSurface';
@@ -18,18 +18,27 @@ import type { RoutineDay } from '@/lib/routine-days';
 import type { RoutineConfig, UserProfile, WorkoutData } from '@/lib/types';
 
 export default function ExerciseDetailPage() {
+  return (
+    <Suspense fallback={<ExerciseDetailLoading />}>
+      <ExerciseDetailContent />
+    </Suspense>
+  );
+}
+
+function ExerciseDetailContent() {
   const { key } = useParams<{ key: string }>();
+  const searchParams = useSearchParams();
+  const requestedDay = searchParams.get('day');
   const { copy, isCopied } = useCopyFeedback();
   const ex = EXERCISES.find((e) => e.key === key);
   const [context, setContext] = useState<{ day: RoutineDay | null; routine: RoutineConfig | null; profile: UserProfile | null; data: WorkoutData }>({ day: null, routine: null, profile: null, data: {} });
 
   useEffect(() => {
     const summary = loadProgramSummary();
-    const requestedDay = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('day') : null;
     const day = requestedDay ? getRoutineDay(requestedDay, summary.routine) : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setContext({ day, routine: summary.routine, profile: summary.profile, data: loadWorkoutData() });
-  }, []);
+  }, [requestedDay]);
 
   if (!ex) {
     return (
@@ -119,5 +128,13 @@ export default function ExerciseDetailPage() {
         })()
       )}
     </WatchScreen>
+  );
+}
+
+function ExerciseDetailLoading() {
+  return (
+    <div className="flex h-full items-center justify-center bg-black">
+      <span className="text-fluid-label font-black uppercase tracking-widest text-white/30">Loading exercise</span>
+    </div>
   );
 }

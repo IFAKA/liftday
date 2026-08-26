@@ -4,6 +4,7 @@ import { WakeLockProvider } from '@/components/WakeLockProvider';
 import { DebugTraceButton } from '@/components/DebugTraceButton';
 import { RouteTransition } from '@/components/RouteTransition';
 import { OfflineBootstrap } from '@/components/OfflineBootstrap';
+import { AppStateProvider } from '@/components/AppStateProvider';
 
 export const metadata: Metadata = {
   title: 'LiftDay',
@@ -38,7 +39,9 @@ export default function RootLayout({
           <div className="flex-1 min-h-0 overflow-hidden">
             <WakeLockProvider>
               <OfflineBootstrap />
-              <RouteTransition>{children}</RouteTransition>
+              <AppStateProvider>
+                <RouteTransition>{children}</RouteTransition>
+              </AppStateProvider>
             </WakeLockProvider>
           </div>
           <DebugTraceButton />

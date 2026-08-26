@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Activity, Scale } from 'lucide-react';
 import { WorkoutData } from '@/lib/types';
 import { getProgressStatusCommand } from '@/components/status-command';
@@ -17,7 +16,6 @@ interface HistoryScreenProps {
 }
 
 export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -66,7 +64,7 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 
           <div className="flex flex-col gap-2">
             <WatchListItem
-              onClick={() => router.push('/history/detail')}
+              href="/history/detail"
               icon={Activity}
               title="Detail"
               subtitle="Load and recovery"
@@ -83,7 +81,6 @@ export function HistoryScreen({ data, onBack }: HistoryScreenProps) {
 }
 
 function BodyTrendRow({ trend }: { trend: ReturnType<typeof getBodyTrendSummary> }) {
-  const router = useRouter();
   const weight = trend.weightTrendKgPerWeek === null
     ? '--'
     : `${trend.weightTrendKgPerWeek > 0 ? '+' : ''}${trend.weightTrendKgPerWeek.toFixed(1)}kg`;
@@ -93,7 +90,7 @@ function BodyTrendRow({ trend }: { trend: ReturnType<typeof getBodyTrendSummary>
 
   return (
     <WatchListItem
-      onClick={() => router.push('/history/body')}
+      href="/history/body"
       icon={Scale}
       title="Body"
       subtitle={trend.recoveryAlert ?? `Measures · ${trend.nutritionAction}`}

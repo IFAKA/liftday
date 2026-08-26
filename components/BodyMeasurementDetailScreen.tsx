@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TopBar } from '@/components/TopBar';
@@ -27,7 +28,6 @@ interface BodyMeasurementSnapshot {
 }
 
 export function BodyMeasurementDetailScreen() {
-  const router = useRouter();
   const { measurement } = useParams<{ measurement: string }>();
   const [snapshot, setSnapshot] = useState<BodyMeasurementSnapshot>(() => ({
     profile: getDefaultProfile(),
@@ -80,12 +80,10 @@ export function BodyMeasurementDetailScreen() {
           summary="That measurement is not tracked."
           active
         />
-        <Button
-          type="button"
-          onClick={() => router.push('/history/body')}
+        <Button asChild
           className="min-h-12 w-full rounded-xl bg-white text-fluid-label font-mono font-black uppercase text-black hover:bg-white/90"
         >
-          Back
+          <Link href="/history/body">Back</Link>
         </Button>
       </WatchScreen>
     );

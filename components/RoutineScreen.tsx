@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Exercise, SetEntry, setEntryReps, setEntryWeight } from '@/lib/types';
 import { TopBar } from './TopBar';
@@ -19,7 +18,6 @@ interface RoutineScreenProps {
 }
 
 export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedReps, hideTopBar, emptyMessage }: RoutineScreenProps) {
-  const router = useRouter();
   return (
     <WatchScreen
       top={!hideTopBar && (
@@ -69,7 +67,7 @@ export function RoutineScreen({ exercises, title, titleColor, subtitle, loggedRe
             return (
               <WatchListItem
                 key={ex.key}
-                onClick={() => router.push(`/exercises/${ex.key}`)}
+                href={`/exercises/${ex.key}`}
                 label={`${i + 1}`}
                 title={ex.name}
                 subtitle={setSummary}
