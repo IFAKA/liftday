@@ -1,0 +1,28 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:background="#000000">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="LiftDay"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
+
+    <Button android:id="@+id/widget_done" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DONE" />
+    <Button android:id="@+id/widget_busy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BUSY" />
+    <Button android:id="@+id/widget_log" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LOG" />
+    <Button android:id="@+id/widget_skip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SKIP" />
+    <Button android:id="@+id/widget_repeat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="REPEAT" />
+    <Button android:id="@+id/widget_end" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="END" />
+</LinearLayout>
