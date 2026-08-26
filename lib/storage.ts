@@ -67,7 +67,7 @@ export function setFirstSessionDate(dateKey: string): PersistenceResult {
 // ── User Profile ──────────────────────────────────────────────────────────────
 
 export function loadUserProfile(): UserProfile | null {
-  return readJsonStorage(USER_PROFILE_KEY, null, (value) => value === null || isUserProfile(value) ? value as UserProfile | null : null);
+  return readJsonStorage(USER_PROFILE_KEY, getDefaultProfile(), (value) => isUserProfile(value) ? value : null);
 }
 
 export function setActiveRoutine(id: RoutineId): PersistenceResult {

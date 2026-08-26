@@ -74,7 +74,6 @@ export interface UseWorkoutReturn {
   canDeferMachineOccupied: boolean;
   isReady: boolean;
   isStorageHydrated: boolean;
-  setupRequired: boolean;
   routineError: string | null;
   isRestoringActiveWorkout: boolean;
   persistenceError: string | null;
@@ -1180,7 +1179,6 @@ export function useWorkout(date: Date): UseWorkoutReturn {
     exercises, nextExerciseName, nextExerciseAfterRestName, currentSupersetPartnerName, nextSupersetPartnerName, currentEquipmentBlockPartnerName, nextEquipmentBlockPartnerName, canHandleNextExerciseMachineOccupied,
     timerPaused, advancedTiers,
     isReady: hydrated && !isRestoringActiveWorkout,
-    setupRequired: !userProfile?.activeRoutine,
     routineError: userProfile?.activeRoutine && !ROUTINES.some((routine) => routine.id === userProfile.activeRoutine)
       ? `Unknown routine "${userProfile.activeRoutine}".`
       : null,

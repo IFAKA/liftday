@@ -7,14 +7,13 @@ import {
   STORAGE_KEY,
   USER_PROFILE_KEY,
 } from './constants';
-import { readBooleanFlag, readJsonStorageResult, readStorageValue, readStorageValueResult, removeStorageValue, writeStorageValue } from './browser-storage';
+import { readJsonStorageResult, readStorageValue, readStorageValueResult, removeStorageValue, writeStorageValue } from './browser-storage';
 import { loadProgressPhotosResult } from './progress-photos';
 import { ActiveWorkoutDraft, DailyLog, ProgressPhoto, UserProfile, WorkoutData, WorkoutSession } from './types';
 
 const SYNC_SCHEMA_VERSION = 3;
 const BACKUP_PREFIX = 'liftday_sync_backup_';
 const LAST_IMPORT_KEY = 'liftday_sync_last_import';
-const ONBOARDING_KEY = 'liftday_onboarding_completed';
 
 type SyncSource = 'phone' | 'laptop' | 'unknown';
 type UnknownRecord = Record<string, unknown>;
@@ -30,7 +29,6 @@ export interface SyncSnapshot {
   activeWorkoutDraft: ActiveWorkoutDraft | null;
   firstSessionDate: string | null;
   mobilityDoneDate: string | null;
-  onboardingCompleted?: boolean;
   progressPhotos: ProgressPhoto[];
 }
 
@@ -48,7 +46,6 @@ export interface ImportResult {
   activeWorkoutDraftImported: boolean;
   firstSessionDateImported: boolean;
   mobilityDoneDateImported: boolean;
-  onboardingCompletedImported: boolean;
   backupKey: string;
   exportedAt: string;
 }
@@ -66,7 +63,6 @@ export function createSyncSnapshot(source: SyncSource = 'unknown'): SyncSnapshot
     activeWorkoutDraft: readActiveWorkoutDraft(),
     firstSessionDate: readStorageValue(FIRST_SESSION_KEY),
     mobilityDoneDate: readStorageValue(MOBILITY_DONE_KEY),
-    onboardingCompleted: readBooleanFlag(ONBOARDING_KEY),
   };
 }
 
@@ -189,12 +185,6 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     writes.set(ACTIVE_WORKOUT_DRAFT_KEY, JSON.stringify(importedDraft));
   }
 
-  const onboardingCompleted = getSnapshotOnboardingCompleted(snapshot, incomingSessions);
-  const onboardingCompletedImported = onboardingCompleted && readBooleanFlag(ONBOARDING_KEY) !== true;
-  if (onboardingCompleted) {
-    writes.set(ONBOARDING_KEY, 'true');
-  }
-
   writes.set(LAST_IMPORT_KEY, JSON.stringify({
     importedAt: new Date().toISOString(),
     exportedAt: snapshot.exportedAt,
@@ -205,7 +195,6 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     profileImported,
     activeWorkoutDraftImported,
     mobilityDoneDateImported,
-    onboardingCompletedImported,
     backupKey,
   }));
 
@@ -225,7 +214,6 @@ export function importPhoneSnapshot(snapshot: SyncSnapshot): ImportResult {
     activeWorkoutDraftImported,
     firstSessionDateImported,
     mobilityDoneDateImported,
-    onboardingCompletedImported,
     backupKey,
     exportedAt: snapshot.exportedAt,
   };
@@ -258,7 +246,6 @@ function createImportBaseSnapshot(): SyncSnapshot {
     activeWorkoutDraft: draft.value,
     firstSessionDate: firstSessionDate.value,
     mobilityDoneDate: mobilityDoneDate.value,
-    onboardingCompleted: readBooleanFlag(ONBOARDING_KEY),
   };
 }
 
@@ -375,8 +362,7 @@ function isSyncSnapshot(value: unknown): value is SyncSnapshot {
     (value.profile === null || isUserProfile(value.profile)) &&
     (value.activeWorkoutDraft === null || isActiveWorkoutDraft(value.activeWorkoutDraft)) &&
     (value.firstSessionDate === null || typeof value.firstSessionDate === 'string') &&
-    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string') &&
-    (value.onboardingCompleted === undefined || typeof value.onboardingCompleted === 'boolean')
+    (value.mobilityDoneDate === null || typeof value.mobilityDoneDate === 'string')
   );
 }
 
@@ -465,13 +451,6 @@ function getSnapshotProgressPhotos(snapshot: SyncSnapshot): ProgressPhoto[] {
 
 function getSnapshotActiveWorkoutDraft(snapshot: SyncSnapshot): ActiveWorkoutDraft | null {
   return snapshot.activeWorkoutDraft;
-}
-
-function getSnapshotOnboardingCompleted(snapshot: SyncSnapshot, incomingSessions: WorkoutData): boolean {
-  if (typeof snapshot.onboardingCompleted === 'boolean') {
-    return snapshot.onboardingCompleted;
-  }
-  return Boolean(snapshot.profile || Object.keys(incomingSessions).length > 0);
 }
 
 function isProgressPhoto(value: unknown): value is ProgressPhoto {

@@ -24,7 +24,7 @@ Playwright e2e specs live in `e2e/` and use `playwright.config.ts` to start the 
 - `/` — `TodayScreen`: today's workout state machine (idle → exercising → resting → transitioning → complete) and Apple Watch-style hub for Program and Progress. Workout stays here because it's tightly coupled to `useWorkout`.
 - `/history`, `/history/[date]`, `/history/personal-bests` — past sessions
 - `/routine`, `/split`, `/profile`, `/program` — config screens
-- `/onboarding` — first-visit redirect from TodayScreen
+- New installs use the default local profile and open Today directly.
 - `/exercises/[key]` — exercise detail (YouTube embed + instructions)
 
 ### State & Data Flow

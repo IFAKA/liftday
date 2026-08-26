@@ -71,7 +71,6 @@ const seededDraft = {
 
 async function seedFullLocalState(page: Page) {
   await page.addInitScript(({ session, profile, draft }) => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({ '2026-05-11': session }));
     localStorage.setItem('liftday_user_profile', JSON.stringify(profile));
     localStorage.setItem('liftday_daily_logs', JSON.stringify({
@@ -136,14 +135,12 @@ test('exports and restores a full v3 local backup', async ({ page }, testInfo) =
     dailyLogs: Record<string, unknown>;
     progressPhotos: unknown[];
     activeWorkoutDraft: unknown;
-    onboardingCompleted: boolean;
   };
   expect(exported.schemaVersion).toBe(3);
   expect(Object.keys(exported.sessions)).toContain('2026-05-11');
   expect(Object.keys(exported.dailyLogs)).toContain('2026-05-11');
   expect(exported.progressPhotos).toHaveLength(1);
   expect(exported.activeWorkoutDraft).not.toBeNull();
-  expect(exported.onboardingCompleted).toBe(true);
 
   await page.evaluate(() => localStorage.clear());
   await page.reload();
@@ -156,7 +153,6 @@ test('exports and restores a full v3 local backup', async ({ page }, testInfo) =
   await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_daily_logs'))).toContain('Backup fixture');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_progress_photos'))).toContain('photo-2026-05-11');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_active_workout_draft'))).toContain('2026-05-11T10:05:00.000Z');
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('liftday_onboarding_completed'))).toBe('true');
 
   await page.goto('/history');
   await expect(page.locator('body')).toContainText('Progress');
@@ -192,13 +188,11 @@ test('exports a backup from the desktop receive view', async ({ page }, testInfo
     source: string;
     sessions: Record<string, unknown>;
     progressPhotos: unknown[];
-    onboardingCompleted: boolean;
   };
   expect(exported.schemaVersion).toBe(3);
   expect(exported.source).toBe('laptop');
   expect(Object.keys(exported.sessions)).toContain('2026-05-11');
   expect(exported.progressPhotos).toHaveLength(1);
-  expect(exported.onboardingCompleted).toBe(true);
 });
 
 test('phone pairing reports when the opened URL has no local data', async ({ page }) => {
@@ -278,7 +272,6 @@ test('accepts phone backups with skipped measurement arrays in daily logs', asyn
     activeWorkoutDraft: null,
     firstSessionDate: '2026-06-01',
     mobilityDoneDate: null,
-    onboardingCompleted: true,
   }));
 
   await page.goto('/sync');

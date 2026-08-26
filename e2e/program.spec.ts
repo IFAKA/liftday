@@ -28,7 +28,6 @@ async function prepareTodayWorkout(page: Page, sessions: Record<string, unknown>
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript((initialSessions) => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_active_workout_draft');
     if (initialSessions) {
       localStorage.setItem('traindaily_sessions', JSON.stringify(initialSessions));
@@ -147,7 +146,6 @@ test('direct day and exercise links have safe back destinations', async ({ page 
 test('today is the watch-style hub for app sections', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
   });
 
   await page.goto('/');
@@ -172,7 +170,6 @@ test('mobility tutorial close control stays above quit control', async ({ page }
   await page.setViewportSize({ width: 320, height: 568 });
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('traindaily_mobility_done');
   });
 
@@ -211,7 +208,6 @@ test('exercise demos are mapped only to matching verified exercises', () => {
 test('returning from program does not flash the home loader', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_active_workout_draft');
   });
 
@@ -248,7 +244,6 @@ test('returning from program does not flash the home loader', async ({ page }) =
 test('completed today mounts done state without flashing start state', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({
       '2026-05-11': {
         logged_at: '2026-05-11T10:00:00.000Z',
@@ -277,7 +272,6 @@ test('completed today mounts done state without flashing start state', async ({ 
 
 test('settings body row opens the canonical body screen', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('liftday_user_profile', JSON.stringify({
       createdAt: '2026-05-01T00:00:00.000Z',
       tiers: {},
@@ -300,7 +294,6 @@ test('settings body row opens the canonical body screen', async ({ page }) => {
 
 test('program avoids joint-risk-only deload when progression needs reps', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({
       '2026-05-19': {
         logged_at: '2026-05-19T10:00:00.000Z',
@@ -365,7 +358,6 @@ test('missed Sunday start opens due measurements, gym weight check, then warm-up
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('liftday_user_profile', JSON.stringify({
       createdAt: '2026-05-01T00:00:00.000Z',
       tiers: {},
@@ -441,7 +433,6 @@ test('saturday weight check can record no scale and continue to warm-up', async 
   await page.clock.setFixedTime(new Date('2026-05-16T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_daily_logs');
   });
 
@@ -461,7 +452,6 @@ test('Monday start can skip missed Sunday checks and open warm-up', async ({ pag
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_daily_logs');
   });
 
@@ -479,7 +469,6 @@ test('today start opens warm-up before the first exercise', async ({ page }) => 
   await page.clock.install({ time: new Date('2026-05-11T10:00:00') });
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_active_workout_draft');
     localStorage.removeItem('traindaily_sessions');
     localStorage.removeItem('traindaily_first_session');
@@ -527,7 +516,6 @@ test('today start is not blocked by pending notification permission', async ({ p
         ready: new Promise(() => {}),
       },
     });
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_active_workout_draft');
     localStorage.removeItem('traindaily_sessions');
     localStorage.removeItem('traindaily_first_session');
@@ -582,7 +570,6 @@ test('warm-up cancel returns to Today without logging the workout', async ({ pag
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_active_workout_draft');
     localStorage.removeItem('traindaily_sessions');
   });
@@ -600,7 +587,6 @@ test('warm-up cancel returns to Today without logging the workout', async ({ pag
 test('rest-day today exposes supporting drill-down rows without measurement prompts', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-10T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
   });
 
   await page.goto('/');
@@ -630,7 +616,6 @@ test('rest-day today exposes supporting drill-down rows without measurement prom
 test('completed mobility keeps the rest-day hub layout', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-10T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_mobility_done', '2026-05-10');
   });
 
@@ -1059,7 +1044,6 @@ test('restores an active workout after reload', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
   });
 
   await page.goto('/');
@@ -1219,7 +1203,6 @@ test('logs an SMV workout with RIR and occupied-machine deferral', async ({ page
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
   });
 
   await page.goto('/');

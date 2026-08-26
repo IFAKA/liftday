@@ -6,7 +6,6 @@ test.describe('offline-first app shell', () => {
 
   test('keeps the core app usable after the first online load', async ({ page, context }) => {
     await page.addInitScript(() => {
-      localStorage.setItem('liftday_onboarding_completed', 'true');
     });
 
     await page.goto('/');

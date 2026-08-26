@@ -3,7 +3,6 @@ import { expect, test, type Page } from '@playwright/test';
 async function prepareApp(page: Page) {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({
       '2026-05-11': {
         logged_at: '2026-05-11T10:00:00.000Z',
@@ -41,19 +40,6 @@ test('major routes use one main landmark and avoid nested interactive roots', as
     await expectSingleVisibleMain(page);
     await expectNoNestedInteractiveRoots(page);
   }
-});
-
-test('onboarding steps are represented in the URL', async ({ page }) => {
-  await page.goto('/onboarding?step=0');
-  await expect(page.getByText('Step 1 / 3')).toBeVisible();
-
-  await page.getByRole('button', { name: /^next$/i }).click();
-  await expect(page).toHaveURL(/\/onboarding\?step=1$/);
-  await expect(page.getByText('Step 2 / 3')).toBeVisible();
-
-  await page.goBack();
-  await expect(page).toHaveURL(/\/onboarding\?step=0$/);
-  await expect(page.getByText('Step 1 / 3')).toBeVisible();
 });
 
 test('mobile footer actions stay inside the viewport', async ({ page }) => {

@@ -7,7 +7,7 @@ import { useSchedule } from '@/hooks/useSchedule';
 import { formatWorkoutType, getWorkoutType } from '@/lib/schedule';
 import { clearStorageIssues, getStorageIssues } from '@/lib/browser-storage';
 import { getRoutine } from '@/lib/routines';
-import { clearLiftDayStorage, loadUserProfile } from '@/lib/storage';
+import { clearLiftDayStorage, getDefaultProfile, loadUserProfile } from '@/lib/storage';
 import { useAppState } from './AppStateProvider';
 import { TodayHub } from './today/TodayHub';
 import { RestDayScreen } from './RestDayScreen';
@@ -19,16 +19,7 @@ export function TodayScreen() {
   const schedule = useSchedule(today, workout.data);
 
   useEffect(() => {
-    const hasSeenOnboarding = window.localStorage.getItem('liftday_onboarding_completed');
-    const hasActiveProfile = Boolean(loadUserProfile()?.activeRoutine);
-    if (!hasSeenOnboarding || !hasActiveProfile) {
-      router.replace('/onboarding');
-    }
-  }, [router]);
-
-  useEffect(() => {
     if (!workout.isStorageHydrated) return;
-    if (!window.localStorage.getItem('liftday_onboarding_completed') || !loadUserProfile()?.activeRoutine || workout.setupRequired) return;
     if (mobility.isActive) {
       router.replace('/mobility');
       return;
@@ -36,7 +27,7 @@ export function TodayScreen() {
     if (workout.state !== 'idle' || (schedule.isTraining && !schedule.isDone)) {
       router.replace('/workout');
     }
-  }, [mobility.isActive, router, schedule.isDone, schedule.isTraining, workout.isStorageHydrated, workout.setupRequired, workout.state]);
+  }, [mobility.isActive, router, schedule.isDone, schedule.isTraining, workout.isStorageHydrated, workout.state]);
 
   return <TodayContent date={today} />;
 }
@@ -57,7 +48,7 @@ function TodayContent({ date }: { date: Date }) {
   });
   const schedule = useSchedule(date, workout.data);
 
-  const profile = loadUserProfile();
+  const profile = loadUserProfile() ?? getDefaultProfile();
   const storageReady = workout.isStorageHydrated;
   const storageIssueMessage = storageIssue ?? formatStorageIssue(getStorageIssues().at(-1));
 
@@ -69,10 +60,7 @@ function TodayContent({ date }: { date: Date }) {
     return <StorageErrorScreen message={workout.routineError ?? schedule.routineError ?? 'Routine setup is invalid.'} />;
   }
 
-  if (workout.setupRequired || !profile?.activeRoutine) {
-    return <LoadingScreen />;
-  }
-  const routine = getRoutine(profile.activeRoutine);
+  const routine = getRoutine(profile.activeRoutine ?? 'gym');
   const workoutType = getWorkoutType(date, routine.schedule, routine.trainingWeekdays);
 
   if (workout.isRestoringActiveWorkout) {
@@ -116,7 +104,7 @@ function StorageErrorScreen({ message }: { message: string }) {
     const result = clearLiftDayStorage();
     if (!result.success) return;
     clearStorageIssues();
-    router.replace('/onboarding');
+    router.replace('/');
   };
 
   return (

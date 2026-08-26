@@ -14,10 +14,6 @@ export default function MobilityPage() {
   const schedule = useSchedule(date, workout.data);
 
   useEffect(() => {
-    if (!window.localStorage.getItem('liftday_onboarding_completed')) {
-      router.replace('/onboarding');
-      return;
-    }
     if (schedule.isTraining || isComplete) {
       router.replace('/');
       return;

@@ -110,7 +110,6 @@ test('weekly workout gate only renders due waist and saves body fallbacks', asyn
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await installRequiredNotificationStack(page);
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.removeItem('liftday_daily_logs');
     localStorage.removeItem('liftday_progress_photos');
     localStorage.removeItem('liftday_active_workout_draft');
@@ -158,7 +157,6 @@ test('monthly photo check accepts an upload and displays it in body progress', a
   await page.addInitScript(() => {
     if (sessionStorage.getItem('monthly_photo_seeded')) return;
     sessionStorage.setItem('monthly_photo_seeded', 'true');
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('liftday_daily_logs', JSON.stringify({
       '2026-05-25': {
         dateKey: '2026-05-25',

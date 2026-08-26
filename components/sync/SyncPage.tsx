@@ -853,7 +853,6 @@ function hasSnapshotData(snapshot: SyncSnapshot): boolean {
     snapshot.profile ||
     snapshot.activeWorkoutDraft ||
     snapshot.firstSessionDate ||
-    snapshot.mobilityDoneDate ||
-    snapshot.onboardingCompleted
+    snapshot.mobilityDoneDate
   );
 }

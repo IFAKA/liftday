@@ -34,7 +34,6 @@ function snapshot(overrides: Record<string, unknown> = {}) {
     activeWorkoutDraft: null,
     firstSessionDate: '2026-05-11',
     mobilityDoneDate: null,
-    onboardingCompleted: true,
     ...overrides,
   };
 }
@@ -63,7 +62,6 @@ async function writeJsonFixture(testInfo: { outputPath: (path: string) => string
 test('corrupt JSON surfaces a storage error without preserving the raw payload', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', '{"2026-05-11":');
   });
 
@@ -78,7 +76,6 @@ test('corrupt JSON surfaces a storage error without preserving the raw payload',
 
 test('invalid import payload writes nothing and shows an error', async ({ page }, testInfo) => {
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({ existing: { logged_at: 'keep' } }));
   });
   const badPath = await writeJsonFixture(testInfo, 'invalid-import.json', { app: 'not-liftday' });
@@ -94,7 +91,6 @@ test('invalid import payload writes nothing and shows an error', async ({ page }
 
 test('setItem failure during import rolls back earlier writes', async ({ page }, testInfo) => {
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({ existing: { logged_at: 'keep' } }));
     const originalSetItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function setItem(key: string, value: string) {
@@ -117,7 +113,6 @@ test('setItem failure during import rolls back earlier writes', async ({ page },
 
 test('quota exceeded during import writes nothing', async ({ page }, testInfo) => {
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('traindaily_sessions', JSON.stringify({ existing: { logged_at: 'keep' } }));
     const originalSetItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function setItem(key: string, value: string) {
@@ -141,7 +136,6 @@ test('quota exceeded during import writes nothing', async ({ page }, testInfo) =
 test('failed workout save does not show completion', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-05-11T10:00:00'));
   await page.addInitScript(() => {
-    localStorage.setItem('liftday_onboarding_completed', 'true');
     localStorage.setItem('liftday_active_workout_draft', JSON.stringify({
       version: 1,
       dateKey: '2026-05-11',
