@@ -31,7 +31,7 @@ export function WatchScreen({
     <div className={cn('watch-shell flex h-full min-h-0 flex-col overflow-hidden bg-black text-white', className)}>
       {top}
       <main className={cn(
-        'min-h-0 flex-1 px-4 pt-1 no-scrollbar',
+        'min-h-0 flex-1 px-4 pt-3 no-scrollbar',
         scrollable ? 'overflow-y-auto pb-8' : 'overflow-hidden',
         bodyClassName
       )}>
@@ -76,7 +76,7 @@ export function WatchBackButton({
   if (href) {
     return (
       <Button asChild variant="ghost" size="icon" aria-label={ariaLabel} className={classes}>
-        <Link href={href} replace>
+        <Link href={href}>
           <ChevronLeft className="h-5 w-5" />
         </Link>
       </Button>
