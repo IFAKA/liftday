@@ -4,7 +4,7 @@
     <application
         android:theme="@style/AppTheme"
         android:label="LiftDay"
-        android:icon="@android:drawable/ic_menu_view"
+        android:icon="@drawable/liftday_icon"
         android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
